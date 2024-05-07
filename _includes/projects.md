@@ -14,8 +14,8 @@
             <abbr class="badge">{{ link.project_short }}</abbr>
   </div>
   <div class="col-sm-9" style="position: relative;padding-right: 15px;padding-left: 20px;">
-      <div class="title"><a href="{{ link.web }}">{{ link.title }}</a></div>
-      <div class="author">{{ link.authors }}</div>
+      <div class="title" style="font-size: 20px;"><a href="{{ link.web }}">{{ link.title }}</a></div>
+      <div class="author" style="font-weight: bold;">{{ link.authors }}</div>
       <div class="author">{{ link.abstract }}</div>
       <div class="date">{{ link.date }}</div>
       <div class="periodical"><em>{{ link.project }}</em>

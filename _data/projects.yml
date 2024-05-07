@@ -3,16 +3,18 @@ main:
   - title: EvaGaussians
     authors: Wangbo Yu, Chaoran Feng, Huangchao Song
     project_short: 3D Reconstruction
-    project: 🔥 March,27,2024 ~ May,15,2024. 🔥 The project is used to reconstruct 3D objects from 2D images with event stream assisted, and get SOTA results on the deblurNeRF dataset and own made dataset.
+    project:  The project is used to reconstruct 3D objects from 2D images with event stream assisted, and get SOTA results on the deblurNeRF dataset and own made dataset.
     pdf: 
     web: 
+    date: 🔥 March,27,2024 ~ May,15,2024. 🔥
     image: 
     notes: Coming soon
 
   - title: ENeRF4D:Dynamic Multi-Object Scene Generation from Event Cameras
     authors: Chaoran Feng
     project_short: 3D Reconstruction
-    project: 🔥 May,15,2024. ~ Now🔥 The project is about dynamicd scenes reconstrucation used to reconstruct 3D objects from  event stream, and nowadays I read DNeRF, DE-NeRF, EvDynamicNeRF and DreamScene4D for inspiration.
+    date: 🔥 May,15,2024. ~ Now🔥
+    project:  The project is about dynamicd scenes reconstrucation used to reconstruct 3D objects from  event stream, and nowadays I read DNeRF, DE-NeRF, EvDynamicNeRF and DreamScene4D for inspiration.
     pdf: 
     web:
     image: 
