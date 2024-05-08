@@ -1,6 +1,6 @@
-<h2 align="center"> 
-  <a href="https://github.com/SuperFCR/ENeRF4D.git">Falcaryl's Homepage</a>
-</h2>
+<h1 align="center"> 
+  <a href="https://github.com/SuperFCR/ENeRF4D.git">Falcary's Homepage</a>
+</h1>
 <h5 align="center"> 
 If you like our project, please give us a star ⭐ on GitHub for latest update.  </h5>
 <h5 align="center">
