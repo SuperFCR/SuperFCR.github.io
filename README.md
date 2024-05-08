@@ -10,7 +10,7 @@ If you like our project, please give us a star ⭐ on GitHub for latest update. 
 ## 📣 News
 * ⏳⏳⏳ The infomation as follows is test...
 
-* **[2024.05.08]**  🤗 **Falcary's Homepape Web ** are available now! Welcome to **watch** 👀 this repository for the latest updates.
+* **[2024.05.08]**  🤗**Falcary's Homepape Web** are available now! Welcome to **watch** 👀 this repository for the latest updates.
 
 
 This is the latest version of my homepage's source code. Feel free to use and share.
