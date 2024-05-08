@@ -5,8 +5,12 @@
 If you like our project, please give us a star ⭐ on GitHub for latest update.  </h5>
 <h5 align="center">
 
-[![LICENSE](https://img.shields.io/github/license/yaoyao-liu/minimal-light?style=flat-square&logo=creative-commons&color=EF9421)](https://github.com/yaoyao-liu/yaoyao-liu.github.io/blob/main/LICENSE)
 
+[![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/SuperFCR/SuperFCR.github.io/blob/main/LICENSE) 
+[![GitHub repo stars](https://img.shields.io/github/stars/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Stars)](https://github.com/SuperFCR/SuperFCR.github.io/stargazers)&#160;
+[![GitHub repo forks](https://img.shields.io/github/forks/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Forks)](https://github.com/SuperFCR/SuperFCR.github.io/network)&#160;
+[![GitHub repo watchers](https://img.shields.io/github/watchers/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Watchers)](https://github.com/SuperFCR/SuperFCR.github.io/watchers)&#160;
+[![GitHub repo size](https://img.shields.io/github/repo-size/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Repo%20Size)](https://github.com/SuperFCR/SuperFCR.github.io/archive/refs/heads/main.zip)
 ## 📣 News
 * ⏳⏳⏳ The infomation as follows is test...
 
