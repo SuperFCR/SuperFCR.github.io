@@ -1,7 +1,7 @@
 main:
 
   - title: EICIL:Joint Excitatory Inhibitory Cycle Iteration Learning for Deep Spiking Neural Networks
-    authors: Zihang Shao, Chaoran Feng, Xuanye Fang, Yaxin Li,  Jiangrong Shen, Qi Xu
+    authors: Zihang Shao, Chaoran Feng, Xuanye Fang, Yaxin Li, Jiangrong Shen, Qi Xu
     conference_short: NeuIPS 2023
     conference: Proceedings of the 37th Conference on Neural Information Processing Systems
     pdf: https://openreview.net/pdf?id=OMDgOjdqoZ
