@@ -5,13 +5,14 @@
 If you like our project, please give us a star ⭐ on GitHub for latest update.  </h5>
 <h5 align="center">
 
-
 [![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/SuperFCR/SuperFCR.github.io/blob/main/LICENSE) 
 [![GitHub repo stars](https://img.shields.io/github/stars/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Stars)](https://github.com/SuperFCR/SuperFCR.github.io/stargazers)&#160;
 [![GitHub repo forks](https://img.shields.io/github/forks/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Forks)](https://github.com/SuperFCR/SuperFCR.github.io/network)&#160;
 [![GitHub repo watchers](https://img.shields.io/github/watchers/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Watchers)](https://github.com/SuperFCR/SuperFCR.github.io/watchers)&#160;
 [![GitHub repo size](https://img.shields.io/github/repo-size/SuperFCR/SuperFCR.github.io?style=flat&logo=github&logoColor=whitesmoke&label=Repo%20Size)](https://github.com/SuperFCR/SuperFCR.github.io/archive/refs/heads/main.zip)
+
 ## 📣 News
+
 * ⏳⏳⏳ The infomation as follows is test...
 
 * **[2024.05.08]**  🤗**Falcary's Homepape Web** are available now! Welcome to **watch** 👀 this repository for the latest updates.
@@ -23,7 +24,31 @@ For more details, please refer to this repository: <https://github.com/yaoyao-li
 
 ### 🔨Using Locally with Jekyll
 
-You need to install [Ruby](https://www.ruby-lang.org/en/) and [Jekyll](https://jekyllrb.com/) fisrt.
+If you are using Linux System,you should install the dependency as follows:
+
+```bash
+sudo apt-get update
+sudo apt-get install ruby
+```
+
+But if you are using MacOS or Windows, you may install these toolkits below:
+- MacOS
+
+```bash
+brew install rbenv
+rbenv init
+gem install jekyll bundler
+```
+
+- Windows
+
+Download and run Ruby Installer from [this website](https://rubyinstaller.org/) ,Follow the instructions to install Ruby and the Devkit
+
+```bash
+gem install jekyll bundler
+```
+
+Then,you need to install [Ruby](https://www.ruby-lang.org/en/) and [Jekyll](https://jekyllrb.com/).
 
 Install and run:
 
@@ -31,6 +56,7 @@ Install and run:
 bundle install
 bundle exec jekyll server
 ```
+
 View the live page using `localhost`:
 <http://localhost:4000>. You can get the html files in the `_site` folder.
 
@@ -55,3 +81,6 @@ This project uses the source code from the following repositories:
 * [AcadHomepage](https://github.com/RayeRen/acad-homepage.github.io)
 
 * [yaoyao-liu homepage](https://github.com/yaoyao-liu/yaoyao-liu.github.io)
+
+
+
