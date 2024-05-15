@@ -15,6 +15,8 @@ If you like our project, please give us a star ⭐ on GitHub for latest update. 
 
 * ⏳⏳⏳ The infomation as follows is test...
 
+* **[2024.05.09]**  I have already updated my own domain name, and the new domain name is [https://www.falcary.com](https://www.falcary.com). Welcome to visit my homepage! 🎉🎉🎉
+
 * **[2024.05.08]**  🤗**Falcary's Homepape Web** are available now! Welcome to **watch** 👀 this repository for the latest updates.
 
 
