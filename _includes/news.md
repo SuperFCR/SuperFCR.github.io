@@ -4,7 +4,7 @@
 
 <ul>
 
-<li><strong>[May. 2024]</strong> 📣📣📣 The web of my profile has been now established,welcome!</li>
+<li><strong>[May. 2024]</strong> 📣📣📣 The web of my profile has been now established, welcome 🥳🥳🥳!</li>
 <!-- <li><strong>[DEC. 2023]</strong> The <span style="color:#e74d3c"><a href="https://songchen.science/blog/gallery/">Hitchhiker's Gallery</a></span> has been released, thanks to anzai's <span style="color:#e74d3c"><a href="https://github.com/anzai249/easy-masonry/tree/main">work: easy-masonry</a></span> </li>
 <li><strong>[NOV. 2023]</strong> The <span style="color:#e74d3c"><a href="https://bemagic-etn.eu/news/80-bemagic-final-event">Final Event of the BeMAGIC project</a></span> will take place in the Universitat Autònoma de Barcelona, Spain, on 14-15 December. </li>
 <li><strong>[NOV. 2023]</strong> AHEMS: <span style="color:#e74d3c"><a href="https://hitchhiker.azurewebsites.net/?/AHEMS/">Anomalous Hall Effect Measurement System</a></span> has been released.</li>
