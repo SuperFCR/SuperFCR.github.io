@@ -2,9 +2,14 @@
 .topnav {
     background-color: #002D72;
     overflow: hidden;
-	position:fixed;
-	z-index:999;
+    position:fixed;
+    z-index:999;
     width:100%;
+    /* display: flex; */
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px;
+
   }
 
 
@@ -12,9 +17,19 @@
     display: inline;
   }
 
-.topnav a.icon {
+  .topnav a.icon {
     display: none;
 }
+  /* Style for logo images */
+  .logo-container {
+    display: flex;
+    align-items: flex-start;
+  }
+  .topnav .logo {
+    height: 48px;
+    margin-top: 0.1px;
+    margin-bottom: 0.1px;
+  }
 
   .topnav img {
     margin-bottom:-16.5pt;
@@ -33,6 +48,7 @@
   }
   
   /* Change the color of links on hover */
+
   .topnav a.normal:hover {
     background-color: #ddd;
     color: black;

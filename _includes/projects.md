@@ -36,7 +36,7 @@
       {% if link.web %} 
       <a href="{{ link.web }}" class="btn btn-sm z-depth-0" role="button" target="_blank" style="font-size:12px;">Website</a>
       {% endif %}
-        {% if link.github %} 
+      {% if link.github %} 
       <a href="{{ link.github }}" class="btn btn-sm z-depth-0" role="button" target="_blank" style="font-size:12px;">Github</a>
       {% endif %}
       {% if link.notes %}

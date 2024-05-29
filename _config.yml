@@ -18,7 +18,7 @@ description: Chaoran Feng's personal website. I am a master student at Peking Un
 enable_hopkins_logo: false
 
 # The option is used to show the last update time.
-enable_last_update: false
+enable_last_update: true
 
 # Links
 cv_link: https://blog.songchen.science/de3ec0aa2234aa1e3ee275bbc715c6c9/CV.pdf
