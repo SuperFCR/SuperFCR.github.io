@@ -21,13 +21,13 @@ main:
   #   image: ./assets/img/enerf4d_pipeline.jpg
   #   notes: Coming soon
 
-  # - title: EvA4DGS
-  #   authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
-  #   project_short: 3D Reconstruction
-  #   date: 🔥 May,15,2024. ~ Now🔥
-  #   project:  The project is about dynamicd scenes reconstrucation the Blurry Video of Mono-camera with event stream.
-  #   pdf: 
-  #   web:
-  #   image: ./assets/img/enerf4d_pipeline.jpg
-  #   notes: Coming soon
+  - title: EvA4DGS
+    authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
+    project_short: 3D Reconstruction
+    date: 🔥 May,15,2024. ~ Now🔥
+    project:  The project is about dynamicd scenes reconstrucation the Blurry Video of Mono-camera with event stream.
+    pdf: 
+    web:
+    image: ./assets/img/enerf4d_pipeline.jpg
+    notes: Coming soon
 
