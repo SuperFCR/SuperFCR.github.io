@@ -63,7 +63,7 @@
       <!-- 添加 logo -->
       <a href="https://www.pku.edu.cn/"><img width="190" src=""></a>
       <a href="/">
-        <img src="./assets/img/Homepage.png" alt="Logo" class="logo">
+        <img src="./assets/img/homepage.png" alt="Logo" class="logo">
       </a>
 
       <div id="myLinks">
@@ -380,6 +380,16 @@
 
       <br>
 
+      
+      <small>Last Update:
+            <script>
+              const monthNames = ["January", "Februray", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+              ];
+              var modiDate = new Date(document.lastModified);
+              var showAs = modiDate.getDate() + ". " + monthNames[modiDate.getMonth()] + " " + modiDate.getFullYear();
+              document.write(showAs);
+            </script>
+      </small> 
       
 
       
