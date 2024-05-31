@@ -4,7 +4,7 @@ main:
     authors: Wangbo Yu*, Chaoran Feng*, Tangji Ye, Xu Jia, Li Yuan†, Yonghong Tian†
     project_short: EvaGaussians
     project:  The project is used to reconstruct 3D objects from 2D blurry images with event stream assisted, and get SOTA results on our made dataset.
-    pdf: https://github.com/PKU-YuanGroup/EvaGaussians
+    pdf: https://arxiv.org/pdf/2405.20224
     page: https://drexubery.github.io/EvaGaussians/
     github: https://github.com/PKU-YuanGroup/EvaGaussians
     date: 🔥 March,27,2024 ~ May,15,2024. 🔥
