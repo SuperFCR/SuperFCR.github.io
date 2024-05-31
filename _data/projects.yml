@@ -30,4 +30,3 @@ main:
     web:
     image: ./assets/img/enerf4d_pipeline.jpg
     notes: Coming soon
-
