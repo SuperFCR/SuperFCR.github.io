@@ -14,7 +14,7 @@ I am currently a master student of Computer Science in [Peking University](https
 
 ## Research Interest:
 
-- **Computer Graphic:** 3D Reconstruction(NeRF,Gaussian Splatting), 3D Generation(DreamFusion...)
+- **Computer Graphic:** 3D Vision, 3D Reconstruction(NeRF,Gaussian Splatting), 3D Generation(DreamFusion...)
 - **SLAM:** Path planning of robots(Fast-Planner, Far-Planner, Ego-planner and so on).
 - **Spiking Neural Network:** Vision tasks using SNN like classification, segmentaion and so on.
 
