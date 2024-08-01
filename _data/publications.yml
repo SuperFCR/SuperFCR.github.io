@@ -7,7 +7,7 @@ main:
     pdf: https://openreview.net/pdf?id=OMDgOjdqoZ
     page: https://openreview.net/forum?id=OMDgOjdqoZ
     bibtex: ./assets/files/eicil.txt
-    image: ./assets/files/multi.jpg
+    image: ./assets/img/multi.jpg
     notes: poster,Published
 
 

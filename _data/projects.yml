@@ -20,7 +20,6 @@ main:
   #   web:
   #   image: ./assets/img/enerf4d_pipeline.jpg
   #   notes: Coming soon
-
   - title: EvA4DGS
     authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
     project_short: 3D Reconstruction
@@ -30,3 +29,14 @@ main:
     web:
     image: ./assets/img/enerf4d_pipeline.jpg
     notes: Coming soon
+
+  - title: Cycle3D:High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle
+    authors: Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, Chaoran Feng, Yatian Pang, Bin Lin, Li Yuan†
+    project_short: 3D Generation
+    date: 🔥 March, 2024. ~ August, 2024🔥
+    project:  The project is about 3d generation used to generation-reconstruction cycle for the unified diffusion process.
+    pdf: https://arxiv.org/pdf/2407.19548
+    github: https://github.com/PKU-YuanGroup/Cycle3D
+    web: https://github.com/PKU-YuanGroup/Cycle3D
+    image: ./assets/img/cycle3d_pipeline.png
+    notes: Paper is under review!

@@ -14,11 +14,13 @@
 
 
   .topnav #myLinks {
+    flex-grow: 1;
     display: inline;
   }
 
   .topnav a.icon {
     display: none;
+    font-size: 24px;
 }
   /* Style for logo images */
   .logo-container {
@@ -26,9 +28,11 @@
     align-items: flex-start;
   }
   .topnav .logo {
-    height: 48px;
+    /* height: 48px; */
     margin-top: 0.1px;
     margin-bottom: 0.1px;
+    max-width: 200px;
+    
   }
 
   .topnav img {
