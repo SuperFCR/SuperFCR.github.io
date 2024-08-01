@@ -20,7 +20,7 @@ I am currently a master student of Computer Science in [Peking University](https
 
 ## Service
 
-Conference reviewer: NeurIPS, ACM mm
+- **💡Conference reviewer**: NeurIPS, ACM mm
 
 {% include_relative _includes/news.md %}
 
