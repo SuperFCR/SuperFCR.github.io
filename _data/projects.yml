@@ -20,6 +20,7 @@ main:
   #   web:
   #   image: ./assets/img/enerf4d_pipeline.jpg
   #   notes: Coming soon
+  
   - title: EvA4DGS
     authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
     project_short: 3D Reconstruction
