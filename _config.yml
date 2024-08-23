@@ -21,7 +21,7 @@ enable_hopkins_logo: false
 enable_last_update: true
 
 # Links
-cv_link: www.baidu.com
+cv_link: ./assets/files/20240823_Falcary_CV_CN.pdf
 google_scholar: https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en
 github_link: https://github.com/SuperFCR/
 linkedin: 
