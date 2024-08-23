@@ -20,7 +20,7 @@ main:
   #   web:
   #   image: ./assets/img/enerf4d_pipeline.jpg
   #   notes: Coming soon
-  
+
   - title: EvA4DGS
     authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
     project_short: 3D Reconstruction
@@ -40,4 +40,15 @@ main:
     github: https://github.com/PKU-YuanGroup/Cycle3D
     web: https://github.com/PKU-YuanGroup/Cycle3D
     image: ./assets/img/cycle3d_pipeline.png
+    notes: Paper is under review!
+  
+  - title: AE-NeRF:Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes
+    authors: Chaoran Feng, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Yonghong Tian, Li Yuan†
+    project_short: 3D Reconstruction
+    date: 🔥 March, 2024. ~ August, 2024🔥
+    project:  The project is about 3d reconstruction with event stream in noisy poses and unbounded larger scenes.
+    pdf: ./assets/files/20240823_AAAI2025_AE_NeRF-Arxiv.pdf
+    github: 
+    web: 
+    image: ./assets/img/ae_nerf_pipeline.jpg
     notes: Paper is under review!
