@@ -20,7 +20,7 @@ I am currently a master student of Computer Science in [Peking University](https
 
 ## Service
 
-- **💡Conference reviewer**: NeurIPS 2024, ACM MM 2024, ICLR 2025
+- **💡Conference reviewer**: NeurIPS 2024, ACM MM 2024, ICLR 2025, CVPR 2025
 
 {% include_relative _includes/news.md %}
 

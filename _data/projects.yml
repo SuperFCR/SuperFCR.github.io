@@ -52,3 +52,14 @@ main:
     web: 
     image: ./assets/img/ae_nerf_pipeline.jpg
     notes: Paper is under review!
+
+  - title: NeuralGS:Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations
+    authors: Zhenyu Tang*, Chaoran Feng*, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu, Xiaoxiao Long, Wenping Wang, Li Yuan†
+    project_short: 3D Compression
+    date: 🔥 Sep., 2024. ~ Nov., 2024🔥
+    project:  The project is abouta novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs, only requiring a small model size even for a large-scale scene.
+    pdf: ./assets/files/20241115NeuralGS-Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations.pdf
+    github: 
+    web: 
+    image: ./assets/img/neuralgs_pipeline.jpg
+    notes: Paper is under review!
