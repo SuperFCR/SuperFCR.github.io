@@ -28,6 +28,4 @@ I am currently a master student of Computer Science in [Peking University](https
 
 {% include_relative _includes/publications.md %}
 
-<!-- {% include_relative _includes/conference.md %} -->
-
 {% include_relative _includes/contact.md %}
