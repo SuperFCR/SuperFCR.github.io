@@ -16,7 +16,7 @@ I am currently a master student of Computer Science in [Peking University](https
 
 - **3D Vision:** Event-based 3D Vision, 3D/4D Reconstruction. 
 - **SLAM:** Path planning of robots(Fast-Planner, Far-Planner, Ego-planner and so on).
-- **Spiking Neural Network and Neuromorphic Cameras:** 3D Vision tasks using SNN from neuromorphic cameras(event camera, spiking camera).
+- **Spiking Neural Network and Neuromorphic Cameras:** 3D Vision tasks using SNN from neuromorphic cameras(event camera, spiking camera etc.).
 - **Auto Regressive Model:** Nowadays, I am interested in the auto-regressive model, especially application in the 3D Vision or autodriving.
 
 ## Service
