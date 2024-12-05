@@ -21,15 +21,15 @@ main:
   #   image: ./assets/img/enerf4d_pipeline.jpg
   #   notes: Coming soon
 
-  - title: EvA4DGS
-    authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
-    project_short: 3D Reconstruction
-    date: 🔥 May,15,2024. ~ Now🔥
-    project:  The project is about dynamicd scenes reconstrucation the Blurry Video of Mono-camera with event stream.
-    pdf: 
-    web:
-    image: ./assets/img/enerf4d_pipeline.jpg
-    notes: Coming soon
+  # - title: EvA4DGS
+  #   authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
+  #   project_short: 3D Reconstruction
+  #   date: 🔥 May,15,2024. ~ Now🔥
+  #   project:  The project is about dynamicd scenes reconstrucation the Blurry Video of Mono-camera with event stream.
+  #   pdf: 
+  #   web:
+  #   image: ./assets/img/enerf4d_pipeline.jpg
+  #   notes: Coming soon
 
   - title: Cycle3D:High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle
     authors: Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, Chaoran Feng, Yatian Pang, Bin Lin, Li Yuan†
@@ -51,6 +51,17 @@ main:
     github: 
     web: 
     image: ./assets/img/ae_nerf_pipeline.jpg
+    notes: Paper is under review!
+
+  - title: NOFA++:Tuning-free NeRF-based One-shot Facial Avatar Reconstruction
+    authors: Wangbo Yu, Chaoran Feng, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†
+    project_short: 3D Facial Avatar
+    date: 🔥 Oct. 2024🔥
+    project:  We propose a generalizable one-shot 3D facial avatar reconstruction framework that leverages a pretrained 3D GAN and a coarse-to-fine strategy to achieve high-fidelity reconstruction and dynamic reenactment from a single source image without test-time finetuning.
+    pdf: ./assets/files/20241015-PAMI_NOFA____NeRF_based_One_shot_Facial_Avatar_Reconstruction_and_beyond.pdf
+    github: 
+    web: 
+    image: ./assets/img/nofa++.png
     notes: Paper is under review!
 
   - title: NeuralGS:Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations
