@@ -54,7 +54,6 @@ remote_theme: yaoyao-liu/minimal-light
 plugins:
 - jekyll-remote-theme # add this line to the plugins list if you already have one
 
-
 # The following files will be removed from the generated website.
 exclude:
   - build.sh
