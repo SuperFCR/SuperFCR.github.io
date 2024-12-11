@@ -16,7 +16,17 @@
   </div>
   <div class="col-sm-9" style="position: relative;padding-right: 15px;padding-left: 20px;">
       <div class="title" style="font-size: 20px;"><a href="{{ link.web }}">{{ link.title }}</a></div>
-      <div class="author" style="font-weight: bold;">{{ link.authors }}</div>
+      <!-- <div class="author" style="font-weight: bold;">{{ link.authors }}</div> -->
+      <div class="author">
+        {% assign authors = link.authors | split: ',' %}
+        {% for author in authors %}
+          {% if author contains 'Chaoran Feng' %}
+            <strong><u>{{ author }}</u></strong>{% if forloop.last == false %}, {% endif %}
+          {% else %}
+            {{ author }}{% if forloop.last == false %}, {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
       <div class="periodical"><em>{{ link.conference }}</em>
       </div>
     <div class="links">
