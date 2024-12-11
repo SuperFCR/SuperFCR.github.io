@@ -8,7 +8,31 @@ main:
     page: https://openreview.net/forum?id=OMDgOjdqoZ
     bibtex: ./assets/files/eicil.txt
     image: ./assets/img/multi.jpg
-    notes: poster,Published
+    notes: poster, Published
 
 
+  - title: Cycle3D:High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle
+    authors: Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, Chaoran Feng, Yatian Pang, Bin Lin, Li Yuan†
+    project_short: 3D Generation
+    date: 🔥 March, 2024. ~ August, 2024🔥
+    project:  The project is about 3d generation used to generation-reconstruction cycle for the unified diffusion process.
+    conference_short: AAAI 2025
+    conference: Proceedings of the 39th Annual AAAI Conference on Artificial Intelligence
+    pdf: https://arxiv.org/pdf/2407.19548
+    github: https://github.com/PKU-YuanGroup/Cycle3D
+    web: https://github.com/PKU-YuanGroup/Cycle3D
+    image: ./assets/img/cycle3d_pipeline.png
+    notes: poster, Published
   
+  - title: AE-NeRF:Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes
+    authors: Chaoran Feng, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Yonghong Tian, Li Yuan†
+    project_short: 3D Reconstruction
+    date: 🔥 March, 2024. ~ August, 2024🔥
+    project:  The project is about 3d reconstruction with event stream in noisy poses and unbounded larger scenes.
+    conference_short: AAAI 2025
+    conference: Proceedings of the 39th Annual AAAI Conference on Artificial Intelligence
+    pdf: ./assets/files/20240823_AAAI2025_AE_NeRF-Arxiv.pdf
+    github: 
+    web: 
+    image: ./assets/img/ae_nerf_pipeline.jpg
+    notes: poster, Published
