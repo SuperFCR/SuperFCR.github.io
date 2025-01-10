@@ -1,16 +1,4 @@
 main:
-
-  - title: EICIL:Joint Excitatory Inhibitory Cycle Iteration Learning for Deep Spiking Neural Networks
-    authors: Zihang Shao, Chaoran Feng, Xuanye Fang, Yaxin Li, Jiangrong Shen, Qi Xu
-    conference_short: NeuIPS 2023
-    conference: Proceedings of the 37th Conference on Neural Information Processing Systems
-    pdf: https://openreview.net/pdf?id=OMDgOjdqoZ
-    page: https://openreview.net/forum?id=OMDgOjdqoZ
-    bibtex: ./assets/files/eicil.txt
-    image: ./assets/img/multi.jpg
-    notes: poster, Published
-
-
   - title: Cycle3D:High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle
     authors: Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, Chaoran Feng, Yatian Pang, Bin Lin, Li Yuan†
     project_short: 3D Generation
@@ -22,7 +10,7 @@ main:
     github: https://github.com/PKU-YuanGroup/Cycle3D
     web: https://github.com/PKU-YuanGroup/Cycle3D
     image: ./assets/img/cycle3d_pipeline.png
-    notes: poster, Published
+    notes: CRC Period
   
   - title: AE-NeRF:Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes
     authors: Chaoran Feng, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Yonghong Tian, Li Yuan†
@@ -31,8 +19,18 @@ main:
     project:  The project is about 3d reconstruction with event stream in noisy poses and unbounded larger scenes.
     conference_short: AAAI 2025
     conference: Proceedings of the 39th Annual AAAI Conference on Artificial Intelligence
-    pdf: ./assets/files/20240823_AAAI2025_AE_NeRF-Arxiv.pdf
+    pdf: https://arxiv.org/pdf/2501.02807
     github: 
     web: 
     image: ./assets/img/ae_nerf_pipeline.jpg
+    notes: CRC Period
+
+  - title: EICIL:Joint Excitatory Inhibitory Cycle Iteration Learning for Deep Spiking Neural Networks
+    authors: Zihang Shao, Chaoran Feng, Xuanye Fang, Yaxin Li, Jiangrong Shen, Qi Xu
+    conference_short: NeuIPS 2023
+    conference: Proceedings of the 37th Conference on Neural Information Processing Systems
+    pdf: https://openreview.net/pdf?id=OMDgOjdqoZ
+    page: https://openreview.net/forum?id=OMDgOjdqoZ
+    bibtex: ./assets/files/eicil.txt
+    image: ./assets/img/multi.jpg
     notes: poster, Published
