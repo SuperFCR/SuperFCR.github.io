@@ -1,5 +1,16 @@
 main:
 
+  - title: NeuralGS:Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations
+    authors: Zhenyu Tang*, Chaoran Feng*, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu, Xiaoxiao Long, Wenping Wang, Li Yuan†
+    project_short: 3D Compression
+    date: 🔥 Sep., 2024. ~ Nov., 2024🔥
+    project:  The project is abouta novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs, only requiring a small model size even for a large-scale scene.
+    pdf: ./assets/files/20241115NeuralGS-Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations.pdf
+    github: 
+    web: 
+    image: ./assets/img/neuralgs_pipeline.jpg
+    notes: Paper is under review by CVPR2025!
+
   - title: EvaGaussians:Event Assisted Gaussian Splatting from Blurry Images
     authors: Wangbo Yu*, Chaoran Feng*, Tangji Ye, Xu Jia, Li Yuan†, Yonghong Tian†
     project_short: EvaGaussians
@@ -9,49 +20,7 @@ main:
     github: https://github.com/PKU-YuanGroup/EvaGaussians
     date: 🔥 March,27,2024 ~ May,15,2024. 🔥
     image: ./assets/img/evags_pipeline.png
-    notes: Paper is under review!
-
-  # - title: ENeRF4D
-  #   authors: Chaoran Feng
-  #   project_short: 3D Reconstruction
-  #   date: 🔥 May,15,2024. ~ Now🔥
-  #   project:  The project is about dynamicd scenes reconstrucation used to reconstruct 3D objects from event stream, and nowadays I read DNeRF, DE-NeRF, EvDynamicNeRF and DreamScene4D for inspiration.
-  #   pdf: 
-  #   web:
-  #   image: ./assets/img/enerf4d_pipeline.jpg
-  #   notes: Coming soon
-
-  # - title: EvA4DGS
-  #   authors: Chaoran Feng, Wenyue Chen, Jianbin Zhao, Wangbo Yu, Li Yuan, Yonghong Tian
-  #   project_short: 3D Reconstruction
-  #   date: 🔥 May,15,2024. ~ Now🔥
-  #   project:  The project is about dynamicd scenes reconstrucation the Blurry Video of Mono-camera with event stream.
-  #   pdf: 
-  #   web:
-  #   image: ./assets/img/enerf4d_pipeline.jpg
-  #   notes: Coming soon
-
-  - title: Cycle3D:High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle
-    authors: Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, Chaoran Feng, Yatian Pang, Bin Lin, Li Yuan†
-    project_short: 3D Generation
-    date: 🔥 March, 2024. ~ August, 2024🔥
-    project:  The project is about 3d generation used to generation-reconstruction cycle for the unified diffusion process.
-    pdf: https://arxiv.org/pdf/2407.19548
-    github: https://github.com/PKU-YuanGroup/Cycle3D
-    web: https://github.com/PKU-YuanGroup/Cycle3D
-    image: ./assets/img/cycle3d_pipeline.png
-    notes: Paper is under review!
-  
-  - title: AE-NeRF:Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes
-    authors: Chaoran Feng, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Yonghong Tian, Li Yuan†
-    project_short: 3D Reconstruction
-    date: 🔥 March, 2024. ~ August, 2024🔥
-    project:  The project is about 3d reconstruction with event stream in noisy poses and unbounded larger scenes.
-    pdf: ./assets/files/20240823_AAAI2025_AE_NeRF-Arxiv.pdf
-    github: 
-    web: 
-    image: ./assets/img/ae_nerf_pipeline.jpg
-    notes: Paper is under review!
+    notes: Paper is under review by CVPR2025!
 
   - title: NOFA++:Tuning-free NeRF-based One-shot Facial Avatar Reconstruction
     authors: Wangbo Yu, Chaoran Feng, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†
@@ -62,15 +31,9 @@ main:
     github: 
     web: 
     image: ./assets/img/nofa++.png
-    notes: Paper is under review!
+    notes: Paper is under review by T-PAMI!
 
-  - title: NeuralGS:Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations
-    authors: Zhenyu Tang*, Chaoran Feng*, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu, Xiaoxiao Long, Wenping Wang, Li Yuan†
-    project_short: 3D Compression
-    date: 🔥 Sep., 2024. ~ Nov., 2024🔥
-    project:  The project is abouta novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs, only requiring a small model size even for a large-scale scene.
-    pdf: ./assets/files/20241115NeuralGS-Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations.pdf
-    github: 
-    web: 
-    image: ./assets/img/neuralgs_pipeline.jpg
-    notes: Paper is under review!
+
+
+
+
