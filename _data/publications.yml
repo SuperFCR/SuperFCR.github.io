@@ -10,7 +10,7 @@ main:
     github: https://github.com/PKU-YuanGroup/Cycle3D
     web: https://github.com/PKU-YuanGroup/Cycle3D
     image: ./assets/img/cycle3d_pipeline.png
-    notes: CRC Period
+    notes: poster, Published
   
   - title: AE-NeRF:Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes
     authors: Chaoran Feng, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Yonghong Tian, Li Yuan†
@@ -23,7 +23,7 @@ main:
     github: 
     web: 
     image: ./assets/img/ae_nerf_pipeline.jpg
-    notes: CRC Period
+    notes: poster, Published
 
   - title: EICIL:Joint Excitatory Inhibitory Cycle Iteration Learning for Deep Spiking Neural Networks
     authors: Zihang Shao, Chaoran Feng, Xuanye Fang, Yaxin Li, Jiangrong Shen, Qi Xu
