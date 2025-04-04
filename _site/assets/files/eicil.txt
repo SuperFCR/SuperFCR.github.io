@@ -1,8 +1,0 @@
-@inproceedings{
-shao2023eicil,
-title={{EICIL}: Joint Excitatory Inhibitory Cycle Iteration Learning for Deep Spiking Neural Networks},
-author={Zihang Shao and Xuanye Fang and Yaxin Li and Chaoran Feng and Jiangrong Shen and Qi Xu},
-booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
-year={2023},
-url={https://openreview.net/forum?id=OMDgOjdqoZ}
-}
