@@ -43,7 +43,7 @@ a:hover {
 #layout-menu a.current:visited {
 	color: rgb(2, 43, 109); border-bottom-color: gray; border-bottom-width: 1px; border-bottom-style: solid;
 }
-#layout-menu a:link {
+/* #layout-menu a:link {
 	color: rgb(82, 123, 189); text-decoration: none;
 }
 #layout-menu a:visited {
@@ -51,6 +51,15 @@ a:hover {
 }
 #layout-menu a:hover {
 	color: rgb(82, 123, 189); text-decoration: none;
+} */
+#layout-menu a:link {
+	color: rgb(2, 43, 109);  text-decoration: none;
+}
+#layout-menu a:visited {
+	color: rgb(2, 43, 109);  text-decoration: none;
+}
+#layout-menu a:hover {
+	color: rgb(2, 43, 109);  text-decoration: none;
 }
 #layout-menu a:hover {
 	text-decoration: none;
