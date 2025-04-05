@@ -1,3 +1,4 @@
+
 table#tlayout {
 	background: white; border: currentColor; border-image: none; border-collapse: separate;
 }
@@ -29,37 +30,28 @@ tt {
 	font-family: monaco, monospace; font-size: 90%;
 }
 a {
-	color: rgb(34, 75, 141); text-decoration: none;
+	color: rgb(10, 42, 159); text-decoration: none;
 }
 a > tt {
-	color: rgb(34, 75, 141); text-decoration: none;
+	color: rgb(10, 42, 159); text-decoration: none;
 }
 a:hover {
 	border-bottom-color: gray; border-bottom-width: 1px; border-bottom-style: dotted;
 }
 #layout-menu a.current:link {
-	color: rgb(2, 43, 109); border-bottom-color: gray; border-bottom-width: 1px; border-bottom-style: solid;
+	color: rgb(10, 42, 159); border-bottom-color: gray; border-bottom-width: 1px; border-bottom-style: solid;
 }
 #layout-menu a.current:visited {
-	color: rgb(2, 43, 109); border-bottom-color: gray; border-bottom-width: 1px; border-bottom-style: solid;
+	color: rgb(10, 42, 159); border-bottom-color: gray; border-bottom-width: 1px; border-bottom-style: solid;
 }
-/* #layout-menu a:link {
-	color: rgb(82, 123, 189); text-decoration: none;
-}
-#layout-menu a:visited {
-	color: rgb(82, 123, 189); text-decoration: none;
-}
-#layout-menu a:hover {
-	color: rgb(82, 123, 189); text-decoration: none;
-} */
 #layout-menu a:link {
-	color: rgb(2, 43, 109);  text-decoration: none;
+	color: rgb(10, 42, 159); text-decoration: none;
 }
 #layout-menu a:visited {
-	color: rgb(2, 43, 109);  text-decoration: none;
+	color: rgb(10, 42, 159); text-decoration: none;
 }
 #layout-menu a:hover {
-	color: rgb(2, 43, 109);  text-decoration: none;
+	color: rgb(10, 42, 159); text-decoration: none;
 }
 #layout-menu a:hover {
 	text-decoration: none;
@@ -89,13 +81,13 @@ strong {
 	font-weight: bold;
 }
 h1 {
-	color: rgb(82, 123, 189); line-height: 1; padding-top: 0.5em; padding-bottom: 0.2em; margin-top: 0.7em; margin-bottom: 0.5em; border-bottom-color: rgb(170, 170, 170); border-bottom-width: 1px; border-bottom-style: solid;
+	color: rgb(38, 48, 84); line-height: 1; padding-top: 0.5em; padding-bottom: 0.2em; margin-top: 0.7em; margin-bottom: 0.5em; border-bottom-color: rgb(170, 170, 170); border-bottom-width: 1px; border-bottom-style: solid;
 }
 h2 {
-	color: rgb(82, 123, 189); line-height: 1; padding-top: 0.5em; padding-bottom: 0.2em; margin-top: 0.7em; margin-bottom: 0.5em; border-bottom-color: rgb(170, 170, 170); border-bottom-width: 1px; border-bottom-style: solid;
+	color: rgb(38, 48, 84); line-height: 1; padding-top: 0.5em; padding-bottom: 0.2em; margin-top: 0.7em; margin-bottom: 0.5em; border-bottom-color: rgb(170, 170, 170); border-bottom-width: 1px; border-bottom-style: solid;
 }
 h3 {
-	color: rgb(82, 123, 189); line-height: 1; padding-top: 0.5em; padding-bottom: 0.2em; margin-top: 0.7em; margin-bottom: 0.5em; border-bottom-color: rgb(170, 170, 170); border-bottom-width: 1px; border-bottom-style: solid;
+	color: rgb(38, 48, 84); line-height: 1; padding-top: 0.5em; padding-bottom: 0.2em; margin-top: 0.7em; margin-bottom: 0.5em; border-bottom-color: rgb(170, 170, 170); border-bottom-width: 1px; border-bottom-style: solid;
 }
 h1 {
 	padding-bottom: 0.3em; font-size: 165%;
