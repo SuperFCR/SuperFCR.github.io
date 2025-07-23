@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -9,6 +9,112 @@
   <link href="./profile.css" rel="stylesheet" type="text/css"> 
   <title>Falcary's Homepage</title> 
   <meta name="GENERATOR" content="MSHTML 11.00.10570.1001">
+</head> -->
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Falcary's homepage">
+    <title>Falcary's Homepage</title>
+    <link rel="icon" media="(prefers-color-scheme:dark)" href="./assets/imgs/favicon-dark.png" type="image/png" />
+    <link rel="icon" media="(prefers-color-scheme:light)" href="./assets/imgs/favicon.png" type="image/png" />
+    <link href="./profile.css" rel="stylesheet" type="text/css">
+    <meta name="GENERATOR" content="MSHTML 11.00.10570.1001">
+    
+    <style>
+        body {
+            font-family: Georgia, serif;
+            color: #111;
+            width: 900px;
+        }
+
+        .profile-pic {
+            width: 280px;
+            border-radius: 5px; 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-pic:hover {
+            transform: scale(1.04);
+        }
+
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact-box {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: inline-block;
+            margin-top: 0.6em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            font-size: 0.95em;
+        }
+
+        .contact-box img {
+            width: 16px;
+            vertical-align: middle;
+            margin-right: 6px;
+            opacity: 0.9;
+        }
+
+        .contact-box a {
+            margin-right: 16px;
+        }
+
+        .emoji {
+            font-family: Apple Color Emoji, Segoe UI Emoji, NotoColorEmoji, sans-serif;
+            font-size: 1.1em;
+        }
+        .publication-entry {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: #fdfdfd;
+            padding: 16px 20px; /* ✅ 保留这行，去掉重复的 padding:12px */
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .publication-entry img {
+            width: 240px;          /* ✅ 更大图宽 */
+            height: 160px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+            margin-left: -4px;     /* ✅ 微微靠近左边界 */
+        }
+
+        .publication-entry div {
+            line-height: 1.6;
+            flex: 1;               /* ✅ 自动撑满右侧 */
+        }
+
+        .pub-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        h1,
+        h2 {
+            color: #263054;
+        }
+
+        h2 {
+            border-bottom: 1px solid #aaa;
+            padding-bottom: 5px;
+            margin-top: 40px;
+        }
+    </style>
 </head>
 
 
@@ -20,24 +126,39 @@
       <td width="670">
         <div id="toptitle">
         <h1>Chaoran Feng</h1></div>
-        <h3>🎓 Master Student</h3>
+        <h3><span class="emoji">🎓</span> Master Student</h3>
         <p><a href="https://www.ece.pku.edu.cn/">School of Electric and Computer Engineering</a>
         <br>Peking University,
         <br>Beijing, China
         <br>
-        <br> Email:  
+        <!-- <br> Email:  
         <a href="mailto:fcr1500583403@gmail.com">fcr1500583403@gmail.com</a>
-        <br>
-        <br> 
+        <br> -->
+        <!-- <br>  -->
+        <!-- [<a href="https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en">Google Scholar</a>]&nbsp;&nbsp[<a href="https://github.com/SuperFCR">GitHub</a>] -->
         
-        [<a href="https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en">Google Scholar</a>]&nbsp;&nbsp[<a href="https://github.com/SuperFCR">GitHub</a>]
-        
-      
-      </p>
+        <div class="contact-box">
+            <img src="./assets/imgs/envelope.png" alt="Email">
+            <a href="mailto:fcr1500583403@gmail.com">fcr1500583403@gmail.com</a>
+
+            <img src="./assets/imgs/google.png" alt="Google Scholar">
+            <a href="https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en" target="_blank">Google Scholar</a>
+
+            <img src="./assets/imgs/github.png" alt="GitHub">
+            <a href="https://github.com/SuperFCR" target="_blank">GitHub</a>
+
+        </div>
+        </p>
       </td>
-      <td>
+
+      <!-- <td>
         <div>
           <img width="270" src="./assets/imgs/bio.jpg" border="0">
+        </div>
+      </td> -->
+      <td>
+        <div>
+            <img class="profile-pic" src="./assets/imgs/bio.jpg" alt="Profile Picture">
         </div>
       </td>
     </tr>
@@ -83,7 +204,6 @@
   <li>
     [2023-09] One papers accepted by <i>NeurIPS 2023</i>.
   </li>
-
 </ul>
 
 
@@ -92,95 +212,114 @@
 * Equal Contribution &nbsp;&nbsp # Project Lead
 <!-- <br><br><tr><td><b><font color="#001F3F">&spades; 3D Reconstruction & Generative Model </font></b></td></tr> -->
 <br><br><tr><td><b><font color="#001F3F">&spades; 3D Reconstruction & Generative Model </font></b></td></tr>
-<ul>
+<ul class="pub-list">
     <li>
-      <div style="margin-top: 30px;"><b>Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting</b></div>
-        <div style="margin-top: 5px;"><a style="color: #777;">Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng*</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†
-        <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>A novel style transfer framework with 3D Gaussian Splatting.</i></a></div>
-        <div style="margin-top: 5px;"><i><b>ICCV 2025</b></i><br></div>
-        <div style="margin-top: 5px;">
-        [<a href=" , Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan">Paper</a>]
-        <!-- [<a href="https://github.com/PKU-YuanGroup/NeuralGS">Code 🌟150+</a>]</div> -->
-      </td>
+        <div class="publication-entry">
+            <img src="./assets/pipelines/Pipeline_tune_your_style.png" alt="Tune-Your-Style">
+            <div>
+                <b>🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting</b><br>
+                <span style="color: #777;">Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng*</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†</span><br>
+                <i style="color: #b70505c0;">A novel style transfer framework with 3D Gaussian Splatting.</i><br>
+                <i><b>ICCV 2025</b></i> &nbsp; [<a href="https://iccv.thecvf.com/virtual/2025/poster/2554">Paper</a>]
+            </div>
+        </div>
     </li>
 </ul>
 
-<ul>
-  <li>
-    <div style="margin-top: 30px;"><b>🔥 Cycle3D:High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</b></div>
-      <div style="margin-top: 5px;"><a style="color: #777;">Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†</a></div>
-      <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>The project is about 3d generation used to generation-reconstruction cycle for the unified diffusion process.</i></a></div>
-      <div style="margin-top: 5px;"><i><b>AAAI 2025</b></i><br></div>
-      <div style="margin-top: 5px;">[<a href="https://arxiv.org/pdf/2407.19548">Paper</a>]
-      [<a href="https://github.com/PKU-YuanGroup/Cycle3D">Code 🌟200+</a>]</div>
-    </td>
-  </li>
-</ul>
+<ul class="pub-list">
 
-<ul>
-    <li>
-      <div style="margin-top: 30px;"><b>🔥 NeuralGS:Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</b></div>
-        <div style="margin-top: 5px;"><a style="color: #777;">Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†
-        <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.</i></a></div>
-        <div style="margin-top: 5px;"><i><b>Arxiv 2025</b></i><br></div>
-        <div style="margin-top: 5px;">
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_cycle3d.png" alt="Cycle3D">
+      <div>
+        <b>🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</b><br>
+        <span style="color: #777;">Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†</span><br>
+        <i style="color: #b70505c0;">The project is about 3D generation using a generation-reconstruction cycle for a unified diffusion process.</i><br>
+        <i><b>AAAI 2025</b></i> &nbsp;
+        [<a href="https://arxiv.org/pdf/2407.19548">Paper</a>]
+        [<a href="https://github.com/PKU-YuanGroup/Cycle3D">Code 🌟200+</a>]
+      </div>
+    </div>
+  </li>
+
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_neuralgs.png" alt="NeuralGS">
+      <div>
+        <b>🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</b><br>
+        <span style="color: #777;">Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†</span><br>
+        <i style="color: #b70505c0;">A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.</i><br>
+        <i><b>Arxiv 2025</b></i> &nbsp;
         [<a href="https://arxiv.org/pdf/2503.23162">Paper</a>]
-        [<a href="https://github.com/PKU-YuanGroup/NeuralGS">Code 🌟150+</a>]</div>
-      </td>
-    </li>
+        [<a href="https://github.com/PKU-YuanGroup/NeuralGS">Code 🌟150+</a>]
+      </div>
+    </div>
+  </li>
+
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_d2gs.png" alt="D2GS">
+      <div>
+        <b>📦 D<sup>2</sup>GS: Deblurring Deformable 3D Gaussian Splatting for Motion-Blurred Causal Videos</b><br>
+        <span style="color: #777;"><u><b>Chaoran Feng</b></u>, Jianbin Zhao, Wangbo Yu, Zhenyu Tang, Yuchen Li, Li Yuan†, and Yonghong Tian†</span><br>
+        <i style="color: #b70505c0;">A novel framework to reconstruct high-quality 4D scenes from blurry videos.</i><br>
+        <i><b>Notes: Paper is under review by T-CSVT!</b></i> &nbsp;
+        [<a href="./assets/files/D2GS_Deblurring_Deformable_3D_Gaussian_Splatting_for_Motion-Blurred_Causal Vide.pdf">Paper</a>]
+      </div>
+    </div>
+  </li>
+
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_nofa++.png" alt="NOFA++">
+      <div>
+        <b>👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction</b><br>
+        <span style="color: #777;">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†</span><br>
+        <i style="color: #b70505c0;">One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.</i><br>
+        <i><b>Notes: Paper is under review by T-PAMI!</b></i> &nbsp;
+        [<a href="./assets/files/20241015-PAMI_NOFA____NeRF_based_One_shot_Facial_Avatar_Reconstruction_and_beyond.pdf">Paper</a>]
+      </div>
+    </div>
+  </li>
+
 </ul>
 
-<ul>
-  <li>
-    <div style="margin-top: 30px;"><b>D<sup>2</sup>GS: Deblurring Deformable 3D Gaussian Splatting for Motion-Blurred Causal Videos</b></div>
-      <div style="margin-top: 5px;"><a style="color: #777;">  <u><b>Chaoran Feng</b></u>, Jianbin Zhao, Wangbo Yu, Zhenyu Tang, Yuchen Li, Li Yuan†, and Yonghong Tian†
-      <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>A novel framework to reconstruct High-quality 4D scenes from blurry videos.</i></a></div>
-      <div style="margin-top: 5px;"><i><b>Notes: Paper is under review by T-CSVT!</b></i><br></div>
-      <div style="margin-top: 5px;">[<a href="./assets/files/D2GS_Deblurring_Deformable_3D_Gaussian_Splatting_for_Motion-Blurred_Causal Vide.pdf">Paper</a>]</div>
-    </td>
-  </li>
-</ul>
-
-<ul>
-  <li>
-    <div style="margin-top: 30px;"><b>NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction</b></div>
-      <div style="margin-top: 5px;"><a style="color: #777;">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†</a></div>
-      <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.</i></a></div>
-      <div style="margin-top: 5px;"><i><b>Notes: Paper is under review by T-PAMI!</b></i><br></div>
-      <div style="margin-top: 5px;">[<a href="./assets/files/20241015-PAMI_NOFA____NeRF_based_One_shot_Facial_Avatar_Reconstruction_and_beyond.pdf">Paper</a>]</div>
-    </td>
-  </li>
-</ul>
 
 
 <br><br><tr><td><b><font color="#001F3F">&spades; Neuromorphic Vision </font></b></td></tr>
-
-<ul>
+<ul class="pub-list">
   <li>
-    <div style="margin-top: 30px;"><b>AE-NeRF:Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</b></div>
-      <div style="margin-top: 5px;"><a style="color: #777;"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†
-      <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>The project is about 3d reconstruction with event stream in noisy poses and unbounded larger scenes.</i></a></div>
-      <div style="margin-top: 5px;"><i><b>AAAI 2025</b></i><br></div>
-      <div style="margin-top: 5px;">[<a href="https://arxiv.org/pdf/2501.02807">Paper</a>]
-      [<a href="https://drexubery.github.io/EvaGaussians/">Code</a>]</div>
-    </td>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_ae_nerf.png" alt="AE-NeRF">
+      <div>
+        <b>⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</b><br>
+        <span style="color: #777;"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</span><br>
+        <i style="color: #b70505c0;">3D reconstruction with event streams under noisy poses and unbounded scenes.</i><br>
+        <i><b>AAAI 2025</b></i> &nbsp;
+        [<a href="https://arxiv.org/pdf/2501.02807">Paper</a>]
+        [<a href="https://drexubery.github.io/EvaGaussians/">Code</a>]
+      </div>
+    </div>
   </li>
+
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_evagaussian.png" alt="EvaGaussians">
+      <div>
+        <b>✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images</b><br>
+        <span style="color: #777;">Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†</span><br>
+        <i style="color: #b70505c0;">Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.</i><br>
+        <i><b>ICCV 2025</b></i> &nbsp;
+        [<a href="https://arxiv.org/abs/2405.20224">Paper</a>]
+        [<a href="https://github.com/SuperFCR">Code 🌟50+</a>]
+      </div>
+    </div>
+  </li>
+
 </ul>
 
-<ul>
-  <li>
-    <div style="margin-top: 30px;"><b>EvaGaussians:Event Assisted Gaussian Splatting from Blurry Images</b></div>
-      <div style="margin-top: 5px;"><a style="color: #777;">
-        Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†
-      <div style="margin-top: 5px;"><a style="color: #b70505c0;"><i>The project is about 3d reconstruction with event stream in noisy poses and unbounded larger scenes.</i></a></div>
-      <div style="margin-top: 5px;"><i><b>ICCV 2025</b></i><br></div>
-      <div style="margin-top: 5px;">[<a href="https://arxiv.org/abs/2405.20224">Paper</a>]
-      [<a href="https://github.com/SuperFCR">Code 🌟50+</a>]</div>
-    </td>
-  </li>
-</ul>
 
-<ul>
+<!-- <ul>
   <li>
     <div style="margin-top: 30px;"><b>EICIL:Joint Excitatory Inhibitory Cycle Iteration Learning for Deep Spiking Neural Networks</b></div>
       <div style="margin-top: 5px;"><a style="color: #777;">Zihang Shao, Xuanye Fang, Yaxin Li, <u><b>Chaoran Feng</b></u>, Jiangrong Shen, Qi Xu†
@@ -189,28 +328,28 @@
       <div style="margin-top: 5px;">[<a href="https://proceedings.neurips.cc/paper_files/paper/2023/file/65e876f6a98c6799d0b3145966dd73e2-Paper-Conference.pdf">Paper</a>]</div>
     </td>
   </li>
-</ul>
+</ul> -->
 
 
 <h2>Award</h2>
 <ul>
   <li>
-    [2024-06] Outstanding Graduate, Dalian University of Technology (Top <b>3%</b>)
+    [2024-06]🎓 Outstanding Graduate, Dalian University of Technology (Top <b>3%</b>)
   </li>
 
 
   <li>
-    [2023-05] 1<sup>st</sup> Prize in the China Robotics and Artificial Intelligence Competition (Ranked <b>1<sup>st</sup></b>/100+)
+    [2023-05]🏆 1<sup>st</sup> Prize in the China Robotics and Artificial Intelligence Competition (Ranked <b>1<sup>st</sup></b>/100+)
   </li>
 
   <li>
-    [2022-10] Qubochuan Scholarship, highest scholarship of DUT, awarded to only 10 recipients each year
+    [2022-10]🌟 Qubochuan Scholarship, highest scholarship of DUT, awarded to only 10 recipients each year
   </li>
   <li>
-    [2021,2022,2023] Nation Scholarship, three times, Dalian University of Technology
+    [2021,2022,2023]🌟 Nation Scholarship, three times, Dalian University of Technology
   </li>
   <li>
-    [2021,2022,2023] Academic Excellence Scholarship (First Class) (Ranked <b>1<sup>st</sup></b>/85), Dalian University of Technology
+    [2021,2022,2023]🌟 Academic Excellence Scholarship (First Class) (Ranked <b>1<sup>st</sup></b>/85), Dalian University of Technology
   </li>
 </ul>
 
