@@ -183,8 +183,14 @@
 
 <h2>News</h2>
 <ul>
+  <!-- <li>
+    [2025-07] A paper is accepted by <i>ACMMM 2025</i>, <a href="https://arxiv.org/pdf/2405.20224 ">"E-4DGS"</a></a>.
+  </li> -->
   <li>
-    [2025-06] Two papers accepted by <i>ICCV 2025</i>, <a href="https://arxiv.org/pdf/2405.20224 ">"EvaGaussians"</a> and <a href="https://iccv.thecvf.com/virtual/2025/poster/2554">"Tune-Your-Style"</a>.
+    [2025-07] A paper is accepted by <i>ACMMM 2025</i>, E-4DGS. The code and paper are coming soon.
+  </li>
+  <li>
+    [2025-06] Two papers are accepted by <i>ICCV 2025</i>, <a href="https://arxiv.org/pdf/2405.20224 ">"EvaGaussians"</a> and <a href="https://iccv.thecvf.com/virtual/2025/poster/2554">"Tune-Your-Style"</a>.
   </li>
   <li>
     [2025-03] 🔥 We release <a href="https://arxiv.org/pdf/2503.23162">"NeuralGS"</a>, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs.
@@ -193,13 +199,10 @@
     [2025-01] 🔥 We release <a href="https://arxiv.org/pdf/2501.02807">"AE-NeRF"</a>, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes.
   </li>
   <li>
-    [2024-12] Two papers accepted by <i>AAAI 2025</i>.
+    [2024-12] Two papers are accepted by <i>AAAI 2025</i>.
   </li>
   <li>
     [2024-05] 🔥 We release <a href="https://arxiv.org/pdf/2405.20224 ">"EvaGaussians"</a>, a first approach that reconstruct sharp static 3D scenes with sparse RGB frames and event streams.
-  </li>
-  <li>
-    [2023-09] One papers accepted by <i>NeurIPS 2023</i>.
   </li>
 </ul>
 
@@ -285,16 +288,33 @@
 <br>
 <tr><td><b><font color="#001F3F">&spades; Neuromorphic Vision </font></b></td></tr>
 <ul class="pub-list">
+  
   <li>
     <div class="publication-entry">
-      <img src="./assets/pipelines/Pipeline_ae_nerf.png" alt="AE-NeRF">
+      <img src="./assets/pipelines/Pipeline_gs2e.png" alt="GS2E">
       <div>
-        <b>⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</b><br>
-        <span style="color: #777;"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</span><br>
-        <i style="color: #b70505c0;">3D reconstruction with event streams under noisy poses and unbounded scenes.</i><br>
-        <i><b>AAAI 2025</b></i> &nbsp;
-        [<a href="https://arxiv.org/pdf/2501.02807">Paper</a>]
-        [<a href="https://drexubery.github.io/EvaGaussians/">Code</a>]
+        <b>🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</b><br>
+        <span style="color: #777;">Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†</span><br>
+        <i style="color: #b70505c0;">The large-scale event dataset and a novel pipeline to simultate the event stream with 3DGS.</i><br>
+        <i><b>Under Review by NeurIPS 2025</b></i> &nbsp;
+        [<a href="https://arxiv.org/pdf/2505.15287">Paper</a>]
+        [<a href="https://github.com/PKU-YuanGroup/GS2E?tab=readme-ov-file">Code</a>]
+        [<a href="https://huggingface.co/datasets/Falcary/GS2E">Datasets</a>]
+      </div>
+    </div>
+  </li>
+
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_e_4dgs.png" alt="GS2E">
+      <div>
+        <b>🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</b><br>
+        <span style="color: #777;"><u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†</span><br>
+        <i style="color: #b70505c0;">A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.</i><br>
+        <i><b>Accepted bt ACMMM 2025</b></i> &nbsp;
+        [<a href="https://arxiv.org/pdf/2505.15287">Paper(Coming Soon!)</a>]
+        [<a href="https://github.com/PKU-YuanGroup/GS2E?tab=readme-ov-file">Code(Coming Soon!)</a>]
+        [<a href="https://huggingface.co/datasets/Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission">Datasets</a>]
       </div>
     </div>
   </li>
@@ -312,6 +332,22 @@
       </div>
     </div>
   </li>
+
+  <li>
+    <div class="publication-entry">
+      <img src="./assets/pipelines/Pipeline_ae_nerf.png" alt="AE-NeRF">
+      <div>
+        <b>⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</b><br>
+        <span style="color: #777;"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</span><br>
+        <i style="color: #b70505c0;">3D reconstruction with event streams under noisy poses and unbounded scenes.</i><br>
+        <i><b>AAAI 2025</b></i> &nbsp;
+        [<a href="https://arxiv.org/pdf/2501.02807">Paper</a>]
+        [<a href="https://drexubery.github.io/EvaGaussians/">Code</a>]
+      </div>
+    </div>
+  </li>
+
+
 
 </ul>
 
