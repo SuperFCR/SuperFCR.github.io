@@ -1,0 +1,13 @@
+{
+  "name": "homepage-generator",
+  "version": "1.0.0",
+  "description": "Template-based homepage generator",
+  "main": "build.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js && echo 'Homepage built successfully!'"
+  },
+  "keywords": ["homepage", "template", "generator"],
+  "author": "Chaoran Feng",
+  "license": "MIT"
+}

@@ -1,0 +1,190 @@
+{
+  "personal": {
+    "name": "Chaoran Feng",
+    "title": "Master Student",
+    "school": "School of Electric and Computer Engineering",
+    "university": "Peking University",
+    "location": "Beijing, China",
+    "email": "fcr1500583403@gmail.com",
+    "profileImage": "./assets/imgs/bio.jpg",
+    "googleScholar": "https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en",
+    "github": "https://github.com/SuperFCR"
+  },
+  "education": [
+    {
+      "period": "[2020-2024]",
+      "emoji": "🎉",
+      "description": "I received my B.E. degree from <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>, awarded the Outstanding Graduate (Top 3%), ranking <b>1<sup>st</sup></b>/85 for three years (2021-2023)."
+    },
+    {
+      "period": "[2024-Now]",
+      "emoji": "💪",
+      "description": "I'm pursuing my M.S. degree in ECE, PKU, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
+    }
+  ],
+  "biography": "I am a first-year M.S. student in ECE at Peking University, holding a B.E. degree from Dalian University of Technology. During my undergraduate studies, I achieved a GPA of 3.8/4.0, ranking <b>1<sup>st</sup></b>/85 in both major and overall scores.<br><br> 📌 My research interests focus on <i>3D Vision</i>, <i> Neuromorphic Vision</i>, and <i>Generative Model</i>.",
+  "news": [
+    {
+      "date": "[2025-07]",
+      "content": "A paper is accepted by <i>ACMMM 2025</i>, E-4DGS. The code and paper are coming soon."
+    },
+    {
+      "date": "[2025-06]",
+      "content": "Two papers are accepted by <i>ICCV 2025</i>, <a href=\"https://arxiv.org/pdf/2405.20224 \">\"EvaGaussians\"</a> and <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">\"Tune-Your-Style\"</a>."
+    },
+    {
+      "date": "[2025-03]",
+      "emoji": "🔥",
+      "content": "We release <a href=\"https://arxiv.org/pdf/2503.23162\">\"NeuralGS\"</a>, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs."
+    },
+    {
+      "date": "[2025-01]",
+      "emoji": "🔥",
+      "content": "We release <a href=\"https://arxiv.org/pdf/2501.02807\">\"AE-NeRF\"</a>, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes."
+    },
+    {
+      "date": "[2024-12]",
+      "content": "Two papers are accepted by <i>AAAI 2025</i>."
+    },
+    {
+      "date": "[2024-05]",
+      "emoji": "🔥",
+      "content": "We release <a href=\"https://arxiv.org/pdf/2405.20224 \">\"EvaGaussians\"</a>, a first approach that reconstruct sharp static 3D scenes with sparse RGB frames and event streams."
+    }
+  ],
+  "projects": {
+    "3d_reconstruction": [
+      {
+        "title": "🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting",
+        "authors": "Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng*</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†",
+        "description": "A novel style transfer framework with 3D Gaussian Splatting.",
+        "venue": "ICCV 2025",
+        "image": "./assets/pipelines/Pipeline_tune_your_style.png",
+        "links": [
+          {"type": "Paper", "url": "https://iccv.thecvf.com/virtual/2025/poster/2554"}
+        ]
+      },
+      {
+        "title": "🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle",
+        "authors": "Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†",
+        "description": "The project is about 3D generation using a generation-reconstruction cycle for a unified diffusion process.",
+        "venue": "AAAI 2025",
+        "image": "./assets/pipelines/Pipeline_cycle3d.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/pdf/2407.19548"},
+          {"type": "Code 🌟200+", "url": "https://github.com/PKU-YuanGroup/Cycle3D"}
+        ]
+      },
+      {
+        "title": "🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations",
+        "authors": "Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†",
+        "description": "A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.",
+        "venue": "Arxiv 2025",
+        "image": "./assets/pipelines/Pipeline_neuralgs.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/pdf/2503.23162"},
+          {"type": "Code 🌟150+", "url": "https://github.com/PKU-YuanGroup/NeuralGS"}
+        ]
+      },
+      {
+        "title": "📦 D<sup>2</sup>GS: Deblurring Deformable 3D Gaussian Splatting for Motion-Blurred Causal Videos",
+        "authors": "<u><b>Chaoran Feng</b></u>, Jianbin Zhao, Wangbo Yu, Zhenyu Tang, Yuchen Li, Li Yuan†, and Yonghong Tian†",
+        "description": "A novel framework to reconstruct high-quality 4D scenes from blurry videos.",
+        "venue": "Notes: Paper is under review by T-CSVT!",
+        "image": "./assets/pipelines/Pipeline_d2gs.png",
+        "links": [
+          {"type": "Paper", "url": "./assets/files/D2GS_Deblurring_Deformable_3D_Gaussian_Splatting_for_Motion-Blurred_Causal Vide.pdf"}
+        ]
+      },
+      {
+        "title": "👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction",
+        "authors": "Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†",
+        "description": "One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.",
+        "venue": "Notes: Paper is under review by T-PAMI!",
+        "image": "./assets/pipelines/Pipeline_nofa++.png",
+        "links": [
+          {"type": "Paper", "url": "./assets/files/20241015-PAMI_NOFA____NeRF_based_One_shot_Facial_Avatar_Reconstruction_and_beyond.pdf"}
+        ]
+      }
+    ],
+    "neuromorphic_vision": [
+      {
+        "title": "🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation",
+        "authors": "Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†",
+        "description": "The large-scale event dataset and a novel pipeline to simultate the event stream with 3DGS.",
+        "venue": "Under Review by NeurIPS 2025",
+        "image": "./assets/pipelines/Pipeline_gs2e.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/pdf/2505.15287"},
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/GS2E?tab=readme-ov-file"},
+          {"type": "Datasets", "url": "https://huggingface.co/datasets/Falcary/GS2E"}
+        ]
+      },
+      {
+        "title": "🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras",
+        "authors": "<u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†",
+        "description": "A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.",
+        "venue": "Accepted bt ACMMM 2025",
+        "image": "./assets/pipelines/Pipeline_e_4dgs.png",
+        "links": [
+          {"type": "Paper(Coming Soon!)", "url": "https://arxiv.org/pdf/2505.15287"},
+          {"type": "Code(Coming Soon!)", "url": "https://github.com/PKU-YuanGroup/GS2E?tab=readme-ov-file"},
+          {"type": "Datasets", "url": "https://huggingface.co/datasets/Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission"}
+        ]
+      },
+      {
+        "title": "✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images",
+        "authors": "Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†",
+        "description": "Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.",
+        "venue": "ICCV 2025",
+        "image": "./assets/pipelines/Pipeline_evagaussian.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2405.20224"},
+          {"type": "Code 🌟50+", "url": "https://github.com/SuperFCR"}
+        ]
+      },
+      {
+        "title": "⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes",
+        "authors": "<u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†",
+        "description": "3D reconstruction with event streams under noisy poses and unbounded scenes.",
+        "venue": "AAAI 2025",
+        "image": "./assets/pipelines/Pipeline_ae_nerf.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/pdf/2501.02807"},
+          {"type": "Code", "url": "https://drexubery.github.io/EvaGaussians/"}
+        ]
+      }
+    ]
+  },
+  "awards": [
+    {
+      "date": "[2024-06]",
+      "emoji": "🎓",
+      "content": "Outstanding Graduate, Dalian University of Technology (Top <b>3%</b>)"
+    },
+    {
+      "date": "[2023-05]",
+      "emoji": "🏆",
+      "content": "1<sup>st</sup> Prize in the China Robotics and Artificial Intelligence Competition (Ranked <b>1<sup>st</sup></b>/100+)"
+    },
+    {
+      "date": "[2022-10]",
+      "emoji": "🌟",
+      "content": "Qubochuan Scholarship, highest scholarship of DUT, awarded to only 10 recipients each year"
+    },
+    {
+      "date": "[2021,2022,2023]",
+      "emoji": "🌟",
+      "content": "Nation Scholarship, three times, Dalian University of Technology"
+    },
+    {
+      "date": "[2021,2022,2023]",
+      "emoji": "🌟",
+      "content": "Academic Excellence Scholarship (First Class) (Ranked <b>1<sup>st</sup></b>/85), Dalian University of Technology"
+    }
+  ],
+  "activities": {
+    "conference_reviewer": "ICLR[25], CVPR[25], ICCV[25], NeurIPS[24-25], AAAI[25-26], IJCAI[25], ACM MM[25]",
+    "journal_reviewer": "TCSVT"
+  }
+}
