@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="{{personal.name}}'s homepage">
+    <title>{{personal.name}}'s Homepage</title>
+    <link rel="icon" media="(prefers-color-scheme:dark)" href="./assets/imgs/favicon-dark.png" type="image/png" />
+    <link rel="icon" media="(prefers-color-scheme:light)" href="./assets/imgs/favicon.png" type="image/png" />
+    <link href="./assets/css/profile.css" rel="stylesheet" type="text/css">
+    <meta name="GENERATOR" content="MSHTML 11.00.10570.1001">
+</head>
+
+<body> 
+  <div id="layout-content" style="margin-top: 25px;">
+  <table>
+    <tbody>
+    <tr>
+      <td width="670">
+        <div id="toptitle">
+        <h1>{{personal.name}}</h1></div>
+        <h3><span class="emoji">🎓</span> {{personal.title}}</h3>
+        <p><a href="https://www.ece.pku.edu.cn/">{{personal.school}}</a>
+        <br>{{personal.university}},
+        <br>{{personal.location}}
+        <br>
+        
+        <div class="contact-box">
+            <img src="./assets/imgs/envelope.png" alt="Email">
+            <a href="mailto:{{personal.email}}">{{personal.email}}</a>
+
+            <img src="./assets/imgs/google.png" alt="Google Scholar">
+            <a href="{{personal.googleScholar}}" target="_blank">Google Scholar</a>
+
+            <img src="./assets/imgs/github.png" alt="GitHub">
+            <a href="{{personal.github}}" target="_blank">GitHub</a>
+        </div>
+        </p>
+      </td>
+
+      <td>
+        <div>
+            <img class="profile-pic" src="{{personal.profileImage}}" alt="Profile Picture">
+        </div>
+      </td>
+    </tr>
+    <tr></tr></tbody>
+  </table>
+  <div id="layout-content" style="margin-top: 25px;">
+
+<h2>Education</h2>
+  <ul>
+    {{#each education}}
+    <li>
+      {{period}} {{#if emoji}}{{emoji}}{{/if}} {{{description}}}
+    </li>
+    {{/each}}
+  </ul>
+    
+<h2>Biography</h2>
+  <p>{{{biography}}}</p>
+
+<h2>News</h2>
+<ul>
+  {{#each news}}
+  <li>
+    {{date}} {{#if emoji}}{{emoji}}{{/if}} {{{content}}}
+  </li>
+  {{/each}}
+</ul>
+
+<h2>Selected Projects</h2>
+* Equal Contribution &nbsp;&nbsp # Project Lead
+<br><br><tr><td><b><font color="#001F3F">&spades; 3D Reconstruction & Generative Model </font></b></td></tr>
+<ul class="pub-list">
+    {{#each projects.3d_reconstruction}}
+    <li>
+        <div class="publication-entry">
+            <img src="{{image}}" alt="{{title}}">
+            <div>
+                <b>{{{title}}}</b><br>
+                <span style="color: #777;">{{{authors}}}</span><br>
+                <i style="color: #b70505c0;">{{{description}}}</i><br>
+                <i><b>{{venue}}</b></i> &nbsp; 
+                {{#each links}}
+                [<a href="{{url}}">{{type}}</a>]
+                {{/each}}
+            </div>
+        </div>
+    </li>
+    {{/each}}
+</ul>
+
+<br>
+<tr><td><b><font color="#001F3F">&spades; Neuromorphic Vision </font></b></td></tr>
+<ul class="pub-list">
+  {{#each projects.neuromorphic_vision}}
+  <li>
+    <div class="publication-entry">
+      <img src="{{image}}" alt="{{title}}">
+      <div>
+        <b>{{{title}}}</b><br>
+        <span style="color: #777;">{{{authors}}}</span><br>
+        <i style="color: #b70505c0;">{{{description}}}</i><br>
+        <i><b>{{venue}}</b></i> &nbsp;
+        {{#each links}}
+        [<a href="{{url}}">{{type}}</a>]
+        {{/each}}
+      </div>
+    </div>
+  </li>
+  {{/each}}
+</ul>
+
+<h2>Award</h2>
+<ul>
+  {{#each awards}}
+  <li>
+    {{date}}{{#if emoji}}{{emoji}}{{/if}} {{{content}}}
+  </li>
+  {{/each}}
+</ul>
+
+<h2>Professional Activities </h2>
+<ul>
+  <li>
+  Conference Reviewer: {{activities.conference_reviewer}}; 
+  </li>
+  <li>
+  Jounal Reviewer: {{activities.journal_reviewer}}; 
+  </li>
+</ul>
+
+<a href="https://clustrmaps.com/site/1c5bo"  title="Visit tracker">
+  <img src="//www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff" />
+</a>
+
+</body>
+</div>
+</div>
+</body>
+</html>

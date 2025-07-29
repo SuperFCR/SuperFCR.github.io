@@ -1,3 +1,90 @@
+body {
+    font-family: Georgia, serif;
+    color: #111;
+    width: 900px;
+}
+
+.profile-pic {
+    width: 280px;
+    border-radius: 5px; 
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.profile-pic:hover {
+    transform: scale(1.04);
+}
+
+.top-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.contact-box {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: inline-block;
+    margin-top: 0.6em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    font-size: 0.95em;
+}
+
+.contact-box img {
+    width: 16px;
+    vertical-align: middle;
+    margin-right: 6px;
+    opacity: 0.9;
+}
+
+.contact-box a {
+    margin-right: 16px;
+}
+
+.emoji {
+    font-family: Apple Color Emoji, Segoe UI Emoji, NotoColorEmoji, sans-serif;
+    font-size: 1.1em;
+}
+
+.publication-entry {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    background: #fdfdfd;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.publication-entry img {
+    width: 240px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
+    margin-left: -4px;
+}
+
+.publication-entry div {
+    line-height: 1.6;
+    flex: 1;
+}
+
+.pub-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+h1, h2 {
+    color: #263054;
+    border-bottom: 1px solid #aaa;
+    padding-bottom: 5px;
+    margin-top: 20px;
+}
+
 
 table#tlayout {
 	background: white; border: currentColor; border-image: none; border-collapse: separate;
