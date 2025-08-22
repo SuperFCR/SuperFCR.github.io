@@ -22,7 +22,7 @@
       "description": "I'm pursuing my M.S. degree in ECE, PKU, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
     }
   ],
-  "biography": "I am a first-year M.S. student in ECE at Peking University, holding a B.E. degree from Dalian University of Technology. During my undergraduate studies, I achieved a GPA of 3.8/4.0, ranking <b>1<sup>st</sup></b>/85 in both major and overall scores.<br><br> 📌 My research interests focus on <i>3D Vision</i>, <i> Neuromorphic Vision</i>, and <i>Generative Model</i>.",
+  "biography": "I am a second-year M.S. student in ECE at Peking University, and achieve a GPA of 3.97/4.0 in Peking University.<br><br>📌 My research interests focus on <i>3D Vision</i>, <i> Neuromorphic Vision</i>, and <i>Generative Model</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.",
   "news": [
     {
       "date": "[2025-07]",
@@ -127,8 +127,8 @@
         "venue": "Accepted bt ACMMM 2025",
         "image": "./assets/pipelines/Pipeline_e_4dgs.png",
         "links": [
-          {"type": "Paper(Coming Soon!)", "url": "https://arxiv.org/pdf/2505.15287"},
-          {"type": "Code(Coming Soon!)", "url": "https://github.com/PKU-YuanGroup/GS2E?tab=readme-ov-file"},
+          {"type": "Paper", "url": "https://arxiv.org/pdf/2508.09912"},
+          {"type": "Code", "url": "https://github.com/SuperFCR/E-4DGS"},
           {"type": "Datasets", "url": "https://huggingface.co/datasets/Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission"}
         ]
       },
