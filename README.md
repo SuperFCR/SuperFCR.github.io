@@ -1,6 +1,7 @@
 # Falcary's Homepage Template Generator
 
 A template-based personal homepage generation system that allows you to quickly update website content by modifying configuration files.
+If you modify your webpage based on this template, please kindly note the source.
 
 ## 🚀 Features
 
