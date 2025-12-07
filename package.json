@@ -7,7 +7,15 @@
     "build": "node build.js",
     "dev": "node build.js && echo 'Homepage built successfully!'"
   },
-  "keywords": ["homepage", "template", "generator"],
+  "keywords": [
+    "homepage",
+    "template",
+    "generator"
+  ],
   "author": "Chaoran Feng",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "fs-extra": "^11.3.2",
+    "handlebars": "^4.7.8"
+  }
 }

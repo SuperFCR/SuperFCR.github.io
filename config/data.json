@@ -25,6 +25,10 @@
   "biography": "I am a second-year M.S. student in ECE at Peking University, and achieve a GPA of 3.97/4.0 in Peking University.<br><br>📌 My research interests focus on <i>3D Vision</i>, <i> Neuromorphic Vision</i>, and <i>Generative Model</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.",
   "news": [
     {
+      "date": "[2025-11]",
+      "content": "Two paper are accepted by <i>AAAI 2026</i>, <a href=\"https://arxiv.org/pdf/2503.23162\">\"NeuralGS\"</a> and <a href=\"hhttps://arxiv.org/pdf/2412.15321\">\"Next Patch Prediction\"</a>."
+    },
+    {
       "date": "[2025-09]",
       "content": "A paper is accepted by <i>NeurIPS 2025</i>, <a href=\"https://arxiv.org/pdf/2505.15287\">\"GS2E\"</a>."
     },
@@ -57,6 +61,16 @@
     }
   ],
   "projects": {
+    "t2i_model": [
+      {
+        "title": "Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling",
+        "authors": "Chaoran Feng*, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
+        "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
+        "venue": "Under Review",
+        "image": "./assets/pipelines/Pipeline_stylegrpo.png"
+      }
+    ],
+
     "3d_reconstruction": [
       {
         "title": "🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting",
@@ -91,23 +105,13 @@
         ]
       },
       {
-        "title": "📦 D<sup>2</sup>GS: Deblurring Deformable 3D Gaussian Splatting for Motion-Blurred Causal Videos",
-        "authors": "<u><b>Chaoran Feng</b></u>, Jianbin Zhao, Wangbo Yu, Zhenyu Tang, Yuchen Li, Li Yuan†, and Yonghong Tian†",
-        "description": "A novel framework to reconstruct high-quality 4D scenes from blurry videos.",
-        "venue": "Notes: Paper is under review by T-CSVT!",
-        "image": "./assets/pipelines/Pipeline_d2gs.png",
-        "links": [
-          {"type": "Paper", "url": "./assets/files/D2GS_Deblurring_Deformable_3D_Gaussian_Splatting_for_Motion-Blurred_Causal Vide.pdf"}
-        ]
-      },
-      {
         "title": "👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction",
         "authors": "Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†",
         "description": "One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.",
-        "venue": "Notes: Paper is under review by T-PAMI!",
+        "venue": "IEEE T-CSVT",
         "image": "./assets/pipelines/Pipeline_nofa++.png",
         "links": [
-          {"type": "Paper", "url": "./assets/files/20241015-PAMI_NOFA____NeRF_based_One_shot_Facial_Avatar_Reconstruction_and_beyond.pdf"}
+          {"type": "Paper", "url": "https://ieeexplore.ieee.org/author/37077420300"}
         ]
       }
     ],
@@ -193,7 +197,7 @@
     }
   ],
   "activities": {
-    "conference_reviewer": "ICLR[25-26], CVPR[25], ICCV[25], NeurIPS[24-25], AAAI[25-26], IJCAI[25], ACM MM[25]",
+    "conference_reviewer": "ICLR[25-26], CVPR[25-26], ICCV[25], NeurIPS[24-25], AAAI[25-26], IJCAI[25], ACM MM[25]",
     "journal_reviewer": "TCSVT"
   }
 }
