@@ -1,0 +1,10 @@
+      {
+        "title": "📦 D<sup>2</sup>GS: Deblurring Deformable 3D Gaussian Splatting for Motion-Blurred Causal Videos",
+        "authors": "<u><b>Chaoran Feng</b></u>, Jianbin Zhao, Wangbo Yu, Zhenyu Tang, Yuchen Li, Li Yuan†, and Yonghong Tian†",
+        "description": "A novel framework to reconstruct high-quality 4D scenes from blurry videos.",
+        "venue": "Notes: Paper is under review by T-CSVT!",
+        "image": "./assets/pipelines/Pipeline_d2gs.png",
+        "links": [
+          {"type": "Paper", "url": "./assets/files/D2GS_Deblurring_Deformable_3D_Gaussian_Splatting_for_Motion-Blurred_Causal Vide.pdf"}
+        ]
+      },
