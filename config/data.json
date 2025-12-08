@@ -97,7 +97,7 @@
         "title": "🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations",
         "authors": "Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†",
         "description": "A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.",
-        "venue": "Arxiv 2025",
+        "venue": "AAAI 2026",
         "image": "./assets/pipelines/Pipeline_neuralgs.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/pdf/2503.23162"},
@@ -106,7 +106,7 @@
       },
       {
         "title": "👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction",
-        "authors": "Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yanbo Fan†, Yong Zhang, Xuan Wang, Fei Yin, Yunpeng Bai, Baoyuan Wu, Yan-Pei Cao, Li Yuan†, and Yonghong Tian†",
+        "authors": "Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, and Yonghong Tian†",
         "description": "One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.",
         "venue": "IEEE T-CSVT",
         "image": "./assets/pipelines/Pipeline_nofa++.png",
@@ -136,8 +136,6 @@
         "image": "./assets/pipelines/Pipeline_e_4dgs.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/pdf/2508.09912"},
-          {"type": "Code", "url": "https://github.com/SuperFCR/E-4DGS"},
-          {"type": "Datasets", "url": "https://huggingface.co/datasets/Anonymous-ACMMM-2025-Submission/Anonymous_ACMMM_2025_Submission"}
         ]
       },
       {

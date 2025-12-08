@@ -308,6 +308,23 @@
         </div>
     </header>
 
+    <!-- Education -->
+    <section>
+        <h2>🎓 Education</h2>
+        <ul class="news-list">
+            {{#each education}}
+            <li class="news-item">
+                <span class="news-date">{{period}}</span>
+                <span>
+                    {{#if emoji}}{{emoji}} {{/if}}
+                    {{{description}}}
+                </span>
+            </li>
+            {{/each}}
+        </ul>
+    </section>
+
+
     <!-- News -->
     <section>
         <h2>📰 News</h2>
@@ -400,21 +417,6 @@
 
 
 
-    <!-- Education -->
-    <section>
-        <h2>🎓 Education</h2>
-        <ul class="news-list">
-            {{#each education}}
-            <li class="news-item">
-                <span class="news-date">{{period}}</span>
-                <span>
-                    {{#if emoji}}{{emoji}} {{/if}}
-                    {{{description}}}
-                </span>
-            </li>
-            {{/each}}
-        </ul>
-    </section>
 
     <!-- Awards -->
     <section>
