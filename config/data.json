@@ -64,14 +64,21 @@
     "t2i_model": [
       {
         "title": "Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling",
-        "authors": "Chaoran Feng*, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
+        "authors": "<u><b>Chaoran Feng<sup>*</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
         "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
         "venue": "Under Review",
         "image": "./assets/pipelines/Pipeline_stylegrpo.png"
       }
     ],
-
     "3d_reconstruction": [
+ 
+      {
+        "title": "Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views",
+        "authors": "Zhankuo Xu*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao, Wangbo Yu, Li Yuan† , Yonghong Tian†",
+        "description": "A novel framework for coherent 3D Gaussian Splatting from sparse and motion-blurred views using physics-aware deblurring priors coupled with diffusion-driven geometry completion.",
+        "venue": "Under Review",
+        "image": "./assets/pipelines/Pipeline_coherentgs.png"
+      },
       {
         "title": "🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting",
         "authors": "Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng*</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†",
