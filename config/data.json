@@ -2,6 +2,7 @@
   "personal": {
     "name": "Chaoran Feng",
     "title": "Master Student",
+    "citations": "N/A",
     "school": "School of Electric and Computer Engineering",
     "university": "Peking University",
     "location": "Beijing, China",
@@ -68,6 +69,7 @@
         "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
         "venue": "Under Review",
         "image": "./assets/pipelines/Pipeline_stylegrpo.png"
+
       }
     ],
     "3d_reconstruction": [
@@ -77,7 +79,11 @@
         "authors": "Zhankuo Xu*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao, Wangbo Yu, Li Yuan† , Yonghong Tian†",
         "description": "A novel framework for coherent 3D Gaussian Splatting from sparse and motion-blurred views using physics-aware deblurring priors coupled with diffusion-driven geometry completion.",
         "venue": "Under Review",
-        "image": "./assets/pipelines/Pipeline_coherentgs.png"
+        "image": "./assets/pipelines/Pipeline_coherentgs.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2512.10369"},
+          {"type": "Code", "url": "https://github.com/PotatoBigRoom/CoherentGS"}
+        ]
       },
       {
         "title": "🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting",
@@ -97,7 +103,7 @@
         "image": "./assets/pipelines/Pipeline_cycle3d.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/pdf/2407.19548"},
-          {"type": "Code 🌟200+", "url": "https://github.com/PKU-YuanGroup/Cycle3D"}
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/Cycle3D"}
         ]
       },
       {
@@ -108,7 +114,7 @@
         "image": "./assets/pipelines/Pipeline_neuralgs.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/pdf/2503.23162"},
-          {"type": "Code 🌟150+", "url": "https://github.com/PKU-YuanGroup/NeuralGS"}
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/NeuralGS"}
         ]
       },
       {
@@ -131,7 +137,7 @@
         "image": "./assets/pipelines/Pipeline_gs2e.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/pdf/2505.15287"},
-          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/GS2E?tab=readme-ov-file"},
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/GS2E"},
           {"type": "Datasets", "url": "https://huggingface.co/datasets/Falcary/GS2E"}
         ]
       },
@@ -153,7 +159,7 @@
         "image": "./assets/pipelines/Pipeline_evagaussian.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/abs/2405.20224"},
-          {"type": "Code 🌟50+", "url": "https://github.com/SuperFCR"}
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/EvaGaussians"}
         ]
       },
       {
