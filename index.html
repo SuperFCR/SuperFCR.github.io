@@ -190,6 +190,7 @@
             border-radius: var(--radius);
             position: relative;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            align-items: stretch; 
         }
 
         .paper-card:hover {
@@ -210,8 +211,18 @@
         }
         .paper-card:hover .paper-img { transform: scale(1.02); }
 
-        .paper-content { flex: 1; }
-
+        .paper-content { 
+            flex: 1; 
+            
+            /* 关键布局设置 */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* 上下撑开 */
+            
+            position: relative;
+            z-index: 2; /* 提高层级，防止被图片遮挡 */
+            min-width: 0;
+        }
         .paper-title {
             font-size: 1.15rem;
             font-weight: bold;
@@ -237,7 +248,7 @@
             transition: all 0.2s;
         }
         .badge-venue { background: var(--accent); color: #fff; }
-        .badge-link { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
+        .badge-link { border: 1px solid var(--primary) !important; ; color: var(--primary); background: transparent; }
         .badge-link:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
 
         .news-list { list-style: none; padding: 0; }
