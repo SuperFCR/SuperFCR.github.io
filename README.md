@@ -34,6 +34,7 @@ homepage/
 ### 1. Install Dependencies (Optional)
 ```bash
 npm install
+npm install axios cheerio
 ```
 
 ### 2. Configure Your Data
@@ -42,7 +43,8 @@ Edit the `config/data.json` file with your personal information, projects, award
 ### 3. Generate Website
 ```bash
 npm run build
-# or run directly
+
+python3 google_scholar_crawler/fetch_scholar.py
 node build.js
 ```
 

@@ -1,29 +1,49 @@
-name: Get Citation Data
-
-on: 
- page_build: 
- schedule:
-  - cron:  '0 8 * * *'
+name: Update Homepage & Citations
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v2
-    - name: Install Reqs
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Python dependencies
       run: |
-        sudo apt-get install python3-setuptools
-    - name: Run
+        pip install requests beautifulsoup4
+
+    - name: Run Crawler
+      run: python google_scholar_crawler/fetch_scholar.py
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Node dependencies
+      run: npm install
+
+    - name: Build Website
+      run: node build.js
+    - name: Commit and Push
       run: |
-        cd ./google_scholar_crawler
-        pip3 install -r requirements.txt
-        python3 main.py
-        cd ./results
-        git init
-        git config --local user.name "${GITHUB_ACTOR}"
-        export remote_repo="https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
-        git add *.json
-        git commit -m "Updated Citation Data"
-        git push "${remote_repo}" HEAD:google-scholar-stats --force
-      env: 
-        GOOGLE_SCHOLAR_ID: ${{ secrets.GOOGLE_SCHOLAR_ID }}
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        
+        # 添加所有可能有变化的文件
+        git add index.html config/scholar_data.json
+        
+        # 提交并推送
+        git commit -m "🤖 Auto-update: Citations updated" || echo "No changes to commit"
+        git push

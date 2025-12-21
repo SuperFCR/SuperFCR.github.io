@@ -283,6 +283,7 @@
                 <div class="name-title">{{personal.name}}</div>
                 <div class="role-info">
                     {{personal.title}} <span style="color:#ddd; margin:0 8px;">|</span> {{personal.school}}
+
                 </div>
                 
                 <div class="social-links">
@@ -290,7 +291,13 @@
                         <img src="./assets/imgs/envelope.png" alt="Email"> Email
                     </a>
                     <a href="{{personal.googleScholar}}" target="_blank" class="social-btn">
-                        <img src="./assets/imgs/google.png" alt="Scholar"> Scholar
+                        <img src="./assets/imgs/google.png" alt="Scholar">
+                        Scholar
+                        {{#if personal.citations}}
+                            <span style="margin-left: 4px; font-weight: 600; color: var(--primary); opacity: 0.9;">
+                                ⭐️{{personal.citations}}
+                            </span>
+                        {{/if}}
                     </a>
                     <a href="{{personal.github}}" target="_blank" class="social-btn">
                         <img src="./assets/imgs/github.png" alt="Github"> Github
@@ -361,7 +368,10 @@
                 <div class="tag-row">
                     <span class="badge badge-venue">{{venue}}</span>
                     {{#each links}}
-                    <a href="{{url}}" class="badge badge-link">{{type}}</a>
+                    <a href="{{url}}" class="badge badge-link" target="_blank">
+                        {{type}}
+                        {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
+                    </a>
                     {{/each}}
                 </div>
             </div>
@@ -371,7 +381,6 @@
 
         <!-- 3D Reconstruction -->
         <div class="category-title">♠ 3D Reconstruction & Generative Model</div>
-        
         {{#each projects.3d_reconstruction}}
         <div class="paper-card">
             <div class="paper-content">
@@ -382,7 +391,10 @@
                 <div class="tag-row">
                     <span class="badge badge-venue">{{venue}}</span>
                     {{#each links}}
-                    <a href="{{url}}" class="badge badge-link">{{type}}</a>
+                    <a href="{{url}}" class="badge badge-link" target="_blank">
+                        {{type}}
+                        {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
+                    </a>
                     {{/each}}
                 </div>
             </div>
@@ -399,11 +411,15 @@
                 <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
                 <div class="paper-authors">{{{authors}}}</div>
                 <div class="paper-desc">{{{description}}}</div>
-                
                 <div class="tag-row">
                     <span class="badge badge-venue">{{venue}}</span>
                     {{#each links}}
-                    <a href="{{url}}" class="badge badge-link">{{type}}</a>
+                    <a href="{{url}}" class="badge badge-link" target="_blank">
+                        {{type}}
+                        {{#if stars}}
+                            <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
+                        {{/if}}
+                    </a>
                     {{/each}}
                 </div>
             </div>
@@ -411,10 +427,7 @@
         </div>
         {{/each}}
 
-
     </section>
-
-
 
 
 
