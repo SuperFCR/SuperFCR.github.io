@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EA3D: Event-Augmented 3D Diffusion</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ================= 核心变量 ================= */
+    :root {
+      --font-main: 'Inter', sans-serif;
+      /* OpenAI 风格柔和色调 */
+      --color-1: rgba(147, 197, 253, 0.45);
+      --color-2: rgba(249, 168, 212, 0.35);
+      --color-3: rgba(253, 230, 138, 0.35);
+      --color-4: rgba(196, 181, 253, 0.35);
+      
+      /* 标题渐变色 */
+      --title-gradient: linear-gradient(135deg, #1a1a1a 0%, #4338ca 50%, #1a1a1a 100%);
+    }
+    .gemini-badge {
+      font-weight: 600;
+      background: linear-gradient(90deg, #4285F4, #9B72CB, #F869B7); 
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.3s ease;
+  }
+
+    .gemini-badge i {
+        font-size: 0.85rem;
+        -webkit-text-fill-color: initial; 
+        color: #9B72CB; 
+    }
+
+    .gemini-badge:hover {
+        opacity: 0.8;
+        cursor: default;
+    }
+      body {
+      font-family: var(--font-main);
+      margin: 0; padding: 0;
+      color: #111;
+      background-color: #fff;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden; /* 防止视差移动导致出现滚动条 */
+    }
+
+    /* ================= 1. 背景 (增加视差支持) ================= */
+    .mesh-background {
+      position: fixed;
+      top: -10%; left: -10%; 
+      width: 120vw; height: 120vh; /* 稍微做大一点，防止移动时露出白边 */
+      z-index: -1;
+      background: 
+        radial-gradient(at 0% 0%, var(--color-1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, var(--color-2) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, var(--color-3) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, var(--color-4) 0px, transparent 50%);
+      filter: blur(80px);
+      opacity: 0.8;
+      transition: transform 0.2s ease-out; /* 平滑移动 */
+      will-change: transform;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+    /* ================= 2. Hero 区域 ================= */
+    .hero { 
+      padding: 140px 0 100px; 
+      text-align: center; 
+      position: relative;
+    }
+    
+    .logo {
+      width: auto; height: 120px;
+      margin: 0 auto 0px; display: block;
+      filter: drop-shadow(0 10px 30px rgba(99, 102, 241, 0.3));
+      transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); /* 弹性动画 */
+    }
+    .logo:hover { transform: scale(1.08) rotate(3deg); }
+    
+    .title {
+      font-size: 5.5rem; font-weight: 800;
+      letter-spacing: -0.04em; margin-bottom: 40px; line-height: 1.2;
+      background: linear-gradient(
+        to right, #6366f1 0%, #8b5cf6 20%, #a855f7 35%, #c084fc 45%, #ec4899 55%,
+        #f472b6 65%, #fb7185 75%, #fbbf24 85%, #f59e0b 95%, #6366f1 100%
+      );
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      animation: shine 5s linear infinite;
+    }
+
+    .title .subtitle-part {
+      font-size: 0.5em; font-weight: 500; letter-spacing: -0.02em;
+      display: block; line-height: 1.3; margin-top: 10px;
+    }
+
+    @keyframes shine { to { background-position: 200% center; } }
+    
+    /* 作者交互增强 */
+    .authors { 
+      font-size: 1.15rem; color: #1f2937; margin-bottom: 40px; 
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 20px; 
+    }
+    
+    .author-name { 
+      font-weight: 600; position: relative; cursor: pointer; transition: all 0.2s;
+      display: inline-block;
+    }
+    .author-name:hover { 
+      color: #4f46e5; transform: translateY(-2px); 
+      text-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+    .author-name sup { font-size: 0.7em; margin-left: 2px; color: #6b7280; }
+
+    .affiliation { 
+      display: block; width: 100%; color: #6b7280; 
+      font-size: 1rem; margin-top: 15px; font-weight: 400;
+    }
+    
+    .btn-group { display: flex; justify-content: center; gap: 16px; margin-top: 40px; }
+    .btn {
+      padding: 14px 28px; border-radius: 100px; text-decoration: none; font-weight: 600;
+      font-size: 1rem; display: flex; align-items: center; gap: 8px;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      position: relative; overflow: hidden; z-index: 1;
+    }
+    .btn-black { background: #111; color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .btn-black:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4); }
+    .btn-white { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.05); color: #111; backdrop-filter: blur(10px); }
+    .btn-white:hover { background: rgba(255,255,255,0.95); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
+    /* ================= 3. 卡片 (Spotlight 交互核心) ================= */
+    /* 定义一个基础卡片类，方便 JS 选中 */
+    .interactive-card {
+      position: relative; /* 为绝对定位的伪元素服务 */
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 32px;
+      padding: 56px;
+      margin-bottom: 50px;
+      box-shadow: 0 20px 60px -10px rgba(0,0,0,0.03);
+      transition: transform 0.1s, box-shadow 0.3s; /* transform 设快一点，配合 JS 视差 */
+      overflow: hidden; /* 必须隐藏溢出的光晕 */
+    }
+
+    /* 聚光灯光晕层 */
+    .interactive-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(
+        800px circle at var(--mouse-x) var(--mouse-y), 
+        rgba(255, 255, 255, 0.8), 
+        transparent 40%
+      );
+      opacity: 0; /* 默认隐藏 */
+      transition: opacity 0.5s;
+      pointer-events: none; /* 不干扰鼠标点击 */
+      z-index: 0;
+    }
+    
+    /* 鼠标悬浮时显示光晕 */
+    .interactive-card:hover::before { opacity: 1; }
+    .interactive-card > * { position: relative; z-index: 1; } /* 确保内容在光晕之上 */
+
+    .section-header { font-size: 2rem; font-weight: 800; margin-bottom: 24px; color: #111; text-align: center; letter-spacing: -0.03em; }
+    .text-content { text-align: justify; color: #374151; line-height: 1.8; font-size: 1.1rem; }
+    .method-img { width: 100%; border-radius: 20px; display: block; margin-top: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+    /* ================= 4. 结果展示项 ================= */
+    .result-item {
+      /* 复用 interactive-card 的逻辑，但样式微调 */
+      position: relative;
+      background: #fff;
+      border-radius: 24px;
+      overflow: hidden;
+      margin-bottom: 60px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.03);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    /* Result item 悬浮时轻微上浮 */
+    .result-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+    }
+
+    /* 视频区域 */
+    .video-area { position: relative; width: 100%; background: #000; }
+    .video-area video { width: 100%; display: block; }
+
+    /* 浮动标签 */
+    .video-label {
+      position: absolute; top: 20px; padding: 8px 16px; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 700; color: #fff;
+      backdrop-filter: blur(12px); z-index: 5; text-transform: uppercase;
+      letter-spacing: 0.05em; pointer-events: none;
+    }
+    .label-left { left: 20px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.15); }
+    .label-right { right: 20px; background: rgba(255, 255, 255, 0.25); border: 1px solid rgba(255,255,255,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+    /* 图片区域 */
+    .images-area { padding: 24px 32px; background: #fafafa; border-top: 1px solid #f3f4f6; }
+    .area-caption { font-size: 0.8rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 16px; letter-spacing: 0.05em; }
+
+    .scroll-strip { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; }
+    .scroll-strip::-webkit-scrollbar { height: 6px; }
+    .scroll-strip::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+
+    .rgb-thumb {
+      flex: 0 0 auto; height: 120px; 
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border: 1px solid #fff; background: #fff;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      cursor: zoom-in; /* 暗示可以交互 */
+    }
+    
+    /* 图片悬浮交互：放大且变亮 */
+    .rgb-thumb:hover { 
+      transform: scale(1.08); 
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+    
+    .rgb-thumb img { height: 100%; width: auto; display: block; object-fit: contain; }
+
+    @media (max-width: 768px) {
+        .logo { width: 80px; height: auto; margin-bottom: 10px; }
+        .title { font-size: 3.5rem; }
+        .interactive-card { padding: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 背景 -->
+  <div class="mesh-background" id="mesh-bg"></div>
+
+  <section class="hero">
+    <div class="container">
+      <img src="static/imgs/icon.png" alt="EA3D Logo" class="logo">
+      <h1 class="title"><span class="subtitle-part">EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</span></h1>
+      
+      <div class="authors">
+        <span class="author-name">Wangbo Yu<sup>1*</sup></span>
+        <span class="author-name">Chaoran Feng<sup>1*</sup></span>
+        <span class="author-name">Jianing Li<sup>1</sup></span>
+        <span class="author-name">Aofan Zhang<sup>2</sup></span>
+        <span class="author-name">Zhenyu Tang<sup>1</sup></span>
+        <span class="author-name">Mingyi Guo<sup>1</sup></span>
+        <span class="author-name">Wei Zhang<sup>1</sup></span>
+        <span class="author-name">Zhengyu Ma<sup>1</sup></span>
+        <span class="author-name">Li Yuan<sup>1</sup></span>
+        <span class="author-name">Yonghong Tian<sup>1</sup></span>
+        <span class="affiliation"><sup>1</sup> Peking University &nbsp;&nbsp; <sup>2</sup> Dalian University of Technology</span>
+        <span class="affiliation"><sup>*</sup> Equal contribution</span>
+      </div>
+
+      <div class="btn-group">
+        <a href="#" class="btn btn-black"><i class="fas fa-file-pdf"></i> Paper</a>
+        <a href="#" class="btn btn-white"><i class="ai ai-arxiv"></i> arXiv</a>
+        <a href="#" class="btn btn-white"><i class="fab fa-github"></i> Code</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    
+    <!-- 给 Abstract 和 Method 添加 interactive-card 类以启用光晕效果 -->
+    <div class="interactive-card">
+      <h2 class="section-header">📌 Abstract</h2>
+      <p class="text-content">
+        We introduce EA3D, an Event-Augmented 3D Diffusion framework for generalizable novel view synthesis from event streams and sparse RGB inputs. 
+        Existing approaches either rely solely on RGB frames for generalizable synthesis, which limits their robustness under rapid camera motion, or require per-scene optimization to exploit event data, undermining scalability. 
+        EA3D addresses these limitations by jointly leveraging the complementary strengths of asynchronous events and RGB imagery. 
+        At its core lies a learnable EA-Renderer, which constructs view-dependent 3D features within target camera frustums by fusing appearance cues from RGB frames with geometric structure extracted from adaptively sliced event voxels. 
+        These features condition a 3D-aware diffusion model, enabling high-fidelity and temporally consistent novel view generation along arbitrary camera trajectories. 
+        To further enhance scalability and generalization, we develop the Event-DL3DV dataset, a large-scale 3D benchmark pairing diverse synthetic event streams with photorealistic multi-view RGB images and depth maps. 
+        Extensive experiments on both real-world and synthetic event data demonstrate that EA3D consistently outperforms optimization-based and generalizable baselines, achieving superior fidelity and cross-scene generalization.
+      </p>
+    </div>
+
+    <div class="interactive-card">
+      <h2 class="section-header">🦄 Methodology</h2>
+      <img src="static/imgs/pipeline.png" alt="EA3D Pipeline" class="method-img">
+      <p style="text-align:center; color:#666; margin-top:15px; font-size:0.9rem;">
+        Figure 1: The overall pipeline of EA3D framework.
+      </p>
+    </div>
+
+    <div style="text-align:center; margin-bottom: 60px;">
+      <h2 style="font-size:3rem; font-weight:800; margin-bottom:15px; letter-spacing: -0.03em;">🚀 Novel View Synthesis Results</h2>
+      <p style="font-size: 1.2rem; color: #666;">Demonstrating robustness under high-speed motion and sparse inputs.</p>
+    </div>
+
+    <!-- 结果项：添加 js-tilt 类用于可能的3D偏转（可选），或者保留result-item -->
+    
+    <!-- 1. TNT1 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/tnt1.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/tnt1.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TNT2 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/tnt2.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/tnt2.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Scene 4 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/4.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/4.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Scene 9 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/9.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/9.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Scene 6 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/6.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/6.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Scene 8 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/8.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/8.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Scene 7 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/7.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/7.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Scene 10 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/10.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/10.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Scene 11 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/11.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/11.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. Scene 12 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/12.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/12.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. Scene 13 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/13.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/13.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. Scene 23 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/23.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/23.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 13. Scene 24 -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/24.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/24.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14. Scene 14 (Playback 0.5) -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video data-playback-rate="0.5" loop playsinline autoplay muted src="static/videos/14.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/14.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 15. Scene 21 (Playback 0.5) -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video data-playback-rate="0.5" loop playsinline autoplay muted src="static/videos/21.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/21.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 16. Scene 16 (Playback 0.5) -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video data-playback-rate="0.5" loop playsinline autoplay muted src="static/videos/16.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/16.png"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 17. DSEC -->
+    <div class="result-item">
+      <div class="video-area">
+        <span class="video-label label-left">Event Stream</span><span class="video-label label-right">EA3D Novel View</span>
+        <video loop playsinline autoplay muted src="static/videos/dsec.mp4"></video>
+      </div>
+      <div class="images-area">
+        <div class="area-caption">Sparse RGB Input</div>
+        <div class="scroll-strip">
+          <div class="rgb-thumb"><img src="static/imgs/dsec.png"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container">
+          <p class="credits">
+              Copyright &copy; 2026 EA3D Project. All rights reserved.
+              &nbsp;|&nbsp;
+              Website design assisted by 
+              <span class="gemini-badge">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Gemini 3 Pro
+              </span>
+          </p>
+      </div>
+  </footer>
+
+  <div class="container">
+  <div style="height: 100px;"></div>
+
+  <!-- 脚本：包含视频倍速、聚光灯效果和背景微视差 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // 1. 处理视频倍速
+      const videos = document.querySelectorAll('video');
+      videos.forEach(vid => {
+        const rate = vid.getAttribute('data-playback-rate');
+        vid.playbackRate = rate ? parseFloat(rate) : 1.0;
+      });
+
+      // 2. 卡片聚光灯效果 (Spotlight Effect)
+      const cards = document.querySelectorAll('.interactive-card, .result-item');
+      
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          // 设置 CSS 变量，供伪元素使用
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        });
+      });
+
+      // 3. 背景微视差 (Micro-Parallax)
+      const bg = document.getElementById('mesh-bg');
+      document.addEventListener('mousemove', (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+        
+        // 背景反向轻微移动
+        const moveX = -(x - 0.5) * 20; // 移动范围 -10px 到 10px
+        const moveY = -(y - 0.5) * 20;
+        
+        bg.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      });
+    });
+  </script>
+</body>
+</html>
