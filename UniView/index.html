@@ -307,22 +307,22 @@
     .text-content { text-align: justify; color: #374151; line-height: 1.8; font-size: 1.1rem; }
     .method-img { width: 100%; border-radius: 20px; display: block; margin-top: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 
-    #cursor-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9999;
-      pointer-events: none;
-    }
-
     .tabs-nav {
       display: flex;
       justify-content: center;
       gap: 10px;
       margin-bottom: 30px;
       flex-wrap: wrap;
+    }
+
+    /* Cursor effects canvas (particle trail + click burst) */
+    #cursor-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20; /* keep low; modal is 10000 */
+      pointer-events: none;
     }
 
     .tab-btn {
@@ -657,6 +657,537 @@
           grid-template-columns: 1fr;
         }
     }
+
+    /* ---------------- SEVA-style demos (no Bootstrap) ---------------- */
+    .seva-demo h3 {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 28px 0 12px;
+      letter-spacing: -0.02em;
+      text-align: left;
+    }
+
+    /* Center ONLY the "Flexible Number of Input Views" section */
+    .seva-section.seva-section-numviews h3,
+    .seva-section.seva-section-numviews .seva-note {
+      text-align: center;
+    }
+
+    .seva-section.seva-section-numviews {
+      --seva-numviews-max: 1100px;
+    }
+
+    .seva-section.seva-section-numviews .seva-numviews-top {
+      max-width: var(--seva-numviews-max);
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 6px;
+    }
+
+    /* Center the thumbnails row and keep its height stable (no jitter when scrollbar appears) */
+    .seva-thumbs.seva-thumbs-center {
+      justify-content: center;
+      scrollbar-gutter: stable both-edges;
+      min-height: 84px; /* thumb(68) + padding + potential scrollbar */
+    }
+
+    .seva-section.seva-section-numviews .seva-numviews-videos {
+      max-width: var(--seva-numviews-max);
+      margin-left: auto;
+      margin-right: auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 12px;
+      align-items: start;
+    }
+
+    /* Desktop: put the two videos side-by-side */
+    @media (min-width: 900px) {
+      .seva-section.seva-section-numviews .seva-numviews-videos {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+      .seva-section.seva-section-numviews .seva-numviews-video {
+        min-width: 0;
+      }
+    }
+
+    /* Make the two video panels the same visual size (align widths/heights). */
+    .seva-section.seva-section-numviews .seva-numviews-video .seva-video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      object-fit: contain; /* preserve native ratio without cropping */
+      background: transparent; /* avoid "black bars" */
+    }
+
+    .seva-section.seva-section-numviews .seva-numviews-video .seva-video {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* -------- Long video: 2-layer layout (inputs top, two videos below) -------- */
+    .seva-long-stack {
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .seva-long-second {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 12px;
+      align-items: start;
+    }
+
+    /* Make the two long-video panels the same visual size */
+    .seva-long-second .seva-video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      object-fit: contain; /* preserve native ratio without cropping */
+      background: rgba(255, 255, 255, 0.92); /* avoids black bars */
+    }
+
+    @media (min-width: 900px) {
+      .seva-long-second {
+        grid-template-columns: 1fr 1fr;
+      }
+      .seva-long-video {
+        min-width: 0;
+      }
+    }
+
+    /* Keep the slider perfectly centered (badge width won't shift layout) */
+    .seva-section.seva-section-numviews .seva-kv {
+      display: grid;
+      grid-template-columns: 1fr minmax(280px, 560px) auto;
+      align-items: center;
+      column-gap: 16px;
+    }
+
+    .seva-section.seva-section-numviews .seva-slider {
+      width: 100%;
+      grid-column: 2;
+      justify-self: center;
+    }
+
+    .seva-section.seva-section-numviews .seva-badge {
+      grid-column: 3;
+      justify-self: start;
+      min-width: 140px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .seva-section.seva-section-numviews .seva-kv {
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+        justify-items: center;
+      }
+      .seva-section.seva-section-numviews .seva-slider,
+      .seva-section.seva-section-numviews .seva-badge {
+        grid-column: auto;
+        justify-self: center;
+      }
+    }
+
+    /* Allow full-bleed children (e.g., marquee) to escape the card */
+    #seva-demos {
+      overflow: visible;
+
+      /* Keep layout aligned with other sections, but remove the "white card" feel */
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Also disable the interactive-card hover glow on this section */
+    #seva-demos.interactive-card::before {
+      display: none !important;
+    }
+
+    /* Remove the noisy overlay on this section to avoid visible "block" boundary */
+    #seva-demos.glass-noise::after {
+      display: none !important;
+    }
+
+    .seva-demo .seva-note {
+      color: #6b7280;
+      font-size: 0.95rem;
+      margin: 0 0 14px;
+      text-align: left;
+    }
+
+    .seva-divider {
+      height: 1px;
+      background: rgba(0,0,0,0.06);
+      margin: 24px 0;
+    }
+
+    .seva-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .seva-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .seva-video {
+      width: 100%;
+      height: auto;
+      border-radius: 18px;
+      /* don't force an aspect ratio; follow the video's native ratio */
+      background: transparent;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      display: block;
+    }
+
+    /* Keep thumbnail rows from pushing layouts on small screens */
+    .seva-thumbs {
+      max-width: 100%;
+    }
+
+    .seva-pillbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 12px 0 6px;
+    }
+
+    .seva-pill {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.55);
+      cursor: pointer;
+      font-weight: 600;
+      color: #374151;
+      transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      user-select: none;
+      backdrop-filter: saturate(180%) blur(10px);
+      -webkit-backdrop-filter: saturate(180%) blur(10px);
+    }
+
+    .seva-pill:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.85);
+    }
+
+    .seva-pill.active {
+      background: #111;
+      color: #fff;
+      border-color: rgba(0,0,0,0.2);
+      box-shadow: 0 10px 20px -8px rgba(0,0,0,0.35);
+    }
+
+    .seva-thumbs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 6px 2px;
+      scroll-snap-type: x mandatory;
+      scrollbar-gutter: stable both-edges; /* prevent layout jump when scrollbar appears */
+    }
+
+    .seva-thumbs::-webkit-scrollbar { height: 8px; }
+    .seva-thumbs::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+    .seva-thumbs::-webkit-scrollbar-track { background: transparent; }
+
+    .seva-thumb {
+      width: 68px;
+      height: 68px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 2px solid transparent;
+      cursor: pointer;
+      opacity: 0.95;
+      transition: border-color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+      scroll-snap-align: start;
+      flex: 0 0 auto;
+    }
+
+    .seva-thumb:hover { transform: translateY(-2px); opacity: 1; }
+    .seva-thumb.active { border-color: #6366f1; }
+
+    /* -------- Free Camera Trajectory: 2-layer stable layout -------- */
+    .seva-free-stack {
+      max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Layer 1: thumbnails row */
+    .seva-free-stack #seva-free-inputs {
+      width: 100%;
+      justify-content: center;
+      min-height: 84px;
+      margin-top: 6px;
+    }
+
+    /* Layer 2: options + video */
+    .seva-free-second {
+      display: grid;
+      grid-template-columns: minmax(360px, 520px) 1fr;
+      gap: 18px;
+      align-items: start;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .seva-free-second {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .seva-free-options {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    /* Make scene buttons a stable vertical list (no wrapping reflow) */
+    #seva-free-scenes {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    #seva-free-scenes .seva-pill {
+      width: 100%;
+      text-align: center;
+      white-space: normal; /* allow wrapping inside button, not across layout */
+    }
+
+    #seva-free-scene-note {
+      width: 100%;
+      max-width: 520px;
+      text-align: left;
+      opacity: 0.85;
+    }
+
+    .seva-free-video-wrap {
+      min-width: 0;
+    }
+
+    .seva-gallery {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 1000px) {
+      .seva-gallery { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 520px) {
+      .seva-gallery { grid-template-columns: 1fr; }
+    }
+
+    .seva-gallery video {
+      width: 100%;
+      border-radius: 16px;
+      background: transparent;
+      display: block;
+    }
+
+    /* -------- Gallery marquee (full-bleed horizontal rolling videos) -------- */
+    .seva-marquee {
+      /* break out of the centered card width (full viewport bleed) */
+      position: relative;
+      left: 50%;
+      right: 50%;
+      width: 100vw;
+      margin-left: -50vw;
+      margin-right: -50vw;
+
+      position: relative;
+      overflow: hidden;
+      padding: 10px 0;
+      z-index: 2;
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 8%,
+        #000 92%,
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 8%,
+        #000 92%,
+        transparent 100%
+      );
+    }
+
+    .seva-marquee-track {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: max-content;
+      will-change: transform;
+      animation: seva-marquee var(--seva-marquee-duration, 40s) linear infinite;
+    }
+
+    .seva-marquee:hover .seva-marquee-track {
+      animation-play-state: paused;
+    }
+
+    @keyframes seva-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(calc(-1 * var(--seva-marquee-distance, 1000px))); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .seva-marquee-track {
+        animation: none;
+        transform: none;
+      }
+    }
+
+    .seva-marquee video {
+      height: 160px;
+      width: auto;
+      border-radius: 18px;
+      background: transparent;
+      display: block;
+      object-fit: cover;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+    }
+
+    @media (max-width: 768px) {
+      .seva-marquee video { height: 120px; border-radius: 16px; }
+      .seva-marquee-track { gap: 12px; }
+    }
+
+    /* -------- Limitations: one centered row, full-bleed, scroll if needed -------- */
+    .seva-lim-row {
+      /* full-bleed like marquee (but no mask) */
+      position: relative;
+      left: 50%;
+      right: 50%;
+      width: 100vw;
+      margin-left: -50vw;
+      margin-right: -50vw;
+
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 18px;
+      overflow-x: auto;
+      /* center within viewport (do NOT bias to content max width) */
+      padding: 8px 16px 2px;
+      scrollbar-gutter: stable both-edges;
+    }
+
+    .seva-lim-row::-webkit-scrollbar { height: 10px; }
+    .seva-lim-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 999px; }
+    .seva-lim-row::-webkit-scrollbar-track { background: transparent; }
+
+    .seva-lim-item {
+      flex: 0 0 clamp(280px, 30vw, 520px);
+    }
+
+    .seva-lim-video {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      max-height: none;        /* don't clamp like generic .seva-video */
+      object-fit: cover;       /* looks better in a row */
+    }
+
+    .seva-zoom {
+      cursor: zoom-in;
+    }
+
+    .seva-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .seva-modal.open { display: flex; }
+
+    .seva-modal img {
+      max-width: min(1200px, 95vw);
+      max-height: 90vh;
+      border-radius: 16px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+      background: #111;
+    }
+
+    .seva-modal .seva-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .seva-kv {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .seva-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      background: rgba(99, 102, 241, 0.12);
+      color: #4f46e5;
+      border: 1px solid rgba(99, 102, 241, 0.18);
+      white-space: nowrap;
+    }
+
+    .seva-slider {
+      width: min(560px, 100%);
+    }
+
+    .seva-range {
+      width: 100%;
+      accent-color: #6366f1;
+    }
+
+    .seva-small {
+      font-size: 0.92rem;
+      color: #6b7280;
+    }
   </style>
 </head>
 <body>
@@ -698,6 +1229,39 @@
       </div>
     </div>
   </section>
+
+  <div class="container" style="text-align: center;">
+    <h2 style="text-align: center;">Gallery</h2>
+  </div>
+  <div class="seva-marquee" aria-label="Gallery marquee">
+    <div class="seva-marquee-track" id="seva-gallery-track">
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/sd3_ComfyUI_temp_jzcbs_00120__spiral.jpg">
+        <source src="static/videos/gallery/sd3_ComfyUI_temp_jzcbs_00120__spiral.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/pexel_000003621_dollyzoomout.jpg">
+        <source src="static/videos/gallery/pexel_000003621_dollyzoomout.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/pexel_000001090_spiral.jpg">
+        <source src="static/videos/gallery/pexel_000001090_spiral.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/pexel_000000164_dollyzoomout.jpg">
+        <source src="static/videos/gallery/pexel_000000164_dollyzoomout.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/mipnerf_garden/sample.jpg">
+        <source src="static/videos/gallery/mipnerf_garden/sample.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/pexel_000008279_spiral_L-short-576_num-111.jpg">
+        <source src="static/videos/gallery/pexel_000008279_spiral_L-short-576_num-111.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/sd3-lilydragon-orbit.jpg">
+        <source src="static/videos/gallery/sd3-lilydragon-orbit.mp4" type="video/mp4">
+      </video>
+      <video autoplay loop muted playsinline preload="metadata" poster="static/videos/gallery/sd3-rabbit-roll.jpg">
+        <source src="static/videos/gallery/sd3-rabbit-roll.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div>
+  <div class="seva-divider"></div>
 
   <div class="container">
     <div class="interactive-card glass-noise">
@@ -821,117 +1385,149 @@
       </p>
     </div>
 
-    <!-- Results Section -->
-    <div class="interactive-card glass-noise">
+
+
+    <!-- SEVA-style interactive demos -->
+    <div class="interactive-card glass-noise seva-demo" id="seva-demos">
       <h2 class="section-header">🏆 Qualitative Results</h2>
+
+      <h3>Overview</h3>
+      <p class="seva-note">任务概览（自动循环播放）。</p>
+      <video class="seva-video" autoplay loop muted playsinline preload="metadata" poster="static/videos/task_overview.jpg">
+        <source src="static/videos/task_overview.mp4" type="video/mp4">
+      </video>
+
+      <div class="seva-divider"></div>
+
       
-      <!-- Tabs Control -->
-      <div class="tabs-nav">
-        <button class="tab-btn active" onclick="openTab(event, 'comparisons')">Comparison (In-the-wild)</button>
-        <button class="tab-btn" onclick="openTab(event, 'ablation')">Ablation Studies</button>
-        <button class="tab-btn" onclick="openTab(event, 'reconstruction')">4D Reconstruction</button>
-      </div>
 
-      <!-- Tab 1: Comparisons (Figure 4 Style) -->
-      <div id="comparisons" class="tab-content active">
-        <div class="comp-grid">
-          <!-- Headers -->
-          <div></div>
-          <div class="comp-header">Input Video</div>
-          <div class="comp-header" style="color:#6366f1">UniView (Ours)</div>
-          <div class="comp-header">ViewCrafter</div>
-          <div class="comp-header">GCD</div>
+      <h3>Single Input View</h3>
+      <p class="seva-note">点击上方场景缩略图 + 下方轨迹按钮，实时切换视频。</p>
 
-          <!-- Row 1: Gym Scene -->
-          <div class="comp-row-label">Gym</div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/cccccc/555555?text=Input" alt="Input">
-            <div class="method-badge">Reference</div>
-          </div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/e0e7ff/6366f1?text=UniView" alt="Ours">
-            <div class="method-badge our-badge">Ours</div>
-          </div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/cccccc/555555?text=ViewCrafter" alt="ViewCrafter">
-          </div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/cccccc/555555?text=GCD" alt="GCD">
-          </div>
+      <div class="seva-thumbs" id="seva-single-scenes"></div>
+      <video id="seva-single-video" class="seva-video" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="seva-pillbar" id="seva-single-trajs"></div>
 
-          <!-- Row 2: Running Scene -->
-          <div class="comp-row-label">Run</div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/cccccc/555555?text=Input" alt="Input">
-          </div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/e0e7ff/6366f1?text=UniView" alt="Ours">
-            <div class="method-badge our-badge">Ours</div>
-          </div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/cccccc/555555?text=ViewCrafter" alt="ViewCrafter">
-          </div>
-          <div class="comp-img-wrapper">
-            <img src="https://via.placeholder.com/300x169/cccccc/555555?text=GCD" alt="GCD">
-          </div>
-        </div>
+      <div class="seva-divider"></div>
 
-        <p class="figure-caption">
-          <strong>Figure 4: Qualitative comparison on in-the-wild monocular videos.</strong> 
-          We show results of redirecting the camera trajectory (e.g., "zoom-in and orbit") from the input videos. UniView maintains high fidelity and geometric consistency compared to baselines like ViewCrafter and GCD.
-        </p>
-      </div>
+      <h3>Free Camera Trajectory</h3>
+      <p class="seva-note">点击左侧描述按钮切换场景，输入视角支持点击放大。</p>
+      <div class="seva-free-stack">
+        <!-- Layer 1: input views (centered row) -->
+        <div class="seva-thumbs seva-thumbs-center" id="seva-free-inputs"></div>
 
-      <!-- Tab 2: Ablation (Figure 5 & 6 Style) -->
-      <div id="ablation" class="tab-content">
-        <div class="ablation-container">
-          
-          <!-- Ablation 1: Ref-DiT -->
-          <div class="ablation-card">
-            <div class="ablation-title">Effectiveness of Ref-DiT Blocks (Fig. 5)</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-               <!-- Row 1 -->
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200?text=Source" alt="Source"></div>
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200/e0e7ff/6366f1?text=w/+Ref-DiT" alt="With Ref-DiT"></div>
-               <!-- Row 2 -->
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200?text=w/o+Ref-DiT" alt="No Ref-DiT"></div>
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200?text=Concat" alt="Concat"></div>
-            </div>
-            <p style="font-size: 0.85rem; color: #666; margin-top: 10px; line-height: 1.4;">
-              Comparing full model (w/ Ref-DiT) to alternatives. The yellow box highlights how Ref-DiT preserves texture details better than direct concatenation.
-            </p>
+        <!-- Layer 2: options (left) + mp4 (right) -->
+        <div class="seva-free-second">
+          <div class="seva-free-options">
+            <div class="seva-pillbar" id="seva-free-scenes"></div>
+            <div class="seva-small" id="seva-free-scene-note"></div>
           </div>
-
-          <!-- Ablation 2: Training Data -->
-          <div class="ablation-card">
-            <div class="ablation-title">Ablation on Training Data (Fig. 6)</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200?text=Source" alt="Source"></div>
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200?text=w/o+MV" alt="No MV"></div>
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200?text=w/o+Dyn" alt="No Dynamic"></div>
-               <div class="comp-img-wrapper"><img src="https://via.placeholder.com/200x200/e0e7ff/6366f1?text=Mixed+(Ours)" alt="Mixed"></div>
-            </div>
-             <p style="font-size: 0.85rem; color: #666; margin-top: 10px; line-height: 1.4;">
-              Models trained without multi-view data struggle with occlusions, while those without dynamic data fail to follow motion. Our mixed strategy solves both.
-            </p>
+          <div class="seva-free-video-wrap">
+            <video id="seva-free-video" class="seva-video" autoplay loop muted playsinline preload="metadata"></video>
           </div>
-
         </div>
       </div>
 
-      <!-- Tab 3: Reconstruction -->
-      <div id="reconstruction" class="tab-content">
-        <div style="text-align: center;">
-            <div class="comp-img-wrapper" style="aspect-ratio: 21/9; max-width: 800px; margin: 0 auto;">
-                <img src="https://via.placeholder.com/800x350?text=4D+Scene+Reconstruction+Visualization" alt="4D Reconstruction">
-                <div class="method-badge our-badge" style="font-size: 1rem; padding: 6px 12px;">4D Gaussian Splatting</div>
-            </div>
-            <p class="figure-caption">
-                <strong>4D Scene Reconstruction.</strong> By leveraging the generated multi-view videos, UniView enables high-quality 4D Gaussian Splatting reconstruction from a single monocular video input.
-            </p>
+      <div class="seva-divider"></div>
+
+      <div class="seva-section seva-section-numviews">
+        <h3>Flexible Number of Input Views</h3>
+        <p class="seva-note">滑动选择输入视角数量（会自动吸附到允许的档位），两段视频同步播放。</p>
+
+        <!-- Top: sparse input views (centered) -->
+        <div class="seva-numviews-top">
+          <div class="seva-thumbs seva-thumbs-center" id="seva-numviews-inputs"></div>
+        </div>
+
+        <!-- Bottom: trajectory + rendered RGB (stacked) -->
+        <div class="seva-numviews-videos">
+          <div class="seva-numviews-video">
+            <div class="seva-small" style="text-align:center; margin-bottom: 6px;">Camera trajectory</div>
+            <video id="seva-numviews-portal" class="seva-video" autoplay loop muted playsinline preload="metadata"></video>
+          </div>
+          <div class="seva-numviews-video">
+            <div class="seva-small" style="text-align:center; margin-bottom: 6px;">Rendered RGB</div>
+            <video id="seva-numviews-sample" class="seva-video" autoplay loop muted playsinline preload="metadata"></video>
+          </div>
+        </div>
+
+        <div class="seva-kv">
+          <div class="seva-slider">
+            <input id="seva-numviews-slider" class="seva-range" type="range" min="1" max="32" step="1" value="32">
+          </div>
+          <span id="seva-numviews-badge" class="seva-badge">32 input views</span>
         </div>
       </div>
 
+      <div class="seva-divider"></div>
+
+      <h3>Flexible Image Resolution</h3>
+      <p class="seva-note">不同长宽比的输出视频示例。</p>
+      <div class="seva-grid-2">
+        <video class="seva-video" autoplay loop muted playsinline preload="metadata" poster="static/videos/nonsquare/trevi/sample.jpg">
+          <source src="static/videos/nonsquare/trevi/sample.mp4" type="video/mp4">
+        </video>
+        <video class="seva-video" autoplay loop muted playsinline preload="metadata" poster="static/videos/nonsquare/basilica/sample.jpg">
+          <source src="static/videos/nonsquare/basilica/sample.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <div class="seva-divider"></div>
+
+      <h3>Long Video with Loop Closure</h3>
+      <p class="seva-note">两段视频同步播放；输入图可点击放大。</p>
+      <div class="seva-long-stack">
+        <!-- Layer 1: sparse input images (centered row) -->
+        <div class="seva-thumbs seva-thumbs-center">
+          <img class="seva-thumb seva-zoom" src="static/videos/long/telephone_booth/input/000.jpg" alt="input 0" loading="lazy">
+          <img class="seva-thumb seva-zoom" src="static/videos/long/telephone_booth/input/001.jpg" alt="input 1" loading="lazy">
+        </div>
+
+        <!-- Layer 2: two videos side-by-side -->
+        <div class="seva-long-second">
+          <div class="seva-long-video">
+            <div class="seva-small" style="text-align:center; margin-bottom: 6px;">Camera trajectory</div>
+            <video id="seva-long-viewport" class="seva-video" autoplay loop muted playsinline preload="metadata">
+              <source src="static/videos/long/telephone_booth/viewport.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="seva-long-video">
+            <div class="seva-small" style="text-align:center; margin-bottom: 6px;">Rendered RGB</div>
+            <video id="seva-long-samples" class="seva-video" autoplay loop muted playsinline preload="metadata">
+              <source src="static/videos/long/telephone_booth/samples_combined.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <div class="seva-divider"></div>
+
+      <h3>Sampling Diversity</h3>
+      <p class="seva-note">点击不同场景，查看多 seed 的合并输出。</p>
+      <div class="seva-thumbs" id="seva-diversity-scenes"></div>
+      <video id="seva-diversity-video" class="seva-video" autoplay loop muted playsinline preload="metadata"></video>
+
+      <div class="seva-divider"></div>
+
+      <h3>Comparison</h3>
+      <p class="seva-note">对比不同任务设置的结果，输入帧可点击放大。</p>
+      <div class="seva-thumbs" id="seva-comp-inputs"></div>
+      <video id="seva-comp-video" class="seva-video" autoplay loop muted playsinline preload="metadata"></video>
+      <div class="seva-pillbar" id="seva-comp-scenes"></div>
+      <div class="seva-small" id="seva-comp-desc"></div>
+
+      <div class="seva-divider"></div>
+
+      <h3>Limitations</h3>
+      <p class="seva-note">两类典型失败模式示例（按需加载）。</p>
+      <div class="seva-pillbar" id="seva-lim-cases"></div>
+      <div class="seva-lim-row" id="seva-lim-videos"></div>
+    </div>
+
+    <!-- Simple modal for image zoom -->
+    <div id="sevaModal" class="seva-modal" aria-hidden="true">
+      <button type="button" class="seva-modal-close" id="sevaModalClose" aria-label="Close">&times;</button>
+      <img id="sevaModalImg" alt="Zoomed image">
     </div>
 
     <!-- Footer -->
@@ -1000,51 +1596,60 @@
         bg.style.transform = `translate(${moveX}px, ${moveY}px)`;
       });
 
-      (function() {
-        const canvas = document.createElement('canvas');
-        canvas.id = 'cursor-canvas';
-        document.body.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
+      // Cursor particle canvas (trail + click burst).
+      // If you ever want to disable it quickly: set ENABLE_CURSOR_EFFECTS = false.
+      (function () {
+        const ENABLE_CURSOR_EFFECTS = true;
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!ENABLE_CURSOR_EFFECTS || reduceMotion) return;
 
-        let width, height;
+        const canvas = document.createElement("canvas");
+        canvas.id = "cursor-canvas";
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext("2d", { alpha: true });
+        if (!ctx) return;
+
+        let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        let width = 0, height = 0;
         let particles = [];
 
         const colors = [
-          'rgba(99, 102, 241, 0.8)',
-          'rgba(168, 85, 247, 0.8)',
-          'rgba(236, 72, 153, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(245, 158, 11, 0.8)'
+          "rgba(99, 102, 241, 0.55)",
+          "rgba(168, 85, 247, 0.55)",
+          "rgba(236, 72, 153, 0.55)",
+          "rgba(59, 130, 246, 0.55)",
+          "rgba(245, 158, 11, 0.50)",
         ];
 
         function resize() {
-          width = canvas.width = window.innerWidth;
-          height = canvas.height = window.innerHeight;
+          dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+          width = window.innerWidth;
+          height = window.innerHeight;
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          canvas.style.width = width + "px";
+          canvas.style.height = height + "px";
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset + scale
         }
-        window.addEventListener('resize', resize);
+        window.addEventListener("resize", resize, { passive: true });
         resize();
 
         class Particle {
-          constructor(x, y, type = 'trail') {
+          constructor(x, y, type = "trail") {
             this.x = x;
             this.y = y;
             this.type = type;
-            
-            this.size = type === 'trail' ? Math.random() * 3 + 1 : Math.random() * 5 + 2;
-            
+            this.size = type === "trail" ? Math.random() * 2.2 + 0.8 : Math.random() * 4.5 + 1.8;
             this.color = colors[Math.floor(Math.random() * colors.length)];
-            
-            const speed = type === 'trail' ? Math.random() * 0.5 + 0.2 : Math.random() * 3 + 2;
+            const speed = type === "trail" ? Math.random() * 0.45 + 0.15 : Math.random() * 2.8 + 1.6;
             const angle = Math.random() * Math.PI * 2;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
-            
-            this.friction = 0.96;
-            this.gravity = type === 'burst' ? 0.05 : 0;
+            this.friction = 0.965;
+            this.gravity = type === "burst" ? 0.03 : 0;
             this.life = 1.0;
-            this.decay = type === 'trail' ? 0.02 : 0.015;
+            this.decay = type === "trail" ? 0.028 : 0.02;
           }
-
           update() {
             this.x += this.vx;
             this.y += this.vy;
@@ -1052,47 +1657,47 @@
             this.vx *= this.friction;
             this.vy *= this.friction;
             this.life -= this.decay;
-            this.size *= 0.98;
+            this.size *= 0.985;
           }
-
           draw() {
             ctx.save();
-            ctx.globalAlpha = this.life;
+            ctx.globalAlpha = Math.max(0, this.life);
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, Math.max(0.1, this.size), 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
           }
         }
 
+        let raf = 0;
         function animate() {
+          // Always clear; prevents any “stuck line” artifacts
+          ctx.globalCompositeOperation = "source-over";
           ctx.clearRect(0, 0, width, height);
-          
+
           for (let i = particles.length - 1; i >= 0; i--) {
-            particles[i].update();
-            particles[i].draw();
-            if (particles[i].life <= 0 || particles[i].size <= 0.1) {
-              particles.splice(i, 1);
-            }
+            const p = particles[i];
+            p.update();
+            p.draw();
+            if (p.life <= 0 || p.size <= 0.12) particles.splice(i, 1);
           }
-          requestAnimationFrame(animate);
+          raf = requestAnimationFrame(animate);
         }
-        animate();
+        raf = requestAnimationFrame(animate);
 
         let throttle = 0;
-        window.addEventListener('mousemove', (e) => {
+        window.addEventListener("mousemove", (e) => {
           throttle++;
-          if (throttle % 2 === 0) { 
-            particles.push(new Particle(e.clientX, e.clientY, 'trail'));
-          }
-        });
+          if (throttle % 2 !== 0) return;
+          particles.push(new Particle(e.clientX, e.clientY, "trail"));
+          if (particles.length > 450) particles = particles.slice(-450);
+        }, { passive: true });
 
-        window.addEventListener('mousedown', (e) => {
-          for (let i = 0; i < 20; i++) {
-            particles.push(new Particle(e.clientX, e.clientY, 'burst'));
-          }
-        });
+        window.addEventListener("mousedown", (e) => {
+          for (let i = 0; i < 18; i++) particles.push(new Particle(e.clientX, e.clientY, "burst"));
+          if (particles.length > 450) particles = particles.slice(-450);
+        }, { passive: true });
       })();
 
       const buttons = document.querySelectorAll('.btn, .author-name');
@@ -1113,6 +1718,554 @@
         });
       });
     });
+  </script>
+
+  <script>
+    // ---------------- SEVA-style demos (pure JS) ----------------
+    (function () {
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+      const modal = {
+        el: $("#sevaModal"),
+        img: $("#sevaModalImg"),
+        open(src) {
+          if (!this.el || !this.img) return;
+          this.img.src = src;
+          this.el.classList.add("open");
+          this.el.setAttribute("aria-hidden", "false");
+        },
+        close() {
+          if (!this.el || !this.img) return;
+          this.el.classList.remove("open");
+          this.el.setAttribute("aria-hidden", "true");
+          this.img.src = "";
+        },
+      };
+
+      // Modal wiring
+      const closeBtn = $("#sevaModalClose");
+      closeBtn && closeBtn.addEventListener("click", () => modal.close());
+      modal.el && modal.el.addEventListener("click", (e) => {
+        if (e.target === modal.el) modal.close();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") modal.close();
+      });
+      document.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t && t.classList && t.classList.contains("seva-zoom") && t.src) {
+          modal.open(t.src);
+        }
+      });
+
+      // ---------------- Single Input View ----------------
+      const singleScenes = [
+        "co3d-car",
+        "nerf-real-vasedeck",
+        "llff-room",
+        "ComfyUI_temp_scvkv_00104",
+        "ComfyUI_temp_jzcbs_00087",
+        "000009843",
+        "000008370",
+        "000007702",
+        "000005309",
+        "000005276",
+        "000000029",
+      ];
+      const singleTrajs = [
+        ["orbit", "Orbit"],
+        ["spiral", "Spiral"],
+        ["lemniscate", "Lemniscate"],
+        ["zoomout", "Zoom-out"],
+        ["dollyzoomout", "Dolly Zoom-out"],
+      ];
+
+      let currentSingleScene = "co3d-car";
+      let currentSingleTraj = "orbit";
+      const singleScenesEl = $("#seva-single-scenes");
+      const singleVideo = $("#seva-single-video");
+      const singleTrajsEl = $("#seva-single-trajs");
+
+      function setSingleVideo() {
+        if (!singleVideo) return;
+        singleVideo.poster = `static/videos/singleview/${currentSingleScene}/input.jpg`;
+        singleVideo.src = `static/videos/singleview/${currentSingleScene}/${currentSingleTraj}.mp4`;
+        singleVideo.load();
+      }
+
+      if (singleScenesEl) {
+        singleScenes.forEach((scene) => {
+          const img = document.createElement("img");
+          img.className = "seva-thumb seva-zoom";
+          img.alt = scene;
+          img.loading = "lazy";
+          img.src = `static/videos/singleview/${scene}/input.jpg`;
+          img.addEventListener("click", () => {
+            currentSingleScene = scene;
+            $$(".seva-thumb", singleScenesEl).forEach((n) => n.classList.remove("active"));
+            img.classList.add("active");
+            setSingleVideo();
+          });
+          if (scene === currentSingleScene) img.classList.add("active");
+          singleScenesEl.appendChild(img);
+        });
+      }
+
+      if (singleTrajsEl) {
+        singleTrajs.forEach(([traj, label]) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "seva-pill";
+          btn.textContent = label;
+          btn.addEventListener("click", () => {
+            currentSingleTraj = traj;
+            $$(".seva-pill", singleTrajsEl).forEach((n) => n.classList.remove("active"));
+            btn.classList.add("active");
+            setSingleVideo();
+          });
+          if (traj === currentSingleTraj) btn.classList.add("active");
+          singleTrajsEl.appendChild(btn);
+        });
+      }
+      setSingleVideo();
+
+      // ---------------- Free Camera Trajectory ----------------
+      const freeSceneMeta = [
+        ["VGGLab", "Fly through the VGG Lab", 4],
+        ["mipnerf_garden", "Explore regions of Mip-NeRF360 garden", 8],
+        ["viewcrafter-1", "Interpolate between two views of a hallway", 2],
+        ["night_architecture", "Orbit around an outdoor landmark", 2],
+        ["dl3dv-2", "Replay an iPhone capture of a mall", 3],
+        ["f2nerf_sky", "Switch viewpoints from a close-up to wide perspective", 12],
+      ];
+      let currentFreeScene = "VGGLab";
+      const freeInputs = $("#seva-free-inputs");
+      const freeScenes = $("#seva-free-scenes");
+      const freeNote = $("#seva-free-scene-note");
+      const freeVideo = $("#seva-free-video");
+
+      function setFreeVideo() {
+        if (!freeVideo) return;
+        freeVideo.poster = `static/videos/trajectory/${currentFreeScene}/sample.jpg`;
+        freeVideo.src = `static/videos/trajectory/${currentFreeScene}/sample.mp4`;
+        freeVideo.load();
+      }
+
+      function renderFreeInputs() {
+        if (!freeInputs) return;
+        freeInputs.innerHTML = "";
+        const meta = freeSceneMeta.find((x) => x[0] === currentFreeScene);
+        const n = meta ? meta[2] : 0;
+        for (let i = 0; i < n; i++) {
+          const padded = String(i).padStart(3, "0");
+          const img = document.createElement("img");
+          img.className = "seva-thumb seva-zoom";
+          img.alt = `input ${padded}`;
+          img.loading = "lazy";
+          img.src = `static/videos/trajectory/${currentFreeScene}/input/${padded}.jpg`;
+          freeInputs.appendChild(img);
+        }
+      }
+
+      if (freeScenes) {
+        freeSceneMeta.forEach(([key, label]) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "seva-pill";
+          btn.textContent = label;
+          btn.addEventListener("click", () => {
+            currentFreeScene = key;
+            $$(".seva-pill", freeScenes).forEach((n) => n.classList.remove("active"));
+            btn.classList.add("active");
+            freeNote && (freeNote.textContent = key);
+            setFreeVideo();
+            renderFreeInputs();
+          });
+          if (key === currentFreeScene) btn.classList.add("active");
+          freeScenes.appendChild(btn);
+        });
+      }
+      freeNote && (freeNote.textContent = currentFreeScene);
+      setFreeVideo();
+      renderFreeInputs();
+
+      // ---------------- Flexible Number of Input Views ----------------
+      const ALLOWED_VIEWS = [1, 2, 3, 6, 9, 12, 16, 20, 25, 32];
+      let currentNumViewsApplied = null;
+      const numSlider = $("#seva-numviews-slider");
+      const numBadge = $("#seva-numviews-badge");
+      const numInputs = $("#seva-numviews-inputs");
+      const portal = $("#seva-numviews-portal");
+      const sample = $("#seva-numviews-sample");
+
+      function syncPair(v1, v2) {
+        if (!v1 || !v2) return;
+        let syncing = false;
+        const TH = 0.06;
+        function syncFrom(src, dst) {
+          if (syncing) return;
+          syncing = true;
+          if (Math.abs(dst.currentTime - src.currentTime) > TH) dst.currentTime = src.currentTime;
+          requestAnimationFrame(() => (syncing = false));
+        }
+        [v1, v2].forEach((v) => {
+          v.addEventListener("timeupdate", () => {
+            if (v.paused) return;
+            syncFrom(v, v === v1 ? v2 : v1);
+          });
+          v.addEventListener("seeked", () => syncFrom(v, v === v1 ? v2 : v1));
+          v.addEventListener("play", () => {
+            if (syncing) return;
+            (v === v1 ? v2 : v1).play().catch(() => {});
+          });
+          v.addEventListener("pause", () => {
+            if (syncing) return;
+            (v === v1 ? v2 : v1).pause();
+          });
+        });
+      }
+
+      function renderNumInputs(n) {
+        if (!numInputs) return;
+        numInputs.innerHTML = "";
+        for (let i = 0; i < n; i++) {
+          const img = document.createElement("img");
+          img.className = "seva-thumb seva-zoom";
+          img.alt = `input ${i}`;
+          img.loading = "lazy";
+          img.src = `static/videos/inputviews/input/${String(i).padStart(3, "0")}.jpg`;
+          numInputs.appendChild(img);
+        }
+      }
+
+      function setNumViews(n) {
+        const closest = ALLOWED_VIEWS.reduce((prev, curr) =>
+          Math.abs(curr - n) < Math.abs(prev - n) ? curr : prev,
+        );
+        if (numSlider) numSlider.value = String(closest);
+        numBadge && (numBadge.textContent = `${closest} input view${closest !== 1 ? "s" : ""}`);
+
+        // Prevent jitter: only swap media when the snapped value actually changes.
+        if (currentNumViewsApplied === closest) return;
+        currentNumViewsApplied = closest;
+
+        renderNumInputs(closest);
+
+        // Some browsers won't autoplay after dynamically changing `src`.
+        // We'll attempt play on `loadeddata`, and fall back gracefully on error.
+        function setVideoSrc(videoEl, posterPath, videoPath) {
+          if (!videoEl) return;
+          videoEl.poster = posterPath;
+          videoEl.src = videoPath;
+
+          const tryPlay = () => {
+            // Ensure muted+inline (iOS / Safari)
+            videoEl.muted = true;
+            videoEl.playsInline = true;
+            videoEl.play().catch(() => {});
+          };
+
+          const onLoaded = () => {
+            videoEl.removeEventListener("loadeddata", onLoaded);
+            tryPlay();
+          };
+          const onError = () => {
+            videoEl.removeEventListener("error", onError);
+            // Keep poster visible; if poster missing, show a subtle hint.
+            videoEl.style.background = "#000";
+          };
+
+          videoEl.addEventListener("loadeddata", onLoaded);
+          videoEl.addEventListener("error", onError);
+
+          videoEl.load();
+          // In case `loadeddata` fires late or autoplay is allowed immediately.
+          tryPlay();
+        }
+
+        if (portal) {
+          // Note: only `32/` has jpg posters; others will simply show first frame once loaded.
+          setVideoSrc(
+            portal,
+            `static/videos/inputviews/${closest}/viewport.jpg`,
+            `static/videos/inputviews/${closest}/viewport.mp4`,
+          );
+        }
+        if (sample) {
+          setVideoSrc(
+            sample,
+            `static/videos/inputviews/${closest}/sample.jpg`,
+            `static/videos/inputviews/${closest}/sample.mp4`,
+          );
+        }
+      }
+
+      numSlider && numSlider.addEventListener("input", (e) => setNumViews(parseInt(e.target.value, 10)));
+      setNumViews(32);
+      syncPair(portal, sample);
+
+      // ---------------- Long video sync ----------------
+      syncPair($("#seva-long-viewport"), $("#seva-long-samples"));
+
+      // ---------------- Diversity ----------------
+      const diversityScenes = ["zvolskiy", "yuliia", "house", "drewdempsey"];
+      let currentDiv = "zvolskiy";
+      const divScenesEl = $("#seva-diversity-scenes");
+      const divVideo = $("#seva-diversity-video");
+
+      function setDivVideo() {
+        if (!divVideo) return;
+        divVideo.poster = `static/videos/diversity/${currentDiv}/combined.jpg`;
+        divVideo.src = `static/videos/diversity/${currentDiv}/combined.mp4`;
+        divVideo.load();
+      }
+
+      if (divScenesEl) {
+        diversityScenes.forEach((scene) => {
+          const img = document.createElement("img");
+          img.className = "seva-thumb seva-zoom";
+          img.alt = scene;
+          img.loading = "lazy";
+          img.src = `static/videos/diversity/${scene}/input.jpg`;
+          img.addEventListener("click", () => {
+            currentDiv = scene;
+            $$(".seva-thumb", divScenesEl).forEach((n) => n.classList.remove("active"));
+            img.classList.add("active");
+            setDivVideo();
+          });
+          if (scene === currentDiv) img.classList.add("active");
+          divScenesEl.appendChild(img);
+        });
+      }
+      setDivVideo();
+
+      // ---------------- Comparison ----------------
+      const compMeta = {
+        largeviewpoint: {
+          label: "Large-viewpoint NVS",
+          nInputs: 3,
+          desc:
+            "ViewCrafter doesn't support this task natively: it assumes start-end interpolation and a fixed number of frames. We therefore chunk the task into multiple of 25 frames with nearest-neighbor start-end association.",
+        },
+        smallviewpoint: {
+          label: "Small-viewpoint NVS",
+          nInputs: 2,
+          desc:
+            "ViewCrafter natively supports small-viewpoint start-end interpolation. We report its result with the official 25-frame configuration. Both CAT3D and our method output 150 frames.",
+        },
+      };
+      let currentComp = "largeviewpoint";
+      const compInputs = $("#seva-comp-inputs");
+      const compVideo = $("#seva-comp-video");
+      const compScenes = $("#seva-comp-scenes");
+      const compDesc = $("#seva-comp-desc");
+
+      function renderComp() {
+        const meta = compMeta[currentComp];
+        if (compDesc) compDesc.textContent = meta.desc;
+
+        if (compInputs) {
+          compInputs.innerHTML = "";
+          for (let i = 0; i < meta.nInputs; i++) {
+            const img = document.createElement("img");
+            img.className = "seva-thumb seva-zoom";
+            img.alt = `input ${i}`;
+            img.loading = "lazy";
+            img.src = `static/videos/comparison/${currentComp}/input/${String(i).padStart(3, "0")}.jpg`;
+            compInputs.appendChild(img);
+          }
+        }
+
+        if (compVideo) {
+          compVideo.poster = `static/videos/comparison/${currentComp}/sample.jpg`;
+          compVideo.src = `static/videos/comparison/${currentComp}/sample.mp4`;
+          compVideo.load();
+        }
+      }
+
+      if (compScenes) {
+        Object.keys(compMeta).forEach((k) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "seva-pill";
+          btn.textContent = compMeta[k].label;
+          btn.addEventListener("click", () => {
+            currentComp = k;
+            $$(".seva-pill", compScenes).forEach((n) => n.classList.remove("active"));
+            btn.classList.add("active");
+            renderComp();
+          });
+          if (k === currentComp) btn.classList.add("active");
+          compScenes.appendChild(btn);
+        });
+      }
+      renderComp();
+
+      // ---------------- Gallery marquee (seamless loop) ----------------
+      (function initGalleryMarquee() {
+        const track = document.getElementById("seva-gallery-track");
+        if (!track) return;
+
+        // Avoid duplicating on hot reloads / multiple inits
+        if (track.dataset.inited === "1") return;
+        track.dataset.inited = "1";
+
+        const original = Array.from(track.children);
+        if (original.length === 0) return;
+
+        // Duplicate once for seamless wrap
+        original.forEach((node) => {
+          const clone = node.cloneNode(true);
+          clone.setAttribute("aria-hidden", "true");
+          // Ensure cloned videos also autoplay on iOS
+          if (clone.tagName === "VIDEO") {
+            clone.muted = true;
+            clone.playsInline = true;
+            clone.autoplay = true;
+            clone.loop = true;
+          }
+          track.appendChild(clone);
+        });
+
+        // Keep marquee videos looping as much as possible:
+        // - Some browsers throttle/stop offscreen videos when many are playing.
+        // - We therefore play only those near viewport, and periodically retry play.
+        const videos = Array.from(track.querySelectorAll("video"));
+        videos.forEach((v) => {
+          v.muted = true;
+          v.autoplay = true;
+          v.loop = true;
+          v.playsInline = true;
+          v.setAttribute("muted", "");
+          v.setAttribute("playsinline", "");
+          // Retry on loadeddata/canplay (Safari sometimes needs explicit play)
+          const tryPlay = () => v.play().catch(() => {});
+          v.addEventListener("loadeddata", tryPlay, { once: true });
+          v.addEventListener("canplay", tryPlay, { once: true });
+        });
+
+        // Only play videos that are (nearly) visible to reduce decoder pressure.
+        if ("IntersectionObserver" in window) {
+          const io = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((e) => {
+                const v = e.target;
+                if (!(v instanceof HTMLVideoElement)) return;
+                if (e.isIntersecting) {
+                  v.play().catch(() => {});
+                } else {
+                  // Pause offscreen videos; they'll resume when re-entering view
+                  v.pause();
+                }
+              });
+            },
+            { root: null, rootMargin: "200px", threshold: 0.15 },
+          );
+          videos.forEach((v) => io.observe(v));
+
+          // When tab becomes visible again, resume any visible videos.
+          document.addEventListener("visibilitychange", () => {
+            if (document.hidden) return;
+            videos.forEach((v) => v.play().catch(() => {}));
+          });
+        } else {
+          // Fallback: best-effort periodic retry.
+          setInterval(() => {
+            videos.forEach((v) => {
+              if (v.paused) v.play().catch(() => {});
+            });
+          }, 3000);
+        }
+
+        function updateMarqueeVars() {
+          // Distance should be the width of the original set, not including clones
+          const originalWidth = original.reduce((sum, el) => sum + el.getBoundingClientRect().width, 0);
+          const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || "16") || 16;
+          const distance = originalWidth + gap * original.length;
+          // Speed: px per second (bigger => faster). Adjust for your taste.
+          const speed = 90; // px/s
+          const duration = Math.max(18, distance / speed); // seconds
+          track.style.setProperty("--seva-marquee-distance", `${Math.max(600, distance)}px`);
+          track.style.setProperty("--seva-marquee-duration", `${duration.toFixed(2)}s`);
+        }
+
+        // Wait for layout + metadata to size videos
+        requestAnimationFrame(() => updateMarqueeVars());
+        window.addEventListener("resize", () => updateMarqueeVars(), { passive: true });
+      })();
+
+      // ---------------- Limitations ----------------
+      const limCases = {
+        case1: {
+          label: "Limited quality due to training data",
+          videos: [
+            { title: "Human", path: "human_animal/pexel_000001175_lemniscate.mp4" },
+            { title: "Animal", path: "human_animal/orbit.mp4" },
+            { title: "Dynamic texture", path: "dynamic/pexel_000007314_lemniscate_L-short-576_num-111.mp4" },
+          ],
+        },
+        case2: {
+          label: "Highly ambiguous scenes / trajectories",
+          videos: [
+            { title: "Extreme views", path: "inconsistency/pexel_000007322_orbit_L-short-576_num-111.mp4" },
+            { title: "Collision", path: "collision/dl3dv-counter_spiral.mp4" },
+          ],
+        },
+      };
+      let currentLim = "case1";
+      const limCasesEl = $("#seva-lim-cases");
+      const limVideosEl = $("#seva-lim-videos");
+
+      function renderLim() {
+        if (!limVideosEl) return;
+        limVideosEl.innerHTML = "";
+        limCases[currentLim].videos.forEach((v) => {
+          const wrap = document.createElement("div");
+          wrap.className = "seva-lim-item";
+
+          const vid = document.createElement("video");
+          vid.className = "seva-video seva-lim-video";
+          vid.autoplay = true;
+          vid.loop = true;
+          vid.muted = true;
+          vid.playsInline = true;
+          vid.preload = "metadata";
+          const src = `static/videos/limitation/${v.path}`;
+          vid.src = src;
+          vid.poster = `${src}.jpg`;
+          vid.load();
+
+          const cap = document.createElement("div");
+          cap.className = "seva-small";
+          cap.style.marginTop = "8px";
+          cap.style.textAlign = "center";
+          cap.textContent = v.title;
+
+          wrap.appendChild(vid);
+          wrap.appendChild(cap);
+          limVideosEl.appendChild(wrap);
+        });
+      }
+
+      if (limCasesEl) {
+        Object.keys(limCases).forEach((k) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "seva-pill";
+          btn.textContent = limCases[k].label;
+          btn.addEventListener("click", () => {
+            currentLim = k;
+            $$(".seva-pill", limCasesEl).forEach((n) => n.classList.remove("active"));
+            btn.classList.add("active");
+            renderLim();
+          });
+          if (k === currentLim) btn.classList.add("active");
+          limCasesEl.appendChild(btn);
+        });
+      }
+      renderLim();
+    })();
   </script>
 </body>
 </html>
