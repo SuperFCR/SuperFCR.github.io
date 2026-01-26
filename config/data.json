@@ -64,7 +64,7 @@
   "projects": {
     "t2i_model": [
       {
-        "title": "Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling",
+        "title": "🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling",
         "authors": "<u><b>Chaoran Feng<sup>*</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
         "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
         "venue": "Under Review",
@@ -73,9 +73,15 @@
       }
     ],
     "3d_reconstruction": [
- 
       {
-        "title": "Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views",
+        "title": "👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis",
+        "authors": "Wangbo Yu*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†",
+        "description": "An Event-Augmented 3D Diffusion framework for generalizable novel view synthesis from event streams and sparse RGB inputs.",
+        "venue": "ICLR 2026",
+        "image": "./assets/pipelines/Pipeline_ea3d.png"
+      },
+      {
+        "title": "🍿 Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views",
         "authors": "Zhankuo Xu*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao, Wangbo Yu, Li Yuan† , Yonghong Tian†",
         "description": "A novel framework for coherent 3D Gaussian Splatting from sparse and motion-blurred views using physics-aware deblurring priors coupled with diffusion-driven geometry completion.",
         "venue": "Under Review",
