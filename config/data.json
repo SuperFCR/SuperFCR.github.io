@@ -72,7 +72,10 @@
         "authors": "<u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
         "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
         "venue": "CVPR 2026",
-        "image": "./assets/pipelines/Pipeline_stylegrpo.png"
+        "image": "./assets/pipelines/Pipeline_stylegrpo.png",
+          "links": [
+          {"type": "Paper", "url": "./assets/files/StyleGRPO.pdf"}
+        ]
 
       },
       {
@@ -80,7 +83,11 @@
         "authors": "Zhenyu Tang*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Yufan Deng, Jie Wu, Xiaojie Li, Rui Wang, Yunpeng Chen, Daquan Zhou",
         "description": "A novel framework for enhancing spatial understanding in image generation via reward modeling.",
         "venue": "CVPR 2026",
-        "image": "./assets/pipelines/Pipeline_spatialt2i.png"
+        "image": "./assets/pipelines/Pipeline_spatialt2i.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2602.24233"},
+          {"type": "Code", "url": "https://github.com/DAGroup-PKU/SpatialT2I"}
+        ]
 
       }
     ],
