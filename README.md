@@ -101,6 +101,15 @@ Array format, each entry contains:
 - `emoji`: Emoji symbol (optional)
 - `content`: Award content
 
+### Experience (`experiences`)
+Array format, each entry contains:
+- `title`: Role title (e.g., "Research Intern")
+- `organization`: Institution/company name
+- `period`: Time period (e.g., "[2024-Now]")
+- `host`: Host/mentor text (HTML supported)
+- `logo`: Logo image path (optional, recommended 1:1 ratio)
+- `emoji`: Fallback icon when `logo` is not provided (optional)
+
 ### Professional Activities (`activities`)
 - `conference_reviewer`: Conference reviewing activities
 - `journal_reviewer`: Journal reviewing activities

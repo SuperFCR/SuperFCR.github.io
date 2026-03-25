@@ -86,6 +86,7 @@
         "image": "./assets/pipelines/Pipeline_spatialt2i.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/abs/2602.24233"},
+          {"type": "Project Page", "url": "https://dagroup-pku.github.io/SpatialT2I/"},
           {"type": "Code", "url": "https://github.com/DAGroup-PKU/SpatialT2I"}
         ]
 
@@ -200,6 +201,23 @@
       }
     ]
   },
+  "experiences": [
+    {
+      "title": "Research Intern",
+      "organization": "Horizon Robotics",
+      "period": "Mar. 2025 - Sep. 2025",
+      "host": "Yanfeng Zhao",
+      "logo": "./assets/logo/horizon_logo.jpg"
+    },
+    {
+      "title": "Research Intern",
+      "organization": "Ant Research",
+      "period": "Mar. 2026 - Now",
+      "host": "<a href=\"\">Jialiang Zheng</a>",
+      "logo": "./assets/logo/ant_logo.jpg"
+    }
+
+  ],
   "awards": [
     {
       "date": "[2025-09]",
