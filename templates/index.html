@@ -179,6 +179,104 @@
             font-family: 'Inter', sans-serif;
         }
 
+        .project-group {
+            margin: 20px 0 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fcfdff;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .project-group:hover {
+            border-color: #cbd5e1;
+        }
+
+        .project-group summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 14px 18px 16px;
+            display: block;
+            position: relative;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--accent);
+            user-select: none;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border-bottom: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .project-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .project-group[open] summary {
+            border-bottom-color: #e5e7eb;
+        }
+
+        .project-group summary::after {
+            content: '\25BE';
+            font-size: 0.85rem;
+            color: #64748b;
+            transition: transform 0.22s ease;
+            position: absolute;
+            right: 18px;
+            top: 19px;
+        }
+
+        .project-group[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .project-body {
+            padding: 8px 16px 4px;
+            animation: projectReveal 0.22s ease;
+        }
+
+        .summary-title {
+            display: block;
+            padding-right: 28px;
+            letter-spacing: 0.1px;
+        }
+
+        .project-preview-inline {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 7px;
+            margin-top: 10px;
+            padding-right: 28px;
+        }
+
+        .project-preview-inline .preview-item {
+            display: block;
+            background: #f3f7fc;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            color: #475569;
+            font-size: 0.83rem;
+            font-weight: 550;
+            line-height: 1.3;
+            padding: 6px 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-preview-inline .preview-item:nth-child(n+5) {
+            display: none;
+        }
+
+        .project-group[open] .project-preview-inline {
+            display: none;
+        }
+
+        @keyframes projectReveal {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .paper-card {
             display: flex;
             gap: 24px;
@@ -272,12 +370,95 @@
             text-align: center;
         }
 
+        .experience-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 22px;
+        }
+
+        .experience-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: #fff;
+            border: 1px solid #eaecf0;
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            transition: all 0.25s ease;
+        }
+
+        .experience-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+            background: #fafcff;
+        }
+
+        .experience-logo {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #fff;
+        }
+
+        .experience-logo-fallback {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            background: #f1f5f9;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .experience-title {
+            font-size: 1.05rem;
+            color: #111;
+            font-weight: 600;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .experience-period {
+            font-family: 'Inter', sans-serif;
+            color: #64748b;
+            font-size: 0.92rem;
+            margin-top: 3px;
+        }
+
+        .experience-host {
+            margin-top: 3px;
+            color: var(--text-sec);
+            font-size: 0.95rem;
+            line-height: 1.35;
+        }
+
         @media (max-width: 768px) {
             .container { padding: 30px 20px; margin: 10px; }
             .header-top { flex-direction: column-reverse; align-items: flex-start; gap: 20px;}
             .avatar { width: 100%; max-width: 100%; height: auto; margin-bottom: 20px; }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
+            .experience-grid { grid-template-columns: 1fr; }
+            .project-group summary { font-size: 0.96rem; padding: 12px 14px; }
+            .project-body { padding: 8px 10px 2px; }
+            .project-group summary::after { right: 14px; top: 16px; }
+            .project-preview-inline {
+                grid-template-columns: 1fr;
+                gap: 6px;
+                padding-right: 22px;
+            }
+            .project-preview-inline .preview-item {
+                font-size: 0.8rem;
+                padding: 5px 9px;
+            }
         }
     </style>
 </head>
@@ -366,78 +547,135 @@
         </div>
 
         <!-- T2I Model -->
-        <div class="category-title">♠ T2I Model & R1-like Reasoning </div>
-
-        {{#each projects.t2i_model}}
-        <div class="paper-card">
-            <div class="paper-content">
-                <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
-                <div class="paper-authors">{{{authors}}}</div>
-                <div class="paper-desc">{{{description}}}</div>
-                
-                <div class="tag-row">
-                    <span class="badge badge-venue">{{venue}}</span>
-                    {{#each links}}
-                    <a href="{{url}}" class="badge badge-link" target="_blank">
-                        {{type}}
-                        {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
-                    </a>
+        <details class="project-group" open>
+            <summary>
+                <span class="summary-title">♠ T2I Model & R1-like Reasoning</span>
+                <span class="project-preview-inline">
+                    {{#each projects.t2i_model}}
+                    <span class="preview-item">{{{title}}}</span>
                     {{/each}}
+                </span>
+            </summary>
+            <div class="project-body">
+                {{#each projects.t2i_model}}
+                <div class="paper-card">
+                    <div class="paper-content">
+                        <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
+                        <div class="paper-authors">{{{authors}}}</div>
+                        <div class="paper-desc">{{{description}}}</div>
+                        
+                        <div class="tag-row">
+                            <span class="badge badge-venue">{{venue}}</span>
+                            {{#each links}}
+                            <a href="{{url}}" class="badge badge-link" target="_blank">
+                                {{type}}
+                                {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
+                            </a>
+                            {{/each}}
+                        </div>
+                    </div>
+                    <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
                 </div>
+                {{/each}}
             </div>
-            <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
-        </div>
-        {{/each}}
+        </details>
 
         <!-- 3D Reconstruction -->
-        <div class="category-title">♠ 3D Reconstruction & Generative Model</div>
-        {{#each projects.3d_reconstruction}}
-        <div class="paper-card">
-            <div class="paper-content">
-                <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
-                <div class="paper-authors">{{{authors}}}</div>
-                <div class="paper-desc">{{{description}}}</div>
-                
-                <div class="tag-row">
-                    <span class="badge badge-venue">{{venue}}</span>
-                    {{#each links}}
-                    <a href="{{url}}" class="badge badge-link" target="_blank">
-                        {{type}}
-                        {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
-                    </a>
+        <details class="project-group">
+            <summary>
+                <span class="summary-title">♠ 3D Reconstruction & Generative Model</span>
+                <span class="project-preview-inline">
+                    {{#each projects.3d_reconstruction}}
+                    <span class="preview-item">{{{title}}}</span>
                     {{/each}}
+                </span>
+            </summary>
+            <div class="project-body">
+                {{#each projects.3d_reconstruction}}
+                <div class="paper-card">
+                    <div class="paper-content">
+                        <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
+                        <div class="paper-authors">{{{authors}}}</div>
+                        <div class="paper-desc">{{{description}}}</div>
+                        
+                        <div class="tag-row">
+                            <span class="badge badge-venue">{{venue}}</span>
+                            {{#each links}}
+                            <a href="{{url}}" class="badge badge-link" target="_blank">
+                                {{type}}
+                                {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
+                            </a>
+                            {{/each}}
+                        </div>
+                    </div>
+                    <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
                 </div>
+                {{/each}}
             </div>
-            <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
-        </div>
-        {{/each}}
+        </details>
 
         <!-- Neuromorphic Vision -->
-        <div class="category-title">♠ Neuromorphic Vision</div>
-
-        {{#each projects.neuromorphic_vision}}
-        <div class="paper-card">
-            <div class="paper-content">
-                <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
-                <div class="paper-authors">{{{authors}}}</div>
-                <div class="paper-desc">{{{description}}}</div>
-                <div class="tag-row">
-                    <span class="badge badge-venue">{{venue}}</span>
-                    {{#each links}}
-                    <a href="{{url}}" class="badge badge-link" target="_blank">
-                        {{type}}
-                        {{#if stars}}
-                            <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
-                        {{/if}}
-                    </a>
+        <details class="project-group">
+            <summary>
+                <span class="summary-title">♠ Neuromorphic Vision</span>
+                <span class="project-preview-inline">
+                    {{#each projects.neuromorphic_vision}}
+                    <span class="preview-item">{{{title}}}</span>
                     {{/each}}
+                </span>
+            </summary>
+            <div class="project-body">
+                {{#each projects.neuromorphic_vision}}
+                <div class="paper-card">
+                    <div class="paper-content">
+                        <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
+                        <div class="paper-authors">{{{authors}}}</div>
+                        <div class="paper-desc">{{{description}}}</div>
+                        <div class="tag-row">
+                            <span class="badge badge-venue">{{venue}}</span>
+                            {{#each links}}
+                            <a href="{{url}}" class="badge badge-link" target="_blank">
+                                {{type}}
+                                {{#if stars}}
+                                    <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
+                                {{/if}}
+                            </a>
+                            {{/each}}
+                        </div>
+                    </div>
+                    <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
                 </div>
+                {{/each}}
             </div>
-            <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
-        </div>
-        {{/each}}
+        </details>
 
     </section>
+
+
+    {{#if experiences}}
+    <!-- Experience -->
+    <section>
+        <h2>💼 Experience</h2>
+        <div class="experience-grid">
+            {{#each experiences}}
+            <div class="experience-card">
+                {{#if logo}}
+                <img class="experience-logo" src="{{logo}}" alt="{{organization}} logo" loading="lazy">
+                {{else}}
+                <div class="experience-logo-fallback">{{#if emoji}}{{emoji}}{{else}}💼{{/if}}</div>
+                {{/if}}
+                <div>
+                    <p class="experience-title">{{title}}, {{organization}}</p>
+                    <div class="experience-period">{{period}}</div>
+                    {{#if host}}
+                    <div class="experience-host">Host by {{{host}}}</div>
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+    {{/if}}
 
 
 
