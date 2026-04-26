@@ -1,0 +1,1758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CoherentGS · Response to Reviewers</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --ink: #1f1f1c;
+    --ink-soft: #4a4a45;
+    --muted: #7a766f;
+    --line: #e7e3dc;
+    --line-strong: #d6d0c4;
+    --accent: #c96442;
+    --accent-soft: #f3dccd;
+    --accent-ink: #8a3f25;
+    --review: #4a6b8a;
+    --review-soft: #e7eef6;
+    --reply: #2f5938;
+    --reply-soft: #e3ede4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "PingFang SC", "Helvetica Neue", "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: "Tiempos Headline", "Iowan Old Style", "Georgia", "Source Han Serif SC", "Songti SC", ui-serif, serif;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  h2 { font-size: 26px; margin: 0 0 6px; }
+  h3 { font-size: 19px; margin: 0 0 12px; }
+  h4 { font-size: 16px; margin: 18px 0 6px; }
+  p { margin: 8px 0 12px; color: var(--ink-soft); }
+  a { color: var(--accent-ink); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  a:hover { border-color: var(--accent); }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #f1ede5;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent-ink);
+  }
+  em.math { font-style: normal; font-family: ui-monospace, monospace; font-size: 0.92em; color: var(--ink); }
+
+  /* Hero band — full bleed accent */
+  .hero-band {
+    background:
+      radial-gradient(1200px 280px at 22% 100%, #f3dccd 0%, transparent 60%),
+      radial-gradient(900px 220px at 85% 0%, #faecd9 0%, transparent 55%),
+      linear-gradient(180deg, #fbf8f2 0%, #faf9f7 100%);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .hero-band::before {
+    content: ""; display: block; height: 4px;
+    background: linear-gradient(90deg, #c96442 0%, #d97706 50%, #c96442 100%);
+  }
+  .hero-inner { max-width: 1280px; margin: 0 auto; padding: 28px 32px 56px; }
+
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 14px; margin-bottom: 36px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink-soft); font-size: 13px; }
+  .brand-dot {
+    width: 10px; height: 10px; border-radius: 3px;
+    background: linear-gradient(135deg, #cc785c 0%, #a14f33 100%);
+  }
+  .brand strong { color: var(--ink); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; font-family: ui-monospace, monospace; }
+
+  /* Hero content */
+  .hero-eyebrow {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-eyebrow::after {
+    content: ""; flex: 1; height: 1px; max-width: 120px;
+    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+  }
+  .hero h1 {
+    font-size: clamp(40px, 6vw, 64px);
+    line-height: 1.05;
+    margin: 0 0 18px;
+    letter-spacing: -0.02em;
+    max-width: 1100px;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); font-weight: 600; }
+  .hero .authors {
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 0 14px;
+    max-width: 920px;
+    font-weight: 500;
+  }
+  .hero .authors sup { color: var(--accent); font-weight: 700; margin-left: 1px; }
+  .hero .authors .aff {
+    display: inline-block;
+    margin-left: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    font-weight: 400;
+  }
+  .hero .sub {
+    color: var(--ink-soft);
+    font-size: 16px;
+    line-height: 1.65;
+    max-width: 760px;
+    margin-top: 0;
+  }
+  .pillrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; align-items: center; }
+  .pillrow.links { margin-top: 26px; }
+  .pillrow.stats { margin-top: 14px; }
+  .pillrow.stats .pill { font-size: 12px; padding: 5px 14px; color: var(--muted); }
+  .pillrow.stats .pill .dot { background: var(--line-strong); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line-strong);
+    font-size: 13px; color: var(--ink);
+    font-weight: 500;
+    text-decoration: none !important;
+    transition: all .15s;
+  }
+  a.pill { border-bottom: 1px solid var(--line-strong); }
+  a.pill:hover {
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    transform: translateY(-1px);
+  }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .pill.solid {
+    background: var(--ink); color: #fff; border-color: var(--ink) !important;
+  }
+  .pill.solid:hover { background: var(--accent-ink); border-color: var(--accent-ink) !important; color: #fff; }
+  .pill.solid .dot { background: var(--accent); }
+  .pill svg { flex-shrink: 0; opacity: 0.85; }
+
+  /* Layout */
+  .page {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 64px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 32px 96px;
+  }
+  @media (max-width: 1020px) {
+    .page { grid-template-columns: 1fr; gap: 24px; }
+    .toc { position: static !important; max-height: none !important; }
+    .hero-inner { padding: 24px 24px 44px; }
+  }
+
+  /* TOC */
+  .toc {
+    position: sticky; top: 24px;
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    padding-right: 8px;
+    font-size: 13.5px;
+  }
+  .toc h4 {
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 16px 0 8px;
+  }
+  .toc h4:first-child { margin-top: 0; }
+  .toc a {
+    display: block;
+    padding: 4px 8px;
+    border-bottom: 0;
+    color: var(--ink-soft);
+    border-radius: 4px;
+    line-height: 1.45;
+  }
+  .toc a:hover { background: var(--surface); color: var(--ink); }
+  .toc a.active { color: var(--accent-ink); background: var(--accent-soft); font-weight: 600; }
+  .toc a .vid {
+    display: inline-block;
+    font-size: 10px;
+    background: var(--accent);
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  main { min-width: 0; }
+
+  /* Section card */
+  section.cmt {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px 36px 28px;
+    margin-bottom: 28px;
+    scroll-margin-top: 32px;
+    counter-increment: cmt;
+  }
+  section.cmt > .head {
+    display: flex; align-items: flex-start; gap: 14px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  section.cmt > .head::before {
+    content: counter(cmt, decimal-leading-zero);
+    font-family: "Tiempos Headline", Georgia, ui-serif, serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    padding-top: 8px;
+  }
+  body { counter-reset: cmt; }
+  .badge {
+    flex-shrink: 0;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+  }
+  .badge.eic { background: #faecd9; color: #8a4f12; }
+  .head h3 {
+    margin: 0; flex: 1;
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  @media (max-width: 700px) {
+    section.cmt { padding: 24px 22px 22px; }
+    .head h3 { font-size: 20px; }
+  }
+
+  /* Quote blocks */
+  .qbox {
+    border-left: 3px solid var(--review);
+    background: var(--review-soft);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0 16px;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .qbox .label, .rbox .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--review);
+    margin-bottom: 4px;
+  }
+  .rbox .label { color: var(--reply); }
+  .rbox {
+    border-left: 3px solid var(--reply);
+    background: var(--reply-soft);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 10px 0 18px;
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+
+  /* Tables */
+  .tablecap {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 18px 0 8px;
+    padding-left: 10px;
+    border-left: 2px solid var(--accent);
+    line-height: 1.5;
+  }
+  .tablecap b { color: var(--ink); font-weight: 600; }
+  .tablewrap { overflow-x: auto; margin: 0 auto 14px; }
+  table.data {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+    background: var(--surface);
+  }
+  table.data th, table.data td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+    white-space: nowrap;
+  }
+  table.data th {
+    background: #faf6ee;
+    color: var(--ink);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  table.data th:first-child, table.data td:first-child {
+    text-align: left;
+    color: var(--ink-soft);
+  }
+  table.data tr.divider td { border-top: 1px solid var(--line-strong); }
+  table.data tr.ours td {
+    background: #fff5ee;
+    color: var(--ink);
+    font-weight: 600;
+    border-top: 1px solid var(--line-strong);
+  }
+  table.data tr.ours td:first-child { color: var(--accent-ink); }
+  table.data .best { color: var(--accent-ink); font-weight: 700; }
+  table.data .group { background: #f1ede5; }
+  .twocol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .twocol { grid-template-columns: 1fr; } }
+  .twocol h5 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-family: inherit; font-weight: 600; }
+
+  /* Figure */
+  figure.fig {
+    margin: 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 12px 8px;
+  }
+  figure.fig img { max-width: 100%; display: block; margin: 0 auto; border-radius: 4px; }
+  figure.fig figcaption {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  /* Math block — KaTeX rendered */
+  .eq-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    background: #faf6ee;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    overflow-x: auto;
+  }
+  .eq-row .eq-body {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+    overflow-x: auto;
+  }
+  .eq-row .eq-body .katex-display { margin: 0; }
+  .eq-row .eq-body .katex { font-size: 1.05em; }
+  .eq-row .eq-tag {
+    flex-shrink: 0;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.4;
+    padding-left: 14px;
+    border-left: 1px solid var(--line);
+  }
+  .eq-row .eq-tag .eq-num { color: var(--ink-soft); font-weight: 600; }
+  .eq-row .eq-tag .eq-note {
+    display: block;
+    color: var(--accent-ink);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  @media (max-width: 720px) {
+    .eq-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .eq-row .eq-tag { padding-left: 0; padding-top: 8px; border-left: 0; border-top: 1px solid var(--line); text-align: left; }
+  }
+
+  /* Bullets */
+  ul.tight { padding-left: 22px; margin: 8px 0 12px; }
+  ul.tight li { color: var(--ink-soft); margin-bottom: 4px; line-height: 1.6; }
+  ul.tight li b { color: var(--ink); font-weight: 600; }
+
+  /* Video block — re-uses existing slider mechanic */
+  .video-section {
+    margin-top: 22px;
+    padding: 18px 18px 16px;
+    background: linear-gradient(180deg, #fbf8f2 0%, #faf6ee 100%);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .video-section h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    display: flex; align-items: center; gap: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    font-family: ui-monospace, monospace;
+    font-weight: 700;
+  }
+  .video-section h4 .pill {
+    background: #fff; color: var(--ink-soft);
+    border-color: var(--line-strong); font-weight: 500;
+    font-family: ui-sans-serif, -apple-system, sans-serif;
+    text-transform: none; letter-spacing: 0;
+  }
+  .scene-selector { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+  .scene-btn {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .scene-btn:hover { border-color: var(--line-strong); color: var(--ink); }
+  .scene-btn.active {
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 600;
+  }
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) { .comparison-grid { grid-template-columns: 1fr !important; } }
+
+  .slider-cell { display: flex; flex-direction: column; }
+  .slider-wrap {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: #000;
+    cursor: col-resize;
+    user-select: none; -webkit-user-select: none;
+    max-height: 340px;
+  }
+  .vid-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
+  .vid-layer video { display: block; width: 100%; height: 100%; pointer-events: none; }
+  .vid-layer.crop-left video  { object-fit: cover; object-position: left center; }
+  .vid-layer.crop-right video { object-fit: cover; object-position: right center; }
+  .vid-layer.crop-none video  { object-fit: cover; object-position: center center; }
+  .vid-layer.ours-layer { z-index: 2; }
+  .slider-line {
+    position: absolute; top: 0; left: 50%;
+    width: 2px; height: 100%;
+    background: var(--accent);
+    transform: translateX(-50%);
+    z-index: 10; pointer-events: none;
+  }
+  .slider-handle {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: rgba(255,255,255,0.92);
+    z-index: 11; pointer-events: none;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+  }
+  .slider-handle::before {
+    content: ''; width: 0; height: 0;
+    border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    border-right: 5px solid var(--accent);
+  }
+  .slider-handle::after {
+    content: ''; width: 0; height: 0;
+    border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    border-left: 5px solid var(--accent);
+  }
+  .vid-label {
+    position: absolute; bottom: 6px;
+    background: rgba(0,0,0,0.65); color: #fff;
+    font-weight: 600;
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    z-index: 5; pointer-events: none;
+  }
+  .vid-label.left { left: 6px; }
+  .vid-label.right { right: 6px; }
+  .vid-label.ours { background: var(--accent); }
+  .slider-caption {
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    margin-top: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+  .slider-caption .versus {
+    font-weight: 600; color: var(--ink);
+  }
+  .slider-caption .versus em {
+    font-style: normal; color: var(--accent); font-weight: 700;
+    margin: 0 4px;
+  }
+  .slider-caption .kind {
+    font-family: ui-monospace, monospace;
+    font-size: 11px; color: var(--muted);
+    background: #f4f0e8;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .slider-hint {
+    text-align: center; color: var(--muted);
+    font-size: 12.5px; margin-top: 16px;
+    letter-spacing: 0.02em;
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 32px; padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 12px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+
+  /* Acknowledgments card */
+  .thanks-card {
+    background:
+      radial-gradient(800px 200px at 90% -20%, #fbe8d7 0%, transparent 60%),
+      linear-gradient(180deg, #fcfaf4 0%, #faf9f7 100%);
+    border: 1px solid var(--line-strong);
+    counter-increment: none;
+    position: relative;
+    padding: 36px 40px 32px;
+  }
+  .thanks-card > .thanks-inner { max-width: 760px; }
+  .thanks-eyebrow {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin-bottom: 14px;
+  }
+  .thanks-title {
+    font-size: 28px;
+    margin: 0 0 18px;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+  }
+  .thanks-card p {
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.75;
+    margin: 0 0 14px;
+  }
+  .thanks-card p em { font-style: italic; color: var(--ink); font-weight: 500; }
+  .thanks-card::before { content: none !important; }
+  /* hide auto numbering on thanks card */
+  body { counter-reset: cmt; }
+
+  .key-points {
+    background: #faf6ee;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 10px 0 16px;
+  }
+  .key-points h5 {
+    margin: 0 0 6px; font-size: 12px; color: var(--accent-ink);
+    letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
+    font-family: inherit;
+  }
+  .key-points ul { margin: 0; padding-left: 20px; }
+  .key-points li { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<div class="hero-band">
+  <div class="hero-inner">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <strong>Response to Reviewers</strong>
+        <span style="color: var(--muted)">· CoherentGS</span>
+      </div>
+      <div class="meta">TCSVT-27506-2025 · Major Revision</div>
+    </div>
+
+    <header class="hero">
+      <div class="hero-eyebrow">Major Revision Companion · TCSVT 2026</div>
+      <h1>Breaking the Vicious Cycle.<br/><em>Coherent 3D Gaussian Splatting</em> from Sparse and Motion-Blurred Views.</h1>
+      <p class="authors">
+        Chaoran Feng<sup>*</sup> · Zhankuo Xu<sup>*</sup> · Yingtao Li · Jianbin Zhao ·
+        Jiashu Yang · Wangbo Yu · Li Yuan<sup>†</sup> · Yonghong Tian<sup>†</sup>
+        <span class="aff">Peking University</span>
+      </p>
+      <p class="sub">
+        Point-by-point rebuttal with new experiments, gradient-level novelty analysis,
+        and side-by-side video comparisons. Eleven cards, one EiC mandatory section,
+        ten reviewer comments — drag any slider to inspect the difference.
+      </p>
+      <div class="pillrow links">
+        <a class="pill solid" href="https://github.com/PotatoBigRoom/CoherentGS" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.34c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.51-1.08-1.78-.2-3.65-.89-3.65-3.96 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.13 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.11.16 1.93.08 2.13.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          Code
+        </a>
+        <a class="pill" href="https://potatobigroom.github.io/CoherentGS/" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm0 1.5c.97 0 2.04.99 2.7 2.74-.85.18-1.76.28-2.7.28s-1.85-.1-2.7-.28C5.96 2.49 7.03 1.5 8 1.5zm-3.93 1A6.5 6.5 0 0 0 1.7 6.5h2.13c.07-1.1.27-2.13.55-3.02-.13-.16-.27-.32-.31-.48zM11.93 2.5c-.04.16-.18.32-.31.48.28.89.48 1.91.55 3.02h2.13a6.5 6.5 0 0 0-2.37-3.5zM3.83 7.5H1.7a6.5 6.5 0 0 0 2.37 3.5c.04-.16.18-.32.31-.48-.28-.89-.48-1.91-.55-3.02zm1 0c.07 1.1.27 2.13.55 3.02C5.96 13.51 7.03 14.5 8 14.5s2.04-.99 2.7-2.98c.27-.89.47-1.92.55-3.02h-6.42zm5.42-1c-.07-1.1-.27-2.13-.55-3.02C9.04 4.39 8 4.66 8 4.66s-1.04-.27-1.7-1.18c-.28.89-.48 1.91-.55 3.02h4.5zM12.17 7.5c-.07 1.1-.27 2.13-.55 3.02.13.16.27.32.31.48a6.5 6.5 0 0 0 2.37-3.5h-2.13z"/></svg>
+          Project Page
+        </a>
+        <a class="pill" href="https://huggingface.co/datasets/Passwerob/CoherentGS/tree/main" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M2 3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3zm2-1a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H4zm1 3h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/></svg>
+          Dataset
+        </a>
+      </div>
+      <div class="pillrow stats">
+        <span class="pill"><span class="dot"></span>10 reviewer comments + EiC question</span>
+        <span class="pill"><span class="dot"></span>4 video benchmarks · 8 scenes</span>
+        <span class="pill"><span class="dot"></span>13 quantitative tables · 7 figures</span>
+      </div>
+    </header>
+  </div>
+</div>
+
+<div class="page">
+
+  <aside class="toc" id="toc">
+    <h4>Overview</h4>
+    <a href="#general">General Response</a>
+    <a href="#tcsvt">T-CSVT Relation <span class="vid" style="background:#8a4f12">EiC</span></a>
+    <a href="#editors">AE / SAE</a>
+
+    <a href="#thanks">Acknowledgments</a>
+
+    <h4>Reviewer 1</h4>
+    <a href="#r1q1">R1.1 · Novelty &amp; coupled degradation</a>
+    <a href="#r1q2">R1.2 · SACN thresholds</a>
+    <a href="#r1q3">R1.3 · Sparse-view comparisons <span class="vid">video</span></a>
+    <a href="#r1q4">R1.4 · Feed-forward 3DGS</a>
+
+    <h4>Reviewer 2</h4>
+    <a href="#r2q1">R2.1 · What is learned internally</a>
+    <a href="#r2q2">R2.2 · Geometric accuracy <span class="vid">video</span></a>
+    <a href="#r2q3">R2.3 · Score distillation novelty</a>
+    <a href="#r2q4">R2.4 · Cross-domain references</a>
+    <a href="#r2q5">R2.5 · Real handheld &amp; scalability <span class="vid">video</span></a>
+    <a href="#r2q6">R2.6 · Cost analysis</a>
+  </aside>
+
+  <main>
+
+  <!-- ============================ THANKS ============================ -->
+  <section class="cmt thanks-card" id="thanks">
+    <div class="thanks-inner">
+      <div class="thanks-eyebrow">A note before the responses</div>
+      <h3 class="thanks-title">Thank you to the reviewers and editors.</h3>
+      <p>
+        We are deeply grateful to the two reviewers, the Associate Editor, the Senior
+        Area Editor, and the Editor-in-Chief for the time and care they have invested
+        in this manuscript. The comments were detailed, technically sharp, and—most
+        importantly—aimed squarely at the parts of our work that <em>needed</em> to be
+        sharper. Several of the most consequential changes in this revision exist only
+        because the reviewers pointed at exactly the right gap.
+      </p>
+      <p>
+        We have addressed every concern point-by-point in the cards below. Where a
+        comment surfaced an empirical hole, we ran new experiments
+        (<a href="#r1q1">naive-cascade and unified-Difix3D+ baselines</a>,
+        <a href="#r1q3">CoR-GS / NexusGS on LLFF / Mip-NeRF 360 / DTU</a>,
+        <a href="#r1q4">MVSplat / PF3plat under compound degradation</a>,
+        <a href="#r2q5">Smartphone-Dataset handheld captures</a>);
+        where it surfaced a conceptual one, we made the technical claim
+        explicit at the gradient level (<a href="#r2q3">Eq. 2.3.1–2.3.3</a>) or
+        through a three-constraint fixed-point analysis (<a href="#r2q1">R2.1</a>).
+        Modifications in the manuscript are highlighted in
+        <span style="color:#b42318;font-weight:600">red</span>, and this companion
+        page mirrors the updated evidence with side-by-side video comparisons.
+      </p>
+      <p style="margin-bottom: 0;">
+        We hope the reviewers will find that the revised manuscript responds to their
+        comments substantively and in good faith. Any remaining unclarity is on us,
+        not on the original critique.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ GENERAL RESPONSE ============================ -->
+  <section class="cmt" id="general">
+    <div class="head">
+      <span class="badge">G</span>
+      <h3>General Response</h3>
+    </div>
+    <p>
+      We sincerely thank the reviewers and Editor for their thorough feedback. The revised
+      submission has been substantially strengthened: every concern is addressed point-by-point,
+      with new experiments and analyses added throughout the manuscript. All modifications are
+      highlighted in <span style="color:#b42318;font-weight:600">red</span>.
+    </p>
+    <div class="key-points">
+      <h5>What this rebuttal contributes</h5>
+      <ul>
+        <li><b>Methodological clarification (R1, R2):</b> CoherentGS resolves a coupled sparse-and-blurry failure mode that no prior work tackles in isolation. We empirically refute "naive combination" via two cascaded pipelines and a single-network retrained baseline, both of which underperform the dual-prior framework.</li>
+        <li><b>Empirical breadth (R1.3 / R1.4):</b> new comparisons against sparse-view methods (CoR-GS, NexusGS) on LLFF / Mip-NeRF360 / DTU, and against feed-forward methods (MVSplat, PF3plat) on Deblur-NeRF-Real / DL3DV-Blur.</li>
+        <li><b>Geometric fidelity (R2.2):</b> depth accuracy on DTU against structured-light GT, multi-view reprojection error, and a SACN failure-mode visualization that honestly bounds the mechanism's scope.</li>
+        <li><b>Real-world scalability (R2.5):</b> evaluation on the Smartphone Dataset (Seiskari et al.) — genuine handheld captures with non-uniform blur and pose noise.</li>
+        <li><b>Cost analysis (R2.6):</b> per-component training-time breakdown on DL3DV-Blur showing the diffusion prior contributes 18.9% (every-200-iter invocation), and an unchanged 0.6 min inference because both priors are training-time only.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================ T-CSVT RELATION ============================ -->
+  <section class="cmt" id="tcsvt">
+    <div class="head">
+      <span class="badge eic">EiC</span>
+      <h3>Relation to Prior T-CSVT Publications</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Editor-in-Chief</div>
+      Before your new submission, you have to answer two questions: (a) what are the 3–5 papers published in the IEEE Transactions on Circuits and Systems for Video Technology that are most closely related to your manuscript; (b) what is distinctive / new about your current manuscript related to these previously published papers.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response</div>
+      <p>
+        Among recent IEEE T-CSVT publications, the five most closely related to our work span
+        the three axes that define our problem: <em>sparse-view 3D reconstruction</em>
+        (GeoRGS, Depth-Guided Robust Point Cloud Fusion NeRF), <em>motion blur and
+        blur-resistant capture</em> (the 2D deblurring benchmark MC-Blur and the
+        event-camera-based SweepEvGS), and <em>the 3DGS landscape</em> (the recent survey,
+        which lists reconstruction from limited or degraded inputs as an open direction
+        without a concrete solution).
+      </p>
+      <p>
+        CoherentGS is distinct from each: the geometric cues exploited by the sparse-view
+        works are themselves corrupted once motion blur is introduced; MC-Blur operates
+        purely in 2D and does not enforce multi-view consistency; SweepEvGS resolves blur on
+        the hardware side via specialized sensors unavailable in commodity RGB capture.
+        To our knowledge, CoherentGS is the first 3DGS framework that explicitly resolves
+        the <b>coupled</b> sparse-and-blurry failure mode—in which each degradation
+        invalidates the cues required to address the other—through three coordinated
+        mechanisms not present in the cited works:
+      </p>
+      <ul class="tight">
+        <li><b>(a)</b> a deblurring prior tied to an SE(3) exposure-trajectory model;</li>
+        <li><b>(b)</b> online diffusion distillation with stop-gradient supervision in place of offline post-processing;</li>
+        <li><b>(c)</b> the SACN viewpoint policy that filters generatively-unreliable virtual views before they can corrupt optimization.</li>
+      </ul>
+      <p>A condensed version of this discussion has been incorporated into Sec. II of the revised manuscript.</p>
+    </div>
+  </section>
+
+  <!-- ============================ AE / SAE ============================ -->
+  <section class="cmt" id="editors">
+    <div class="head">
+      <span class="badge">AE</span>
+      <h3>Associate &amp; Senior Area Editors</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Associate Editor</div>
+      The reviewers pointed out several issues, specially in the experimental evaluation, novelty and complexity of the approach.
+    </div>
+    <div class="qbox">
+      <div class="label">Senior Area Editor</div>
+      The paper topic is relevant for this journal. The authors structured the manuscript well and they claim novelty and a consistent performance gain. The paper should be peer reviewed.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response</div>
+      We acknowledge the decisions and have made every effort to address all concerns. The
+      manuscript has been substantially revised with additional experiments, analyses, and
+      clarifications, detailed point-by-point in the cards below.
+    </div>
+  </section>
+
+  <!-- ============================ R1.1 ============================ -->
+  <section class="cmt" id="r1q1">
+    <div class="head">
+      <span class="badge">R1.1</span>
+      <h3>Novelty &amp; the coupled degradation problem</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 1 — Comment 1.1</div>
+      The main contribution is somewhat limited. The deblurring prior is driven from BAD-Gaussians and most of the diffusion prior is similar to Difix3D+. Combining existing two schemes may improve the performance, but it does not bring any new concept.
+    </div>
+
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      Our contribution is <b>not</b> a simple combination, but a unified optimization framework
+      addressing a fundamentally different and harder problem—the <b>coupled degradation</b>
+      of sparse views and motion blur. We support this with three lines of evidence.
+    </div>
+
+    <h4>1 · The coupled degradation is a distinct research problem</h4>
+    <ul class="tight">
+      <li><b>Sparse views break deblurring:</b> motion-deblurring methods rely on dense multi-view geometric constraints to disentangle camera motion from scene; under sparse views these constraints vanish and motion estimation becomes ill-posed.</li>
+      <li><b>Motion blur breaks sparse-view reconstruction:</b> sparse-view methods (e.g. Difix3D+, GSFixer) assume sharp inputs; blur erases the high-frequency cues used for cross-view alignment and the diffusion model misinterprets blur as texture.</li>
+    </ul>
+
+    <h4>2 · Naive combination of existing methods fails — empirical evidence</h4>
+    <p class="tablecap"><b>Table A.</b> Naive sequential pipelines vs. CoherentGS on Deblur-NeRF synthetic, 3-view. Both Deblur→Diffusion and Diffusion→Deblur cascades fall well short of the joint design.</p>
+    <div class="twocol">
+      <div>
+        <h5>(a) Novel View Synthesis</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>BAD-Gaussians</td><td>19.58</td><td>0.555</td><td>0.274</td></tr>
+            <tr><td>Difix3D+</td><td>18.43</td><td>0.504</td><td>0.307</td></tr>
+            <tr><td>Pipeline A (Deblur→Diff.)</td><td>17.43</td><td>0.463</td><td>0.349</td></tr>
+            <tr><td>Pipeline B (Diff.→Deblur)</td><td>18.63</td><td>0.518</td><td>0.253</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">21.12</td><td class="best">0.671</td><td class="best">0.195</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h5>(b) Deblurring View Synthesis</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>BAD-Gaussians</td><td>20.72</td><td>0.566</td><td>0.253</td></tr>
+            <tr><td>Difix3D+</td><td>21.28</td><td>0.617</td><td>0.248</td></tr>
+            <tr><td>Pipeline A (Deblur→Diff.)</td><td>19.71</td><td>0.517</td><td>0.187</td></tr>
+            <tr><td>Pipeline B (Diff.→Deblur)</td><td>21.10</td><td>0.635</td><td>0.193</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">27.81</td><td class="best">0.874</td><td class="best">0.095</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <p>In Pipeline A, BAD-Gaussians produces a degraded initial reconstruction under sparse views (fragmented geometry and failed motion estimation), which Difix3D+ cannot recover from. In Pipeline B, Difix3D+ hallucinates blurred texture as scene content, which the subsequent deblurring stage cannot undo.</p>
+
+    <h4>3 · Novel technical components beyond individual priors</h4>
+    <p class="tablecap"><b>Table B.</b> Novel technical components in CoherentGS and their distinction from prior work.</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th style="text-align:left">Component</th><th style="text-align:left">Prior Work</th><th style="text-align:left">Our Novelty</th></tr></thead>
+      <tbody>
+        <tr><td>Scene Adaptive Consistency Norm. (Sec. IV-D)</td><td style="text-align:left">Linear / ellipse sampling for trajectory (TrajectoryCrafter, GSFixer)</td><td style="text-align:left">First consistency-guided exploration that quantifies diffusion reliability via band-pass filtering</td></tr>
+        <tr><td>Feature-space Deblurring Distillation (Sec. IV-B)</td><td style="text-align:left">SparseDeRF: pixel-level deblur supervision</td><td style="text-align:left">Perceptual-space distillation that avoids enforcing pixel alignment with inconsistent pseudo-targets</td></tr>
+        <tr><td>Diffusion-as-Online-Supervision (Sec. IV-C)</td><td style="text-align:left">Difix3D+: offline post-processing with image replacement</td><td style="text-align:left">Score-distillation-inspired online gradient with stop-gradient, preventing diffusion bias</td></tr>
+        <tr><td>Warm-up &amp; Joint Optimization (Sec. IV-E)</td><td style="text-align:left">No prior work addresses injection timing of generative priors under blur</td><td style="text-align:left">Empirically validated warm-up that prevents diffusion from solidifying blur as texture</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>4 · Supplementary baseline: end-to-end retrained Difix3D+</h4>
+    <p>Before arriving at the dual-prior design we explored a single end-to-end model handling both de-artifact and deblurring. We constructed a blurry–sharp paired training set following Difix3D+'s data protocol and fine-tuned with the official training recipe (SD-Turbo backbone, reference-conditioned attention, identical schedule, τ=200).</p>
+    <p class="tablecap"><b>Table C.</b> Unified Difix3D+ retrained on blurry–sharp paired data, Deblur-NeRF synthetic, 3-view.</p>
+    <div class="twocol">
+      <div>
+        <h5>(a) Novel View Synthesis</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>Difix3D+ (original)</td><td>18.43</td><td>0.504</td><td>0.307</td></tr>
+            <tr><td>Difix3D+ (retrained w/ blur)</td><td>16.89</td><td>0.485</td><td>0.375</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">21.12</td><td class="best">0.671</td><td class="best">0.195</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h5>(b) Deblurring View Synthesis</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>Difix3D+ (original)</td><td>19.58</td><td>0.562</td><td>0.249</td></tr>
+            <tr><td>Difix3D+ (retrained w/ blur)</td><td>19.64</td><td>0.564</td><td>0.256</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">21.50</td><td class="best">0.594</td><td class="best">0.232</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <p>The retrained single model still falls short. We attribute this to a fundamental <b>conflict of inductive biases</b>: deblurring demands faithful recovery of high-frequency details under a physical motion model, whereas geometric completion requires plausible hallucination in unobserved regions. A single network compromises on both fronts; the dual design avoids this conflict by assigning each task to a specialized model coordinated through joint optimization.</p>
+  </section>
+
+  <!-- ============================ R1.2 ============================ -->
+  <section class="cmt" id="r1q2">
+    <div class="head">
+      <span class="badge">R1.2</span>
+      <h3>SACN threshold sensitivity</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 1 — Comment 1.2</div>
+      The dynamic range of the score in Eq. (14) is not bounded, so it is important to determine s<sub>min</sub> and s<sub>max</sub> in Eq. (16). Authors should provide ablations.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      <em>s<sub>min</sub></em> and <em>s<sub>max</sub></em> act as a coarse band-pass filter that
+      retains "moderately challenging but recoverable" viewpoints—an outlier rejection
+      mechanism, not a precisely calibrated decision boundary. The mechanism is therefore
+      robust to moderate threshold perturbations, which we confirm with a comprehensive
+      ablation on both Deblur-NeRF and DL3DV-Blur.
+    </div>
+
+    <p class="tablecap"><b>Table D.</b> Ablation on s<sub>min</sub> and s<sub>max</sub> under 3-view. Default settings marked with †. PSNR varies by less than ~0.3 dB across moderate neighborhoods.</p>
+    <div class="twocol">
+      <div>
+        <h5>(a) Deblur-NeRF (default 2.5 / 8.5)</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>s<sub>min</sub></th><th>s<sub>max</sub></th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th><th># Views</th></tr></thead>
+          <tbody>
+            <tr class="group"><td colspan="6" style="text-align:left;font-style:italic;color:var(--muted)">Fixing s<sub>max</sub>=8.5</td></tr>
+            <tr><td>0.0</td><td>8.5</td><td>21.21</td><td>0.678</td><td>0.186</td><td>50.2</td></tr>
+            <tr><td>1.0</td><td>8.5</td><td>21.16</td><td>0.674</td><td>0.191</td><td>47.0</td></tr>
+            <tr class="ours"><td>2.5†</td><td>8.5†</td><td>21.12</td><td>0.671</td><td>0.195</td><td>39.0</td></tr>
+            <tr><td>4.0</td><td>8.5</td><td>20.98</td><td>0.662</td><td>0.208</td><td>21.8</td></tr>
+            <tr><td>5.5</td><td>8.5</td><td>20.65</td><td>0.645</td><td>0.225</td><td>12.2</td></tr>
+            <tr class="group"><td colspan="6" style="text-align:left;font-style:italic;color:var(--muted)">Fixing s<sub>min</sub>=2.5</td></tr>
+            <tr><td>2.5</td><td>5.0</td><td>20.72</td><td>0.651</td><td>0.218</td><td>26.6</td></tr>
+            <tr><td>2.5</td><td>6.5</td><td>21.05</td><td>0.676</td><td>0.192</td><td>35.4</td></tr>
+            <tr><td>2.5</td><td>10.5</td><td>21.10</td><td>0.668</td><td>0.201</td><td>41.4</td></tr>
+            <tr><td>2.5</td><td>12.5</td><td>20.80</td><td>0.654</td><td>0.212</td><td>43.2</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h5>(b) DL3DV-Blur (default 4.5 / 14.5)</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>s<sub>min</sub></th><th>s<sub>max</sub></th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th><th># Views</th></tr></thead>
+          <tbody>
+            <tr class="group"><td colspan="6" style="text-align:left;font-style:italic;color:var(--muted)">Fixing s<sub>max</sub>=14.5</td></tr>
+            <tr><td>0.0</td><td>14.5</td><td>17.57</td><td>0.642</td><td>0.380</td><td>37.6</td></tr>
+            <tr><td>2.5</td><td>14.5</td><td>17.51</td><td>0.638</td><td>0.384</td><td>34.0</td></tr>
+            <tr class="ours"><td>4.5†</td><td>14.5†</td><td>17.48</td><td>0.639</td><td>0.386</td><td>33.3</td></tr>
+            <tr><td>6.5</td><td>14.5</td><td>17.35</td><td>0.632</td><td>0.394</td><td>26.0</td></tr>
+            <tr><td>8.5</td><td>14.5</td><td>17.05</td><td>0.618</td><td>0.410</td><td>20.5</td></tr>
+            <tr class="group"><td colspan="6" style="text-align:left;font-style:italic;color:var(--muted)">Fixing s<sub>min</sub>=4.5</td></tr>
+            <tr><td>4.5</td><td>9.0</td><td>16.90</td><td>0.618</td><td>0.415</td><td>12.5</td></tr>
+            <tr><td>4.5</td><td>11.5</td><td>17.38</td><td>0.635</td><td>0.392</td><td>20.0</td></tr>
+            <tr><td>4.5</td><td>17.5</td><td>17.15</td><td>0.620</td><td>0.405</td><td>36.4</td></tr>
+            <tr><td>4.5</td><td>20.5</td><td>16.83</td><td>0.611</td><td>0.420</td><td>39.0</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <figure class="fig">
+      <img src="assets/figs/fig_r1_c2_sacn_sensitivity_curve-1.png" alt="SACN sensitivity curve" />
+      <figcaption><b>Figure A.</b> PSNR vs. s<sub>min</sub> (left) and s<sub>max</sub> (right) on both datasets. The shaded region indicates ~0.3 dB of the optimum—a stable plateau across moderate threshold perturbations.</figcaption>
+    </figure>
+
+    <p>
+      We note that the default setting is not the single best PSNR point but a robust
+      <em>trade-off between reconstruction quality and the number of accepted candidates</em>.
+      For example, on Deblur-NeRF setting s<sub>min</sub>=0 raises PSNR by only 0.09 dB
+      (21.12 → 21.21) while increasing accepted views by 28.7%—the additional views are
+      largely near-duplicate or weakly informative, bringing marginal metric gain at higher
+      optimization cost. Degradation only appears at extreme settings that effectively
+      disable one side of the filter.
+    </p>
+  </section>
+
+  <!-- ============================ R1.3 ============================ -->
+  <section class="cmt" id="r1q3">
+    <div class="head">
+      <span class="badge">R1.3</span>
+      <h3>Sparse-view comparisons (LLFF / Mip-NeRF360 / DTU)</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 1 — Comment 1.3</div>
+      Authors need to provide performance comparison with state-of-the-art sparse-view methods (e.g., CoR-GS, NexusGS) on standard sparse-view benchmarks (LLFF, DTU 3/6/9 views, Mip-NeRF360).
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      Our setting is strictly a <em>superset</em> of clean sparse-view reconstruction—motion
+      blur destroys the very high-frequency cues co-regularization and epipolar-depth
+      estimation depend on. Once the blur branch is disabled, CoherentGS reduces to a
+      sparse-view reconstructor driven by SACN and the diffusion prior, and is directly
+      comparable. We add evaluations on three standard benchmarks plus DeblurNeRF-Real.
+    </div>
+
+    <p class="tablecap"><b>Table E.</b> LLFF (3-view) and Mip-NeRF 360 (12-view) novel view synthesis.</p>
+    <div class="twocol">
+      <div>
+        <h5>(a) LLFF (3 views)</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>CoR-GS</td><td>20.17</td><td>0.703</td><td>0.202</td></tr>
+            <tr><td>NexusGS</td><td>20.24</td><td>0.721</td><td>0.190</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">20.68</td><td class="best">0.745</td><td class="best">0.181</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h5>(b) Mip-NeRF 360 (12 views)</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+          <tbody>
+            <tr><td>CoR-GS</td><td>19.59</td><td>0.580</td><td>0.371</td></tr>
+            <tr><td>NexusGS</td><td>19.31</td><td>0.561</td><td>0.344</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">19.80</td><td class="best">0.601</td><td class="best">0.270</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <p class="tablecap"><b>Table F.</b> DTU novel view synthesis, 3-/6-/9-view.</p>
+    <div class="tablewrap"><table class="data">
+      <thead>
+        <tr><th rowspan="2">Method</th><th colspan="4">PSNR↑</th><th colspan="4">SSIM↑</th><th colspan="4">LPIPS↓</th></tr>
+        <tr><th>3</th><th>6</th><th>9</th><th>Avg</th><th>3</th><th>6</th><th>9</th><th>Avg</th><th>3</th><th>6</th><th>9</th><th>Avg</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CoR-GS</td><td>19.46</td><td>24.05</td><td>26.94</td><td>23.48</td><td>0.858</td><td>0.916</td><td>0.945</td><td>0.906</td><td>0.120</td><td>0.072</td><td>0.030</td><td>0.074</td></tr>
+        <tr><td>NexusGS</td><td>19.31</td><td>23.91</td><td>26.82</td><td>23.34</td><td>0.812</td><td>0.910</td><td>0.933</td><td>0.885</td><td>0.120</td><td>0.068</td><td>0.040</td><td>0.076</td></tr>
+        <tr class="ours"><td>CoherentGS</td><td class="best">20.06</td><td class="best">24.58</td><td class="best">27.29</td><td class="best">23.97</td><td class="best">0.863</td><td class="best">0.922</td><td class="best">0.956</td><td class="best">0.913</td><td class="best">0.10</td><td class="best">0.062</td><td class="best">0.03</td><td class="best">0.064</td></tr>
+      </tbody>
+    </table></div>
+
+    <p class="tablecap"><b>Table G.</b> DeblurNeRF-Real novel view synthesis, 3-/6-/9-view. CoherentGS retains its lead on the more difficult real-blurry data.</p>
+    <div class="tablewrap"><table class="data">
+      <thead>
+        <tr><th rowspan="2">Method</th><th colspan="4">PSNR↑</th><th colspan="4">SSIM↑</th><th colspan="4">LPIPS↓</th></tr>
+        <tr><th>3</th><th>6</th><th>9</th><th>Avg</th><th>3</th><th>6</th><th>9</th><th>Avg</th><th>3</th><th>6</th><th>9</th><th>Avg</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CoR-GS</td><td>13.62</td><td>16.32</td><td>21.73</td><td>17.22</td><td>0.380</td><td>0.584</td><td>0.820</td><td>0.595</td><td>0.555</td><td>0.416</td><td>0.313</td><td>0.428</td></tr>
+        <tr><td>NexusGS</td><td>19.71</td><td>21.16</td><td>21.28</td><td>20.71</td><td>0.502</td><td>0.658</td><td>0.659</td><td>0.606</td><td>0.441</td><td>0.360</td><td>0.322</td><td>0.374</td></tr>
+        <tr class="ours"><td>CoherentGS</td><td class="best">19.98</td><td class="best">22.01</td><td class="best">23.44</td><td class="best">21.67</td><td class="best">0.575</td><td class="best">0.681</td><td class="best">0.747</td><td class="best">0.668</td><td class="best">0.297</td><td class="best">0.201</td><td class="best">0.167</td><td class="best">0.221</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>On Real 3-view we marginally edge NexusGS by 0.27 dB PSNR—under extreme sparsity its epipolar-depth prior remains stable on certain textureless regions—yet we consistently outperform on 6/9-view (+0.85 / +2.16 dB), in LPIPS at every level (−0.144 at 3-view), and in geometric accuracy (DTU AbsRel −0.030, see <a href="#r2q2">R2.2</a>).</p>
+
+    <figure class="fig">
+      <img src="assets/figs/fig_r1_c3_compare-1.png" alt="Sparse comparison qualitative" />
+      <figcaption><b>Figure B.</b> Qualitative comparison on standard sparse-view benchmarks. CoR-GS leaves residual floaters under extreme sparsity; NexusGS degrades on textureless surfaces; CoherentGS produces cleaner geometry and sharper textures.</figcaption>
+    </figure>
+
+    <div class="video-section" data-vid-question="r1q3">
+      <h4>Video Sliders <span class="pill">drag to compare</span></h4>
+    </div>
+  </section>
+
+  <!-- ============================ R1.4 ============================ -->
+  <section class="cmt" id="r1q4">
+    <div class="head">
+      <span class="badge">R1.4</span>
+      <h3>Comparison with feed-forward 3DGS</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 1 — Comment 1.4</div>
+      Various feed-forward 3DGS methods, e.g., MVSplat, PF3plat, etc., have been introduced. Authors need to verify the advantages of their method compared to such feed-forward approaches both in theoretical and experimental viewpoints.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      Feed-forward methods learn an <em>amortized mapping</em> from inputs to scene
+      representations—strong when test inputs match the training distribution. The
+      compound sparse-and-blurry degradation is precisely the OOD case: motion blur
+      destroys the high-frequency cues these methods rely on for cross-view feature
+      matching, and corrupts the pose estimation many depend on. CoherentGS, by contrast,
+      uses <em>per-scene optimization with an explicit blur formation model</em>, which
+      directly disentangles camera motion from scene appearance.
+    </div>
+
+    <p class="tablecap"><b>Table H.</b> Quantitative comparison with feed-forward methods under the 3-view setting.</p>
+    <div class="twocol">
+      <div>
+        <h5>(a) Deblur-NeRF Real</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th><th>Type</th></tr></thead>
+          <tbody>
+            <tr><td>MVSplat</td><td>11.62</td><td>0.232</td><td>0.656</td><td>Feed-fwd.</td></tr>
+            <tr><td>PF3plat</td><td>15.71</td><td>0.462</td><td>0.471</td><td>Feed-fwd.</td></tr>
+            <tr class="divider"><td>BAD-Gaussians</td><td>18.57</td><td>0.495</td><td>0.337</td><td>Per-scene</td></tr>
+            <tr><td>Difix3D+</td><td>18.06</td><td>0.533</td><td>0.415</td><td>Per-scene</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">19.57</td><td class="best">0.575</td><td class="best">0.297</td><td>Per-scene</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h5>(b) DL3DV-Blur</h5>
+        <div class="tablewrap"><table class="data">
+          <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th><th>Type</th></tr></thead>
+          <tbody>
+            <tr><td>MVSplat</td><td>12.58</td><td>0.294</td><td>0.556</td><td>Feed-fwd.</td></tr>
+            <tr><td>PF3plat</td><td>13.12</td><td>0.315</td><td>0.517</td><td>Feed-fwd.</td></tr>
+            <tr class="divider"><td>BAD-Gaussians</td><td>15.08</td><td>0.501</td><td>0.466</td><td>Per-scene</td></tr>
+            <tr><td>Difix3D+</td><td>14.36</td><td>0.492</td><td>0.404</td><td>Per-scene</td></tr>
+            <tr class="ours"><td>CoherentGS</td><td class="best">17.48</td><td class="best">0.639</td><td class="best">0.368</td><td>Per-scene</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <figure class="fig">
+      <img src="assets/figs/fig_r1_c4_feedforward_1_-1.png" alt="Feed-forward qualitative" />
+      <figcaption><b>Figure C.</b> Feed-forward methods absorb blur into reconstruction as over-smoothed textures; CoherentGS explicitly disentangles blur from appearance and recovers high-frequency detail.</figcaption>
+    </figure>
+
+    <p>
+      We note this is not an argument that per-scene optimization is universally superior.
+      For clean sparse-view inputs, feed-forward approaches offer compelling speed and
+      generalization. The two paradigms have different strengths—per-scene optimization
+      with explicit physical modeling is better suited when the degradation is complex,
+      structured, and potentially out-of-distribution.
+    </p>
+  </section>
+
+  <!-- ============================ R2.1 ============================ -->
+  <section class="cmt" id="r2q1">
+    <div class="head">
+      <span class="badge">R2.1</span>
+      <h3>What CoherentGS itself learns vs. inherits from external priors</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 2 — Comment 2.1</div>
+      The performance gain depends substantially on external models (image deblurring network and Difix3D+). The paper could better clarify what new modeling capacity is learned by CoherentGS itself, versus what is inherited from these large pre-trained models.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      <p>CoherentGS is a per-scene optimizer. Its only trainable parameters are the 3D Gaussian primitives and the per-frame exposure trajectories. Both external networks are <em>frozen</em> and <em>not loaded at test time</em>—they supply training-time supervisory signals only.</p>
+      <p>What is learned internally is the <b>unique 3D state that simultaneously satisfies three heterogeneous constraints</b>:</p>
+    </div>
+
+    <ul class="tight">
+      <li><b>(i)</b> reproducibility of blurry multi-view observations under exposure-integrated rendering — \(\mathcal{L}_{\mathrm{blurry}}\), Eq. (8);</li>
+      <li><b>(ii)</b> perceptual consistency of midpoint-rendered sharp images with VGG features of the deblurring pseudo-target — \(\mathcal{L}_{\mathrm{pr}}\), Eq. (10);</li>
+      <li><b>(iii)</b> geometric agreement with the diffusion model's repaired renderings at explored viewpoints — \(\mathcal{L}_{\mathrm{geo}}\), Eq. (12).</li>
+    </ul>
+
+    <p>No individual external model has access to all three signals, and no subset is sufficient under sparse-and-blurry input: (ii) alone propagates single-image deblurring artifacts, (iii) alone hallucinates content, (i) alone is severely ill-posed (baseline 3DGS drops to 19.58 PSNR on 3-view synthetic). The internal optimization is the only mechanism that reconciles all three into a self-consistent 3D state. <b>This fixed point is what CoherentGS "learns".</b></p>
+
+    <p class="tablecap"><b>Component ablation</b> (Sec. V, Table IV in manuscript) — disabling either prior degrades reconstruction substantially, confirming each is non-redundant.</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th>CoherentGS</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+      <tbody>
+        <tr><td>baseline</td><td>19.58</td><td>0.555</td><td>0.274</td></tr>
+        <tr><td>+Geometric Priors</td><td>20.59</td><td>0.615</td><td>0.218</td></tr>
+        <tr><td>+Deblurring Priors</td><td>20.83</td><td>0.647</td><td>0.207</td></tr>
+        <tr class="ours"><td>+Depth Loss (full)</td><td class="best">21.12</td><td class="best">0.671</td><td class="best">0.195</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><b>A capacity that exists only inside CoherentGS — the SACN exploration policy.</b> The decision of which novel viewpoints to supervise the diffusion prior against (Sec. IV-D) is computed online from the current 3DGS state and the diffusion-aided reliability score. It is not the output of any pre-trained model—no external prior produces such a viewpoint sequence.</p>
+
+    <p class="tablecap"><b>Trajectory ablation</b> (Sec. V, Table VI in manuscript).</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th>Trajectory</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+      <tbody>
+        <tr><td>Linear interpolation</td><td>17.24</td><td>0.575</td><td>0.372</td></tr>
+        <tr><td>Ellipse sampling</td><td>15.64</td><td>0.550</td><td>0.428</td></tr>
+        <tr class="ours"><td>SACN</td><td class="best">17.48</td><td class="best">0.639</td><td class="best">0.368</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============================ R2.2 ============================ -->
+  <section class="cmt" id="r2q2">
+    <div class="head">
+      <span class="badge">R2.2</span>
+      <h3>Geometric accuracy &amp; failure-mode analysis</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 2 — Comment 2.2</div>
+      Generative priors can introduce hallucinated structures inconsistent with true geometry. There is little systematic analysis of geometric errors—depth accuracy, multi-view consistency metrics, or visualizations of failure modes where diffusion guidance becomes misleading.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      We provide three new analyses on DTU (which has structured-light depth GT) and
+      Deblur-NeRF: (1) depth accuracy against GT, (2) multi-view depth-based reprojection
+      error, and (3) a controlled failure-mode visualization that honestly bounds SACN's scope.
+    </div>
+
+    <h4>(1) Depth accuracy on DTU against structured-light GT</h4>
+    <p class="tablecap"><b>Table I.</b> CoR-GS and NexusGS use explicit geometric regularizers; this comparison directly tests whether diffusion guidance sacrifices geometry for perceptual quality. CoherentGS wins on AbsRel, RMSE, and δ&lt;1.25 across 3-/6-/9-view.</p>
+    <div class="tablewrap"><table class="data">
+      <thead>
+        <tr><th rowspan="2">Method</th><th colspan="3">AbsRel↓</th><th colspan="3">RMSE↓</th><th colspan="3">δ&lt;1.25 ↑</th></tr>
+        <tr><th>3</th><th>6</th><th>9</th><th>3</th><th>6</th><th>9</th><th>3</th><th>6</th><th>9</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>BAD-Gaussians</td><td>0.802</td><td>0.754</td><td>0.688</td><td>9.35</td><td>8.96</td><td>8.41</td><td>0.497</td><td>0.512</td><td>0.547</td></tr>
+        <tr><td>CoR-GS</td><td>0.561</td><td>0.552</td><td>0.535</td><td>7.12</td><td>6.94</td><td>6.65</td><td>0.638</td><td>0.642</td><td>0.651</td></tr>
+        <tr><td>NexusGS</td><td>0.579</td><td>0.561</td><td>0.548</td><td>7.24</td><td>7.02</td><td>6.83</td><td>0.618</td><td>0.625</td><td>0.637</td></tr>
+        <tr><td>Difix3D+</td><td>0.715</td><td>0.688</td><td>0.613</td><td>9.08</td><td>8.66</td><td>8.23</td><td>0.510</td><td>0.537</td><td>0.552</td></tr>
+        <tr class="ours"><td>CoherentGS</td><td class="best">0.549</td><td class="best">0.542</td><td class="best">0.531</td><td class="best">7.04</td><td class="best">6.78</td><td class="best">6.52</td><td class="best">0.641</td><td class="best">0.648</td><td class="best">0.660</td></tr>
+      </tbody>
+    </table></div>
+
+    <figure class="fig">
+      <img src="assets/figs/fig_r2_c3_depth1-1.png" alt="DTU depth comparison" />
+      <figcaption><b>Figure D.</b> Qualitative depth comparison on DTU (3-view). BAD-Gaussians collapses to near-planar depth; CoR-GS / NexusGS preserve coarse structure but produce uneven depth at textureless surfaces; Difix3D+ shows speckle from per-view 2D de-artifacting. CoherentGS produces smooth depth aligned with the GT structured-light measurements.</figcaption>
+    </figure>
+
+    <h4>(2) Multi-view depth-based reprojection error</h4>
+    <p class="tablecap"><b>Table J.</b> Reprojection L1 error on DTU 3-view, averaged over training-view pairs. Lower indicates more geometrically coherent 3D reconstruction.</p>
+    <div class="tablewrap" style="max-width:380px"><table class="data">
+      <thead><tr><th>Method</th><th>Reprojection L1 ↓</th></tr></thead>
+      <tbody>
+        <tr><td>BAD-Gaussians</td><td>0.217</td></tr>
+        <tr><td>CoR-GS</td><td>0.114</td></tr>
+        <tr><td>NexusGS</td><td>0.154</td></tr>
+        <tr><td>Difix3D+</td><td>0.182</td></tr>
+        <tr class="ours"><td>CoherentGS</td><td class="best">0.102</td></tr>
+      </tbody>
+    </table></div>
+
+    <figure class="fig">
+      <img src="assets/figs/fig_r2_c3_error_1_-1.png" alt="Reprojection error maps" />
+      <figcaption><b>Figure E.</b> Multi-view reprojection error maps on DTU (3-view). Baselines exhibit large errors at depth discontinuities and textureless regions; CoherentGS produces the most uniform error distribution.</figcaption>
+    </figure>
+
+    <h4>(3) Failure-mode visualization of diffusion guidance</h4>
+    <figure class="fig">
+      <img src="assets/figs/fig_r2_c3_failure_1_-1.png" alt="SACN failure modes" />
+      <figcaption><b>Figure F.</b> SACN suppresses hallucinations from excessively divergent viewpoints (rows 1–2). Regions with zero training-view coverage (row 3) remain a fundamental limit of any reliability filter, not a design flaw of SACN.</figcaption>
+    </figure>
+
+    <div class="video-section" data-vid-question="r2q2">
+      <h4>Video Sliders <span class="pill">DTU scenes · drag to compare depth + RGB</span></h4>
+    </div>
+  </section>
+
+  <!-- ============================ R2.3 ============================ -->
+  <section class="cmt" id="r2q3">
+    <div class="head">
+      <span class="badge">R2.3</span>
+      <h3>Score distillation &amp; perceptual distillation novelty</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 2 — Comment 2.3</div>
+      The geometric guidance loss is closely related to score distillation / image-residual distillation. Perceptual distillation from a restoration network is a known strategy. The main novelty lies in combination and adaptation; individual components may be viewed as incremental.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      We agree the underlying primitives are not new. Our claim is narrower: each loss
+      is reshaped by the physics of the compound degradation, and it is their <em>joint
+      behavior</em> that makes reconstruction possible. We make this explicit at the
+      gradient level.
+    </div>
+
+    <h4>1 · The two losses are physically anchored, not drop-in instantiations</h4>
+    <p>\(\mathcal{L}_{\mathrm{pr}}\) supervises rendering at the SE(3) exposure midpoint \(\mathbf{T}_{\tau/2}\) — the same parameterization that already governs \(\mathcal{L}_{\mathrm{blurry}}\). The two losses share the trajectory variables \((\mathbf{T}_{\mathrm{start}}, \mathbf{T}_{\mathrm{end}})\), and the gradient of \(\mathcal{L}_{\mathrm{pr}}\) flows back through the same pose Jacobian:</p>
+
+    <div class="eq-row">
+      <div class="eq-body">$$\frac{\partial \mathcal{L}_{\mathrm{pr}}}{\partial \mathbf{T}_{\mathrm{start}}}
+      \;=\;
+      \underbrace{\frac{\partial \mathcal{L}_{\mathrm{pr}}}{\partial \mathbf{T}_{\tau/2}}}_{\text{deblurring guidance}}
+      \;\cdot\;
+      \underbrace{\frac{\partial \mathbf{T}_{\tau/2}}{\partial \mathbf{T}_{\mathrm{start}}}}_{\text{shared with } \mathcal{L}_{\mathrm{blurry}}}$$</div>
+      <div class="eq-tag"><span class="eq-num">(2.3.1)</span></div>
+    </div>
+
+    <p>A perceptual loss anchored at an arbitrary canonical frame would not have this property — the deblurred target could be matched simply by drifting the canonical pose, while \(\mathcal{L}_{\mathrm{blurry}}\) silently reabsorbed the drift. Tying supervision to the exposure midpoint turns \(\mathcal{L}_{\mathrm{pr}}\) into a constraint on the very trajectory the blur formation integrates over.</p>
+
+    <h4>2 · \(\mathcal{L}_{\mathrm{geo}}\) departs from vanilla SDS along three coordinated axes</h4>
+    <p>Canonical SDS gradient:</p>
+    <div class="eq-row">
+      <div class="eq-body">$$\nabla_\theta \mathcal{L}_{\mathrm{SDS}}
+      \;=\;
+      \mathbb{E}_{t,\boldsymbol{\epsilon}}\!\left[\,
+        w(t)\bigl(\boldsymbol{\epsilon}_\phi(\mathbf{x}_t;\, t,\, c) - \boldsymbol{\epsilon}\bigr)
+        \,\frac{\partial \hat{I}}{\partial \theta}
+      \,\right]$$</div>
+      <div class="eq-tag"><span class="eq-num">(2.3.2)</span><span class="eq-note">vanilla SDS</span></div>
+    </div>
+    <p>Our gradient is deterministic and acts entirely in image feature space:</p>
+    <div class="eq-row">
+      <div class="eq-body">$$\nabla_\theta \mathcal{L}_{\mathrm{geo}}
+      \;=\;
+      2\lambda_{\mathrm{geo}}\!\left(\Theta_{\mathrm{vgg}}(\hat{I}) - \Theta_{\mathrm{vgg}}\!\bigl(\mathrm{sg}(\hat{I}^{\mathrm{fix}}_i)\bigr)\right)
+      \,\frac{\partial \Theta_{\mathrm{vgg}}(\hat{I})}{\partial \theta}$$</div>
+      <div class="eq-tag"><span class="eq-num">(2.3.3)</span><span class="eq-note">ours</span></div>
+    </div>
+
+    <ul class="tight">
+      <li><b>(i)</b> the stochastic noise residual \(w(t)(\boldsymbol{\epsilon}_\phi - \boldsymbol{\epsilon})\) — dominant cause of densification instability in sparse-view 3DGS — is replaced by a bounded feature-space residual on the rendered image;</li>
+      <li><b>(ii)</b> the implicit moving target inside \(\boldsymbol{\epsilon}_\phi\) is frozen by \(\mathrm{sg}(\cdot)\), eliminating the self-referential gradient cycle that drives SDS toward saturated hallucinations;</li>
+      <li><b>(iii)</b> the noise-schedule expectation \(\mathbb{E}_t\) is collapsed to a fixed \(t_0=199\), suppressing low-noise samples that bypass the reference view.</li>
+    </ul>
+    <p>Together these three modifications repurpose Difix3D+ from a generative <em>sampler</em> into a reference-conditioned <em>refiner</em> — the only mode in which its output is safe to use as a geometric prior under sparse and blurry observations.</p>
+
+    <p>More fundamentally, the two losses are <em>not additive</em>. Standalone SDS under sparse views hallucinates motion blur as texture; standalone perceptual distillation under blur propagates per-frame restoration errors into 3D. Joint optimization (Sec. IV-E) and SACN (Sec. IV-D) convert this mutual interference into a virtuous cycle: cleaner deblurring exposes sharper features for the diffusion prior, while better-repaired geometry tightens the multi-view constraints the deblurring branch relies on. <b>This systemic coupling, not the individual primitives, is the contribution we claim.</b></p>
+  </section>
+
+  <!-- ============================ R2.4 ============================ -->
+  <section class="cmt" id="r2q4">
+    <div class="head">
+      <span class="badge">R2.4</span>
+      <h3>Cross-domain references on robustness &amp; multi-view consistency</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 2 — Comment 2.4</div>
+      Include comparisons with recent works on robust reconstruction and multimodal representation: DroneSplat (CVPR), Video Captioning Using Global-Local Representation (TCSVT), Solve the Puzzle of Instance Segmentation in Videos (TCSVT).
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response</div>
+      We thank the reviewer and apologize for the oversight. All three references have been
+      added to the revised Sec. II with explicit positioning relative to our problem:
+      DroneSplat targets in-the-wild 3DGS robustness without explicit blur modeling; the
+      spatio-temporal collaboration in the instance-segmentation work and the global-local
+      representation in the captioning work jointly motivate the local-global trade-off
+      underlying our SACN viewpoint policy.
+    </div>
+  </section>
+
+  <!-- ============================ R2.5 ============================ -->
+  <section class="cmt" id="r2q5">
+    <div class="head">
+      <span class="badge">R2.5</span>
+      <h3>Real handheld captures &amp; scalability</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 2 — Comment 2.5</div>
+      Experiments focus on Deblur-NeRF and a derived blurred outdoor dataset—forward-facing or object-centric, moderate scale. It remains unclear how the method behaves in large-scale, dynamic, or real handheld captures with pose noise, rolling shutter, or non-uniform blur.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      We evaluate on the <b>Smartphone Dataset</b> (Seiskari et al., <em>Gaussian Splatting on the Move</em>) — a recent depth-aware video deblurring benchmark of real handheld captures with natural non-uniform blur, implicit pose noise, and pixel-aligned depth GT. Following our 6-view protocol, we sparsely sample 6 frames per sequence and hold out the rest as novel-view targets.
+    </div>
+
+    <p class="tablecap"><b>Table K.</b> Static subset, Smartphone Dataset, 6-view. CoherentGS retains its lead under genuinely real-world handheld conditions.</p>
+    <div class="tablewrap" style="max-width:480px"><table class="data">
+      <thead><tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr></thead>
+      <tbody>
+        <tr><td>BAD-Gaussians</td><td>17.82</td><td>0.633</td><td>0.438</td></tr>
+        <tr><td>Sparse-DeRF*</td><td>18.24</td><td>0.630</td><td>0.457</td></tr>
+        <tr><td>Difix3D+</td><td>17.81</td><td>0.628</td><td>0.474</td></tr>
+        <tr><td>GenFusion</td><td>15.49</td><td>0.614</td><td>0.612</td></tr>
+        <tr class="ours"><td>CoherentGS</td><td class="best">20.34</td><td class="best">0.661</td><td class="best">0.366</td></tr>
+      </tbody>
+    </table></div>
+
+    <figure class="fig">
+      <img src="assets/figs/fig_r2_c5_sai-1.png" alt="Smartphone qualitative" />
+      <figcaption><b>Figure G.</b> Top: static captures, where CoherentGS recovers sharp details from real handheld motion blur. Bottom: dynamic capture, where CoherentGS exhibits expected foreground tearing because the exposure-integrated rendering model attributes all in-frame motion to the camera.</figcaption>
+    </figure>
+
+    <p>For completeness we also ran CoherentGS on dynamic captures of the Smartphone dataset. As anticipated, the method exhibits foreground tearing in regions with moving objects—the exposure-integrated rendering model attributes all in-frame motion to the camera. At the same time, the experiment suggests <em>moderate rolling-shutter effects do not constitute the dominant failure mode</em>: despite smartphone captures not strictly satisfying our global-shutter assumption, CoherentGS still produces reasonable reconstructions for the static background. The Limitations paragraph in Sec. VI has been expanded to clarify CoherentGS as a focused contribution to the static-scene, sparse-and-blurry regime.</p>
+
+    <div class="video-section" data-vid-question="r2q5">
+      <h4>Video Sliders <span class="pill">Smartphone scenes · drag to compare</span></h4>
+    </div>
+  </section>
+
+  <!-- ============================ R2.6 ============================ -->
+  <section class="cmt" id="r2q6">
+    <div class="head">
+      <span class="badge">R2.6</span>
+      <h3>Cost analysis</h3>
+    </div>
+    <div class="qbox">
+      <div class="label">Reviewer 2 — Comment 2.6</div>
+      The framework integrates multiple heavy components (exposure-based blur simulation with multi-sample rendering, diffusion-guided enhancement, perceptual distillation, joint optimization). The paper lacks sufficient cost analysis against simpler baselines.
+    </div>
+    <div class="rbox">
+      <div class="label">Our Response · summary</div>
+      Relative to BAD-Gaussians, the dual-prior design adds 7.2 GB storage and 3.1 min training—a
+      36% increase that is modest given the quality gains. <b>Inference is unchanged at
+      0.6 min</b> because both generative priors are training-time distillation signals
+      and are not invoked at test time. CoherentGS is over an order of magnitude faster at
+      inference than Difix3D+ (6.9 min) and GenFusion (9.2 min), and an order of magnitude
+      faster at training than Sparse-DeRF (132 h).
+    </div>
+
+    <p class="tablecap"><b>Table L.</b> Efficiency on DL3DV-Blur (NVIDIA A6000, 7000 iterations).</p>
+    <div class="tablewrap" style="max-width:580px"><table class="data">
+      <thead><tr><th>Method</th><th>Storage</th><th>Training</th><th>Inference</th></tr></thead>
+      <tbody>
+        <tr><td>BAD-Gaussians</td><td>9.63 GB</td><td>8.6 min</td><td>0.5 min</td></tr>
+        <tr><td>Difix3D+</td><td>14.9 GB</td><td>3.7 min</td><td>6.9 min</td></tr>
+        <tr><td>GenFusion</td><td>20.2 GB</td><td>3.9 min</td><td>9.19 min</td></tr>
+        <tr><td>Sparse-DeRF</td><td>25.6 GB</td><td>132 h</td><td>1.8 min</td></tr>
+        <tr class="ours"><td>CoherentGS</td><td>16.8 GB</td><td>11.7 min</td><td class="best">0.6 min</td></tr>
+      </tbody>
+    </table></div>
+
+    <p class="tablecap"><b>Table M.</b> Per-component training cost breakdown on DL3DV-Blur (3-view, 7000 iterations). The diffusion prior is invoked every 200 iterations and contributes 18.9% of total wall-clock; the dominant additions over BAD-Gaussians are the exposure-based multi-sample rendering and the deblurring forward pass.</p>
+    <div class="tablewrap"><table class="data">
+      <thead><tr><th>Component</th><th>Wall-clock</th><th>Share</th><th>Invocation</th></tr></thead>
+      <tbody>
+        <tr><td>3DGS rasterization + densification</td><td>2.7 min</td><td>23.0%</td><td>every iter</td></tr>
+        <tr><td>Exposure-based multi-sample rendering (Eq. 7)</td><td>6.2 min</td><td>53.3%</td><td>every iter</td></tr>
+        <tr><td>Deblurring prior (EVSSM + 𝓛<sub>pr</sub>)</td><td>0.4 min</td><td>3.4%</td><td>every iter</td></tr>
+        <tr><td>Diffusion prior (Difix3D+ + 𝓛<sub>geo</sub>)</td><td>2.1 min</td><td>18.9%</td><td>every 200 iter</td></tr>
+        <tr><td>SACN scoring + trajectory update</td><td>0.2 min</td><td>1.7%</td><td>every 200 iter</td></tr>
+        <tr class="ours"><td>Total</td><td>11.7 min</td><td>100%</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  </main>
+
+  <footer>
+    <div>This page accompanies the formal point-by-point response. All methods are rendered using identical camera trajectories for fair comparison.</div>
+    <div>CoherentGS · TCSVT-27506-2025</div>
+  </footer>
+</div>
+
+<script>
+/* ────────── Video data (re-routed: r2q3 → r2q2 to match the actual letter) ────────── */
+var P = "assets/videos/";
+var CACHE_VER = "v=2026_04_26";
+
+var VIDEO_DATA = {
+  r1q3: {
+    scenes: [
+      { id: "dtu", title: "DTU", ar: "400 / 304",
+        comparisons: [
+          { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/dtu/corgs_depth_and_rgb.mp4",
+                ours: P+"reviewer1_question3/dtu/ours_depth_and_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer1_question3/dtu/corgs_depth_and_rgb.mp4",
+                ours: P+"reviewer1_question3/dtu/ours_depth_and_rgb.mp4" }
+          ] },
+          { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/dtu/nexusgs_depth_and_rgb.mp4",
+                ours: P+"reviewer1_question3/dtu/ours_depth_and_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer1_question3/dtu/nexusgs_depth_and_rgb.mp4",
+                ours: P+"reviewer1_question3/dtu/ours_depth_and_rgb.mp4" }
+          ] }
+        ] },
+      { id: "llff", title: "LLFF", ar: "504 / 384",
+        comparisons: [
+          { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer1_question3/LLFF/CoR-GS_LLFF.mp4",
+                ours: P+"reviewer1_question3/LLFF/CoherentGS_LLFF.mp4" }
+          ] },
+          { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer1_question3/LLFF/NexusGS_LLFF.mp4",
+                ours: P+"reviewer1_question3/LLFF/CoherentGS_LLFF.mp4" }
+          ] }
+        ] },
+      { id: "mipnerf360", title: "Mip-NeRF 360", ar: "392 / 272",
+        comparisons: [
+          { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer1_question3/mipnerf360/CoR-GS_mipNeRF360.mp4",
+                ours: P+"reviewer1_question3/mipnerf360/CoherentGS_mipNeRF360.mp4" }
+          ] },
+          { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer1_question3/mipnerf360/NexusGS_mipNeRF360.mp4",
+                ours: P+"reviewer1_question3/mipnerf360/CoherentGS_mipNeRF360.mp4" }
+          ] }
+        ] },
+      { id: "real", title: "DeblurNeRF-Real", ar: "600 / 400",
+        comparisons: [
+          { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer1_question3/real/CoR-GS_real.mp4",
+                ours: P+"reviewer1_question3/real/CoherentGS_real.mp4" }
+          ] },
+          { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer1_question3/real/NexusGS_real.mp4",
+                ours: P+"reviewer1_question3/real/CoherentGS_real.mp4" }
+          ] }
+        ] }
+    ]
+  },
+  r2q2: {  /* re-routed from r2q3 — depth/geometry videos belong here */
+    scenes: [
+      { id: "scan31", title: "DTU Scan 31", ar: "400 / 304",
+        comparisons: [
+          { baselineName: "BAD-Gaussians", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer2_question3/scan31/badgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan31/ours_depth_and_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer2_question3/scan31/badgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan31/ours_depth_and_rgb.mp4" }
+          ] },
+          { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer2_question3/scan31/corgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan31/ours_depth_and_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer2_question3/scan31/corgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan31/ours_depth_and_rgb.mp4" }
+          ] },
+          { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer2_question3/scan31/nexusgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan31/ours_depth_and_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer2_question3/scan31/nexusgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan31/ours_depth_and_rgb.mp4" }
+          ] }
+        ] },
+      { id: "scan40", title: "DTU Scan 40", ar: "400 / 304",
+        comparisons: [
+          { baselineName: "BAD-Gaussians", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer2_question3/scan40/badgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan40/ours_depth_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer2_question3/scan40/badgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan40/ours_depth_rgb.mp4" }
+          ] },
+          { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer2_question3/scan40/corgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan40/ours_depth_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer2_question3/scan40/corgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan40/ours_depth_rgb.mp4" }
+          ] },
+          { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer2_question3/scan40/nexusgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan40/ours_depth_rgb.mp4" },
+              { label: "Depth Video", crop: "right",
+                baseline: P+"reviewer2_question3/scan40/nexusgs_depth_and_rgb.mp4",
+                ours: P+"reviewer2_question3/scan40/ours_depth_rgb.mp4" }
+          ] }
+        ] }
+    ]
+  },
+  r2q5: {
+    scenes: [
+      { id: "pixel5-table", title: "Pixel 5 — Table", ar: "800 / 608",
+        comparisons: [
+          { baselineName: "BAD-Gaussians", oursName: "CoherentGS",
+            pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer2_question5/pixel5-table/BAD-Gaussians_rgb.mp4",
+                ours: P+"reviewer2_question5/pixel5-table/CoherentGS_rgb.mp4" },
+              { label: "Depth Video", crop: null,
+                baseline: P+"reviewer2_question5/pixel5-table/BAD-Gaussians_depth.mp4",
+                ours: P+"reviewer2_question5/pixel5-table/CoherentGS_depth.mp4" }
+            ] },
+          { baselineName: "Difix3D+", oursName: "CoherentGS",
+            pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer2_question5/pixel5-table/Difix3Dp_rgb.mp4",
+                ours: P+"reviewer2_question5/pixel5-table/CoherentGS_rgb.mp4" },
+              { label: "Depth Video", crop: null,
+                baseline: P+"reviewer2_question5/pixel5-table/Difix3Dp_depth.mp4",
+                ours: P+"reviewer2_question5/pixel5-table/CoherentGS_depth.mp4" }
+            ] }
+        ] },
+      { id: "s20-bikerack", title: "S20 — Bikerack", ar: "4 / 3",
+        comparisons: [
+          { baselineName: "BAD-Gaussians", oursName: "CoherentGS",
+            pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer2_question5/s20-bikerack/BAD-Gaussians_rgb.mp4",
+                ours: P+"reviewer2_question5/s20-bikerack/CoherentGS_rgb.mp4" },
+              { label: "Depth Video", crop: null,
+                baseline: P+"reviewer2_question5/s20-bikerack/BAD-Gaussians_depth.mp4",
+                ours: P+"reviewer2_question5/s20-bikerack/CoherentGS_depth.mp4" }
+            ] },
+          { baselineName: "Difix3D+", oursName: "CoherentGS",
+            pairs: [
+              { label: "Rendered Video", crop: null,
+                baseline: P+"reviewer2_question5/s20-bikerack/Difix3Dp_rgb.mp4",
+                ours: P+"reviewer2_question5/s20-bikerack/CoherentGS_rgb.mp4" },
+              { label: "Depth Video", crop: null,
+                baseline: P+"reviewer2_question5/s20-bikerack/Difix3Dp_depth.mp4",
+                ours: P+"reviewer2_question5/s20-bikerack/CoherentGS_depth.mp4" }
+            ] }
+        ] }
+    ]
+  }
+};
+
+function el(tag, cls) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+function mkVideo(src) {
+  var v = document.createElement('video');
+  v.src = src + (src.indexOf('?') === -1 ? '?' : '&') + CACHE_VER;
+  v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'metadata';
+  v.setAttribute('playsinline', '');
+  return v;
+}
+function createSliderCell(pair, baselineName, oursName, ar) {
+  var cell = el('div', 'slider-cell');
+  var wrap = el('div', 'slider-wrap');
+  wrap.style.aspectRatio = ar;
+  var cropClass = pair.crop ? ('crop-' + pair.crop) : 'crop-none';
+  var baseLayer = el('div', 'vid-layer base-layer ' + cropClass);
+  baseLayer.appendChild(mkVideo(pair.baseline));
+  wrap.appendChild(baseLayer);
+  var oursLayer = el('div', 'vid-layer ours-layer ' + cropClass);
+  oursLayer.style.clipPath = 'inset(0 0 0 50%)';
+  oursLayer.appendChild(mkVideo(pair.ours));
+  wrap.appendChild(oursLayer);
+  wrap.appendChild(el('div', 'slider-line'));
+  wrap.appendChild(el('div', 'slider-handle'));
+  var lblL = el('div', 'vid-label left'); lblL.textContent = baselineName; wrap.appendChild(lblL);
+  var lblR = el('div', 'vid-label right ours'); lblR.textContent = oursName; wrap.appendChild(lblR);
+  cell.appendChild(wrap);
+  var cap = el('div', 'slider-caption');
+  var versus = el('span', 'versus');
+  versus.innerHTML = baselineName + ' <em>vs</em> ' + oursName;
+  cap.appendChild(versus);
+  var kind = el('span', 'kind');
+  kind.textContent = pair.label;
+  cap.appendChild(kind);
+  cell.appendChild(cap);
+  return cell;
+}
+function renderScene(question, sceneIdx, container) {
+  container.innerHTML = '';
+  var scene = question.scenes[sceneIdx];
+  var grid = el('div', 'comparison-grid');
+
+  // Column layout policy:
+  //   - if a comparison has multiple pairs (e.g. Rendered + Depth),
+  //     use pairs-per-comp as the column count so each comparison occupies one row.
+  //   - otherwise pick by total tile count.
+  var pairsPerComp = scene.comparisons[0].pairs.length;
+  var cols;
+  if (pairsPerComp > 1) {
+    cols = pairsPerComp;
+  } else {
+    var n = scene.comparisons.length;
+    cols = (n === 1) ? 1 : (n === 4 ? 2 : (n >= 3 ? 3 : 2));
+  }
+  grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+
+  scene.comparisons.forEach(function(comp) {
+    comp.pairs.forEach(function(pair) {
+      grid.appendChild(createSliderCell(pair, comp.baselineName, comp.oursName, scene.ar));
+    });
+  });
+
+  container.appendChild(grid);
+  grid.querySelectorAll('.slider-wrap').forEach(initSlider);
+}
+function initSlider(wrap) {
+  var vidB = wrap.querySelector('.base-layer video');
+  var vidO = wrap.querySelector('.ours-layer video');
+  var oursLayer = wrap.querySelector('.ours-layer');
+  var line = wrap.querySelector('.slider-line');
+  var handle = wrap.querySelector('.slider-handle');
+  var pos = 50, dragging = false, downX = 0, moved = false;
+  function setPos(p) {
+    pos = Math.max(2, Math.min(98, p));
+    oursLayer.style.clipPath = 'inset(0 0 0 ' + pos + '%)';
+    line.style.left = pos + '%';
+    handle.style.left = pos + '%';
+  }
+  function pctFrom(x) {
+    var r = wrap.getBoundingClientRect();
+    return ((x - r.left) / r.width) * 100;
+  }
+  wrap.addEventListener('mousedown', function(e) {
+    dragging = true; moved = false; downX = e.clientX;
+    setPos(pctFrom(e.clientX)); e.preventDefault();
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    if (Math.abs(e.clientX - downX) > 3) moved = true;
+    setPos(pctFrom(e.clientX));
+  });
+  window.addEventListener('mouseup', function() {
+    if (dragging && !moved) {
+      if (vidB.paused) { vidB.play().catch(function(){}); vidO.play().catch(function(){}); }
+      else { vidB.pause(); vidO.pause(); }
+    }
+    dragging = false;
+  });
+  wrap.addEventListener('touchstart', function(e) {
+    dragging = true; moved = false; downX = e.touches[0].clientX;
+    setPos(pctFrom(e.touches[0].clientX));
+  }, { passive: true });
+  wrap.addEventListener('touchmove', function(e) {
+    if (!dragging) return; moved = true;
+    setPos(pctFrom(e.touches[0].clientX)); e.preventDefault();
+  }, { passive: false });
+  wrap.addEventListener('touchend', function() {
+    if (dragging && !moved) {
+      if (vidB.paused) { vidB.play().catch(function(){}); vidO.play().catch(function(){}); }
+      else { vidB.pause(); vidO.pause(); }
+    }
+    dragging = false;
+  });
+  vidB.addEventListener('timeupdate', function() {
+    if (Math.abs(vidB.currentTime - vidO.currentTime) > 0.15) vidO.currentTime = vidB.currentTime;
+  });
+  vidB.addEventListener('play',  function() { vidO.play().catch(function(){}); });
+  vidB.addEventListener('pause', function() { vidO.pause(); });
+  function tryPlay() { vidB.play().catch(function(){}); vidO.play().catch(function(){}); }
+  if (vidB.readyState >= 2) tryPlay();
+  else vidB.addEventListener('loadeddata', tryPlay, { once: true });
+}
+
+/* ────────── Mount video sliders into each video-section ────────── */
+document.querySelectorAll('.video-section').forEach(function(section) {
+  var qid = section.dataset.vidQuestion;
+  var data = VIDEO_DATA[qid];
+  if (!data) return;
+  var sel = el('div', 'scene-selector');
+  var box = el('div');
+  var idx = 0;
+  data.scenes.forEach(function(sc, i) {
+    var btn = el('button', 'scene-btn' + (i === 0 ? ' active' : ''));
+    btn.textContent = sc.title;
+    btn.addEventListener('click', function() {
+      idx = i;
+      sel.querySelectorAll('.scene-btn').forEach(function(b, j) { b.classList.toggle('active', j === i); });
+      renderScene(data, i, box);
+    });
+    sel.appendChild(btn);
+  });
+  section.appendChild(sel);
+  section.appendChild(box);
+  renderScene(data, 0, box);
+  var hint = el('div', 'slider-hint');
+  hint.textContent = 'Drag the divider to compare · Click to play / pause';
+  section.appendChild(hint);
+});
+
+/* ────────── TOC scrollspy ────────── */
+var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+var sections = tocLinks.map(function(a) { return document.querySelector(a.getAttribute('href')); });
+function onScroll() {
+  var y = window.scrollY + 80;
+  var active = 0;
+  sections.forEach(function(s, i) { if (s && s.offsetTop <= y) active = i; });
+  tocLinks.forEach(function(a, i) { a.classList.toggle('active', i === active); });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+</script>
+</body>
+</html>
