@@ -628,9 +628,10 @@
         <span class="aff">Peking University</span>
       </p>
       <p class="sub">
-        Point-by-point rebuttal with new experiments, gradient-level novelty analysis,
-        and side-by-side video comparisons. Eleven cards, one EiC mandatory section,
-        ten reviewer comments — drag any slider to inspect the difference.
+        Companion page to our point-by-point response. Each reviewer comment is paired
+        with our reply, the supporting experiments and tables, and—where
+        applicable—side-by-side video comparisons of CoherentGS against the cited
+        baselines.
       </p>
       <div class="pillrow links">
         <a class="pill solid" href="https://github.com/PotatoBigRoom/CoherentGS" target="_blank" rel="noopener">
@@ -710,9 +711,9 @@
         page mirrors the updated evidence with side-by-side video comparisons.
       </p>
       <p style="margin-bottom: 0;">
-        We hope the reviewers will find that the revised manuscript responds to their
-        comments substantively and in good faith. Any remaining unclarity is on us,
-        not on the original critique.
+        We hope these revisions clearly address the reviewers' concerns, and we are
+        happy to provide further clarification on any point that remains unclear.
+        Thank you once more for the careful and constructive feedback.
       </p>
     </div>
   </section>
@@ -1447,12 +1448,18 @@ var VIDEO_DATA = {
       { id: "llff", title: "LLFF", ar: "504 / 384",
         comparisons: [
           { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
-              { label: "Rendered Video", crop: null,
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/LLFF/CoR-GS_LLFF.mp4",
+                ours: P+"reviewer1_question3/LLFF/CoherentGS_LLFF.mp4" },
+              { label: "Depth Video", crop: "right",
                 baseline: P+"reviewer1_question3/LLFF/CoR-GS_LLFF.mp4",
                 ours: P+"reviewer1_question3/LLFF/CoherentGS_LLFF.mp4" }
           ] },
           { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
-              { label: "Rendered Video", crop: null,
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/LLFF/NexusGS_LLFF.mp4",
+                ours: P+"reviewer1_question3/LLFF/CoherentGS_LLFF.mp4" },
+              { label: "Depth Video", crop: "right",
                 baseline: P+"reviewer1_question3/LLFF/NexusGS_LLFF.mp4",
                 ours: P+"reviewer1_question3/LLFF/CoherentGS_LLFF.mp4" }
           ] }
@@ -1460,12 +1467,18 @@ var VIDEO_DATA = {
       { id: "mipnerf360", title: "Mip-NeRF 360", ar: "392 / 272",
         comparisons: [
           { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
-              { label: "Rendered Video", crop: null,
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/mipnerf360/CoR-GS_mipNeRF360.mp4",
+                ours: P+"reviewer1_question3/mipnerf360/CoherentGS_mipNeRF360.mp4" },
+              { label: "Depth Video", crop: "right",
                 baseline: P+"reviewer1_question3/mipnerf360/CoR-GS_mipNeRF360.mp4",
                 ours: P+"reviewer1_question3/mipnerf360/CoherentGS_mipNeRF360.mp4" }
           ] },
           { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
-              { label: "Rendered Video", crop: null,
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/mipnerf360/NexusGS_mipNeRF360.mp4",
+                ours: P+"reviewer1_question3/mipnerf360/CoherentGS_mipNeRF360.mp4" },
+              { label: "Depth Video", crop: "right",
                 baseline: P+"reviewer1_question3/mipnerf360/NexusGS_mipNeRF360.mp4",
                 ours: P+"reviewer1_question3/mipnerf360/CoherentGS_mipNeRF360.mp4" }
           ] }
@@ -1473,12 +1486,18 @@ var VIDEO_DATA = {
       { id: "real", title: "DeblurNeRF-Real", ar: "600 / 400",
         comparisons: [
           { baselineName: "CoR-GS", oursName: "CoherentGS", pairs: [
-              { label: "Rendered Video", crop: null,
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/real/CoR-GS_real.mp4",
+                ours: P+"reviewer1_question3/real/CoherentGS_real.mp4" },
+              { label: "Depth Video", crop: "right",
                 baseline: P+"reviewer1_question3/real/CoR-GS_real.mp4",
                 ours: P+"reviewer1_question3/real/CoherentGS_real.mp4" }
           ] },
           { baselineName: "NexusGS", oursName: "CoherentGS", pairs: [
-              { label: "Rendered Video", crop: null,
+              { label: "Rendered Video", crop: "left",
+                baseline: P+"reviewer1_question3/real/NexusGS_real.mp4",
+                ours: P+"reviewer1_question3/real/CoherentGS_real.mp4" },
+              { label: "Depth Video", crop: "right",
                 baseline: P+"reviewer1_question3/real/NexusGS_real.mp4",
                 ours: P+"reviewer1_question3/real/CoherentGS_real.mp4" }
           ] }
