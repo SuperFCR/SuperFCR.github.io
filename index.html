@@ -185,11 +185,14 @@
             border-radius: 12px;
             background: #fcfdff;
             overflow: hidden;
-            transition: all 0.25s ease;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
         }
 
-        .project-group:hover {
+        .project-group:hover,
+        .project-group.is-pinned {
             border-color: #cbd5e1;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(32, 84, 136, 0.08);
         }
 
         .project-group summary {
@@ -239,6 +242,41 @@
             display: block;
             padding-right: 28px;
             letter-spacing: 0.1px;
+        }
+
+        .project-state {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+            padding: 2px 7px;
+            border: 1px solid #dbe3ef;
+            border-radius: 999px;
+            color: #64748b;
+            background: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
+        .project-group:not([open]) .project-state::before {
+            content: 'Show';
+        }
+
+        .project-group[open]:not(.is-pinned) .project-state::before {
+            content: 'Preview';
+        }
+
+        .project-group.is-pinned .project-state {
+            color: #fff;
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .project-group.is-pinned .project-state::before {
+            content: 'Pinned';
         }
 
         .project-preview-inline {
@@ -300,7 +338,8 @@
         .paper-img {
             width: 220px;
             height: 135px;
-            object-fit: cover;
+            object-fit: contain;
+            background: #fff;
             border-radius: 6px;
             border: 1px solid #f0f0f0;
             flex-shrink: 0;
@@ -481,14 +520,14 @@
                     <a href="mailto:fcr1500583403@gmail.com" class="social-btn">
                         <img src="./assets/imgs/envelope.png" alt="Email"> Email
                     </a>
-                    <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" class="social-btn">
+                    <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-btn">
                         <img src="./assets/imgs/google.png" alt="Scholar">
                         Scholar
                             <span style="margin-left: 4px; font-weight: 600; color: var(--primary); opacity: 0.9;">
-                                ⭐️667
+                                ⭐️670
                             </span>
                     </a>
-                    <a href="https://github.com/SuperFCR" target="_blank" class="social-btn">
+                    <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn">
                         <img src="./assets/imgs/github.png" alt="Github"> Github
                     </a>
                 </div>
@@ -500,7 +539,7 @@
         </div>
 
         <div class="bio-text-box">
-            I am a second-year M.S. student in ECE at Peking University, and achieve a GPA of 3.97/4.0 in Peking University.<br><br>📌 My research interests focus on <i>3D Vision</i>, <i> Neuromorphic Vision</i>, and <i>Generative Model</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.
+            I am a second-year M.S. student in ECE at Peking University and my research interests focus on <i>3D Vision</i>, <i>Neuromorphic Vision</i>, and <i>Generative Models</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.<br><br>🎓 I am currently applying for Fall 2027 Ph.D. positions. I warmly welcome potential advisors and collaborators to contact me.
         </div>
     </header>
 
@@ -516,7 +555,7 @@
                 </span>
             </li>
             <li class="news-item">
-                <span class="news-date">[2024-Now]</span>
+                <span class="news-date">[2024-2027]</span>
                 <span>
                     💪 
                     I'm pursuing my M.S. degree in ECE, PKU, supervised by <a href="https://yuanli2333.github.io/">Prof. Li Yuan</a> and <a href="https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en">Prof. Yonghong Tian</a>.
@@ -541,7 +580,7 @@
                 <span class="news-date">[2025-11]</span>
                 <span>
                     
-                    Two paper are accepted by <i>AAAI 2026</i>, <a href="https://arxiv.org/pdf/2503.23162">"NeuralGS"</a> and <a href="hhttps://arxiv.org/pdf/2412.15321">"Next Patch Prediction"</a>.
+                    Two papers are accepted by <i>AAAI 2026</i>, <a href="https://arxiv.org/pdf/2503.23162">"NeuralGS"</a> and <a href="https://arxiv.org/pdf/2412.15321">"Next Patch Prediction"</a>.
                 </span>
             </li>
             <li class="news-item">
@@ -555,14 +594,14 @@
                 <span class="news-date">[2025-07]</span>
                 <span>
                     
-                    A paper is accepted by <i>ACMMM 2025</i>, E-4DGS. The code and paper are coming soon.
+                    A paper is accepted by <i>ACM MM 2025</i>, <a href="https://arxiv.org/pdf/2508.09912">"E-4DGS"</a>.
                 </span>
             </li>
             <li class="news-item">
                 <span class="news-date">[2025-06]</span>
                 <span>
                     
-                    Two papers are accepted by <i>ICCV 2025</i>, <a href="https://arxiv.org/pdf/2405.20224 ">"EvaGaussians"</a> and <a href="https://iccv.thecvf.com/virtual/2025/poster/2554">"Tune-Your-Style"</a>.
+                    Two papers are accepted by <i>ICCV 2025</i>, <a href="https://arxiv.org/pdf/2405.20224">"EvaGaussians"</a> and <a href="https://iccv.thecvf.com/virtual/2025/poster/2554">"Tune-Your-Style"</a>.
                 </span>
             </li>
             <li class="news-item">
@@ -590,7 +629,7 @@
                 <span class="news-date">[2024-05]</span>
                 <span>
                     🔥 
-                    We release <a href="https://arxiv.org/pdf/2405.20224 ">"EvaGaussians"</a>, a first approach that reconstruct sharp static 3D scenes with sparse RGB frames and event streams.
+                    We release <a href="https://arxiv.org/pdf/2405.20224">"EvaGaussians"</a>, the first approach that reconstructs sharp static 3D scenes with sparse RGB frames and event streams.
                 </span>
             </li>
         </ul>
@@ -604,9 +643,9 @@
         </div>
 
         <!-- T2I Model -->
-        <details class="project-group" open>
+        <details class="project-group">
             <summary>
-                <span class="summary-title">♠ T2I Model & R1-like Reasoning</span>
+                <span class="summary-title">♠ T2I Model & R1-like Reasoning <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     <span class="preview-item">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</span>
                     <span class="preview-item">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</span>
@@ -622,7 +661,7 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
-                            <a href="./assets/files/StyleGRPO.pdf" class="badge badge-link" target="_blank">
+                            <a href="./assets/files/StyleGRPO.pdf" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
@@ -638,15 +677,15 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
-                            <a href="https://arxiv.org/abs/2602.24233" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/abs/2602.24233" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
-                            <a href="https://dagroup-pku.github.io/SpatialT2I/" class="badge badge-link" target="_blank">
+                            <a href="https://dagroup-pku.github.io/SpatialT2I/" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Project Page
                                 
                             </a>
-                            <a href="https://github.com/DAGroup-PKU/SpatialT2I" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/DAGroup-PKU/SpatialT2I" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                                  <span style="margin-left:2px; opacity:0.8;">★84</span> 
                             </a>
@@ -662,13 +701,13 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">ICML 2026</span>
-                            <a href="https://arxiv.org/abs/2503.07265" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/abs/2503.07265" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/WISE" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PKU-YuanGroup/WISE" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                
+                                 <span style="margin-left:2px; opacity:0.8;">★205</span> 
                             </a>
                         </div>
                     </div>
@@ -680,7 +719,7 @@
         <!-- 3D Reconstruction -->
         <details class="project-group">
             <summary>
-                <span class="summary-title">♠ 3D Reconstruction & Generative Model</span>
+                <span class="summary-title">♠ 3D Reconstruction & Generative Model <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     <span class="preview-item">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</span>
                     <span class="preview-item">🌫️ DeblurNVS: Geometric Latent Diffusion for Novel View Synthesis from Sparse Motion-Blurred Images</span>
@@ -712,13 +751,13 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">arXiv 2026</span>
-                            <a href="https://arxiv.org/abs/2606.01315" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/abs/2606.01315" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/DeblurNVS" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PKU-YuanGroup/DeblurNVS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                
+                                 <span style="margin-left:2px; opacity:0.8;">★9</span> 
                             </a>
                         </div>
                     </div>
@@ -732,11 +771,11 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
-                            <a href="https://arxiv.org/abs/2512.10369" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/abs/2512.10369" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
-                            <a href="https://github.com/PotatoBigRoom/CoherentGS" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PotatoBigRoom/CoherentGS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                                  <span style="margin-left:2px; opacity:0.8;">★95</span> 
                             </a>
@@ -752,7 +791,7 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
-                            <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="badge badge-link" target="_blank">
+                            <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
@@ -768,11 +807,11 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
-                            <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/Cycle3D" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PKU-YuanGroup/Cycle3D" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                                  <span style="margin-left:2px; opacity:0.8;">★219</span> 
                             </a>
@@ -788,11 +827,11 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2026</span>
-                            <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/NeuralGS" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PKU-YuanGroup/NeuralGS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                                  <span style="margin-left:2px; opacity:0.8;">★182</span> 
                             </a>
@@ -808,7 +847,7 @@
                         
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
-                            <a href="https://ieeexplore.ieee.org/document/11223960" class="badge badge-link" target="_blank">
+                            <a href="https://ieeexplore.ieee.org/document/11223960" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                                 
                             </a>
@@ -822,7 +861,7 @@
         <!-- Neuromorphic Vision -->
         <details class="project-group">
             <summary>
-                <span class="summary-title">♠ Neuromorphic Vision</span>
+                <span class="summary-title">♠ Neuromorphic Vision <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     <span class="preview-item">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</span>
                     <span class="preview-item">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</span>
@@ -835,17 +874,17 @@
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2505.15287" class="paper-title">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</a>
                         <div class="paper-authors">Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†</div>
-                        <div class="paper-desc">The large-scale event dataset and a novel pipeline to simultate the event stream with 3DGS.</div>
+                        <div class="paper-desc">The large-scale event dataset and a novel pipeline to simulate the event stream with 3DGS.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">NeurIPS 2025 D&amp;B Track</span>
-                            <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/GS2E" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PKU-YuanGroup/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★20</span>
                             </a>
-                            <a href="https://huggingface.co/datasets/Falcary/GS2E" class="badge badge-link" target="_blank">
+                            <a href="https://huggingface.co/datasets/Falcary/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Datasets
                             </a>
                         </div>
@@ -858,8 +897,8 @@
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.</div>
                         <div class="tag-row">
-                            <span class="badge badge-venue">ACMMM 2025</span>
-                            <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank">
+                            <span class="badge badge-venue">ACM MM 2025</span>
+                            <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                             </a>
                         </div>
@@ -873,10 +912,10 @@
                         <div class="paper-desc">Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
-                            <a href="https://arxiv.org/abs/2405.20224" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/abs/2405.20224" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/EvaGaussians" class="badge badge-link" target="_blank">
+                            <a href="https://github.com/PKU-YuanGroup/EvaGaussians" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★60</span>
                             </a>
@@ -891,10 +930,10 @@
                         <div class="paper-desc">3D reconstruction with event streams under noisy poses and unbounded scenes.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
-                            <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank">
+                            <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Paper
                             </a>
-                            <a href="https://drexubery.github.io/EvaGaussians/" class="badge badge-link" target="_blank">
+                            <a href="https://drexubery.github.io/EvaGaussians/" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
                             </a>
                         </div>
@@ -916,7 +955,7 @@
                 <div>
                     <p class="experience-title">Research Intern, Horizon Robotics</p>
                     <div class="experience-period">Mar. 2025 - Sep. 2025</div>
-                    <div class="experience-host">Host by Yanfeng Zhao</div>
+                    <div class="experience-host">Hosted by Yanfeng Zhao</div>
                 </div>
             </div>
             <div class="experience-card">
@@ -924,7 +963,7 @@
                 <div>
                     <p class="experience-title">Research Intern, Ant Research</p>
                     <div class="experience-period">Mar. 2026 - Now</div>
-                    <div class="experience-host">Host by <a href="">Jialiang Zheng</a></div>
+                    <div class="experience-host">Hosted by Jialiang Zheng</div>
                 </div>
             </div>
         </div>
@@ -968,7 +1007,7 @@
                 <span class="news-date">[2021,2022,2023]</span>
                 <span>
                     🌟 
-                    Nation Scholarship, three times, Dalian University of Technology
+                    National Scholarship, three times, Dalian University of Technology
                 </span>
             </li>
             <li class="news-item">
@@ -986,14 +1025,14 @@
         <h2>🧑‍💻 Professional Activities</h2>
         <ul style="color: var(--text-sec); padding-left: 20px;">
             <li><strong>Conference Reviewer:</strong> ICLR[25-26], CVPR[25-26], ICCV[25], NeurIPS[24-25], AAAI[25-26], IJCAI[25], ACM MM[25]</li>
-            <li><strong>Journal Reviewer:</strong> TCSVT</li>
+            <li><strong>Journal Reviewer:</strong> T-PAMI, T-CSVT</li>
         </ul>
     </section>
 
     <!-- Footer Map -->
     <div style="margin-top: 30px; text-align: center; opacity: 0.6; filter: grayscale(100%); transition: 0.3s;">
         <a href="https://clustrmaps.com/site/1c5bo" title="Visit tracker">
-            <img style="width: 150px;" src="//www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff" />
+            <img style="width: 150px;" src="https://www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff" alt="Visitor map" />
         </a>
     </div>
     <style>div[style*="filter"]:hover { filter: grayscale(0%); opacity: 1; }</style>
@@ -1003,13 +1042,70 @@
             &copy; 2025 <strong>Chaoran Feng</strong>. All rights reserved.
         </div>
         <div style="margin-top: 8px; font-size: 0.85rem;">
-            Generated by <a href="https://github.com/SuperFCR" target="_blank" class="footer-link">SuperFCR</a>
+            Generated by <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="footer-link">SuperFCR</a>
             <span style="margin: 0 6px; color: #ddd;">|</span>
             Assisted by <span class="ai-text">Gemini 3</span>
         </div>
-    </footer>
+</footer>
 
 </div>
+
+<script>
+(() => {
+    const groups = Array.from(document.querySelectorAll('.project-group'));
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const enterDelay = 180;
+    const leaveDelay = 450;
+
+    groups.forEach((group) => {
+        const summary = group.querySelector('summary');
+        let enterTimer = null;
+        let leaveTimer = null;
+        let pinned = false;
+        let hovering = false;
+
+        const setExpanded = (expanded) => {
+            group.open = expanded;
+            summary.setAttribute('aria-expanded', String(expanded));
+        };
+
+        const clearTimers = () => {
+            window.clearTimeout(enterTimer);
+            window.clearTimeout(leaveTimer);
+        };
+
+        const setPinned = (value) => {
+            pinned = value;
+            group.classList.toggle('is-pinned', pinned);
+            setExpanded(pinned || hovering);
+        };
+
+        summary.setAttribute('aria-expanded', String(group.open));
+
+        summary.addEventListener('click', (event) => {
+            event.preventDefault();
+            clearTimers();
+            setPinned(!pinned);
+        });
+
+        if (!canHover) return;
+
+        group.addEventListener('mouseenter', () => {
+            hovering = true;
+            window.clearTimeout(leaveTimer);
+            enterTimer = window.setTimeout(() => setExpanded(true), enterDelay);
+        });
+
+        group.addEventListener('mouseleave', () => {
+            hovering = false;
+            window.clearTimeout(enterTimer);
+            leaveTimer = window.setTimeout(() => {
+                if (!pinned) setExpanded(false);
+            }, leaveDelay);
+        });
+    });
+})();
+</script>
 
 </body>
 </html>

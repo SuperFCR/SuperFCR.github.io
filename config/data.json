@@ -18,12 +18,12 @@
       "description": "I received my B.E. degree from <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>, awarded the Outstanding Graduate (Top 3%), ranking <b>1<sup>st</sup></b>/85 for three years (2021-2023)."
     },
     {
-      "period": "[2024-Now]",
+      "period": "[2024-2027]",
       "emoji": "💪",
       "description": "I'm pursuing my M.S. degree in ECE, PKU, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
     }
   ],
-  "biography": "I am a second-year M.S. student in ECE at Peking University, and achieve a GPA of 3.97/4.0 in Peking University.<br><br>📌 My research interests focus on <i>3D Vision</i>, <i> Neuromorphic Vision</i>, and <i>Generative Model</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.",
+  "biography": "I am a second-year M.S. student in ECE at Peking University and my research interests focus on <i>3D Vision</i>, <i>Neuromorphic Vision</i>, and <i>Generative Models</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.<br><br>🎓 I am currently applying for Fall 2027 Ph.D. positions. I warmly welcome potential advisors and collaborators to contact me.",
   "news": [
     {
       "date": "[2026-02]",
@@ -31,7 +31,7 @@
     },
     {
       "date": "[2025-11]",
-      "content": "Two paper are accepted by <i>AAAI 2026</i>, <a href=\"https://arxiv.org/pdf/2503.23162\">\"NeuralGS\"</a> and <a href=\"hhttps://arxiv.org/pdf/2412.15321\">\"Next Patch Prediction\"</a>."
+      "content": "Two papers are accepted by <i>AAAI 2026</i>, <a href=\"https://arxiv.org/pdf/2503.23162\">\"NeuralGS\"</a> and <a href=\"https://arxiv.org/pdf/2412.15321\">\"Next Patch Prediction\"</a>."
     },
     {
       "date": "[2025-09]",
@@ -39,11 +39,11 @@
     },
     {
       "date": "[2025-07]",
-      "content": "A paper is accepted by <i>ACMMM 2025</i>, E-4DGS. The code and paper are coming soon."
+      "content": "A paper is accepted by <i>ACM MM 2025</i>, <a href=\"https://arxiv.org/pdf/2508.09912\">\"E-4DGS\"</a>."
     },
     {
       "date": "[2025-06]",
-      "content": "Two papers are accepted by <i>ICCV 2025</i>, <a href=\"https://arxiv.org/pdf/2405.20224 \">\"EvaGaussians\"</a> and <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">\"Tune-Your-Style\"</a>."
+      "content": "Two papers are accepted by <i>ICCV 2025</i>, <a href=\"https://arxiv.org/pdf/2405.20224\">\"EvaGaussians\"</a> and <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">\"Tune-Your-Style\"</a>."
     },
     {
       "date": "[2025-03]",
@@ -62,7 +62,7 @@
     {
       "date": "[2024-05]",
       "emoji": "🔥",
-      "content": "We release <a href=\"https://arxiv.org/pdf/2405.20224 \">\"EvaGaussians\"</a>, a first approach that reconstruct sharp static 3D scenes with sparse RGB frames and event streams."
+      "content": "We release <a href=\"https://arxiv.org/pdf/2405.20224\">\"EvaGaussians\"</a>, the first approach that reconstructs sharp static 3D scenes with sparse RGB frames and event streams."
     }
   ],
   "projects": {
@@ -179,7 +179,7 @@
       {
         "title": "🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation",
         "authors": "Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†",
-        "description": "The large-scale event dataset and a novel pipeline to simultate the event stream with 3DGS.",
+        "description": "The large-scale event dataset and a novel pipeline to simulate the event stream with 3DGS.",
         "venue": "NeurIPS 2025 D&B Track",
         "image": "./assets/pipelines/Pipeline_gs2e.png",
         "links": [
@@ -192,7 +192,7 @@
         "title": "🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras",
         "authors": "<u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†",
         "description": "A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.",
-        "venue": "ACMMM 2025",
+        "venue": "ACM MM 2025",
         "image": "./assets/pipelines/Pipeline_e_4dgs.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/pdf/2508.09912"}
@@ -234,7 +234,7 @@
       "title": "Research Intern",
       "organization": "Ant Research",
       "period": "Mar. 2026 - Now",
-      "host": "<a href=\"\">Jialiang Zheng</a>",
+      "host": "Jialiang Zheng",
       "logo": "./assets/logo/ant_logo.jpg"
     }
 
@@ -263,7 +263,7 @@
     {
       "date": "[2021,2022,2023]",
       "emoji": "🌟",
-      "content": "Nation Scholarship, three times, Dalian University of Technology"
+      "content": "National Scholarship, three times, Dalian University of Technology"
     },
     {
       "date": "[2021,2022,2023]",
@@ -273,6 +273,6 @@
   ],
   "activities": {
     "conference_reviewer": "ICLR[25-26], CVPR[25-26], ICCV[25], NeurIPS[24-25], AAAI[25-26], IJCAI[25], ACM MM[25]",
-    "journal_reviewer": "TCSVT"
+    "journal_reviewer": "T-PAMI, T-CSVT"
   }
 }

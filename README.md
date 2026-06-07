@@ -18,11 +18,12 @@ homepage/
 ├── config/
 │   └── data.json           # Data configuration file
 ├── templates/
-│   └── index.html          # HTML template (deprecated - now using JS generation)
+│   └── index.html          # Handlebars HTML template
 ├── assets/
 │   ├── css/
-│   │   └── profile.css     # Stylesheet
-│   └── imgs/               # Image assets
+│   │   └── profile.css     # Legacy stylesheet
+│   ├── imgs/               # Image assets
+│   └── pipelines/          # Project pipeline thumbnails
 ├── build.js                # Build script
 ├── package.json            # Project configuration
 ├── README.md               # Documentation
@@ -34,7 +35,6 @@ homepage/
 ### 1. Install Dependencies (Optional)
 ```bash
 npm install
-npm install axios cheerio
 ```
 
 ### 2. Configure Your Data
@@ -45,7 +45,7 @@ Edit the `config/data.json` file with your personal information, projects, award
 npm run build
 
 python3 google_scholar_crawler/fetch_scholar.py
-node build.js
+npm run build
 ```
 
 ### 4. View Results
@@ -117,7 +117,7 @@ Array format, each entry contains:
 ## 🎨 Customization
 
 ### Modifying Styles
-Edit `assets/css/profile.css` to customize the website appearance:
+Edit the `<style>` block in `templates/index.html` to customize the website appearance:
 
 - **Colors**: Modify color schemes
 - **Layout**: Adjust spacing, margins, and positioning
@@ -126,16 +126,16 @@ Edit `assets/css/profile.css` to customize the website appearance:
 
 ### Adding New Sections
 1. Add new data to `config/data.json`
-2. Modify `build.js` to include the new section in HTML generation
+2. Modify `templates/index.html` to render the new section
 3. Add corresponding CSS styles if needed
 
 ## 🔧 Build Script Details
 
 The `build.js` script:
 - Reads data from `config/data.json`
-- Generates HTML using JavaScript template literals
+- Compiles `templates/index.html` with Handlebars
 - Outputs the final `index.html` file
-- Provides build statistics
+- Injects optional Google Scholar citations and GitHub stars when the generated JSON files exist
 
 ### Error Handling
 The script includes error handling for:
@@ -178,12 +178,12 @@ The script includes error handling for:
 ### Adding a New Publication
 1. Add project images to `assets/pipelines/`
 2. Add project entry to `config/data.json` in the appropriate category
-3. Run `node build.js`
+3. Run `npm run build`
 4. Done!
 
 ### Adding News
 1. Add new entry to the `news` array in `config/data.json`
-2. Run `node build.js`
+2. Run `npm run build`
 3. Your news appears on the homepage!
 
 ## 🤝 Contributing
