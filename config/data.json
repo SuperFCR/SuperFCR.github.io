@@ -89,8 +89,18 @@
           {"type": "Project Page", "url": "https://dagroup-pku.github.io/SpatialT2I/"},
           {"type": "Code", "url": "https://github.com/DAGroup-PKU/SpatialT2I"}
         ]
-
-      }
+      },
+      {
+        "title": "🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation",
+        "authors": "Yuwei Niu, Munan Ning, Mengren Zheng, Weiyang Jin, Bin Lin, Peng Jin, Jiaqi Liao, <u><b>Chaoran Feng</b></u>, Fanqing Meng, Kunpeng Ning, Bin Zhu, Li Yuan",
+        "description": "The first benchmark for evaluating world-knowledge-informed semantic understanding in text-to-image generation, with 1,000 prompts across cultural common sense, spatio-temporal reasoning, and natural science.",
+        "venue": "ICML 2026",
+        "image": "./assets/pipelines/Pipeline_wise.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2503.07265"},
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/WISE"}
+        ]
+      }      
     ],
     "3d_reconstruction": [
       {
@@ -101,10 +111,21 @@
         "image": "./assets/pipelines/Pipeline_ea3d.png"
       },
       {
+        "title": "🌫️ DeblurNVS: Geometric Latent Diffusion for Novel View Synthesis from Sparse Motion-Blurred Images",
+        "authors": "Changyue Shi, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†",
+        "description": "A geometric latent diffusion framework for high-fidelity novel view synthesis directly from sparse motion-blurred images without per-scene optimization.",
+        "venue": "arXiv 2026",
+        "image": "./assets/pipelines/Pipeline_deblurnvs.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2606.01315"},
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/DeblurNVS"}
+        ]
+      },
+      {
         "title": "🍿 Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views",
-        "authors": "Zhankuo Xu*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao, Wangbo Yu, Li Yuan† , Yonghong Tian†",
+        "authors": "<u><b>Chaoran Feng</b></u>, Zhankuo Xu, Yingtao Li, Jianbin Zhao, Jiashu Yang, Wangbo Yu, Li Yuan†, Yonghong Tian†",
         "description": "A novel framework for coherent 3D Gaussian Splatting from sparse and motion-blurred views using physics-aware deblurring priors coupled with diffusion-driven geometry completion.",
-        "venue": "Under Review",
+        "venue": "IEEE T-CSVT",
         "image": "./assets/pipelines/Pipeline_coherentgs.png",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/abs/2512.10369"},
