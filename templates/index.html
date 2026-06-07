@@ -324,15 +324,15 @@
             border: 1px solid #eaecf0;
             border-radius: var(--radius);
             position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.38s ease, box-shadow 0.38s ease, background-color 0.38s ease, transform 0.38s ease;
             align-items: stretch; 
         }
 
         .paper-card:hover {
-            border-color: var(--primary); 
-            transform: translateY(-4px);  
-            box-shadow: var(--shadow-hover);
-            background: #fafcff; 
+            border-color: rgba(32, 84, 136, 0.32); 
+            transform: translateY(-1px);  
+            box-shadow: 0 10px 22px -12px rgba(32, 84, 136, 0.24), 0 0 0 1px rgba(32, 84, 136, 0.05);
+            background: #fbfdff; 
         }
 
         .paper-img {
@@ -343,9 +343,12 @@
             border-radius: 6px;
             border: 1px solid #f0f0f0;
             flex-shrink: 0;
-            transition: transform 0.3s;
+            transition: border-color 0.38s ease, filter 0.38s ease;
         }
-        .paper-card:hover .paper-img { transform: scale(1.02); }
+        .paper-card:hover .paper-img {
+            border-color: #dbe3ef;
+            filter: saturate(1.02);
+        }
 
         .paper-content { 
             flex: 1; 
@@ -497,6 +500,23 @@
             .project-preview-inline .preview-item {
                 font-size: 0.8rem;
                 padding: 5px 9px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.001ms !important;
+            }
+
+            .paper-card:hover,
+            .paper-card:hover .paper-img,
+            .news-item:hover,
+            .social-btn:hover,
+            .experience-card:hover {
+                transform: none !important;
             }
         }
     </style>
