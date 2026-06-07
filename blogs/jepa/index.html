@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEPA 系列教程 · I-JEPA → V-JEPA → V-JEPA 2 → V-JEPA 2.1</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --ink:#e6edf3; --muted:#9aa7b6;
+    --line:#2a3340; --accent:#58a6ff;
+    --ijepa:#3b82f6; --vjepa:#10b981; --vjepa2:#a855f7; --vjepa21:#f97316;
+    --good:#3fb950; --warn:#f0883e; --bad:#f85149;
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;font-size:16px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,.mono{font-family:var(--mono);font-size:.92em}
+
+  /* progress bar */
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--ijepa),var(--vjepa),var(--vjepa2),var(--vjepa21));z-index:200}
+
+  /* layout */
+  .wrap{display:grid;grid-template-columns:280px 1fr;max-width:1480px;margin:0 auto;gap:0}
+  nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:26px 18px;border-right:1px solid var(--line);background:#0b0e13}
+  nav.toc h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+  nav.toc a{display:block;color:var(--muted);padding:5px 10px;border-radius:7px;font-size:14px;border-left:2px solid transparent}
+  nav.toc a:hover{color:var(--ink);background:var(--panel)}
+  nav.toc a.active{color:var(--ink);background:var(--panel2);border-left-color:var(--accent)}
+  nav.toc .brand{font-weight:800;font-size:18px;color:var(--ink);margin-bottom:4px}
+  nav.toc .brand span{background:linear-gradient(90deg,var(--ijepa),var(--vjepa21));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  main{padding:0 48px 120px;min-width:0}
+  @media(max-width:960px){.wrap{grid-template-columns:1fr}nav.toc{display:none}main{padding:0 18px 80px}}
+
+  section{padding-top:38px;margin-top:8px;border-top:1px solid transparent}
+  h1{font-size:34px;line-height:1.25;margin:.4em 0}
+  h2.sec{font-size:27px;margin:.2em 0 .5em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+  h3{font-size:20px;margin:1.4em 0 .4em}
+  h4{font-size:16px;margin:1.1em 0 .3em;color:var(--accent)}
+  p{margin:.6em 0}
+  .lead{font-size:18px;color:#cdd9e5}
+  .muted{color:var(--muted)}
+  ul,ol{padding-left:1.3em}
+  li{margin:.3em 0}
+
+  /* hero */
+  .hero{padding:52px 0 10px}
+  .pill{display:inline-block;font-size:12.5px;padding:3px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
+  .kbd{font-family:var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.85em}
+
+  /* timeline */
+  .timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0 6px}
+  @media(max-width:780px){.timeline{grid-template-columns:1fr 1fr}}
+  .tl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+  .tl:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+  .tl.i:before{background:var(--ijepa)} .tl.v:before{background:var(--vjepa)}
+  .tl.v2:before{background:var(--vjepa2)} .tl.v21:before{background:var(--vjepa21)}
+  .tl .date{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .tl .name{font-weight:800;font-size:18px;margin:3px 0}
+  .tl .tag{font-size:13px;color:#c9d4e0}
+  .tl .scale{margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+  /* cards / tables */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:780px){.grid2,.grid3{grid-template-columns:1fr}}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .stat .n{font-size:24px;font-weight:800;font-family:var(--mono)}
+  .stat .l{font-size:12.5px;color:var(--muted)}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.2px;display:block;overflow-x:auto}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);font-weight:700;position:sticky;top:0}
+  tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
+  td.num,th.num{font-family:var(--mono);white-space:nowrap}
+  .best{color:var(--good);font-weight:700}
+  .win{color:var(--good)} .lose{color:var(--warn)}
+
+  .badge{display:inline-block;font-size:11.5px;font-family:var(--mono);padding:2px 8px;border-radius:6px;border:1px solid var(--line);margin:2px 4px 2px 0}
+  .b-i{color:var(--ijepa);border-color:color-mix(in srgb,var(--ijepa) 50%,var(--line))}
+  .b-v{color:var(--vjepa);border-color:color-mix(in srgb,var(--vjepa) 50%,var(--line))}
+  .b-v2{color:var(--vjepa2);border-color:color-mix(in srgb,var(--vjepa2) 50%,var(--line))}
+  .b-v21{color:var(--vjepa21);border-color:color-mix(in srgb,var(--vjepa21) 50%,var(--line))}
+  .b-app{color:#ec4899;border-color:color-mix(in srgb,#ec4899 50%,var(--line))}
+  .b-mindv{color:#6366f1;border-color:color-mix(in srgb,#6366f1 50%,var(--line))}
+  .b-pe{color:#06b6d4;border-color:color-mix(in srgb,#06b6d4 50%,var(--line))}
+
+  /* equation */
+  .eq{background:#0a0d12;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:14px 18px;margin:12px 0;font-family:var(--mono);font-size:14.5px;overflow-x:auto;color:#d6e1ec}
+  .eq .c{color:var(--muted)}
+  sub,sup{font-size:.72em}
+
+  .note{border-left:3px solid var(--warn);background:rgba(240,136,62,.07);padding:10px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14.5px}
+  .key{border-left:3px solid var(--good);background:rgba(63,185,80,.07);padding:10px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:14.5px}
+  blockquote{margin:12px 0;padding:8px 18px;border-left:3px solid var(--line);color:#c4cfdb;font-style:italic}
+
+  .secthead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:13px;padding:3px 10px;border-radius:8px;color:#fff}
+  .chip.i{background:var(--ijepa)} .chip.v{background:var(--vjepa)} .chip.v2{background:var(--vjepa2)} .chip.v21{background:var(--vjepa21)} .chip.app{background:#ec4899} .chip.mindv{background:#6366f1} .chip.pe{background:#06b6d4}
+
+  /* svg diagram container */
+  .figure{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:18px 0}
+  .figure svg{width:100%;height:auto;display:block}
+  .figcap{font-size:13px;color:var(--muted);margin-top:10px;text-align:center}
+
+  footer{border-top:1px solid var(--line);margin-top:50px;padding-top:20px;color:var(--muted);font-size:13.5px}
+  .anchor{scroll-margin-top:20px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="wrap">
+
+<!-- ============ TOC ============ -->
+<nav class="toc">
+  <div class="brand"><span>JEPA 系列教程</span></div>
+  <div class="muted" style="font-size:12.5px">预测式自监督视觉表征的四步演进</div>
+  <h2>导航</h2>
+  <a href="#intro">0 · 引言与全景</a>
+  <a href="#principle">1 · JEPA 核心原理</a>
+  <a href="#ijepa">2 · I-JEPA（图像）</a>
+  <a href="#vjepa">3 · V-JEPA（视频）</a>
+  <a href="#vjepa2">4 · V-JEPA 2（世界模型）</a>
+  <a href="#vjepa21">5 · V-JEPA 2.1（稠密特征）</a>
+  <h2>延伸应用</h2>
+  <a href="#apply">★ 物理奖励 · WMReward</a>
+  <a href="#mindv">★★ MIND-V 机器人世界模型</a>
+  <a href="#pegrpo">★★★ PE-GRPO 视频生成对齐</a>
+  <h2>横向对比</h2>
+  <a href="#evolution">6 · 方法演进对比</a>
+  <a href="#results">7 · 实验效果对比</a>
+  <a href="#compute">8 · 算力与规模</a>
+  <a href="#capability">9 · 能力进阶</a>
+  <a href="#open">10 · 开放问题</a>
+  <a href="#refs">参考文献</a>
+</nav>
+
+<!-- ============ MAIN ============ -->
+<main>
+
+<!-- ===== 0 INTRO ===== -->
+<section id="intro" class="hero anchor">
+  <div>
+    <span class="pill">自监督学习 SSL</span>
+    <span class="pill">联合嵌入预测架构</span>
+    <span class="pill">世界模型 World Model</span>
+    <span class="pill">Meta FAIR · Yann LeCun</span>
+  </div>
+  <h1>从 <span style="color:var(--ijepa)">I-JEPA</span> 到 <span style="color:var(--vjepa21)">V-JEPA 2.1</span>：<br>预测式视觉表征学习的四步演进</h1>
+  <p class="lead">
+    JEPA（Joint-Embedding Predictive Architecture，联合嵌入预测架构）是 Yann LeCun 提出的"通往自主机器智能"蓝图中的核心组件。它的主张只有一句话：
+    <b>不要在像素空间重建，也不要靠人造数据增广，而要在<u>抽象表征空间</u>中"预测"——用一部分输入的表征去预测另一部分输入的表征。</b>
+    这一原理从图像（I-JEPA）出发，扩展到视频（V-JEPA），再被规模化为可理解、预测、规划的世界模型（V-JEPA 2），最终解决稠密特征质量问题（V-JEPA 2.1）。
+  </p>
+
+  <div class="timeline">
+    <div class="tl i">
+      <div class="date">2023-01 · CVPR'23 · arXiv 2301.08243</div>
+      <div class="name" style="color:var(--ijepa)">I-JEPA</div>
+      <div class="tag">图像表征：在隐空间预测，去掉数据增广与像素重建</div>
+      <div class="scale">ViT-B → ViT-G/16 · IN1K/IN22K · &lt;1200 GPU-h</div>
+    </div>
+    <div class="tl v">
+      <div class="date">2024-02 · arXiv 2404.08471</div>
+      <div class="name" style="color:var(--vjepa)">V-JEPA</div>
+      <div class="tag">视频表征：3D 多块掩码 + L1，解锁"运动理解"</div>
+      <div class="scale">ViT-L 200M / ViT-H 630M · ~2M 视频 · 270M 样本</div>
+    </div>
+    <div class="tl v2">
+      <div class="date">2025-06 · arXiv 2506.09985</div>
+      <div class="name" style="color:var(--vjepa2)">V-JEPA 2</div>
+      <div class="tag">世界模型：四轴 scaling + 动作条件预测 + 零样本机器人规划</div>
+      <div class="scale">ViT-g 1B · 22M 视频 / &gt;1M 小时 · ~60 GPU-年级</div>
+    </div>
+    <div class="tl v21">
+      <div class="date">2026-03 · arXiv 2603.14482</div>
+      <div class="name" style="color:var(--vjepa21)">V-JEPA 2.1</div>
+      <div class="tag">稠密特征：对全部 token 监督 + 深层自监督，做分割/深度/跟踪</div>
+      <div class="scale">ViT-G 2B · VisionMix163M · 蒸馏到 ViT-L/B</div>
+    </div>
+  </div>
+
+  <div class="key">
+    <b>本教程怎么读：</b>第 1 节讲清"为什么是隐空间预测"这一不变内核；第 2–5 节逐篇拆解动机 / 架构 / 目标函数 / 掩码 / 实验 / 算力；第 6–10 节做横向对比与脉络总结。
+    四篇 PDF 已下载至 <code>./papers/</code>。文中所有数字均来自原文，并经二次回读核验（含若干处对比基线数字的纠正，见各处脚注）。
+  </div>
+</section>
+
+<!-- ===== 1 PRINCIPLE ===== -->
+<section id="principle" class="anchor">
+  <h2 class="sec">1 · JEPA 核心原理：在隐空间里"预测"</h2>
+  <p>要理解整个系列，先要分清自监督视觉学习的三条技术路线。JEPA 是对前两条的"折中再超越"：</p>
+
+  <table>
+    <thead><tr><th>路线</th><th>代表</th><th>怎么学</th><th>痛点</th></tr></thead>
+    <tbody>
+      <tr><td><b>生成式 / 重建</b></td><td>MAE, BEiT, VideoMAE, data2vec</td><td>在<b>像素 / token 空间</b>重建被遮挡的内容</td><td>被迫拟合不可预测的低层细节，特征语义性低、收敛慢</td></tr>
+      <tr><td><b>不变性 / 对比</b></td><td>DINO, iBOT, MSN, SimCLR</td><td>强制对<b>人造增广视图</b>保持表征不变</td><td>依赖手工增广（注入偏置、跨模态难迁移）、需多视图、需负样本</td></tr>
+      <tr><td style="border-left:3px solid var(--accent)"><b>JEPA（本系列）</b></td><td>I/V-JEPA</td><td>用 context 的<b>表征</b>预测 target 的<b>表征</b>（隐空间回归）</td><td>无需增广、无需负样本、无需像素重建；语义更强、更省算力</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.1 三个网络 + 一个停梯度 = 不坍缩的预测器</h3>
+  <p>所有四篇论文共用同一套"骨架"，差异只在<b>模态、掩码维度、损失加在哪些 token、规模</b>：</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 920 420" xmlns="http://www.w3.org/2000/svg" font-family="var(--sans)">
+      <defs>
+        <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa7b6"/></marker>
+        <marker id="arrG" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3fb950"/></marker>
+      </defs>
+      <!-- input -->
+      <rect x="20" y="150" width="120" height="120" rx="10" fill="#1c2230" stroke="#2a3340"/>
+      <text x="80" y="145" fill="#9aa7b6" font-size="13" text-anchor="middle">输入 x（图像/视频）</text>
+      <!-- patch grid -->
+      <g>
+        <rect x="35" y="165" width="22" height="22" fill="#3b82f6" opacity=".8"/><rect x="59" y="165" width="22" height="22" fill="#2a3340"/><rect x="83" y="165" width="22" height="22" fill="#3b82f6" opacity=".8"/><rect x="107" y="165" width="20" height="22" fill="#2a3340"/>
+        <rect x="35" y="189" width="22" height="22" fill="#2a3340"/><rect x="59" y="189" width="22" height="22" fill="#3b82f6" opacity=".8"/><rect x="83" y="189" width="22" height="22" fill="#2a3340"/><rect x="107" y="189" width="20" height="22" fill="#3b82f6" opacity=".8"/>
+        <rect x="35" y="213" width="22" height="22" fill="#3b82f6" opacity=".8"/><rect x="59" y="213" width="22" height="22" fill="#2a3340"/><rect x="83" y="213" width="22" height="22" fill="#3b82f6" opacity=".8"/><rect x="107" y="213" width="20" height="22" fill="#2a3340"/>
+        <rect x="35" y="237" width="22" height="22" fill="#2a3340"/><rect x="59" y="237" width="22" height="22" fill="#3b82f6" opacity=".8"/><rect x="83" y="237" width="22" height="22" fill="#2a3340"/><rect x="107" y="237" width="20" height="22" fill="#3b82f6" opacity=".8"/>
+      </g>
+      <text x="80" y="292" fill="#7c8794" font-size="11" text-anchor="middle">蓝=context（可见）  灰=target（遮挡）</text>
+
+      <!-- context encoder -->
+      <rect x="210" y="60" width="150" height="80" rx="10" fill="#13202e" stroke="#3b82f6"/>
+      <text x="285" y="95" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">Context Encoder</text>
+      <text x="285" y="115" fill="#9aa7b6" font-size="12" text-anchor="middle">E_θ（只看可见 token）</text>
+      <!-- target encoder -->
+      <rect x="210" y="280" width="150" height="80" rx="10" fill="#13261b" stroke="#3fb950"/>
+      <text x="285" y="312" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">Target Encoder</text>
+      <text x="285" y="332" fill="#9aa7b6" font-size="12" text-anchor="middle">E_θ̄（EMA 复制·看全图）</text>
+      <text x="285" y="349" fill="#3fb950" font-size="11" text-anchor="middle">stop-gradient</text>
+
+      <!-- predictor -->
+      <rect x="450" y="120" width="160" height="90" rx="10" fill="#241a30" stroke="#a855f7"/>
+      <text x="530" y="152" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">Predictor P_φ</text>
+      <text x="530" y="172" fill="#9aa7b6" font-size="12" text-anchor="middle">窄 ViT + 掩码 token Δy</text>
+      <text x="530" y="190" fill="#9aa7b6" font-size="12" text-anchor="middle">（带位置）→ 预测表征</text>
+
+      <!-- loss -->
+      <rect x="690" y="180" width="170" height="80" rx="10" fill="#2b1414" stroke="#f85149"/>
+      <text x="775" y="212" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">隐空间回归损失</text>
+      <text x="775" y="232" fill="#9aa7b6" font-size="12" text-anchor="middle">L2(I-JEPA) / L1(V-JEPA+)</text>
+      <text x="775" y="249" fill="#9aa7b6" font-size="12" text-anchor="middle">‖ pred − sg(target) ‖</text>
+
+      <!-- arrows -->
+      <line x1="140" y1="190" x2="208" y2="100" stroke="#9aa7b6" marker-end="url(#arr)"/>
+      <line x1="140" y1="230" x2="208" y2="320" stroke="#9aa7b6" marker-end="url(#arr)"/>
+      <line x1="360" y1="100" x2="448" y2="150" stroke="#9aa7b6" marker-end="url(#arr)"/>
+      <line x1="610" y1="170" x2="688" y2="205" stroke="#9aa7b6" marker-end="url(#arr)"/>
+      <line x1="360" y1="320" x2="688" y2="235" stroke="#3fb950" stroke-dasharray="5,4" marker-end="url(#arrG)"/>
+      <!-- EMA arrow -->
+      <path d="M285 140 C 150 200, 150 220, 285 280" fill="none" stroke="#3fb950" stroke-dasharray="3,4" marker-end="url(#arrG)"/>
+      <text x="120" y="215" fill="#3fb950" font-size="11" transform="rotate(-90 120 215)">EMA 权重更新</text>
+    </svg>
+    <div class="figcap">图 1 · JEPA 通用计算图：context-encoder 可学（接收梯度），target-encoder 是其 EMA 副本且对输出 stop-gradient，predictor 在隐空间回归 target 表征。非对称结构 + EMA + 停梯度共同防止表征坍缩。</div>
+  </div>
+
+  <h3>1.2 目标函数：从 L2 到 L1，再到"全 token"</h3>
+  <div class="eq">
+    <span class="c"># I-JEPA：M 个 target 块上的平均 L2（patch 级）</span><br>
+    L = (1/M) · Σ<sub>i=1..M</sub> Σ<sub>j∈B<sub>i</sub></sub> ‖ ŝ<sub>y<sub>j</sub></sub> − s<sub>y<sub>j</sub></sub> ‖<sub>2</sub><sup>2</sup>
+  </div>
+  <div class="eq">
+    <span class="c"># V-JEPA / V-JEPA 2：被掩码位置上的 L1（更稳定）</span><br>
+    minimize<sub>θ,φ</sub>  ‖ P<sub>φ</sub>( E<sub>θ</sub>(x), Δ<sub>y</sub> ) − sg( EMA<sub>θ</sub>(y) ) ‖<sub>1</sub>
+  </div>
+  <div class="eq">
+    <span class="c"># V-JEPA 2.1：对"所有" token 监督（掩码 M + 可见 C），距离加权</span><br>
+    L<sub>predict</sub> = (1/|M|) Σ<sub>i∈M</sub> ‖ pred<sub>i</sub> − sg(target<sub>i</sub>) ‖<sub>1</sub><br>
+    L<sub>context</sub> = (1/|C|) Σ<sub>i∈C</sub> λ<sub>i</sub> ‖ pred<sub>i</sub> − sg(target<sub>i</sub>) ‖<sub>1</sub>,&nbsp;&nbsp; λ<sub>i</sub> = λ / √( d<sub>min</sub>(i, M) )<br>
+    L<sub>dense</sub> = L<sub>predict</sub> + L<sub>context</sub>
+  </div>
+
+  <div class="key">
+    <b>为什么不坍缩？</b>target-encoder 不是凭空固定的——它是 context-encoder 权重的指数滑动平均（EMA / Polyak），再对其输出施加 stop-gradient。
+    这种"师生 + 停梯度 + 预测器"的非对称结构（BYOL 式机制）阻止了"所有表征都塌成同一常数"的平凡解。I-JEPA 明确指出 EMA target-encoder 是用 ViT 训练 JEPA 的必要条件；后续工作沿用了固定 EMA 系数 <code>0.99925</code>。
+  </div>
+
+  <h3>1.3 实证：隐空间预测 vs 像素预测 / 增广不变</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4>vs 像素重建（MAE 类）</h4>
+      <p>I-JEPA 的关键消融极具说服力（ViT-L/16，IN-1% 评测）：</p>
+      <ul>
+        <li>预测 target-encoder <b>输出表征</b> → <b class="best">66.9%</b>（500ep）</li>
+        <li>预测<b>像素</b> → <b class="lose">40.7%</b>（800ep）</li>
+        <li>掩码加在 target-encoder <b>输出</b> vs <b>输入</b>：67.3 vs 56.1（ViT-H/16）</li>
+      </ul>
+      <p class="muted">隐空间预测可丢弃不可预测的低层像素细节，特征更语义、收敛快 ~5×。</p>
+    </div>
+    <div class="card">
+      <h4>vs 增广不变（DINO/iBOT 类）</h4>
+      <p>JEPA 不用任何手工增广、不用负样本、单视图即可：</p>
+      <ul>
+        <li>I-JEPA ViT-H/16<sub>448</sub> 线性探测 <b class="best">81.1%</b>，超过靠增广的 iBOT ViT-L/16（81.0）</li>
+        <li>训练 ViT-H/14 比 ViT-S/16 的 iBOT 还快 &gt;2.5×</li>
+        <li>V-JEPA 在 SSv2 运动理解上比 DINOv2 ViT-g/14 高 <b class="best">+21 分</b>（增广不变模型结构上学不到运动）</li>
+      </ul>
+    </div>
+  </div>
+  <blockquote>"In contrast to view-invariance based methods, I-JEPA highlights a path for learning general representations with joint-embedding architectures, without relying on hand-crafted view augmentations." —— I-JEPA</blockquote>
+</section>
+
+<!-- ===== 2 I-JEPA ===== -->
+<section id="ijepa" class="anchor">
+  <div class="secthead"><span class="chip i">I-JEPA</span><h2 class="sec" style="border:0;margin:0">2 · I-JEPA：把 JEPA 落在图像上</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:13px">Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture · arXiv 2301.08243 · CVPR 2023 · Assran et al., Meta FAIR / McGill / Mila / NYU</p>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:var(--ijepa)">81.1%</div><div class="l">IN1K 线性探测（ViT-H/16₄₄₈）</div></div>
+    <div class="stat"><div class="n" style="color:var(--ijepa)">&lt;1200</div><div class="l">GPU-小时（ViT-H/14，16×A100，&lt;72h）</div></div>
+    <div class="stat"><div class="n" style="color:var(--ijepa)">~5×</div><div class="l">比 MAE 少的收敛迭代</div></div>
+  </div>
+
+  <h3>2.1 动机</h3>
+  <p>当时两条主流 SSL 路线各有硬伤（见 §1 表）。I-JEPA 要做的是把 LeCun 的 JEPA 框架第一次<b>具体落在图像上</b>：在抽象表征空间预测，既比 MAE 等像素方法语义更强，又比 iBOT/DINO 等不变性方法省算力、且摆脱手工增广偏置。</p>
+
+  <h3>2.2 架构与方法</h3>
+  <ul>
+    <li><b>三个 ViT：</b>context-encoder（只编码可见块）、target-encoder（EMA 副本，编码全图产生 patch 级目标）、predictor（窄 ViT，<b>固定嵌入维 384 瓶颈</b> vs 编码器 1024；深度：ViT-B 用 6、ViT-L/H 用 12、ViT-G 用 16）。</li>
+    <li><b>无 [CLS] token</b>，下游用 target-encoder 输出做平均池化得到全局表征。</li>
+    <li><b>关键技巧：</b>目标由"掩码 target-encoder 的<u>输出</u>"得到（而非掩码输入像素），保证目标高语义。</li>
+  </ul>
+
+  <h4>多块掩码（Multi-Block Masking）</h4>
+  <p>采样 <b>M=4 个较大的语义 target 块</b>（尺度 0.15–0.2，长宽比 0.75–1.5），以及 <b>1 个信息充分的 context 块</b>（尺度 0.85–1.0），并把与 target 重叠的 context 区域移除（context 仅约占 0.25）。消融显示这是产生语义特征的决定性设计：</p>
+  <table>
+    <thead><tr><th>掩码策略（ViT-B/16, 300ep, IN-1%）</th><th class="num">准确率</th></tr></thead>
+    <tbody>
+      <tr><td>multi-block（本文）</td><td class="num best">54.2</td></tr>
+      <tr><td>block</td><td class="num">20.2</td></tr>
+      <tr><td>random</td><td class="num">17.6</td></tr>
+      <tr><td>rasterized</td><td class="num">15.5</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">其他消融：target 块数 M=1/2/3/4 → 9.0 / 22.0 / 48.5 / 54.2；context 尺度越大越好（0.40→0.85 区间 31.2→54.2）；predictor 深度 12 优于 6（66.9 vs 64.0）；384 维瓶颈优于 1024。</p>
+
+  <h3>2.3 实验效果</h3>
+  <table>
+    <thead><tr><th>基准 / 协议</th><th>I-JEPA</th><th>对照</th></tr></thead>
+    <tbody>
+      <tr><td>IN1K 线性探测（ViT-H/16₄₄₈, 300ep）</td><td class="num best">81.1</td><td class="num">iBOT ViT-L/16 81.0（带增广,250ep）· DINO ViT-B/8 80.1</td></tr>
+      <tr><td>IN1K 线性探测（ViT-H/14, 300ep）</td><td class="num">79.3</td><td class="num">MAE ViT-H/14 77.2（1600ep）· data2vec 77.3 · CAE 78.1</td></tr>
+      <tr><td>IN-1% 低样本（ViT-H/16₄₄₈）</td><td class="num best">77.3</td><td class="num">MAE ViT-H/14 71.5 · data2vec 73.3 · MSN ViT-B/4 75.7（带增广）</td></tr>
+      <tr><td>CIFAR100 线性迁移（ViT-H/14）</td><td class="num">87.5</td><td class="num">MAE 77.3 · DINO 84.9 · iBOT 88.3</td></tr>
+      <tr><td>Clevr/Dist 深度（低层，ViT-H/14）</td><td class="num">72.4</td><td class="num">MAE 72.4（持平）· DINO 53.4 · iBOT 62.8 —— 远超不变性方法</td></tr>
+      <tr><td>IN1K 全量微调（ViT-H/16₄₄₈, 50ep）</td><td class="num">87.1</td><td class="num">MAE ViT-H/14₄₄₈ 87.8（1600ep）—— 用 5.3× 更少预训练 epoch，差距 &lt;1%</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>能力萌芽：</b>I-JEPA 在 Clevr/Dist 深度预测上与 MAE 持平、远超 DINO/iBOT，说明隐空间预测特征已携带一定<b>低层几何信号</b>——这正是 V-JEPA 2.1 后来要全面解锁的稠密能力的伏笔。</div>
+
+  <h3>2.4 算力</h3>
+  <p>这是全系列<b>唯一明确给出 GPU-小时</b>的一篇：ViT-H/14 在 ImageNet 上用 <b>16 块 A100、不到 72 小时</b>（即 &lt;1200 GPU-小时）训练完成——比 ViT-S/16 的 iBOT 快 &gt;2.5×，比 ViT-H/14 的 MAE 高效 &gt;10×。优化器 AdamW，batch 2048，LR 1e-4→1e-3（前 15 epoch 预热）再 cosine 衰减到 1e-6，weight decay 0.04→0.4，EMA momentum 0.996→1.0。预训练数据 IN1K（~128 万图），scaling 用 IN22K（ViT-H/14 训练等效 900 个 IN1K epoch）。</p>
+</section>
+
+<!-- ===== 3 V-JEPA ===== -->
+<section id="vjepa" class="anchor">
+  <div class="secthead"><span class="chip v">V-JEPA</span><h2 class="sec" style="border:0;margin:0">3 · V-JEPA：把 JEPA 搬上视频，解锁"运动"</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:13px">Revisiting Feature Prediction for Learning Visual Representations from Video · arXiv 2404.08471 · 2024-02 · Bardes, Garrido, …, LeCun, Assran, Ballas, Meta FAIR</p>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:var(--vjepa)">72.2%</div><div class="l">SSv2 运动理解（冻结探测）</div></div>
+    <div class="stat"><div class="n" style="color:var(--vjepa)">+21</div><div class="l">SSv2 比 DINOv2 ViT-g/14 高出的分数</div></div>
+    <div class="stat"><div class="n" style="color:var(--vjepa)">270M</div><div class="l">见过的样本（MAE 410M, OmniMAE 2400M）</div></div>
+  </div>
+
+  <h3>3.1 动机</h3>
+  <p>核心问题：<b>仅凭"特征预测"这一个目标</b>（不用预训练编码器、不用文本、不用负样本、不用像素重建），能否从视频学到通用表征？V-JEPA 是 I-JEPA 在视频模态上的直接延伸。</p>
+
+  <h3>3.2 架构与方法</h3>
+  <ul>
+    <li><b>Tubelet 化：</b>16 帧视频经 3D 卷积（tubelet 2×16×16）变成 token 序列（16×224×224 → 8×14×14 = 1568 token），加 3D sin-cos 绝对位置编码。</li>
+    <li><b>损失 L2 → L1：</b>沿用 JEPA 但改用 L1 回归，训练更稳定。</li>
+    <li><b>注意力探测（Attentive Probe）：</b>冻结评测时用可学习交叉注意力池化（而非平均/线性池化）。这对 JEPA 特征至关重要：在 K400 上 <b>+17.3</b>、SSv2 上 <b>+16.1</b>。</li>
+  </ul>
+
+  <h4>3D 多块掩码（~90% 掩码率）</h4>
+  <p>每个 clip 用两类掩码的并集：<b>short-range</b>（8 个块 × 15%）+ <b>long-range</b>（2 个块 × 70%），每个空间块<b>沿整个时间维延展</b>（时间掩码 100%），平均掩码率约 90%；每 clip 采 2 个掩码。26 组掩码消融表明：高空间+高时间掩码率、多个小块、每样本多掩码，是学到语义的关键（random-tube[0.9] 仅 51.5 vs multi-block 72.9，K400）。</p>
+
+  <h3>3.3 实验效果</h3>
+  <table>
+    <thead><tr><th>基准（冻结 + 注意力探测）</th><th>ViT-L/16<br>(200M)</th><th>ViT-H/16<br>(630M)</th><th>ViT-H/16₃₈₄</th><th>对照</th></tr></thead>
+    <tbody>
+      <tr><td><b>SSv2</b>（运动理解）</td><td class="num">69.5</td><td class="num">71.4</td><td class="num best">72.2</td><td class="num">Hiera-H 64.7 · VideoMAE-H 66.2 · <b>DINOv2-g 仅 50.6</b></td></tr>
+      <tr><td><b>K400</b>（外观动作）</td><td class="num">80.8</td><td class="num">82.0</td><td class="num">81.9</td><td class="num">VideoMAE-H 79.8 · DINOv2-g 83.4</td></tr>
+      <tr><td><b>IN1K</b>（静态图像）</td><td class="num">74.8</td><td class="num">75.9</td><td class="num">77.4 / 77.9*</td><td class="num">DINOv2-g 86.2 · OpenCLIP-G 86.2</td></tr>
+      <tr><td><b>AVA</b>（动作定位 mAP）</td><td class="num">25.6</td><td class="num best">25.8</td><td class="num">25.0</td><td class="num">I-JEPA 19.8 · DINOv2-g 24.3 · VideoMAE-H 20.7</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">*论文摘要的 IN1K headline 为 <b>77.9%</b>（两层注意力探测）；77.4% 是默认一层探测。微调结果：ViT-H/16 K400-ft 86.6 / SSv2-ft 77.0。</p>
+  <div class="key"><b>决定性新能力 = 运动理解。</b>纯图像模型（DINOv2）结构上无法学到时间动态，在 SSv2 上只有 50.6；V-JEPA 一举到 72.2（+21）。同时它在 SSv2 上比像素法（VideoMAE/OmniMAE）也明显更好，且只"看过" 270M 样本（像素法需 410M–2400M）。</div>
+
+  <h3>3.4 算力</h3>
+  <p>硬件 A100 80G、bf16。三个变体均训练 <b>90,000 迭代</b>（12,000 预热），batch 3072（384px 模型 2400），LR 2e-4→6.25e-4 峰值→1e-6 cosine，weight decay 0.04→0.4，EMA 0.998→1.0。
+  <span class="note" style="display:inline-block;margin:6px 0">本文<b>不报告 GPU 数量 / GPU-小时</b>，而以"<b>见过的样本数</b>"衡量成本：ViT-L/H 各约 270M（384px 约 210M），比 VideoMAE(410M)/VideoMAEv2(1600M)/OmniMAE(2400M) 少一个量级、比 OpenCLIP(39000M) 少两个量级；单 GPU 实测约 2× 于大型像素预测模型的吞吐。</span></p>
+</section>
+
+<!-- ===== 4 V-JEPA 2 ===== -->
+<section id="vjepa2" class="anchor">
+  <div class="secthead"><span class="chip v2">V-JEPA 2</span><h2 class="sec" style="border:0;margin:0">4 · V-JEPA 2：从表征学习器到"世界模型"</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:13px">V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning · arXiv 2506.09985 · 2025-06 · Assran, Bardes, Fan, … LeCun, Ballas, Meta FAIR</p>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:var(--vjepa2)">39.7</div><div class="l">EK100 动作预判 R@5（SOTA，+12.1 vs 8B PlausiVL）</div></div>
+    <div class="stat"><div class="n" style="color:var(--vjepa2)">80%</div><div class="l">零样本机器人取放成功率（Octo 仅 15%）</div></div>
+    <div class="stat"><div class="n" style="color:var(--vjepa2)">8.4×</div><div class="l">渐进分辨率训练节省的 GPU 时间</div></div>
+  </div>
+
+  <h3>4.1 动机</h3>
+  <p>目标升级为：从"被动观看"的互联网视频中学出能<b>理解、预测、规划</b>物理世界的世界模型，同时尽量少用昂贵稀缺的交互数据。相对 V-JEPA，本文<b>同时沿四个轴 scaling</b>，并新增动作条件世界模型与 LLM 对齐。</p>
+
+  <h3>4.2 方法：同一内核 + 四轴 scaling + 两阶段</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4>阶段一：V-JEPA 2 编码器</h4>
+      <ul>
+        <li>仍是隐空间 L1 掩码去噪，但绝对 sin-cos 位置 → <b>3D-RoPE</b> 相对位置编码（稳定大模型）。</li>
+        <li>编码器放大到 <b>ViT-g 1B</b>（ViT-L 300M / ViT-H 600M），<b>predictor 固定为 ViT-s 22M</b>。</li>
+        <li>LR 调度改为 <b>warmup-constant-decay（cooldown）</b>，固定 teacher EMA=0.99925。</li>
+        <li><b>渐进分辨率训练：</b>warmup/常数阶段用 16 帧/256px，仅在末段 12K 步 cooldown 升到 64 帧/384px → <b>省 8.4× GPU 时间</b>（否则全程 64×384 的 ViT-g 约需 60 GPU-年）。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>阶段二：V-JEPA 2-AC（动作条件）</h4>
+      <ul>
+        <li>在<b>冻结的 ViT-g</b> 上加 ~300M 预测器（24 层），用块因果注意力 + 3D-RoPE，依据"动作 + 末端执行器状态"<b>自回归预测下一帧隐表征</b>。</li>
+        <li>损失 = teacher-forcing L1（T=15）+ 2 步 rollout L1（抑制自回归误差累积）。</li>
+        <li>仅用 <b>&lt;62 小时</b>无标注 Droid 机器人视频后训练。</li>
+        <li>规划：在想象的隐状态上做 <b>CEM / MPC</b> 能量最小化——<b>无奖励、无任务特定训练、无环境数据</b>。</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>四轴 scaling 的累计收益（ViT-L 基线，6 任务平均）</h4>
+  <table>
+    <thead><tr><th>逐步叠加</th><th class="num">平均准确率</th><th class="num">增量</th></tr></thead>
+    <tbody>
+      <tr><td>V-JEPA 1 基线（2M 数据）</td><td class="num">84.2</td><td class="num">—</td></tr>
+      <tr><td>+ 数据 scaling（2M→22M）</td><td class="num">85.2</td><td class="num win">+1.0</td></tr>
+      <tr><td>+ 模型 scaling（300M→1B）</td><td class="num">86.7</td><td class="num win">+1.5</td></tr>
+      <tr><td>+ 更长训练（90K→252K 迭代）</td><td class="num">87.5</td><td class="num win">+0.8</td></tr>
+      <tr><td>+ 更高分辨率（256→384, 16→64 帧）</td><td class="num best">88.2</td><td class="num win">+0.7</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 实验效果（三类能力）</h3>
+  <h4>① 理解（冻结探测）</h4>
+  <table>
+    <thead><tr><th>基准</th><th>ViT-g (256)</th><th>ViT-g₃₈₄</th><th>对照</th></tr></thead>
+    <tbody>
+      <tr><td>SSv2（运动）</td><td class="num">75.3</td><td class="num best">77.3</td><td class="num">InternVideo2-1B 67.3 · VideoPrism-1B 68.5 · 旧 V-JEPA-H 74.3</td></tr>
+      <tr><td>Diving-48</td><td class="num">—</td><td class="num best">90.2</td><td class="num">VideoPrism 71.3</td></tr>
+      <tr><td>K400</td><td class="num">86.6</td><td class="num">87.3</td><td class="num">InternVideo2-1B 89.4（外观任务略低）</td></tr>
+      <tr><td>IN1K</td><td class="num">84.6</td><td class="num">85.1</td><td class="num">较旧 V-JEPA-H(80.0) <b>+4.6</b> · DINOv2 86.1</td></tr>
+      <tr><td>6 任务平均</td><td class="num">87.5</td><td class="num best">88.2</td><td class="num">—</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">注：经核验，对照中 InternVideo2 SSv2 应为 <b>67.3</b>、ViT-g@256 的 K400 应为 <b>86.6</b>（原始抽取曾误写为 67.0 / 84.6）。</p>
+
+  <h4>② 预测：人类动作预判（Epic-Kitchens-100）</h4>
+  <table>
+    <thead><tr><th>模型</th><th class="num">Action R@5</th><th class="num">Verb</th><th class="num">Noun</th></tr></thead>
+    <tbody>
+      <tr><td>PlausiVL（8B，旧 SOTA）</td><td class="num">27.6</td><td class="num">55.6</td><td class="num">54.2</td></tr>
+      <tr><td>V-JEPA 2 ViT-g₃₈₄</td><td class="num best">39.7</td><td class="num">63.6</td><td class="num">57.1</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">+12.1 分，相对提升 44%；规模递进 ViT-L 32.7 → ViT-H 36.5 → ViT-g 38.0 → ViT-g₃₈₄ 39.7。</p>
+
+  <h4>③ 规划：零样本真实机器人（Franka 双实验室平均）</h4>
+  <table>
+    <thead><tr><th>技能</th><th class="num">V-JEPA 2-AC</th><th class="num">Octo（行为克隆）</th></tr></thead>
+    <tbody>
+      <tr><td>Reach（单目标）</td><td class="num best">100%</td><td class="num">100%</td></tr>
+      <tr><td>Grasp（杯 / 盒）</td><td class="num best">65% / 25%</td><td class="num">15% / 0%</td></tr>
+      <tr><td>Pick-&amp;-Place（杯 / 盒）</td><td class="num best">80% / 65%</td><td class="num">15% / 10%</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">规划在单张 <b>RTX 4090</b> 上：V-JEPA 2-AC 800 样本/10 步 ≈ <b>16 秒/动作</b>；对照 Cosmos 80 样本却需 <b>4 分钟/动作</b> 且取放成功率 0%。</p>
+
+  <h4>④ 视频问答（ViT-g₃₈₄ + Llama 3.1 8B）</h4>
+  <p>首次证明<b>完全无语言监督</b>预训练的视频编码器也能对齐 LLM 达到 8B 级 SOTA：PerceptionTest <b>84.0</b>（PerceptionLM 8B 82.7）、TempCompass 76.9（+4.2）、TemporalBench 36.7（+8.4）、TOMATO 40.3（+7.1）、MVP 44.5（+4.8）。</p>
+
+  <h3>4.4 算力与数据</h3>
+  <p><b>VideoMix22M：</b>2200 万样本、&gt;100 万小时，含 SSv2(168K) + Kinetics(733K) + HowTo100M(1.1M) + 精选 YT1B(19M) + ImageNet(1M 图)。YT1B 经检索式精选：PySceneDetect 切出 316M 场景 → DINOv2 ViT-L 中帧特征聚 1.5M 簇 → 检索匹配目标分布 → 留 ~115M 精选场景（精选 vs 未精选 +1.4 平均分）。</p>
+  <p>硬件 A100（以 GPU-天/GPU-年计）。预训练 global batch 3072，228K 常数步 + 12K cooldown（共 90K→252K 迭代）。V-JEPA 2-AC 后训练 batch 256、&lt;62h Droid。VidQA scaling 用 <b>512 张 H100</b>（受控实验 128 H100）。</p>
+</section>
+
+<!-- ===== 5 V-JEPA 2.1 ===== -->
+<section id="vjepa21" class="anchor">
+  <div class="secthead"><span class="chip v21">V-JEPA 2.1</span><h2 class="sec" style="border:0;margin:0">5 · V-JEPA 2.1：解锁稠密、时间一致的特征</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:13px">V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning · arXiv 2603.14482 · 2026-03 · Mur-Labadia, Muckley, Bar, Assran, … LeCun, Ballas, Bardes, Meta FAIR</p>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:var(--vjepa21)">0.307</div><div class="l">NYUv2 深度 RMSE（&lt;2B 最佳，胜 DINOv3 7B 的 0.309）</div></div>
+    <div class="stat"><div class="n" style="color:var(--vjepa21)">47.9</div><div class="l">ADE20K 分割 mIoU（V-JEPA 2 仅 ~24.4）</div></div>
+    <div class="stat"><div class="n" style="color:var(--vjepa21)">2B</div><div class="l">ViT-G 参数，可蒸馏到 ViT-L 300M / ViT-B 80M</div></div>
+  </div>
+
+  <h3>5.1 动机：诊断 V-JEPA 2 的"稠密短板"</h3>
+  <div class="note"><b>核心诊断：</b>V-JEPA 2 全局理解很强，但稠密特征图<b>嘈杂、碎片化</b>（分割/深度/跟踪差）。原因是——<b>损失只加在被掩码 token 上，编码器就没有动力把局部信息编进可见（context）token</b>，于是这些可见 token 退化成"register 式全局聚合器"。</div>
+
+  <h3>5.2 方法：三处结构性改动</h3>
+  <div class="grid3">
+    <div class="card">
+      <h4>① 稠密预测损失</h4>
+      <p>把 L1 预测损失加到<b>所有 token</b>（含可见 token）：<code>L_dense = L_predict + L_context</code>。可见 token 损失按<b>到最近掩码块的距离加权</b> <code>λ_i = λ/√d_min</code>（λ：视频 0.5 / 图像 0.7），并在 epoch 50–100 渐进预热。</p>
+      <p class="muted">单加 context loss：ADE20K 24.6→33.8，但 SSv2 77.0→62.5（全局退化）。</p>
+    </div>
+    <div class="card">
+      <h4>② 深层自监督 (DSS)</h4>
+      <p><b>多级 predictor（24 层 vs V-JEPA 2 的 12 层）</b>在 4 个中间编码器层（ViT-G 的 [12,24,36,48]）输出预测；把 3 个中间层输出与最终层拼接、MLP 融合。</p>
+      <p class="muted">恢复并提升全局能力（SSv2 回到 72，IN1K 80.8），还免去多尺度评测。</p>
+    </div>
+    <div class="card">
+      <h4>③ 多模态 tokenizer</h4>
+      <p>视频用 3D 卷积 16×16×2、图像用 2D 卷积 16×16，加可学习<b>模态 token</b>。原生处理图像，<b>不再把图像复制成 16 帧伪视频</b>。</p>
+      <p class="muted">ADE20K 40.8→41.4，识别保持稳定。</p>
+    </div>
+  </div>
+  <p>外加<b>数据 scaling</b>（VisionMix163M：ImageNet-1M → LVD-142M 图像；视频重加权 SSv2 0.056→0.170、YT-1B 0.188→0.720）与<b>模型 scaling</b> 到 ViT-G(2B)，再蒸馏到 ViT-L/B。</p>
+
+  <h3>5.3 实验效果</h3>
+  <h4>稠密任务（新能力，frozen + 线性/标签传播）</h4>
+  <table>
+    <thead><tr><th>基准</th><th class="num">V-JEPA 2.1 ViT-G</th><th class="num">V-JEPA 2 ViT-g</th><th class="num">DINOv3 ViT-7B</th></tr></thead>
+    <tbody>
+      <tr><td>NYUv2 深度 RMSE ↓</td><td class="num best">0.307</td><td class="num">0.642</td><td class="num">0.309</td></tr>
+      <tr><td>KITTI 深度 RMSE ↓</td><td class="num">2.461</td><td class="num">4.650</td><td class="num best">2.346</td></tr>
+      <tr><td>ADE20K 分割 mIoU ↑</td><td class="num">47.9</td><td class="num">~24.4</td><td class="num best">55.9</td></tr>
+      <tr><td>PASCAL VOC12 mIoU ↑</td><td class="num">85.0</td><td class="num">~64</td><td class="num best">86.6</td></tr>
+      <tr><td>Cityscapes mIoU ↑</td><td class="num">73.5</td><td class="num">~46</td><td class="num best">81.1</td></tr>
+      <tr><td>DAVIS-17 视频分割 J&amp;F ↑</td><td class="num">69.0</td><td class="num">52.5</td><td class="num best">71.1（ViT-H+）</td></tr>
+      <tr><td>YouTube-VOS J&amp;F ↑</td><td class="num">72.7</td><td class="num">53.7</td><td class="num best">74.0（ViT-H+）</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">深度估计上 V-JEPA 2.1 ViT-G 以 &lt;2B 参数<b>超过了 7B 的 DINOv3</b>；分割仍落后顶级图像编码器（作者归因于训练数据中高度杂乱场景偏少）。注：V-JEPA 2 的 ADE20K 基线经核验为 24.4(表)/24.6(图)，并非早期抽取的 22.2（那是从零训 ViT-L 的消融基线）。</p>
+
+  <h4>全局任务（保持甚至提升）+ 规划</h4>
+  <table>
+    <thead><tr><th>基准</th><th class="num">V-JEPA 2.1 ViT-G</th><th class="num">V-JEPA 2</th><th class="num">说明</th></tr></thead>
+    <tbody>
+      <tr><td>SSv2 动作识别</td><td class="num best">77.7</td><td class="num">77.3</td><td class="num">frozen-probe 新 SOTA</td></tr>
+      <tr><td>EK100 动作预判 R@5</td><td class="num best">40.8</td><td class="num">39.7</td><td class="num">新 SOTA（+2.8 绝对）</td></tr>
+      <tr><td>Ego4D STA mAP（All）</td><td class="num best">7.71</td><td class="num">6.75</td><td class="num">~+35% vs 旧最佳 5.67；AP_b 50.7 &gt; DINOv3-7B 50.2</td></tr>
+      <tr><td>Franka 抓取（零样本 MPC）</td><td class="num best">70–80%</td><td class="num">60%</td><td class="num">300 样本/15 步/horizon 8 时达 80%</td></tr>
+      <tr><td>TartanDrive 导航 ATE ↓</td><td class="num">5.687</td><td class="num">—</td><td class="num">vs NWM 5.831 且规划快 10×（10.6s vs 103.2s）</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>代价：</b>在 TemporalBench、TOMATO（细粒度短时运动 QA）以及 Diving-48（89.2 vs 90.2）、K400（87.7 vs InternVideo2 89.4）上 V-JEPA 2.1 略逊——稠密目标可能小幅牺牲了部分细时序/外观锐度；VidQA 还受对齐数据量影响（72.5M vs 旧 88.5M）。</div>
+
+  <h3>5.4 算力</h3>
+  <p>两阶段（ViT-L/g/G 同超参）：primary <b>135,000 迭代</b>（12K 预热，LR 1e-4→常数 5.25e-4）+ cooldown <b>12,000 迭代</b>（LR 6e-4→1e-6，视频 64 帧/384px、图像 512px）；weight decay 0.04，EMA 0.99925。按模态分别配 batch：每 global batch <b>2304 张图 + 128 段视频（各 16 帧）</b>，不同 worker 处理不同模态、梯度聚合后更新。
+  <span class="note" style="display:inline-block;margin-top:6px"><b>透明度缺口：</b>全文<b>未报告 GPU 型号 / 数量 / GPU-小时 / 墙钟时间</b>；唯一的 GPU 提及是机器人规划 MPC 用<b>单张 A100</b>（800 样本/10 步 ≈ 3 秒；300 样本/15 步/horizon 8 ≈ 14 秒）。</span></p>
+</section>
+
+<!-- ===== 5.5 APPLICATION: physics reward ===== -->
+<section id="apply" class="anchor">
+  <div class="secthead"><span class="chip app">应用</span><h2 class="sec" style="border:0;margin:0">★ 应用案例：把 V-JEPA 2 当"物理奖励"，改进视频生成</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:12.5px">同一团队两篇连续工作：① 短报告 <b>arXiv 2510.21840</b>《Improving the physics of video generation with VJEPA-2 reward signal》（2025-10，ICCV'25 PhysicsIQ Challenge 冠军方案）→ ② 完整版 <b>arXiv 2601.10553</b>《Inference-time Physics Alignment of Video Generative Models with Latent World Models》（2026-02，提出 WMReward 框架）· Yuan, Zhang, …, Ballas, Drozdzal, Romero-Soriano（Oxford / FAIR · Meta / Mila）· 代码 github.com/facebookresearch/WMReward</p>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:#ec4899">+6.63</div><div class="l">I2V PhysicsIQ（30.23 → 36.86，新 SOTA）</div></div>
+    <div class="stat"><div class="n" style="color:#ec4899">+6.33</div><div class="l">V2V PhysicsIQ（56.31 → 62.64，新 SOTA）</div></div>
+    <div class="stat"><div class="n" style="color:#ec4899">0 训练</div><div class="l">冻结 V-JEPA 2，仅推理时引导，不微调生成器</div></div>
+  </div>
+
+  <div class="card" style="margin-top:14px"><b>🔧 用的模型：</b>被对齐的视频生成器 = <b>MAGI-1 24B</b>、<b>Sora2</b>、<b>vLDM 5B</b>（覆盖自回归与整体扩散两类架构）；奖励/裁判 = <b>冻结的 V-JEPA 2</b>（编码器 E_θ + 预测器 P_φ；可换更大骨干，ViT-huge→ViT-giant 越大越好）。<b>全程不微调生成器</b>。<br><b>📦 用的数据：</b>这是<b>推理时</b>方法，<b>不需要任何训练数据</b>；评测基准为 <b>PhysicsIQ</b>（I2V/V2V 物理可信）与 <b>VideoPhy</b>（T2V 物理一致性 + 语义遵循），另含人类偏好研究。</div>
+
+  <h3>5★.1 洞察：视觉逼真 ≠ 懂物理，而 JEPA 的隐空间预测正是"物理先验"</h3>
+  <p>SOTA 视频生成模型画面很逼真，物理常识却很差，常生成不合理的运动——PhysicsIQ 基准已证明<b>视觉真实度并不蕴含物理理解</b>。另一边，V-JEPA 2 这类在自然视频上做自监督的模型，被证明会<b>自发涌现"直觉物理"</b>。本文的洞察因此非常直接：</p>
+  <div class="key"><b>既然 V-JEPA 2 的 predictor 已经在隐空间学会了"按物理规律，下一刻合理会发生什么"，就可以把它当成一个现成的"物理评判器 / 奖励信号"，去约束一个强大的像素空间视频生成器（MAGI-1）——而无需重新训练生成器。</b>这正是本教程 §4–§5 反复强调的"<u>predictor 的隐空间 rollout 就是世界模型</u>"的直接变现：V-JEPA 2-AC 用它来<b>规划机器人</b>，这里则用同一个 predictor 来<b>给视频生成打分</b>。</div>
+
+  <h3>5★.2 方法：它到底怎么发挥作用？</h3>
+  <p>载体是 <b>MAGI-1</b>（SOTA 自回归视频生成器，逐块去噪、因果时序建模，支持 I2V / V2V）。核心思路是：把 MAGI-1 生成的"下一块"，与 V-JEPA 2 对"下一块该长什么样"的预测做对比。</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 940 340" xmlns="http://www.w3.org/2000/svg" font-family="var(--sans)">
+      <defs>
+        <marker id="ap" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa7b6"/></marker>
+        <marker id="apk" markerWidth="11" markerHeight="11" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#ec4899"/></marker>
+      </defs>
+      <text x="470" y="22" text-anchor="middle" fill="#9aa7b6" font-size="13">世界模型路径（V-JEPA 2 预测"该发生什么"）  vs  生成路径（MAGI-1 实际"生成了什么"）</text>
+
+      <rect x="20" y="50" width="120" height="60" rx="10" fill="#1c2230" stroke="#2a3340"/>
+      <text x="80" y="78" text-anchor="middle" fill="#e6edf3" font-size="13">过去块</text>
+      <text x="80" y="97" text-anchor="middle" fill="#9aa7b6" font-size="12" font-family="monospace">x&lt;t</text>
+
+      <rect x="180" y="50" width="120" height="60" rx="10" fill="#13202e" stroke="#3b82f6"/>
+      <text x="240" y="76" text-anchor="middle" fill="#e6edf3" font-size="13">编码器 E_θ</text>
+      <text x="240" y="94" text-anchor="middle" fill="#9aa7b6" font-size="11">V-JEPA 2</text>
+
+      <rect x="340" y="50" width="120" height="60" rx="10" fill="#241a30" stroke="#a855f7"/>
+      <text x="400" y="76" text-anchor="middle" fill="#e6edf3" font-size="13">预测器 P_φ</text>
+      <text x="400" y="94" text-anchor="middle" fill="#9aa7b6" font-size="11">预测下一刻</text>
+
+      <rect x="500" y="50" width="155" height="60" rx="10" fill="#11161d" stroke="#5b6675" stroke-dasharray="5,4"/>
+      <text x="577" y="76" text-anchor="middle" fill="#cdd9e5" font-size="12.5">预测的未来表征</text>
+      <text x="577" y="95" text-anchor="middle" fill="#9aa7b6" font-size="10.5" font-family="monospace">P_φ(E_θ(x&lt;t))</text>
+
+      <rect x="20" y="232" width="280" height="60" rx="10" fill="#2a1320" stroke="#ec4899"/>
+      <text x="160" y="258" text-anchor="middle" fill="#e6edf3" font-size="13">视频生成器 MAGI-1（自回归扩散）</text>
+      <text x="160" y="277" text-anchor="middle" fill="#9aa7b6" font-size="10.5" font-family="monospace">G_γ(x&lt;t, txt) → 候选下一块</text>
+
+      <rect x="340" y="232" width="120" height="60" rx="10" fill="#13202e" stroke="#3b82f6"/>
+      <text x="400" y="258" text-anchor="middle" fill="#e6edf3" font-size="13">编码器 E_θ</text>
+      <text x="400" y="276" text-anchor="middle" fill="#9aa7b6" font-size="11">V-JEPA 2</text>
+
+      <rect x="500" y="232" width="155" height="60" rx="10" fill="#11161d" stroke="#5b6675" stroke-dasharray="5,4"/>
+      <text x="577" y="258" text-anchor="middle" fill="#cdd9e5" font-size="12.5">生成的未来表征</text>
+      <text x="577" y="277" text-anchor="middle" fill="#9aa7b6" font-size="10.5" font-family="monospace">E_θ(G_γ(…))</text>
+
+      <rect x="700" y="118" width="218" height="106" rx="12" fill="#2b1414" stroke="#f85149"/>
+      <text x="809" y="148" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700">余弦相似度 → S</text>
+      <text x="809" y="168" text-anchor="middle" fill="#cdd9e5" font-size="12">surprise / 符合度（Eq 1）</text>
+      <text x="809" y="190" text-anchor="middle" fill="#3fb950" font-size="11">高 = 与世界模型预测吻合 = 物理可信</text>
+      <text x="809" y="208" text-anchor="middle" fill="#f0883e" font-size="11">低 = 失配 = 违反物理预期</text>
+
+      <line x1="140" y1="80" x2="178" y2="80" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="300" y1="80" x2="338" y2="80" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="460" y1="80" x2="498" y2="80" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="300" y1="262" x2="338" y2="262" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="460" y1="262" x2="498" y2="262" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="655" y1="85" x2="700" y2="140" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="655" y1="258" x2="700" y2="202" stroke="#9aa7b6" marker-end="url(#ap)"/>
+      <line x1="80" y1="110" x2="80" y2="230" stroke="#5b6675" stroke-dasharray="3,4" marker-end="url(#ap)"/>
+      <path d="M809 224 C 809 312, 380 326, 162 294" fill="none" stroke="#ec4899" stroke-dasharray="6,4" marker-end="url(#apk)"/>
+      <text x="470" y="333" text-anchor="middle" fill="#ec4899" font-size="12">奖励引导 −ω_s∇S（Eq 2）  +  从 16 个样本中选 surprise 最低者（Best-of-N）</text>
+    </svg>
+    <div class="figcap">图 3 · V-JEPA 2 作为物理奖励的工作机制。同一段过去 <span class="mono">x&lt;t</span> 兵分两路：世界模型预测"应该发生什么"，生成器给出"实际生成了什么"，两者在 V-JEPA 2 表征空间比对得到 surprise 分数，再反过来引导/筛选生成。</div>
+  </div>
+
+  <h4>① surprise / 符合度 评分（Eq 1）</h4>
+  <div class="eq">
+    S( x<sub>t</sub> | x<sub>&lt;t</sub>, txt ) = sim( &nbsp;P<sub>φ</sub>( E<sub>θ</sub>(x<sub>&lt;t</sub>) ) &nbsp;,&nbsp; E<sub>θ</sub>( G<sub>γ</sub>(x<sub>&lt;t</sub>, txt) ) &nbsp;)<br>
+    <span class="c"># P_φ,E_θ：冻结的 V-JEPA 2 预测器/编码器  ·  G_γ：MAGI-1 生成器  ·  sim：余弦相似度</span>
+  </div>
+  <p><b>逐项拆解（这就是"怎么发挥作用"）：</b></p>
+  <ul>
+    <li><code>E<sub>θ</sub>(x<sub>&lt;t</sub>)</code>：V-JEPA 2 把<b>真实的过去块</b>编码进表征空间。</li>
+    <li><code>P<sub>φ</sub>(·)</code>：predictor 据此<b>预测下一块的表征</b>——即"按它学到的直觉物理，接下来合理的画面在表征空间长什么样"。</li>
+    <li><code>E<sub>θ</sub>(G<sub>γ</sub>(x<sub>&lt;t</sub>,txt))</code>：MAGI-1 生成一个<b>候选下一块</b>，再用<b>同一个 E_θ</b> 编码到同一表征空间。</li>
+    <li><code>sim(·,·)</code>：两者余弦相似度。高 = 生成结果吻合世界模型的物理预期（不"surprise"、物理可信）；低 = 失配、违反物理。</li>
+  </ul>
+
+  <h4>② 两种用法：采样引导 + Best-of-N</h4>
+  <p>(a) <b>采样引导</b>——在 MAGI-1 原本的扩散得分函数（含无条件项、过去块条件项、文本条件项）后，<b>追加一个由 V-JEPA 2 导出的引导项</b>，把每一步去噪都推向世界模型认为更合理的方向：</p>
+  <div class="eq">
+    ∇<sub>x<sub>t</sub></sub> log p<sub>s</sub>(x<sub>t</sub>|x<sub>&lt;t</sub>,txt) =
+    (1−ω<sub>&lt;t</sub>)∇<sub>x<sub>t</sub></sub>log p(x<sub>t</sub>)
+    + (ω<sub>&lt;t</sub>−ω<sub>txt</sub>)∇<sub>x<sub>t</sub></sub>log p(x<sub>t</sub>|x<sub>&lt;t</sub>)
+    + ω<sub>txt</sub>∇<sub>x<sub>t</sub></sub>log p(x<sub>t</sub>|x<sub>&lt;t</sub>,txt)
+    <span style="color:#ec4899">− ω<sub>s</sub>∇<sub>x<sub>t</sub></sub>S(x<sub>t</sub>|x<sub>&lt;t</sub>,txt)</span><br>
+    <span class="c"># 粉色项为新增的 V-JEPA 2 物理引导，ω_s 控制强度</span>
+  </div>
+  <p>(b) <b>Best-of-N 筛选</b>——按上式为每个条件采 <b>16 个</b>视频样本，再挑出平均 surprise <b>最低</b>（与世界模型预测最吻合）的那一个作为最终输出。</p>
+
+  <h3>5★.3 实验效果（PhysicsIQ，越高越好 ↑）</h3>
+  <div class="grid2">
+    <div>
+      <h4>V2V 生成</h4>
+      <table>
+        <thead><tr><th>模型</th><th class="num">PhysicsIQ</th></tr></thead>
+        <tbody>
+          <tr><td>Lumiere</td><td class="num">23.00</td></tr>
+          <tr><td>VideoPoet</td><td class="num">29.50</td></tr>
+          <tr><td>MAGI-1</td><td class="num">56.31</td></tr>
+          <tr><td><b>MAGI-1 + V-JEPA 2（本文）</b></td><td class="num best">62.64 <span class="win">(+6.33)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h4>I2V 生成</h4>
+      <table>
+        <thead><tr><th>模型</th><th class="num">PhysicsIQ</th></tr></thead>
+        <tbody>
+          <tr><td>Sora</td><td class="num">10.00</td></tr>
+          <tr><td>Runway Gen 3</td><td class="num">22.80</td></tr>
+          <tr><td>CogVideoX</td><td class="num">26.22</td></tr>
+          <tr><td>MAGI-1</td><td class="num">30.23</td></tr>
+          <tr><td><b>MAGI-1 + V-JEPA 2（本文）</b></td><td class="num best">36.86 <span class="win">(+6.63)</span></td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="font-size:12.5px">I2V 表中略去 Pika 1.0(13.00)/SVD(14.80)/Lumiere(19.00)/VideoPoet(20.30)/Wan2.1(20.89)。</p>
+    </div>
+  </div>
+  <div class="note"><b>为什么有效——又一次印证 JEPA 论题：</b>因为 V-JEPA 2 是在<b>表征空间</b>而非像素空间预测，它的 predictor 编码的恰是"接下来物理上合理会发生什么"这一<b>动态先验</b>，而这正是像素空间生成器最缺的信号。把这个先验当奖励/引导接上去，<b>不重训生成器</b>就把 PhysicsIQ 提升约 6 分、在 I2V 与 V2V 双双刷新 SOTA，拿下 ICCV 2025 PhysicsIQ Challenge 冠军。</div>
+
+  <h3>5★.4 进阶：从"一个奖励"升格为框架 —— WMReward 与推理时物理对齐</h3>
+  <p>完整版（arXiv 2601.10553）把上述做法提炼成通用框架 <b>WMReward</b>，并给出一个更锋利的论点：</p>
+  <div class="key"><b>视频生成的物理硬伤，不只是"预训练学得不够"，也是"<u>推理策略</u>不够好"。</b>于是把"改进物理"显式建模为一个<b>推理时对齐（inference-time alignment）</b>问题——在不重训生成器的前提下，用测试时算力去搜索/引导，从一个"向物理可信倾斜"的分布中采样。而且这个框架<b>不绑定 V-JEPA 2</b>：任何具备强物理先验的隐空间世界模型，原则上都能当奖励。</div>
+
+  <h4>① 倾斜分布（tilted distribution）</h4>
+  <div class="eq">
+    p<sup>*</sup>(x) ∝ w(x) · p(x)<br>
+    <span class="c"># p(x)：预训练视频模型分布  ·  w(x)&gt;0：由物理奖励 r(x) 构造的权重  ·  目标：从更物理可信的 p* 采样</span>
+  </div>
+
+  <h4>② 滑动窗口 surprise 奖励（Eq 4–6）——比短报告更精确的形式</h4>
+  <p>在生成视频上滑动长度 <b>C+M</b> 的窗口（C=上下文帧、M=预测视界）：仅用上下文预测未来表征 ẑ<sub>k</sub>，再编码整段窗口得到 z<sub>k</sub>，<b>只比对未来段</b>，窗口平均的 <code>1−cos</code> 即 surprise（越低越物理连贯）：</p>
+  <div class="eq">
+    ẑ<sub>k</sub> = P<sub>φ</sub>( Δ<sub>m</sub>, E<sub>θ</sub>(x<sup>k−C+1:k</sup>) )<span class="c">   # 仅凭上下文预测的未来表征 (Eq 4)</span><br>
+    z<sub>k</sub> = E<sub>θ</sub>( x<sup>k−C+1:k+M</sup> )<span class="c">   # 编码完整窗口得到的表征 (Eq 5)</span><br>
+    surprise(x) = (1/|K|) Σ<sub>k∈K</sub> ( 1 − cos( ẑ<sub>k</sub><sup>fut</sup>, z<sub>k</sub><sup>fut</sup> ) )<span class="c">   # 越低 = 生成越吻合世界模型预测 (Eq 6)</span>
+  </div>
+
+  <h4>③ 三种采样方案：怎么从 p* 里采样</h4>
+  <table>
+    <thead><tr><th>方案</th><th>权重 w(x)</th><th>类型</th><th>要点</th></tr></thead>
+    <tbody>
+      <tr><td><b>Guidance (∇)</b></td><td class="mono">exp(λr(x))</td><td>梯度式</td><td>经 Tweedie 公式把 λ∇r(x<sub>0|t</sub>) 加进扩散 score，每步去噪都被引导；需对 V-JEPA 反传</td></tr>
+      <tr><td><b>Best-of-N (BoN)</b></td><td class="mono">[F(r(x))]<sup>N−1</sup></td><td>免梯度</td><td>采 N 个粒子，选 r 最高（surprise 最低）者；N=16</td></tr>
+      <tr><td><b>∇ + BoN（最佳）</b></td><td class="mono">exp(λr)·[F<sub>λ</sub>(r)]<sup>N−1</sup></td><td>组合</td><td>引导生成 N 个再挑最优：无需大 λ 即可强倾斜，并过滤近似误差，scaling 最好</td></tr>
+    </tbody>
+  </table>
+
+  <h4>④ 测试时算力 scaling</h4>
+  <p>粒子数 <b>N↑ → PhysicsIQ 稳定↑</b>：N≤4 时提升最猛，之后持续小升且方差变小；<b>∇+BoN 的 scaling 曲线比纯 BoN 更陡</b>。把更多算力投到"更多粒子 + 引导"，会把分数分布整体推向高分区——这正是"用推理时计算换物理可信度"的体现。它也胜过 SMC、SVDD 等其他从倾斜分布采样的方法（因为 V-JEPA surprise 可微，其逐步梯度比多次 rollout 的重要性估计更准）。</p>
+
+  <h4>⑤ 更广验证与关键发现</h4>
+  <ul>
+    <li><b>跨模型 / 任务一致提升：</b>MAGI-1 24B、Sora2、vLDM 5B × T2V/I2V/V2V × PhysicsIQ/VideoPhy。官方平台口径：V2V <b>62.64% 夺冠（+7.42）</b>、I2V <b>37.39%（+7.62）</b>，I2V 超过 Sora2 +4.13%。<span class="muted">（论文内部测得分别为 +6.33 / +6.63，见上表；不同评测协议下增量略有差异。）</span></li>
+    <li><b>奖励信号对比：</b>V-JEPA 2 隐空间 surprise &gt; VideoMAE 像素重建 surprise &gt; VLM（Qwen2.5/3-VL）二分判断（后者近乎随机）——再次印证"隐空间预测"才是物理可信度的好代理。</li>
+    <li><b>VideoPhy 物理一致性：</b>MAGI-1 +8.1%、vLDM +6.9%（代价：文本语义对齐略降，因 V-JEPA surprise 与文本无关）。<b>人类偏好</b>：∇+BoN 胜率 +11.4%，其中"物理可信"维度提升最显著。</li>
+    <li><b>感知质量不降反升：</b>VBench 上时序一致性、运动平滑度、闪烁均改善（遵循物理 → 顺带抑制了伪影）。</li>
+    <li><b>奖励模型越大越好：</b>把 V-JEPA 从 ViT-huge 换到 ViT-giant，物理分随之上升（最佳配置 ViT-giant / 窗口 32 / 上下文 16 / 步长 16 → 60.78）——<b>无需微调生成器</b>，仅靠更强的世界模型就能继续涨分；对上下文长度 C、视界 M、步长 s 也都鲁棒。</li>
+    <li><b>算力成本（H200；MAGI-1 用 8 卡、vLDM 用 1 卡）：</b>BoN 时间 ×N、显存不变；Guidance(∇) 因需对 V-JEPA 反传，时间 ≈ ×5、显存 ×2–4；∇+BoN 取二者之积。即"加准确度"与"加算力"可按预算自由组合。</li>
+  </ul>
+</section>
+
+<!-- ===== 5.6 APPLICATION: MIND-V ===== -->
+<section id="mindv" class="anchor">
+  <div class="secthead"><span class="chip mindv">应用 · 机器人</span><h2 class="sec" style="border:0;margin:0">★★ 再进一步：MIND-V —— 把 V-JEPA 2 surprise 当 RL 奖励，驱动长程机器人操作世界模型</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:12.5px">MIND-V: Hierarchical World Model for Long-Horizon Robotic Manipulation with RL-based Physical Alignment · arXiv 2512.06628 · 2025-12（v2 2026-03）· Ruicheng Zhang, …, Zunnan Xu, Haocheng Luo, Xiu Li（清华大学 / X Square Robot / 中山大学 / HKUST 等）</p>
+
+  <div class="key">承接上一节：MIND-V <b>明确引用了 WMReward（2510.21840）</b>，把"V-JEPA 2 隐空间 surprise = 物理裁判"这一思想从<b>推理时引导</b>升级为 <b>GRPO 强化学习奖励</b>，并嵌进一个更大的<b>分层长程机器人操作视频世界模型</b>。它的视频生成器本身是 CogVideoX-5B（DiT，非 JEPA）——也就是说，<b>V-JEPA 2 的 predictor 正在成为整个领域可复用的"物理 critic"</b>：既能给扩散采样打分（WMReward），也能当 RL 奖励（MIND-V）。</div>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:#6366f1">+76.7%</div><div class="l">长程任务成功率（0.347 → 0.613，相对提升）</div></div>
+    <div class="stat"><div class="n" style="color:#6366f1">0.462</div><div class="l">PFC 物理可信分（次优 0.424，+9.0%）</div></div>
+    <div class="stat"><div class="n" style="color:#6366f1">27.7→43.5%</div><div class="l">下游 VLA 策略成功率（生成数据当训练场）</div></div>
+  </div>
+
+  <div class="card" style="margin-top:14px"><b>🔧 用的模型：</b>视频生成器 MVG = <b>CogVideoX-5B</b>（DiT，30 层 / 隐藏维 1920）；规划 SRH = <b>Gemini-2.5 Pro</b>（VLM）+ <b>Affordance-R1</b>（可供性定位）；物理奖励 = <b>冻结 V-JEPA 2</b>（编码器 E_v + 预测器 P_v）；美学奖励 = Gemini-2.5（1–5 分）；下游策略 = <b>OpenVLA-OFT</b>（VLA）。<br><b>📦 用的数据：</b>SFT 训练用 <b>Bridge V2</b>（真实机器人操作视频，自动生成 BSB 标注 via Qwen-VL 2.5 + Grounded SAM2）；评测为 <b>108 样本</b>测试集（Bridge V2 测试集 + 网络未见场景，每个长程任务含 2–4 子任务）；下游策略学习用 <b>MimicGen</b>（Coffee / StackThree / Square）。</div>
+
+  <h3>5★★.1 洞察：长程操作数据稀缺 → 借"脑启发分层"把认知与像素合成解耦</h3>
+  <p>可扩展的具身智能受困于<b>多样化长程操作数据稀缺</b>；现有视频世界模型只能合成简单动作的短片。生成长程操作视频面临三难：<b>① 长程连贯</b>（子任务间因果一致，一步错则全盘崩）、<b>② 语义到像素</b>（把抽象指令翻译成具体时空交互）、<b>③ 物理可信</b>（碰撞、物体恒存、交互力）。核心洞察来自人类运动控制的<b>分层认知理论</b>（皮层负责规划、小脑/运动系统负责肌肉控制，由神经通路桥接）：把<b>高层认知推理</b>与<b>低层像素合成</b>解耦成三层。</p>
+
+  <h3>5★★.2 方法：三层"认知→执行"流水线 + System-2 自我修正 + GRPO 物理对齐</h3>
+  <div class="figure">
+    <svg viewBox="0 0 960 408" xmlns="http://www.w3.org/2000/svg" font-family="var(--sans)">
+      <defs>
+        <marker id="mv" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa7b6"/></marker>
+        <marker id="mvA" markerWidth="11" markerHeight="11" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#f59e0b"/></marker>
+        <marker id="mvG" markerWidth="11" markerHeight="11" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 Z" fill="#6366f1"/></marker>
+      </defs>
+
+      <rect x="298" y="28" width="232" height="50" rx="10" fill="#2a2410" stroke="#f59e0b"/>
+      <text x="414" y="49" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">VLM 评审 Critic</text>
+      <text x="414" y="67" text-anchor="middle" fill="#9aa7b6" font-size="11">打分：任务成功 / 物理 / 画质</text>
+
+      <rect x="10" y="172" width="98" height="84" rx="10" fill="#1c2230" stroke="#2a3340"/>
+      <text x="59" y="206" text-anchor="middle" fill="#e6edf3" font-size="12">指令 L</text>
+      <text x="59" y="224" text-anchor="middle" fill="#9aa7b6" font-size="11">+ 初始观测 I₀</text>
+
+      <rect x="128" y="172" width="158" height="84" rx="10" fill="#231b30" stroke="#6366f1"/>
+      <text x="207" y="198" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">① SRH 语义推理中枢</text>
+      <text x="207" y="216" text-anchor="middle" fill="#9aa7b6" font-size="10.5">VLM(Gemini)+Affordance</text>
+      <text x="207" y="232" text-anchor="middle" fill="#9aa7b6" font-size="10.5">长程指令 → 原子子任务序列</text>
+
+      <rect x="306" y="172" width="158" height="84" rx="10" fill="#10261f" stroke="#14b8a6"/>
+      <text x="385" y="198" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">② BSB 行为语义桥</text>
+      <text x="385" y="216" text-anchor="middle" fill="#9aa7b6" font-size="10.5">物体/机械臂掩码 + 三段式轨迹</text>
+      <text x="385" y="232" text-anchor="middle" fill="#9aa7b6" font-size="10.5">+ 相位转换点（域无关表示）</text>
+
+      <rect x="484" y="172" width="158" height="84" rx="10" fill="#2a1320" stroke="#ec4899"/>
+      <text x="563" y="198" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">③ MVG 运动视频生成器</text>
+      <text x="563" y="216" text-anchor="middle" fill="#9aa7b6" font-size="10.5">DiT · init CogVideoX-5B</text>
+      <text x="563" y="232" text-anchor="middle" fill="#9aa7b6" font-size="10.5">语义 → 像素（物理引擎）</text>
+
+      <rect x="662" y="172" width="120" height="84" rx="10" fill="#11161d" stroke="#5b6675" stroke-dasharray="5,4"/>
+      <text x="722" y="206" text-anchor="middle" fill="#cdd9e5" font-size="12">长程操作视频</text>
+      <text x="722" y="224" text-anchor="middle" fill="#9aa7b6" font-size="10.5">111 帧 · 多子任务</text>
+
+      <line x1="108" y1="214" x2="126" y2="214" stroke="#9aa7b6" marker-end="url(#mv)"/>
+      <line x1="286" y1="214" x2="304" y2="214" stroke="#9aa7b6" marker-end="url(#mv)"/>
+      <line x1="464" y1="214" x2="482" y2="214" stroke="#9aa7b6" marker-end="url(#mv)"/>
+      <line x1="642" y1="214" x2="660" y2="214" stroke="#9aa7b6" marker-end="url(#mv)"/>
+
+      <line x1="700" y1="172" x2="528" y2="72" stroke="#f59e0b" marker-end="url(#mvA)"/>
+      <path d="M298 60 C 180 70, 165 120, 200 170" fill="none" stroke="#f59e0b" stroke-dasharray="6,4" marker-end="url(#mvA)"/>
+      <text x="150" y="120" text-anchor="middle" fill="#f59e0b" font-size="10.5" transform="rotate(-62 150 120)">测试时 System-2 重规划</text>
+
+      <rect x="470" y="306" width="256" height="74" rx="12" fill="#13261b" stroke="#3fb950"/>
+      <text x="598" y="332" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">V-JEPA 2（冻结）= 物理裁判</text>
+      <text x="598" y="350" text-anchor="middle" fill="#9aa7b6" font-size="10.5">PFC surprise（隐空间余弦，滑窗）</text>
+      <text x="598" y="366" text-anchor="middle" fill="#9aa7b6" font-size="10.5">+ softmax 聚焦"最差窗口"</text>
+
+      <rect x="250" y="312" width="170" height="62" rx="12" fill="#231b30" stroke="#6366f1"/>
+      <text x="335" y="338" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">GRPO 后训练</text>
+      <text x="335" y="356" text-anchor="middle" fill="#9aa7b6" font-size="10.5">R_physics 物理对齐</text>
+
+      <line x1="722" y1="256" x2="660" y2="306" stroke="#9aa7b6" marker-end="url(#mv)"/>
+      <line x1="470" y1="343" x2="422" y2="343" stroke="#6366f1" marker-end="url(#mvG)"/>
+      <path d="M335 312 C 335 268, 470 262, 545 256" fill="none" stroke="#6366f1" stroke-dasharray="6,4" marker-end="url(#mvG)"/>
+      <text x="430" y="284" text-anchor="middle" fill="#6366f1" font-size="10.5">训练时更新 MVG（KL→SFT 防 reward hacking）</text>
+    </svg>
+    <div class="figcap">图 4 · MIND-V 的"认知→执行"流水线。主链 SRH→BSB→MVG 把长程指令逐级翻译为像素视频；<span style="color:#f59e0b">橙色</span>为测试时 System-2 自我修正闭环，<span style="color:#3fb950">绿色</span>的冻结 V-JEPA 2 充当物理裁判，经 PFC 奖励驱动 <span style="color:#6366f1">GRPO</span> 训练时物理对齐。</div>
+  </div>
+
+  <ul>
+    <li><b>① SRH 语义推理中枢：</b>用 VLM（Gemini-2.5 Pro）+ 可供性定位器（Affordance-R1）把长程指令分解为有序原子子任务 <code>{动作, 物体, 目标位}</code>，并规划平滑轨迹。</li>
+    <li><b>② BSB 行为语义桥：</b>一个<b>域无关的结构化中间表示</b> = 物体/机械臂掩码 + 三段式协同轨迹（接近 → 交互 → retract）+ 相位转换点。把"任务逻辑"与"视觉外观"解耦，带来跨域泛化。</li>
+    <li><b>③ MVG 运动视频生成器：</b>条件 DiT（从 CogVideoX-5B 初始化，30 blocks / 隐藏维 1920），把 BSB 编码成时空引导张量注入 DiT 偶数层，渲染为像素。</li>
+    <li><b>Staged Visual Future Rollouts（测试时 System-2）：</b>每个子任务切换处做 Propose-Verify-Refine——SRH 提 K 个候选计划，MVG 各 rollout 成短片，VLM 当 critic 打分选最优，不达标则给文字反馈（如"末端位置错误""未正确抓取"）重规划，把全局规划拆成局部最优、抑制误差累积。</li>
+  </ul>
+
+  <h4>V-JEPA 2 到底在哪发挥作用：PFC 物理裁判奖励（同 WMReward 思想 + 新巧思）</h4>
+  <p>训练分两步。Stage 1 <b>SFT</b>：用去噪损失把 BSB→像素映射学好（只需短子任务片段，分层结构保证泛化到长程），得到参考策略 π_ref。Stage 2 <b>GRPO 物理对齐</b>，奖励里嵌入冻结的 V-JEPA 2：</p>
+  <div class="eq">
+    s<sub>i</sub> = cos_sim( P<sub>v</sub>(E<sub>v</sub>(x<sub>context</sub><sup>(i)</sup>)) , E<sub>v</sub>(x<sub>target</sub><sup>(i)</sup>) )<span class="c">   # 每个滑窗的符合度（stride 3，15 上下文 + 5 目标帧）(Eq 4)</span><br>
+    R<sub>physics</sub> = Σ<sub>i</sub> [ exp((1−s<sub>i</sub>)/τ) / Σ<sub>j</sub> exp((1−s<sub>j</sub>)/τ) ] · s<sub>i</sub><span class="c">   # softmax 把奖励集中到"最差窗口" (Eq 5)</span><br>
+    R = w<sub>p</sub>·R<sub>physics</sub> + w<sub>a</sub>·R<sub>aesthetic</sub>&nbsp;&nbsp;(w<sub>p</sub>=0.2, w<sub>a</sub>=1)<span class="c">   # R_aesthetic 由 VLM 打 1–5 分 (Eq 3)</span>
+  </div>
+  <p>GRPO：采一组 G 个视频，按组内归一化优势 <code>A_i=(R_i−mean)/std</code> 做裁剪式更新，并加 <code>KL(π_θ‖π_ref)</code> 拉回 SFT 策略防 reward hacking。<b>与 WMReward 的异同：</b>都用"V-JEPA 2 隐空间 surprise"度量物理可信；不同在于 MIND-V 把它当成 <b>RL 奖励</b>（而非推理时引导/BoN），并引入 <b>softmax 最差窗口加权</b>——专挑物理违例最严重的片段重罚，而不是简单平均。</p>
+
+  <h3>5★★.3 实验效果</h3>
+  <table>
+    <thead><tr><th>长程任务（108 样本测试集）</th><th class="num">MIND-V</th><th class="num">次优基线</th><th class="num">相对提升</th></tr></thead>
+    <tbody>
+      <tr><td>PFC Score（物理可信 ↑）</td><td class="num best">0.462</td><td class="num">Dreamdojo 0.424</td><td class="num win">+9.0%</td></tr>
+      <tr><td>Task Success（任务成功率 ↑）</td><td class="num best">0.613</td><td class="num">WoW-1-Wan-14B 0.347</td><td class="num win">+76.7%</td></tr>
+      <tr><td>User Preference（人类偏好 ↑）</td><td class="num best">49%</td><td class="num">Dreamdojo 18%</td><td class="num win">+172.2%</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:12.5px">短程任务 V-Bench 各项亦为最佳：美学 0.526、时序闪烁 0.986、运动平滑 0.991、主体一致 0.940、背景一致 0.963。</p>
+  <table>
+    <thead><tr><th>下游 VLA 策略（MimicGen，成功率 %）</th><th class="num">Coffee</th><th class="num">StackThree</th><th class="num">Square</th><th class="num">均值</th></tr></thead>
+    <tbody>
+      <tr><td>Base 策略</td><td class="num">32.6</td><td class="num">30.2</td><td class="num">20.4</td><td class="num">27.7</td></tr>
+      <tr><td>IL 持续学习</td><td class="num">37.4</td><td class="num">36.7</td><td class="num">26.1</td><td class="num">33.4</td></tr>
+      <tr><td><b>MIND-V 生成数据 + IL</b></td><td class="num best">51.7</td><td class="num best">48.3</td><td class="num best">30.4</td><td class="num best">43.5</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:13px"><b>关键消融：</b>去掉 Staged Rollouts，子任务成功率从 0.613 暴跌到 <b>0.327</b>（System-2 自我修正最关键）；去掉 GRPO，PFC 从 0.452 降到 0.429（RL 物理对齐确实有效）；可供性模块换 YOLO+SAM2，成功率降到 0.455。rollout 数 K：K=1 35.2% → K=3（默认）61.3% → K=5 62.5%（递减，且显存 70→122 GB）。</p>
+
+  <h3>5★★.4 算力</h3>
+  <p>全部实验在 <b>4 张 NVIDIA H200</b> 上：SFT 30,000 步（AdamW，lr 2e-5），GRPO 后训练 1,500 迭代（lr 5e-6）。推理生成 111 帧长程视频（3 子任务）约 <b>50 GB 显存</b>，因自回归子任务结构，序列任意加长<b>仅线性增本</b>（总时长 60.24/123.02/181.55 秒对应 1/2/3 子任务，约 30s/子任务；峰值显存恒为 ~70 GB；MVG 是瓶颈，占 ~65–70% 时间、~86% 显存）。</p>
+
+  <div class="note"><b>和 JEPA 系列的连接（一个有意思的互补）：</b>MIND-V 特别强调它在<b>像素空间</b>生成未来以指导 VLA（区别于在抽象表征空间操作的 latent IL/RL），而 V-JEPA 系列恰恰主张<b>在表征空间预测</b>。两者在此形成互补——<b>用表征空间的世界模型（V-JEPA 2）去评判像素空间的生成</b>。从 §4 的"predictor 即世界模型"，到 §5★ 的"surprise 当推理时引导"，再到这里的"surprise 当 RL 奖励"，V-JEPA 2 的隐空间预测器正被反复复用为领域通用的物理先验。</div>
+</section>
+
+<!-- ===== 5.7 APPLICATION: PE-GRPO ===== -->
+<section id="pegrpo" class="anchor">
+  <div class="secthead"><span class="chip pe">应用 · 视频生成</span><h2 class="sec" style="border:0;margin:0">★★★ 同期对照：PE-GRPO —— 把 V-JEPA 2 物理奖励"焊进生成器权重"（后训练）</h2></div>
+  <p class="muted" style="font-family:var(--mono);font-size:12.5px">PE-GRPO: Aligning Video Generation for Physical and Embodied Reasoning via World Model · NeurIPS 2026 投稿 #7042（匿名双盲）· 2026 · "PE" = Physical &amp; Embodied</p>
+
+  <div class="key">第三种用法。和 MIND-V 同属"<b>V-JEPA 2 当 GRPO 奖励</b>"，但对齐的是<b>通用视频生成器 Wan2.1</b>。它<b>显式对照了 WMReward</b>（并引用 arXiv 2601.10553）：WMReward 在<b>推理时</b>用 V-JEPA 2 引导（推理变贵、不改模型），PE-GRPO 则在<b>后训练时</b>用，把物理信号<b>固化进生成器权重</b>本身。</div>
+
+  <div class="card" style="margin-top:14px"><b>🔧 用的模型：</b>被对齐的生成器 = <b>Wan2.1</b>（T2V 用 <b>1.3B</b>、I2V 用 <b>14B</b>，零样本 Wan2.1 即匹配基线）；奖励全部<b>冻结、无可训练 critic</b>——物理 = <b>冻结 V-JEPA 2</b>、任务 = <b>冻结 Qwen2-VL-2B</b>（logit 判分）、时序 = <b>SSIM</b>（非参数）；数据构造另用 <b>FLUX</b> 合成 I2V 初始帧。<br><b>📦 用的数据：</b>训练为 <b>130K</b> 提示样本（<b>WISA-80K</b> 80K + <b>DanceGRPO</b> 50K，<b>无人工标注</b>）；评测 = <b>RBench</b>（具身视频，9 指标）、<b>VideoPhy</b> / <b>VideoPhy2</b>（物理常识 PC + 语义 SA）。</div>
+
+  <div class="grid3">
+    <div class="stat"><div class="n" style="color:#06b6d4">+8.27%</div><div class="l">RBench I2V 总分（0.399 → 0.432）</div></div>
+    <div class="stat"><div class="n" style="color:#06b6d4">+18.05%</div><div class="l">RBench「推理」指标相对增益（最高项）</div></div>
+    <div class="stat"><div class="n" style="color:#06b6d4">1.3B≈14B</div><div class="l">对齐后的 1.3B 在部分指标追平 14B 零样本</div></div>
+  </div>
+
+  <h3>5★★★.1 洞察：把"物理可信"当约束，而非又一个配权重的奖励项</h3>
+  <p>视频生成模型学的是 2D 像素统计、而非 3D 物理规律，常出现穿模、瞬移、结构畸变。已有 RLHF 对齐难点：人工标注细粒度物理<b>不可扩展</b>；URDF/ControlNet 显式条件<b>不泛化</b>到开放世界；手工把"美学 + 物理"线性配权重会产生<b>梯度冲突</b>。PE-GRPO 的两点洞察：① 用冻结的隐空间世界模型（V-JEPA 2）当<b>免标注、可扩展</b>的物理奖励；② 把物理可行性建模成<b>约束（CMDP）</b>而非固定权重项，并按去噪阶段做<b>信用分配</b>。</p>
+
+  <h3>5★★★.2 方法：PEARL 三通道奖励 + CMDP 约束 + 相位路由</h3>
+  <div class="grid3">
+    <div class="card"><h4 style="color:#3fb950">物理（V-JEPA 2，冻结）</h4><p>对生成视频采时空掩码，用冻结 V-JEPA 2 预测被掩码的隐 token，与编码目标比 Smooth-L1。<b>预测误差越小 = 越物理一致</b>。</p></div>
+    <div class="card"><h4 style="color:#f0883e">任务（Qwen2-VL-2B，冻结）</h4><p>不解码硬 Yes/No，而是读 Yes/No token 的 logits → 温度 softmax → <code>R_task = 2·p_Yes − 1 ∈ [−1,1]</code>，得到密集的语义遵循奖励。</p></div>
+    <div class="card"><h4 style="color:#58a6ff">时序连续（SSIM，无模型）</h4><p>相邻帧结构相似度均值 <code>R_smooth = mean SSIM(I_t, I_{t+1})</code>，抑制闪烁/抖动。</p></div>
+  </div>
+  <div class="eq">
+    <span class="c"># 物理奖励 = 负的「掩码隐 token 预测误差」（Eq 3），由冻结 V-JEPA 2 给出</span><br>
+    R<sub>phys</sub> = − (1/|M|) Σ<sub>p∈M</sub> (1/d) Σ<sub>j</sub> SmoothL1( ẑ<sub>p,j</sub> , z<sub>p,j</sub> )
+  </div>
+  <ul>
+    <li><b>CMDP 约束（Auto-PEARL）：</b>不手工配权重，而是 <code>max E[R_task + R_smooth]  s.t.  E[R_phys] ≥ τ</code>，用拉格朗日乘子 λ 的对偶更新求解；阈值 <b>τ 自动标定</b>（warm-up 期记录 0.8 分位数、取中位数），避免"美学 vs 物理"的梯度冲突。</li>
+    <li><b>相位感知路由（sigmoid）：</b>把 macro（任务 + λ·物理）优势分配给<b>早期高噪声</b>步（定场景布局/交互结构），把 micro（SSIM）分配给<b>晚期干净</b>步（去闪烁/细节精修）。</li>
+    <li><b>优化：</b>把随机去噪看作 SDE/MDP 策略执行（缓存 log-prob 复用 rollout），用 critic-free 裁剪式 GRPO + KL 拉回参考策略。</li>
+  </ul>
+
+  <h3>5★★★.3 实验效果</h3>
+  <table>
+    <thead><tr><th>基准 / 指标</th><th class="num">Wan2.1 基线</th><th class="num">PE-GRPO</th><th class="num">提升</th></tr></thead>
+    <tbody>
+      <tr><td>RBench I2V 总分（9 指标均值）</td><td class="num">0.399（14B）</td><td class="num best">0.432</td><td class="num win">+8.27%</td></tr>
+      <tr><td>RBench 任务侧（相对增益）</td><td class="num">—</td><td class="num" colspan="2">推理 +18.05% · 空间 +14.55% · 操作 +4.07% · 多体 +2.13% · 长程 +1.49%</td></tr>
+      <tr><td>RBench 具身侧（相对增益）</td><td class="num">—</td><td class="num" colspan="2">单臂 +15.52% · 双臂 +9.86% · 人形 +8.01% · 四足 +5.71%</td></tr>
+      <tr><td>VideoPhy（T2V 1.3B）PC / SA</td><td class="num">0.24 / 0.46</td><td class="num best">0.26 / 0.49</td><td class="num win">+0.02 / +0.03</td></tr>
+      <tr><td>VideoPhy2（T2V 1.3B）PC / SA</td><td class="num">0.61 / 0.28</td><td class="num best">0.63 / 0.29</td><td class="num win">+0.02 / +0.01</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:13px"><b>亮点：</b>对齐后的 <b>1.3B</b> 在 VideoPhy2 SA 上达到 0.29，<b>追平 Wan2.1-14B 零样本</b>。<b>消融</b>（RBench I2V，B0→B4）：骨干 0.399 → +V-JEPA 2 物理+任务 0.421 → 仅任务+SSIM 回落 0.399（说明 <b>V-JEPA 2 物理奖励才是关键</b>）→ +全 PEARL/余弦路由 0.425 → 完整 PE-GRPO（自动 CMDP + sigmoid 路由）<b>0.432</b>。算力：<b>8× H100</b>，5 秒/81 帧/832×480/16fps/50 步去噪（未报告 GPU-小时）。</p>
+
+  <h3>5★★★.4 小结：三种把 V-JEPA 2 当"物理信号"的方式</h3>
+  <div class="note">把三项应用并起来看，"V-JEPA 2 物理信号注入生成"出现了清晰的<b>两类范式</b>：<b>推理时</b>（WMReward，不动生成器、但每次推理变贵）vs <b>后训练 RL 奖励</b>（MIND-V、PE-GRPO，把物理固化进权重、推理时零额外开销）。三者都把"<u>V-JEPA 2 隐空间预测误差 = 物理不可信</u>"当作核心信号——这正是本教程从 §1 起强调的"在表征空间预测"的下游红利。</div>
+  <table>
+    <thead><tr><th>工作</th><th>被对齐的生成器</th><th>V-JEPA 2 的用法</th><th>其他奖励 / 模型</th><th>训练 / 评测数据</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-app">WMReward</span><br>2510 / 2601</td><td>MAGI-1 24B · Sora2 · vLDM 5B</td><td><b>推理时</b>引导 + Best-of-N<br>（不改生成器）</td><td>—（仅 V-JEPA 2 surprise）</td><td>无训练数据；评测 PhysicsIQ · VideoPhy</td></tr>
+      <tr><td><span class="badge b-mindv">MIND-V</span><br>2512</td><td>CogVideoX-5B（DiT）</td><td><b>GRPO 奖励</b>（PFC，<br>softmax 最差窗口）</td><td>Gemini-2.5（规划/美学）<br>+ Affordance-R1 · 下游 OpenVLA-OFT</td><td>SFT: Bridge V2；评测 108 样本；<br>下游 MimicGen</td></tr>
+      <tr><td><span class="badge b-pe">PE-GRPO</span><br>#7042</td><td>Wan2.1 1.3B(T2V)/14B(I2V)</td><td><b>GRPO 奖励</b>（掩码隐空间<br>预测误差，作 CMDP 约束）</td><td>Qwen2-VL-2B（任务判分）<br>+ SSIM（时序）· FLUX（造数据）</td><td>130K（WISA-80K + DanceGRPO）；<br>评测 RBench · VideoPhy(2)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 6 EVOLUTION ===== -->
+<section id="evolution" class="anchor">
+  <h2 class="sec">6 · 方法演进对比：不变的内核 + 刻意的增量</h2>
+  <p>整个系列是"方法论上的专一"：始终保持 <b>EMA-target + stop-gradient + 窄 predictor + 隐空间 L1/L2 掩码去噪</b> 这一内核，每篇只做<b>有针对性的加法</b>（模态 / 掩码维度 / 损失加在哪 / 规模），而非推倒重来。</p>
+  <table>
+    <thead>
+      <tr><th>维度</th><th class="b-i">I-JEPA</th><th class="b-v">V-JEPA</th><th class="b-v2">V-JEPA 2</th><th class="b-v21">V-JEPA 2.1</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>模态</b></td><td>图像</td><td>视频（16 帧 tubelet 2×16×16）</td><td>视频 + 图像（图像复制成伪视频）</td><td>视频 + 图像（多模态 tokenizer，原生）</td></tr>
+      <tr><td><b>位置编码</b></td><td>绝对（learnable/sincos）</td><td>3D sin-cos 绝对</td><td><b>3D-RoPE 相对</b></td><td>3D-RoPE + 模态 embedding</td></tr>
+      <tr><td><b>回归损失</b></td><td>L2</td><td>L1</td><td>L1（仅掩码 token）</td><td><b>L1 加在全部 token</b>（L_predict+L_context）</td></tr>
+      <tr><td><b>掩码</b></td><td>多块（M=4 目标）</td><td>3D 多块（short+long，~90%）</td><td>沿用 V-JEPA 多块</td><td>沿用 V-JEPA 多块</td></tr>
+      <tr><td><b>Predictor</b></td><td>窄 ViT，384 维，深 6–16</td><td>窄 ViT，384 维，深 12</td><td>固定 ViT-s 22M，深 12</td><td><b>多级 predictor，深 24</b>，4 级输出</td></tr>
+      <tr><td><b>防坍缩</b></td><td>EMA(0.996→1.0)+stop-grad</td><td>EMA(0.998→1.0)+stop-grad</td><td>固定 EMA 0.99925</td><td>固定 EMA 0.99925</td></tr>
+      <tr><td><b>LR 调度</b></td><td>warmup→cosine</td><td>warmup→cosine（截断技巧）</td><td><b>warmup-constant-decay</b></td><td>warmup-constant-decay</td></tr>
+      <tr><td><b>评测协议</b></td><td>线性探测/微调</td><td><b>注意力探测</b></td><td>4 层注意力探测</td><td>注意力 + 线性 + 标签传播</td></tr>
+      <tr><td><b>新增能力件</b></td><td>—</td><td>—</td><td><b>V-JEPA 2-AC</b> 动作条件世界模型 + LLM 对齐</td><td>深层自监督 + 稠密损失</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 7 RESULTS ===== -->
+<section id="results" class="anchor">
+  <h2 class="sec">7 · 实验效果横向对比</h2>
+  <p>同一编码器家族冻结评测下的代表性数字（粗体为该行最佳；↓ 表示越低越好）：</p>
+  <table>
+    <thead>
+      <tr><th>能力 / 基准</th><th class="b-i">I-JEPA</th><th class="b-v">V-JEPA</th><th class="b-v2">V-JEPA 2</th><th class="b-v21">V-JEPA 2.1</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>IN1K 图像分类</td><td class="num">81.1（线性）</td><td class="num">77.9</td><td class="num">85.1</td><td class="num best">85.5</td></tr>
+      <tr><td>SSv2 运动理解</td><td class="num">—</td><td class="num">72.2</td><td class="num">77.3</td><td class="num best">77.7</td></tr>
+      <tr><td>K400 动作识别</td><td class="num">—</td><td class="num">82.0</td><td class="num">87.3</td><td class="num best">87.7</td></tr>
+      <tr><td>EK100 动作预判 R@5</td><td class="num">—</td><td class="num">—</td><td class="num">39.7</td><td class="num best">40.8</td></tr>
+      <tr><td>NYUv2 深度 RMSE ↓</td><td class="num">—</td><td class="num">—</td><td class="num">0.642</td><td class="num best">0.307</td></tr>
+      <tr><td>ADE20K 分割 mIoU</td><td class="num">—</td><td class="num">—</td><td class="num">~24.4</td><td class="num best">47.9</td></tr>
+      <tr><td>YouTube-VOS J&amp;F</td><td class="num">—</td><td class="num">—</td><td class="num">53.7</td><td class="num best">72.7</td></tr>
+      <tr><td>零样本机器人规划</td><td class="num">—</td><td class="num">—</td><td class="num">取放 80%</td><td class="num best">抓取 70–80%</td></tr>
+      <tr><td>视频问答（8B 对齐）</td><td class="num">—</td><td class="num">—</td><td class="num best">PerceptionTest 84.0</td><td class="num">83.1</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">说明：I-JEPA 81.1 为线性探测，其余为注意力探测/对应协议，跨论文绝对值不完全可比，仅示意能力随系列单调扩张。深度/分割是 V-JEPA 2.1 新解锁，故 I/V-JEPA 留空。</p>
+</section>
+
+<!-- ===== 8 COMPUTE ===== -->
+<section id="compute" class="anchor">
+  <h2 class="sec">8 · 算力与规模对比</h2>
+  <p>算力口径从"明确 GPU-小时"逐步变成"样本数 / GPU-年 / 不披露"——这是横向对比时最需注意的一点。</p>
+  <table>
+    <thead>
+      <tr><th>项目</th><th class="b-i">I-JEPA</th><th class="b-v">V-JEPA</th><th class="b-v2">V-JEPA 2</th><th class="b-v21">V-JEPA 2.1</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>最大模型</b></td><td>ViT-G/16</td><td>ViT-H/16 (630M)</td><td>ViT-g (1B)</td><td><b>ViT-G (2B)</b></td></tr>
+      <tr><td><b>Predictor</b></td><td>窄 ViT (384d)</td><td>窄 ViT 12 层 (384d)</td><td>ViT-s 22M</td><td>24 层多级 (384d)</td></tr>
+      <tr><td><b>预训练数据</b></td><td>IN1K ~1.28M 图<br>(scaling 用 IN22K)</td><td>VideoMix2M<br>~2M 视频</td><td>VideoMix22M<br>22M / &gt;1M 小时</td><td>VisionMix163M<br>(LVD-142M 图 + 重加权视频)</td></tr>
+      <tr><td><b>迭代 / 轮次</b></td><td>300–600 epoch</td><td>90K 迭代</td><td>90K→252K 迭代<br>(228K 常数+12K cooldown)</td><td>135K + 12K cooldown</td></tr>
+      <tr><td><b>Batch</b></td><td>2048</td><td>3072 (384px:2400)</td><td>3072</td><td>2304 图 + 128 视频/批</td></tr>
+      <tr><td><b>硬件</b></td><td>16× A100</td><td>A100 80G (bf16)</td><td>A100（VidQA 用 512×H100）</td><td>未披露（MPC 单 A100）</td></tr>
+      <tr><td><b>算力口径</b></td><td class="best">&lt;1200 GPU-小时<br>(&lt;72h)</td><td>仅报"样本数"<br>~270M（无 GPU-h）</td><td>GPU-天/年级<br>渐进训练省 8.4×<br>(全程 64×384 约 60 GPU-年)</td><td class="lose">完全不报告<br>GPU-h / 墙钟</td></tr>
+      <tr><td><b>效率亮点</b></td><td>比 MAE 高效 10×<br>收敛快 ~5×</td><td>样本数比像素法少 1 个量级</td><td>渐进分辨率 8.4×<br>2-AC 仅 62h 机器人视频</td><td>2B 蒸馏到 80M/300M</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>趋势解读：</b>I-JEPA 以"极致省算力"开场（&lt;1200 GPU-h），V-JEPA 改用"见过的样本数"作为成本代理，V-JEPA 2 进入 GPU-年量级但用渐进分辨率把成本压回 1/8.4，V-JEPA 2.1 规模达 2B 却<b>不再披露任何预训练算力</b>——开篇那条"高效"主线在 2B 尺度是否仍成立，已无法直接从论文核实。</div>
+</section>
+
+<!-- ===== 9 CAPABILITY ===== -->
+<section id="capability" class="anchor">
+  <h2 class="sec">9 · 能力进阶：一个冻结编码器，越来越能干</h2>
+  <div class="figure">
+    <svg viewBox="0 0 920 240" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="a2" markerWidth="12" markerHeight="12" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#9aa7b6"/></marker></defs>
+      <g font-family="var(--sans)">
+        <rect x="20" y="80" width="190" height="90" rx="12" fill="#13202e" stroke="#3b82f6"/>
+        <text x="115" y="108" text-anchor="middle" fill="#3b82f6" font-weight="800" font-size="16">I-JEPA</text>
+        <text x="115" y="130" text-anchor="middle" fill="#cdd9e5" font-size="12.5">静态图像语义</text>
+        <text x="115" y="150" text-anchor="middle" fill="#7c8794" font-size="11">分类·迁移·(萌芽:深度)</text>
+
+        <rect x="245" y="80" width="190" height="90" rx="12" fill="#13261b" stroke="#10b981"/>
+        <text x="340" y="108" text-anchor="middle" fill="#10b981" font-weight="800" font-size="16">V-JEPA</text>
+        <text x="340" y="130" text-anchor="middle" fill="#cdd9e5" font-size="12.5">视频外观 + 运动</text>
+        <text x="340" y="150" text-anchor="middle" fill="#7c8794" font-size="11">SSv2 +21·动作定位</text>
+
+        <rect x="470" y="80" width="190" height="90" rx="12" fill="#241a30" stroke="#a855f7"/>
+        <text x="565" y="108" text-anchor="middle" fill="#a855f7" font-weight="800" font-size="16">V-JEPA 2</text>
+        <text x="565" y="130" text-anchor="middle" fill="#cdd9e5" font-size="12.5">预测 + 规划</text>
+        <text x="565" y="150" text-anchor="middle" fill="#7c8794" font-size="11">动作预判·机器人·VQA</text>
+
+        <rect x="695" y="80" width="200" height="90" rx="12" fill="#2a1d10" stroke="#f97316"/>
+        <text x="795" y="108" text-anchor="middle" fill="#f97316" font-weight="800" font-size="16">V-JEPA 2.1</text>
+        <text x="795" y="130" text-anchor="middle" fill="#cdd9e5" font-size="12.5">稠密·时间一致特征</text>
+        <text x="795" y="150" text-anchor="middle" fill="#7c8794" font-size="11">深度·分割·跟踪 (保留全局)</text>
+
+        <line x1="210" y1="125" x2="244" y2="125" stroke="#9aa7b6" marker-end="url(#a2)"/>
+        <line x1="435" y1="125" x2="469" y2="125" stroke="#9aa7b6" marker-end="url(#a2)"/>
+        <line x1="660" y1="125" x2="694" y2="125" stroke="#9aa7b6" marker-end="url(#a2)"/>
+        <text x="457" y="40" text-anchor="middle" fill="#9aa7b6" font-size="13">能力面单调扩张：图像语义 → 视频运动 → 预测/规划 → 稠密几何（同一隐空间预测原理）</text>
+      </g>
+    </svg>
+    <div class="figcap">图 2 · 四步走的能力进阶。每一步都是在同一"隐空间预测"能量原理上新增能力，而非替换。</div>
+  </div>
+  <ul>
+    <li><b>I-JEPA：</b>静态图像语义（IN1K 81.1 线性探测、IN-1% 77.3、CIFAR100 87.5），并在 Clevr/Dist 深度上已露低层几何苗头。</li>
+    <li><b>V-JEPA：</b>新增视频<b>运动理解</b>（SSv2 72.2，+21 vs DINOv2）与动作定位（AVA 25.8），冻结骨干即可。</li>
+    <li><b>V-JEPA 2：</b>从"识别"跨到"<b>预测未来 + 采取行动</b>"——动作预判 SOTA、零样本机器人规划、LLM 对齐视频问答。</li>
+    <li><b>V-JEPA 2.1：</b>补上<b>稠密、时间一致</b>的几何/定位/跟踪能力（深度 0.307、分割 47.9、VOS 72.7），且全局与规划能力不降反升。</li>
+  </ul>
+</section>
+
+<!-- ===== 10 OPEN ===== -->
+<section id="open" class="anchor">
+  <h2 class="sec">10 · 贯穿全系列的开放问题</h2>
+  <div class="grid2">
+    <div class="card"><h4>① 数据多样性天花板</h4><p>V-JEPA 起就推测公开视频缺乏图像语料的互联网级多样性，故静态图任务逊于 DINOv2/OpenCLIP。即便 scaling 到 22M 视频 + LVD-142M，V-JEPA 2.1 在分割上仍落后 DINOv3-7B（ADE20K 47.9 vs 55.9），归因于训练集"高度杂乱场景"偏少。</p></div>
+    <div class="card"><h4>② 规模上限</h4><p>V-JEPA 2 直言只 scaling 到"适度的" 1B（同期他工作已到 20B），&gt;1B 的可持续 scaling 配方仍是未来工作；2.1 到了 2B 却不报算力，性价比无从评估。</p></div>
+    <div class="card"><h4>③ 稠密 vs 全局的权衡</h4><p>2.1 的 context loss 单用会拉低全局（SSv2 77.0→62.5），靠深层自监督才挽回——局部 grounding 与全局聚合之间的平衡靠超参（λ、距离加权、预热）调出来，并非已闭合的问题。</p></div>
+    <div class="card"><h4>④ 规划 / 世界模型的边界</h4><p>2-AC 对相机位置敏感（需从未标定单目 RGB 推断动作坐标轴，旋转误差随角度近线性增长）；长程规划受自回归误差累积 + 搜索空间指数爆炸限制，取放需中间子目标图；预测仅 ~16 秒；目标是图像而非语言。</p></div>
+    <div class="card"><h4>⑤ 预判与细时序 QA 缺口</h4><p>2 未完全攻克 EK100、只聚焦 1 秒预判（更长会骤降）；2.1 反而在 TemporalBench/TOMATO（细运动短时 QA）与 Diving-48/K400 上略退——稠密目标似乎小幅牺牲了细时序/外观锐度。</p></div>
+    <div class="card"><h4>⑥ 复现与算力透明度</h4><p>V-JEPA 与 V-JEPA 2.1 均不报告总 GPU-小时/墙钟（前者给样本数，后者啥也不给）。开篇 I-JEPA 那条 &lt;1200 GPU-h 的"高效"叙事在 2B 尺度是否仍成立，无法从论文直接验证。</p></div>
+  </div>
+</section>
+
+<!-- ===== REFS ===== -->
+<section id="refs" class="anchor">
+  <h2 class="sec">参考文献与资源</h2>
+  <table>
+    <thead><tr><th>论文</th><th>arXiv</th><th>本地 PDF</th><th>官方代码</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-i">I-JEPA</span> Self-Supervised Learning from Images with a JEPA (CVPR 2023)</td><td><a href="https://arxiv.org/abs/2301.08243">2301.08243</a></td><td class="mono">papers/2301.08243-I-JEPA.pdf</td><td><a href="https://github.com/facebookresearch/ijepa">facebookresearch/ijepa</a></td></tr>
+      <tr><td><span class="badge b-v">V-JEPA</span> Revisiting Feature Prediction for Learning Visual Representations from Video</td><td><a href="https://arxiv.org/abs/2404.08471">2404.08471</a></td><td class="mono">papers/2404.08471-V-JEPA.pdf</td><td><a href="https://github.com/facebookresearch/jepa">facebookresearch/jepa</a></td></tr>
+      <tr><td><span class="badge b-v2">V-JEPA 2</span> Self-Supervised Video Models Enable Understanding, Prediction and Planning</td><td><a href="https://arxiv.org/abs/2506.09985">2506.09985</a></td><td class="mono">papers/2506.09985-V-JEPA2.pdf</td><td><a href="https://github.com/facebookresearch/vjepa2">facebookresearch/vjepa2</a></td></tr>
+      <tr><td><span class="badge b-v21">V-JEPA 2.1</span> Unlocking Dense Features in Video Self-Supervised Learning</td><td><a href="https://arxiv.org/abs/2603.14482">2603.14482</a></td><td class="mono">papers/2603.14482-V-JEPA2.1.pdf</td><td><a href="https://github.com/facebookresearch/vjepa2">facebookresearch/vjepa2</a></td></tr>
+      <tr><td><span class="badge b-app">应用</span> Improving the physics of video generation with VJEPA-2 reward signal（ICCV'25 PhysicsIQ Challenge 冠军 · 短报告）</td><td><a href="https://arxiv.org/abs/2510.21840">2510.21840</a></td><td class="mono">papers/2510.21840.pdf</td><td class="muted">—</td></tr>
+      <tr><td><span class="badge b-app">应用·完整版</span> Inference-time Physics Alignment of Video Generative Models with Latent World Models（WMReward 框架）</td><td><a href="https://arxiv.org/abs/2601.10553">2601.10553</a></td><td class="mono">papers/2601.10553.pdf</td><td><a href="https://github.com/facebookresearch/WMReward">facebookresearch/WMReward</a></td></tr>
+      <tr><td><span class="badge b-mindv">应用·机器人</span> MIND-V: Hierarchical World Model for Long-Horizon Robotic Manipulation with RL-based Physical Alignment</td><td><a href="https://arxiv.org/abs/2512.06628">2512.06628</a></td><td class="mono">papers/2512.06628v2-MIND-V-.pdf</td><td class="muted">—</td></tr>
+      <tr><td><span class="badge b-pe">应用·视频生成</span> PE-GRPO: Aligning Video Generation for Physical and Embodied Reasoning via World Model</td><td>NeurIPS'26 投稿 #7042</td><td class="mono">papers/7042_PE_GRPO_Aligning_Video_Ge.pdf</td><td class="muted">—</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">概念源头：Yann LeCun, <i>A Path Towards Autonomous Machine Intelligence</i> (2022) 首次提出 JEPA 框架，I-JEPA 是其第一个图像实例。</p>
+
+  <footer>
+    <p>本教程由对八篇 PDF（4 篇 JEPA 主线 + 4 篇「V-JEPA 2 当物理 critic」应用：WMReward 短报告/完整版、MIND-V、PE-GRPO）的逐篇全文精读 + 二次回读核验自动生成；所有数字均标注于原文表格/正文，并对若干对比基线数字做了纠正（如 V-JEPA 2 中 InternVideo2 SSv2=67.3、ViT-g@256 K400=86.6；V-JEPA 2.1 中 V-JEPA 2 的 ADE20K 基线=24.4/24.6；MIND-V 每子任务约 30s 而非正文的 60s）。如需更深入，请直接查阅 <code>./papers/</code> 下对应 PDF 的标注页码。</p>
+    <p>生成日期：2026-06-04 · 8 篇论文 · 跨度 2023.01 → 2026.03</p>
+  </footer>
+</section>
+
+</main>
+</div>
+
+<script>
+// progress bar
+const bar=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;const sc=(h.scrollTop)/(h.scrollHeight-h.clientHeight);bar.style.width=(sc*100)+'%';});
+// scroll-spy
+const links=[...document.querySelectorAll('nav.toc a')];
+const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+const obs=new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=map.get(e.target.id);if(a)a.classList.add('active');}});
+},{rootMargin:'-15% 0px -75% 0px',threshold:0});
+document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
