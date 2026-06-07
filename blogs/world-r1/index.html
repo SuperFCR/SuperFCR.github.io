@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World-R1 中文讲解 · 用强化学习把 3D 约束逼进文生视频模型</title>
+<style>
+  :root{
+    --green:#6d28d9;        /* accent (violet) */
+    --green-d:#5b21b6;
+    --green-l:#efe9fb;
+    --ink:#16181d;
+    --ink-2:#3a3f4b;
+    --muted:#6b7280;
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --line:#e6e6f0;
+    --code:#0d1117;
+    --blue:#2563eb;
+    --amber:#b45309;
+    --amber-bg:#fef6e7;
+    --shadow:0 1px 3px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Helvetica Neue",Arial,sans-serif;
+    line-height:1.85;font-size:16.5px;-webkit-font-smoothing:antialiased;
+  }
+  .layout{display:flex;max-width:1280px;margin:0 auto;gap:0}
+  /* ---------- sidebar ---------- */
+  nav.toc{
+    width:280px;flex:0 0 280px;position:sticky;top:0;height:100vh;overflow-y:auto;
+    padding:26px 18px 60px;border-right:1px solid var(--line);background:#fbfbff;
+  }
+  nav.toc .brand{font-weight:800;font-size:15px;letter-spacing:.3px;color:var(--ink);margin-bottom:4px}
+  nav.toc .brand span{color:var(--green)}
+  nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+  nav.toc a{
+    display:block;color:var(--ink-2);text-decoration:none;font-size:13.5px;
+    padding:5px 10px;border-radius:7px;margin:1px 0;border-left:2px solid transparent;line-height:1.4;
+  }
+  nav.toc a:hover{background:var(--green-l);color:var(--ink)}
+  nav.toc a.active{background:var(--green-l);color:var(--green-d);font-weight:700;border-left-color:var(--green)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12px;color:var(--muted)}
+  /* ---------- content ---------- */
+  main{flex:1 1 auto;min-width:0;padding:0 clamp(20px,4vw,64px) 120px}
+  header.hero{
+    margin:0 calc(-1*clamp(20px,4vw,64px)) 40px;
+    padding:54px clamp(20px,4vw,64px) 44px;
+    background:linear-gradient(135deg,#0d1117 0%,#241248 55%,#3a1d70 100%);
+    color:#fff;
+  }
+  header.hero .tag{
+    display:inline-block;background:rgba(124,58,237,.18);color:#c9b6f7;
+    border:1px solid rgba(124,58,237,.42);padding:4px 12px;border-radius:999px;
+    font-size:12.5px;font-weight:600;letter-spacing:.5px;margin-bottom:18px;
+  }
+  header.hero h1{font-size:clamp(26px,3.6vw,40px);line-height:1.25;margin:0 0 14px;font-weight:800}
+  header.hero h1 .g{color:#a78bfa}
+  header.hero .meta{color:#c8d0dc;font-size:14px;margin-bottom:22px}
+  header.hero .meta b{color:#fff;font-weight:600}
+  header.hero p.lead{font-size:16.5px;color:#e6ebf2;max-width:780px;margin:0}
+  .pills{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+  .pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+    padding:8px 14px;border-radius:10px;font-size:13px;color:#eaf0f6}
+  .pill b{color:#a78bfa;font-weight:700}
+  .reslinks{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px}
+  .reslinks a{
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+    background:var(--green);color:#fff;font-weight:700;font-size:13.5px;
+    padding:9px 16px;border-radius:10px;border:1px solid var(--green);
+    transition:background .15s,transform .15s;
+  }
+  .reslinks a:hover{background:#8b5cf6;transform:translateY(-1px)}
+  footer .reslinks{margin-top:10px}
+  footer .reslinks a{background:transparent;color:var(--green-d);border-color:var(--green-d);font-size:13px}
+  footer .reslinks a:hover{background:var(--green-l);transform:none}
+
+  h2.sec{font-size:25px;font-weight:800;margin:54px 0 6px;padding-top:14px;letter-spacing:.2px}
+  h2.sec .num{color:var(--green);font-weight:800;margin-right:10px}
+  .sec-rule{height:3px;width:54px;background:var(--green);border-radius:3px;margin:0 0 22px}
+  h3.sub{font-size:19px;font-weight:700;margin:34px 0 10px;color:var(--ink)}
+  h4{font-size:16px;font-weight:700;margin:22px 0 8px;color:var(--ink-2)}
+  p{margin:12px 0}
+  strong{color:var(--ink)}
+  em{color:var(--green-d);font-style:normal;font-weight:600;background:var(--green-l);padding:1px 5px;border-radius:4px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+
+  /* callouts */
+  .callout{border-radius:12px;padding:16px 20px;margin:18px 0;border:1px solid;font-size:15.5px}
+  .callout .h{font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .c-idea{background:var(--green-l);border-color:#d7c9f3}
+  .c-idea .h{color:var(--green-d)}
+  .c-note{background:#eef4ff;border-color:#cfe0ff}
+  .c-note .h{color:var(--blue)}
+  .c-warn{background:var(--amber-bg);border-color:#f3d9a6}
+  .c-warn .h{color:var(--amber)}
+
+  /* highlight number cards */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+  .stat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .stat .v{font-size:21px;font-weight:800;color:var(--green-d);line-height:1.25;word-break:keep-all;overflow-wrap:break-word;hyphens:none}
+  .stat .l{font-size:13px;color:var(--muted);margin-top:6px}
+
+  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:14.5px;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  caption{caption-side:top;text-align:left;font-size:13.5px;color:var(--muted);margin-bottom:8px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:#0d1117;color:#fff;font-weight:600;font-size:13.5px}
+  tbody tr:nth-child(even){background:#faf9fd}
+  tbody tr:hover{background:var(--green-l)}
+  td.best{color:var(--green-d);font-weight:700}
+  .up::after{content:" ↑";color:var(--green)}
+  .down::after{content:" ↓";color:#c2410c}
+
+  ul,ol{margin:12px 0;padding-left:24px}
+  li{margin:7px 0}
+  code{background:#eef1f6;color:#7c3aed;padding:2px 6px;border-radius:5px;font-size:13.5px;
+    font-family:"SF Mono",Menlo,Consolas,monospace}
+  sup{font-size:.75em}
+
+  /* diagrams */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:22px 0;justify-content:center}
+  .node{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px 16px;
+    min-width:140px;max-width:200px;text-align:center;box-shadow:var(--shadow)}
+  .node .t{font-size:11px;letter-spacing:1px;color:var(--green-d);font-weight:700;text-transform:uppercase}
+  .node .n{font-weight:700;font-size:14.5px;margin:4px 0 2px}
+  .node .d{font-size:12px;color:var(--muted)}
+  .arrow{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 6px;color:var(--green);font-weight:700;min-width:74px}
+  .arrow .lbl{font-size:11px;color:var(--muted);margin-bottom:2px}
+  .arrow .a{font-size:22px;line-height:1}
+
+  .pipe{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0;counter-reset:step}
+  .pstep{flex:1 1 180px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--green);
+    border-radius:10px;padding:12px 14px;position:relative;box-shadow:var(--shadow)}
+  .pstep .k{font-size:11.5px;font-weight:700;color:var(--green-d);letter-spacing:.5px}
+  .pstep .n{font-weight:700;font-size:14.5px;margin:3px 0}
+  .pstep .d{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+  .twocol .card{margin:0}
+  .vs-h{font-weight:700;font-size:15px;margin-bottom:6px}
+  .vs-recon{color:#c2410c}
+  .vs-gen{color:var(--green-d)}
+
+  .glossary dt{font-weight:700;color:var(--green-d);margin-top:12px}
+  .glossary dd{margin:2px 0 0 0;color:var(--ink-2);font-size:14.5px}
+
+  footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+  .anchor{position:relative;top:-10px;visibility:hidden}
+
+  /* interactive demo */
+  .demo .demo-wrap{display:flex;gap:14px;flex-wrap:wrap}
+  .demo-col{flex:1 1 280px;min-width:0}
+  .demo-cap{font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+  .demo canvas{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#0d1117;image-rendering:pixelated;display:block}
+  .demo-ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+  .demo-ctrl .demo-label{font-size:13px;color:var(--muted)}
+  .demo-ctrl button{font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink-2);padding:6px 12px;border-radius:8px;transition:border-color .12s,background .12s,color .12s}
+  .demo-ctrl button:hover{border-color:var(--green);color:var(--green-d)}
+  .demo-ctrl button.active{background:var(--green);border-color:var(--green);color:#fff}
+  .demo-ctrl button.ghost{margin-left:auto;color:var(--muted)}
+
+  @media(max-width:920px){
+    nav.toc{display:none}
+    .twocol{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    body{font-size:16px}
+  }
+  @media(max-width:560px){
+    .stats{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ============ SIDEBAR ============ -->
+  <nav class="toc" id="toc">
+    <div class="brand">World-<span>R1</span></div>
+    <div class="sub">中文深度讲解 · arXiv:2604.24764v4</div>
+    <a href="#tldr">⚡ 一分钟速览</a>
+    <a href="#bg">1 · 背景与动机</a>
+    <a href="#bg-prob" class="lvl2">1.1 几何幻觉</a>
+    <a href="#bg-prior" class="lvl2">1.2 两条旧路线及其局限</a>
+    <a href="#idea">2 · 核心思想</a>
+    <a href="#idea-key" class="lvl2">2.1 关键洞察：激发而非灌注</a>
+    <a href="#idea-flow" class="lvl2">2.2 整体框架</a>
+    <a href="#method">3 · 方法</a>
+    <a href="#m-noise" class="lvl2">3.1 隐式相机控制</a>
+    <a href="#m-reward" class="lvl2">3.2 奖励设计（核心）</a>
+    <a href="#m-grpo" class="lvl2">3.3 Flow-GRPO 优化</a>
+    <a href="#m-decouple" class="lvl2">3.4 周期解耦训练</a>
+    <a href="#data">4 · 数据：纯文本数据集</a>
+    <a href="#d-build" class="lvl2">4.1 构造方式</a>
+    <a href="#d-taxo" class="lvl2">4.2 轨迹分类法与场景域</a>
+    <a href="#exp">5 · 实验结果</a>
+    <a href="#e-3d" class="lvl2">5.1 3D 一致性</a>
+    <a href="#e-vbench" class="lvl2">5.2 通用画质 VBench</a>
+    <a href="#e-user" class="lvl2">5.3 用户研究 + 指标验证</a>
+    <a href="#e-cam" class="lvl2">5.4 相机控制精度</a>
+    <a href="#e-more" class="lvl2">5.5 MVCS / 缩放 / 长视频 / 复杂度</a>
+    <a href="#ablation">6 · 消融与 Reward Hacking</a>
+    <a href="#takeaway">7 · 总结：贡献 / 局限 / 意义</a>
+    <a href="#glossary">📖 术语表</a>
+  </nav>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+    <header class="hero">
+      <span class="tag">Microsoft Research × 浙江大学 · ICML · RL × 3D × 视频生成</span>
+      <h1><span class="g">World-R1</span>：用强化学习把<br>3D 约束“逼”进文生视频模型</h1>
+      <div class="meta">
+        <b>Microsoft Research · 浙江大学</b> · <i style="background:none;color:#c9b6f7;padding:0">Reinforcing 3D Constraints for Text-to-Video Generation</i><br>
+        arXiv:2604.24764v4 · 投 ICML · 37 页 · 基座 Wan 2.1
+      </div>
+      <div class="reslinks">
+        <a href="https://arxiv.org/pdf/2604.24764" target="_blank" rel="noopener">📄 arXiv PDF</a>
+        <a href="https://arxiv.org/abs/2604.24764" target="_blank" rel="noopener">📑 arXiv 摘要页</a>
+        <a href="https://aka.ms/world-r1" target="_blank" rel="noopener">🌐 项目主页</a>
+      </div>
+      <p class="lead">
+        一句话：视频大模型其实<b>已经隐式编码了 3D 几何</b>，只是没被激发出来。World-R1 <b>不改架构、不灌 3D 数据集、不在推理时加 3D 约束</b>，
+        而是把“让视频符合 3D 一致性”重新表述成一个<b>强化学习对齐问题</b>——用预训练的 3D 基础模型 + 视觉语言模型当“裁判”给奖励，
+        用 Flow-GRPO 把几何一致性<b>内化</b>进模型本身。可以理解为面向几何/物理一致性的 “RLHF”。
+      </p>
+      <div class="pills">
+        <span class="pill">3D 一致性 PSNR <b>+10.23 / +7.91 dB</b></span>
+        <span class="pill">用户整体偏好 <b>86%</b></span>
+        <span class="pill"><b>零</b>架构改动 · <b>零</b> 3D 数据集</span>
+        <span class="pill">支持 <b>T2V</b>（不只 I2V）</span>
+      </div>
+    </header>
+
+    <!-- ============ TLDR ============ -->
+    <span class="anchor" id="tldr"></span>
+    <h2 class="sec"><span class="num">⚡</span>一分钟速览</h2>
+    <div class="sec-rule"></div>
+
+    <div class="callout c-idea">
+      <div class="h">💡 一句话核心</div>
+      Wan / CogVideoX 这类视频模型画面惊艳，但只是在拟合 2D 像素相关性、没有真正的 3D 理解，相机一大幅运动物体就<strong>变形、消失、穿模</strong>（几何幻觉）。
+      过去要么<strong>显式注入 3D 模块</strong>（改架构、推理慢、靠静态 3D 数据、多半只能 I2V），要么<strong>加相机控制模块</strong>（只保证轨迹、不保证几何）。
+      World-R1 换思路：既然视频模型已隐含 3D 知识，就用 <strong>RL 后训练</strong>把它“激发”出来——把生成视频用 3D 基础模型重建成 3DGS，
+      再从“重建是否自洽”构造奖励，反过来逼模型生成几何一致的世界。
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">Wan 2.1</div><div class="l">基座视频模型（1.3B / 14B 两档）</div></div>
+      <div class="stat"><div class="v">Flow-GRPO</div><div class="l">flow-matching 上的 RL（-Fast 加速版）</div></div>
+      <div class="stat"><div class="v">重建即奖励</div><div class="l">analysis-by-synthesis：重建 3DGS 再回验</div></div>
+      <div class="stat"><div class="v">~3000 条</div><div class="l">Gemini 合成的纯文本数据集</div></div>
+      <div class="stat"><div class="v">+10.23 dB</div><div class="l">3D 一致性 PSNR 提升（对 1.3B 基线）</div></div>
+      <div class="stat"><div class="v">86% / 92%</div><div class="l">整体偏好 / 几何一致性胜率</div></div>
+    </div>
+
+    <p>方法由 <strong>四个关键组件</strong>拼成，拆开理解：</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">控制</div><div class="n">① 隐式相机控制</div><div class="d">把相机运动以 noise wrapping 直接编码进初始噪声，零参数、不改架构。</div></div>
+      <div class="pstep"><div class="k">奖励</div><div class="n">② 3D 感知奖励</div><div class="d">重建 3DGS 后从元视角/重渲染/轨迹三路打分（+ 通用画质分）。</div></div>
+      <div class="pstep"><div class="k">优化</div><div class="n">③ Flow-GRPO</div><div class="d">把确定性 ODE 采样转 SDE 做探索，group 归一化优势 + KL 约束。</div></div>
+      <div class="pstep"><div class="k">正则</div><div class="n">④ 周期解耦训练</div><div class="d">每 100 步关掉 3D 奖励、在动态场景上微调，防止压死非刚性动态。</div></div>
+    </div>
+
+    <!-- ============ 1 背景 ============ -->
+    <span class="anchor" id="bg"></span>
+    <h2 class="sec"><span class="num">1</span>背景与动机：视频模型缺的是 3D</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="bg-prob"></span>
+    <h3 class="sub">1.1 问题：几何幻觉（geometric hallucination）</h3>
+    <p>
+      视频基础模型在 internet 级数据上预训练，被视为通用世界模型的雏形。但它们<strong>本质上是图像空间的生成</strong>，缺乏对真实世界 3D 几何的内在理解：
+      擅长生成短的、静态相机的片段，一旦遇到<strong>大幅相机运动或长时场景</strong>，就出现几何幻觉与时序不一致——物体会变形、消失、非物理地扭曲。
+      没有显式 3D 约束，模型其实只是在模仿表面相关性，而非模拟一个连贯的真实世界。
+    </p>
+
+    <span class="anchor" id="bg-prior"></span>
+    <h3 class="sub">1.2 两条旧路线，各有硬伤</h3>
+    <div class="twocol">
+      <div class="card">
+        <div class="vs-h vs-recon">🟠 显式注入 3D（3D-aware 生成）</div>
+        <ul>
+          <li>把 3D 表示/decoder/pointmap 直接塞进生成管线（ViewCrafter、Voyager、FantasyWorld…）。</li>
+          <li>需要<strong>大改架构</strong>、推理延迟高、依赖<strong>静态 3D-aware 数据集</strong>，多半只能做 <strong>I2V</strong>，且限制输出多样性与动态。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="vs-h vs-recon">🟠 加相机控制模块</div>
+        <ul>
+          <li>训练辅助控制网络注入相机位姿（CameraCtrl、ReCamMaster…）。</li>
+          <li>只关注<strong>轨迹对齐</strong>、需额外输入，<strong>不保证 3D 几何一致</strong>，复杂相机运动下常有物体畸变、纹理拉伸。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout c-note">
+      <div class="h">🔗 World-R1 的切入点</div>
+      作者基于一个观察（引用 “How much 3D do video foundation models encode?”）：<strong>视频基础模型已经隐式编码了丰富的 3D 信息</strong>。
+      所以问题不是“缺 3D 能力”，而是<strong>如何把潜在能力激发出来</strong>——这就把一个看似“改架构/灌数据”的问题，转成了“纯后训练 RL 对齐”的问题。
+    </div>
+
+    <!-- ============ 2 核心思想 ============ -->
+    <span class="anchor" id="idea"></span>
+    <h2 class="sec"><span class="num">2</span>核心思想：把 3D 一致性变成 RL 对齐</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="idea-key"></span>
+    <h3 class="sub">2.1 关键洞察：激发而非灌注</h3>
+    <div class="callout c-idea">
+      <div class="h">💡 重新表述（这是真正的 insight）</div>
+      与其给模型“补” 3D 能力，不如<strong>用 RL 把它本就隐含的 3D 知识逼出来</strong>。具体做法全程<strong>不动模型架构、不改推理过程、不用任何 3D 标注数据</strong>——
+      因此<strong>保住了基模型的多样性与画质</strong>，并且天然支持 <strong>T2V</strong>（而非只能 I2V）。本质上是把 RLHF 的“对齐人类偏好”，换成“对齐 3D 物理一致性”，
+      可称为 <em>RL from 3D-foundation-model feedback</em>。
+    </div>
+
+    <span class="anchor" id="idea-flow"></span>
+    <h3 class="sub">2.2 整体框架（对应论文 Fig.2）</h3>
+    <div class="flow">
+      <div class="node"><div class="t">输入</div><div class="n">文本 + 相机轨迹</div><div class="d">轨迹经 noise wrapping<br>编码进初始噪声</div></div>
+      <div class="arrow"><span class="lbl">policy rollout</span><span class="a">→</span></div>
+      <div class="node" style="border-color:var(--green)"><div class="t">策略</div><div class="n">Wan 2.1</div><div class="d">生成候选视频片段</div></div>
+      <div class="arrow"><span class="lbl">analysis-by-synthesis</span><span class="a">→</span></div>
+      <div class="node"><div class="t">裁判</div><div class="n">DA3 → 3DGS</div><div class="d">重建 3D 高斯<br>+ Qwen3-VL 评判</div></div>
+      <div class="arrow"><span class="lbl">reward</span><span class="a">→</span></div>
+      <div class="node"><div class="t">优化</div><div class="n">Flow-GRPO</div><div class="d">梯度回传策略</div></div>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:-6px">
+      ↑ 奖励反过来更新 Wan 2.1，把“生成几何一致的视频”这件事内化进策略参数。
+    </p>
+
+    <!-- ============ 3 方法 ============ -->
+    <span class="anchor" id="method"></span>
+    <h2 class="sec"><span class="num">3</span>方法</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="m-noise"></span>
+    <h3 class="sub">3.1 隐式相机控制（noise wrapping，零参数）</h3>
+    <p>不训练任何相机位姿网络，而是利用“初始噪声分布显著影响生成内容运动轨迹”这一观察，把相机运动<strong>直接编码进初始噪声</strong>：</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">STEP 1</div><div class="n">prompt → 轨迹</div><div class="d">关键词检测 <code>φ(c)</code> 扫描 prompt 里的运动词（push in / orbit left…），用参数化生成器递推相机外参 <code>E_t = E_{t-1}·T_action(t)</code>。</div></div>
+      <div class="pstep"><div class="k">STEP 2</div><div class="n">轨迹 → 光流</div><div class="d">小孔模型 + 把场景近似为常深度 fronto-parallel 平面，由相对位姿诱导的单应把像素投影成 2D 稠密光流场 <code>f(u)</code>。</div></div>
+      <div class="pstep"><div class="k">STEP 3</div><div class="n">离散噪声传输</div><div class="d">直接 warp 噪声会破坏方差/留空洞，故按 Go-with-the-Flow 把它建模成二部图上的<strong>质量传输</strong>，并归一化保持单位方差。</div></div>
+    </div>
+    <p>于是相机运动以一个 inductive bias 注入 latent，<strong>不改架构、不加输入</strong>。多段相机指令时把各段轨迹拼接。</p>
+
+    <div class="callout c-note">
+      <div class="h">🤔 “常深度平面假设”不会很不准吗？——对，但它不需要准</div>
+      <ul style="margin:6px 0 0">
+        <li><strong>确实是粗近似</strong>：真实场景深度不一（近处视差大、远处小），单一平面 homography 只能给出一个<strong>全局光流</strong>，忽略了逐物体视差——尤其 orbit 这类强视差运动。</li>
+        <li><strong>但它只用来“播种”初始噪声</strong>，不是用来渲染最终画面。它给的是一个<em>粗略的运动 inductive bias</em>；真正的几何/视差由模型自己学到的 3D 知识在去噪时补全。</li>
+        <li><strong>精度由下游奖励兜底</strong>：RL 奖励里的 <code>S_traj</code> 直接惩罚轨迹不匹配、<code>S_meta</code> / <code>S_recon</code> 惩罚几何不一致——即便噪声先验不精确，训练也会把模型拉到<strong>真实相机轨迹 + 真 3D 一致</strong>上。</li>
+        <li>一句话：noise wrapping 是控制信号的<strong>“播种”</strong>，不是几何的<strong>“标注”</strong>；不准的部分由 <strong>模型先验 + RL 奖励</strong> 联合纠正。</li>
+      </ul>
+    </div>
+
+    <div class="card demo" id="nwDemo">
+      <div class="vs-h vs-gen">🎞️ 交互 Demo：噪声如何“携带”相机运动</div>
+      <p style="font-size:14px;color:var(--ink-2);margin:4px 0 12px">
+        选一个相机动作，对比两种<strong>初始噪声</strong>。<strong>左</strong>＝每帧独立高斯（电视雪花，帧间无关）；
+        <strong>右</strong>＝Wrapped 噪声（同一批噪点按相机光流<strong>连贯平移</strong>，<span style="color:#f59e0b;font-weight:700">橙色前缘</span>＝补入的新噪声 disocclusion，<span style="color:#a78bfa;font-weight:700">紫点</span>是方便你跟踪的“记号噪点”）。
+        模型对左去噪 → 抖动乱跳；对右去噪 → 内容沿相机方向连贯移动。
+      </p>
+      <div class="demo-wrap">
+        <div class="demo-col"><div class="demo-cap">❌ 独立高斯噪声（i.i.d.，帧间无关）</div><canvas id="nwA" width="360" height="240"></canvas></div>
+        <div class="demo-col"><div class="demo-cap">✅ Wrapped 噪声（帧间按相机相关）</div><canvas id="nwB" width="360" height="240"></canvas></div>
+      </div>
+      <div class="demo-ctrl">
+        <span class="demo-label">相机动作：</span>
+        <button data-m="panR" class="active">右摇 →</button>
+        <button data-m="panL">← 左摇</button>
+        <button data-m="tiltU">↑ 上摇</button>
+        <button data-m="tiltD">下摇 ↓</button>
+        <button data-m="zoom">推进 Zoom</button>
+        <button id="nwPlay" class="ghost">⏸ 暂停</button>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:12px 0 0">
+        👉 关键直觉：相机控制 ＝ 给初始噪声植入“帧间相关结构”。右边那批噪点<strong>没有被重采样</strong>，只是被<strong>搬运</strong>；这种相关性会引导扩散模型生成沿相机运动的连贯画面。这也呼应上面的提醒——平面近似只决定噪点“怎么搬”，搬得糙一点没关系。
+      </p>
+    </div>
+    <script>
+    (function(){
+      var cvA=document.getElementById('nwA'), cvB=document.getElementById('nwB');
+      if(!cvA||!cvB) return;
+      var a=cvA.getContext('2d'), b=cvB.getContext('2d');
+      var W=cvA.width, H=cvA.height, cell=6;
+      var cols=Math.ceil(W/cell)+2, rows=Math.ceil(H/cell)+2, N=cols*rows;
+      var val=new Uint8Array(N), mark=new Uint8Array(N), fresh=new Float32Array(N);
+      for(var i0=0;i0<N;i0++){ val[i0]=40+(Math.random()*180|0); mark[i0]=Math.random()<0.05?1:0; fresh[i0]=0; }
+      function inj(i){ val[i]=40+(Math.random()*180|0); mark[i]=Math.random()<0.05?1:0; fresh[i]=1; }
+      var accX=0, accY=0, motion='panR', playing=true, lastA=0, last=0, zp=0;
+      var tile=document.createElement('canvas'); tile.width=W; tile.height=H; var tc=tile.getContext('2d');
+      function regenTile(){ for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){ var x=(c-1)*cell,y=(r-1)*cell,g=40+(Math.random()*180|0); tc.fillStyle=Math.random()<0.05?'#a78bfa':'rgb('+g+','+g+','+g+')'; tc.fillRect(x,y,cell,cell);} }
+      regenTile();
+      function sL(){ for(var r=0;r<rows;r++){var bs=r*cols; for(var c=0;c<cols-1;c++){var d=bs+c,s=bs+c+1; val[d]=val[s];mark[d]=mark[s];fresh[d]=fresh[s];} inj(bs+cols-1);} }
+      function sR(){ for(var r=0;r<rows;r++){var bs=r*cols; for(var c=cols-1;c>0;c--){var d=bs+c,s=bs+c-1; val[d]=val[s];mark[d]=mark[s];fresh[d]=fresh[s];} inj(bs);} }
+      function sU(){ for(var r=0;r<rows-1;r++)for(var c=0;c<cols;c++){var d=r*cols+c,s=(r+1)*cols+c; val[d]=val[s];mark[d]=mark[s];fresh[d]=fresh[s];} for(var c2=0;c2<cols;c2++) inj((rows-1)*cols+c2); }
+      function sD(){ for(var r=rows-1;r>0;r--)for(var c=0;c<cols;c++){var d=r*cols+c,s=(r-1)*cols+c; val[d]=val[s];mark[d]=mark[s];fresh[d]=fresh[s];} for(var c3=0;c3<cols;c3++) inj(c3); }
+      function rndCanvas(ctx){ for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){var x=(c-1)*cell,y=(r-1)*cell,g=40+(Math.random()*180|0); ctx.fillStyle=Math.random()<0.05?'#a78bfa':'rgb('+g+','+g+','+g+')'; ctx.fillRect(x,y,cell,cell);} }
+      function drawWrapped(){ for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){var i=r*cols+c,x=(c-1)*cell,y=(r-1)*cell; if(mark[i]){b.fillStyle='#a78bfa';} else { var g=val[i],fr=fresh[i]; if(fr>0.03){var R=(g+(245-g)*fr)|0,G=(g+(158-g)*fr)|0,B=(g+(11-g)*fr)|0; b.fillStyle='rgb('+R+','+G+','+B+')';} else { b.fillStyle='rgb('+g+','+g+','+g+')'; } } b.fillRect(x,y,cell,cell);} }
+      rndCanvas(a); b.fillStyle='#0d1117'; b.fillRect(0,0,W,H); drawWrapped();
+      function loop(ts){
+        if(!last) last=ts; var dt=(ts-last)/1000; last=ts; if(dt>0.1)dt=0.1;
+        if(playing){
+          if(ts-lastA>80){ lastA=ts; rndCanvas(a); }
+          var dec=Math.pow(0.05,dt); for(var k=0;k<N;k++) fresh[k]*=dec;
+          if(motion==='zoom'){
+            zp+=dt*0.32; var f=zp-Math.floor(zp);
+            b.fillStyle='#0d1117'; b.fillRect(0,0,W,H);
+            var sBig=Math.pow(2,f);
+            b.save(); b.globalAlpha=1-f; b.translate(W/2,H/2); b.scale(sBig,sBig); b.translate(-W/2,-H/2); b.drawImage(tile,0,0); b.restore();
+            b.save(); b.globalAlpha=Math.min(1,f*1.1); b.translate(W/2,H/2); b.scale(sBig*0.5,sBig*0.5); b.translate(-W/2,-H/2); b.drawImage(tile,0,0); b.restore();
+            b.globalAlpha=1;
+          } else {
+            var sp=46, vx=0, vy=0;
+            if(motion==='panR') vx=-sp; else if(motion==='panL') vx=sp; else if(motion==='tiltU') vy=sp; else if(motion==='tiltD') vy=-sp;
+            accX+=vx*dt; accY+=vy*dt;
+            while(accX<=-cell){ sL(); accX+=cell; } while(accX>=cell){ sR(); accX-=cell; }
+            while(accY<=-cell){ sU(); accY+=cell; } while(accY>=cell){ sD(); accY-=cell; }
+            b.fillStyle='#0d1117'; b.fillRect(0,0,W,H);
+            b.save(); b.translate(Math.round(accX),Math.round(accY)); drawWrapped(); b.restore();
+          }
+        }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+      var btns=document.querySelectorAll('#nwDemo button[data-m]');
+      btns.forEach(function(btn){ btn.addEventListener('click',function(){ btns.forEach(function(x){x.classList.remove('active');}); btn.classList.add('active'); motion=btn.getAttribute('data-m'); if(motion==='zoom') regenTile(); }); });
+      var pb=document.getElementById('nwPlay'); pb.addEventListener('click',function(){ playing=!playing; pb.textContent=playing?'⏸ 暂停':'▶ 播放'; });
+    })();
+    </script>
+
+    <span class="anchor" id="m-reward"></span>
+    <h3 class="sub">3.2 奖励设计：analysis-by-synthesis（核心）</h3>
+    <p>把生成视频 <strong>x</strong> 用 <strong>Depth Anything 3</strong> 重建成 3D 高斯（3DGS）<code>Φ_GS</code>，并反推相机轨迹 <code>Ê</code>，再从“重建是否自洽”构造奖励。
+      总奖励 <code>R = R_3D + λ·R_gen</code>（λ=1）；<code>R_3D = S_meta + S_recon + S_traj</code>，每项 ∈ [0,1]，故 R_3D ∈ [0,3]，R_gen ∈ [−1,1]。</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">S_meta（最关键）</div><div class="n">🔭 元视角分</div><div class="d">从一个<strong>大幅偏移的全新“元视角”</strong>渲染 3DGS，让 <strong>Qwen3-VL</strong> 当 3D 专家打 0–9 分（×0.1 归一）。专抓“正面看没问题、其实是张纸片(cardboard)”的伪 3D——这些缺陷在原始机位被遮挡、只有换视角才暴露。</div></div>
+      <div class="pstep"><div class="k">S_recon</div><div class="n">🖼️ 重建保真分</div><div class="d">从反推轨迹 <code>Ê</code> 重渲染得 <code>x̂</code>，<code>S_recon = 1 − LPIPS(x, x̂)</code>，保证生成内容能被照片级地 3D 重建。</div></div>
+      <div class="pstep"><div class="k">S_traj</div><div class="n">🎯 轨迹对齐分</div><div class="d">目标轨迹 <code>E</code> 与反推 <code>Ê</code> 的偏差：平移取 L2、旋转取测地距离，再取负指数。保证相机运动严格服从指令。</div></div>
+      <div class="pstep"><div class="k">R_gen</div><div class="n">✨ 通用画质分</div><div class="d">前 K 帧 <strong>HPSv3</strong> 美学分的均值，守住人类视觉偏好与画质，防止 3D 约束把画面带塌。</div></div>
+    </div>
+    <div class="callout c-idea">
+      <div class="h">💡 “照妖镜”设计</div>
+      <strong>S_meta + 元视角</strong>是点睛之笔：用现成的 3D 基础模型和 VLM 当裁判，从“换个没见过的视角去看重建结果是否仍然合理”来区分
+      <strong>真 3D 视差</strong> vs <strong>2D 内容漂移</strong>。论文还给了 VLM 的完整 0–9 打分 rubric（9=稠密干净的完整 360° 模型；4–6=能认出但稀疏/扁平、只有 zoom 没有 orbit；0–1=空的/纯噪声）。
+    </div>
+
+    <span class="anchor" id="m-grpo"></span>
+    <h3 class="sub">3.3 用 Flow-GRPO-Fast 优化</h3>
+    <p>Flow-GRPO 把 GRPO 适配到 flow-matching 生成模型：标准 flow matching 是<strong>确定性 ODE</strong>，而 RL 需要随机性来探索——于是把它<strong>改写成反向时间 SDE</strong> 引入噪声，
+      把去噪过程当作 MDP；对一组 <code>G</code> 条轨迹的奖励做 <strong>group 归一化</strong>得到优势 <code>Â</code>，再用带 KL 约束的 PPO 式裁剪目标更新。
+      <strong>Flow-GRPO-Fast</strong> 进一步在随机 ODE 步注入噪声、训练时用更少去噪步来加速。配置：group size <code>G=8</code>、48 个并行组、分辨率 832×480；Small 从 Wan2.1-1.3B（48×H200）、Large 从 Wan2.1-14B（96×H200）。</p>
+
+    <span class="anchor" id="m-decouple"></span>
+    <h3 class="sub">3.4 周期解耦训练（防止压死动态）</h3>
+    <div class="callout c-warn">
+      <div class="h">⚠️ 严格 3D 一致性会误伤非刚性动态</div>
+      一味追求几何刚性，会<strong>抑制</strong>人在动、物体形变、流体等非刚性动态——模型容易过拟合到“静态刚性”。
+    </div>
+    <p>对策：多阶段循环。主阶段用完整复合奖励逼 3D 一致；但<strong>每 100 步</strong>插入一个 <em>dynamic fine-tuning</em> 阶段——在约 <strong>500 条高熵动态场景</strong> prompt（瀑布、狮吼、变形、烟花…）上
+      <strong>临时关掉 R_3D，只用 R_gen 优化</strong>，当正则化器，保住流体/动态生成能力。这个设计的有效性在消融里被坐实（见第 6 节）。</p>
+
+    <!-- ============ 4 数据 ============ -->
+    <span class="anchor" id="data"></span>
+    <h2 class="sec"><span class="num">4</span>数据：纯文本数据集</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="d-build"></span>
+    <h3 class="sub">4.1 构造方式：~3000 条、Gemini 合成、零真实视频</h3>
+    <p>之前相机控制研究的一大瓶颈是依赖开放域视频数据（分辨率有限、文本-视频对齐噪声大）。World-R1 反其道：构造一个 <strong>纯文本数据集</strong>，
+      把“学 3D 约束”和“特定视频数据分布/视觉偏置”<strong>彻底解耦</strong>——不依赖任何真实视频。</p>
+    <ul>
+      <li>用 <strong>Gemini</strong> 扮演“电影摄影师 + 3D 布景师”，强制把<strong>场景几何与相机运动配对</strong>（例如给“隧道/走廊”配 <code>push_in</code> 以最大化视差），输出 JSON（prompt + camera_logic + domain + layout_type）。</li>
+      <li>约 <strong>3000 条</strong>，按控制复杂度分级：隐式运动 / 单方向 / 复合轨迹，让模型在不同难度上学到符合物理的生成。</li>
+    </ul>
+
+    <span class="anchor" id="d-taxo"></span>
+    <h3 class="sub">4.2 相机轨迹分类法（按 WorldScore）与场景域</h3>
+    <table>
+      <caption>表 · 相机动作空间（11 个）与轨迹拓扑分类</caption>
+      <thead><tr><th>类别</th><th>动作</th><th>侧重</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Intra-scene</strong> 场景内探索</td><td>push_in / orbit_left / orbit_right</td><td>深度 · 视差 · 360° 物体一致</td></tr>
+        <tr><td><strong>Inter-scene</strong> 跨场景转移</td><td>pull_out / move_left·right / pan_left·right</td><td>上下文揭示 · 视差 · 全景</td></tr>
+        <tr><td><strong>Composite</strong> 复合轨迹</td><td>pull_left = move_left→pull_out→pan_left（pull_right 同理）</td><td>长程一致性</td></tr>
+        <tr><td><strong>Static</strong> 静态观察</td><td>fixed</td><td>隔离流体/粒子动态</td></tr>
+      </tbody>
+    </table>
+    <p><strong>场景域</strong>覆盖：自然风光（地貌/水体/天气光照）、城市建筑（街景/室内/基础设施）、微距静物（桌面/微观世界/材质）、奇幻超现实、艺术风格。
+      此外有一个约 <strong>500 条</strong>的<strong>动态子集</strong>（高熵、可形变场景），专供 3.4 节的周期解耦训练使用。</p>
+
+    <!-- ============ 5 实验 ============ -->
+    <span class="anchor" id="exp"></span>
+    <h2 class="sec"><span class="num">5</span>实验结果</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="e-3d"></span>
+    <h3 class="sub">5.1 3D 一致性：大幅领先</h3>
+    <p>评测方式：把生成视频用 3DGS 重建，再按 prompt 指定的相机轨迹重渲染，算与原视频的 PSNR / SSIM / LPIPS——重建保真高，说明几何幻觉被压住了。</p>
+    <table>
+      <caption>表 2 · 3D 一致性（重建后重渲染对比）</caption>
+      <thead><tr><th>方法</th><th class="up">PSNR</th><th class="up">SSIM</th><th class="down">LPIPS</th></tr></thead>
+      <tbody>
+        <tr><td>CogVideoX-1.5-5B</td><td>24.44</td><td>0.783</td><td>0.242</td></tr>
+        <tr><td>Wan2.1-T2V-14B（基线）</td><td>19.76</td><td>0.629</td><td>0.405</td></tr>
+        <tr><td>Wan2.1-T2V-1.3B（基线）</td><td>17.40</td><td>0.550</td><td>0.467</td></tr>
+        <tr><td><strong>World-R1-Small</strong></td><td>27.63</td><td>0.858</td><td>0.201</td></tr>
+        <tr><td><strong>World-R1-Large</strong></td><td class="best">27.67</td><td class="best">0.865</td><td class="best">0.162</td></tr>
+      </tbody>
+    </table>
+    <p>对各自基线，PSNR <strong>+7.91 dB</strong>（14B）与 <strong>+10.23 dB</strong>（1.3B），SSIM / LPIPS 同步大涨。</p>
+
+    <span class="anchor" id="e-vbench"></span>
+    <h3 class="sub">5.2 通用画质（VBench）：不仅没掉，反而更好</h3>
+    <table>
+      <caption>表 1 · VBench 通用视频质量（World-R1-Small）</caption>
+      <thead><tr><th>方法</th><th class="up">美学</th><th class="up">成像</th><th class="up">运动平滑</th><th class="up">主体一致</th><th class="up">背景一致</th></tr></thead>
+      <tbody>
+        <tr><td>CogVideoX-1.5-5B</td><td>62.07</td><td>65.34</td><td>98.15</td><td>96.56</td><td>96.81</td></tr>
+        <tr><td>Wan2.1-T2V-1.3B（基座）</td><td>62.43</td><td>66.51</td><td>97.44</td><td>96.34</td><td>97.29</td></tr>
+        <tr><td>ReCamMaster（显式相机）</td><td>42.70</td><td>53.97</td><td>99.28</td><td>92.05</td><td>93.83</td></tr>
+        <tr><td><strong>World-R1-Small</strong></td><td class="best">65.74</td><td class="best">67.53</td><td>98.55</td><td class="best">97.58</td><td>96.67</td></tr>
+      </tbody>
+    </table>
+    <p>关键：World-R1 在美学/成像/主体一致上<strong>超过自己的基座</strong>，并<strong>远超显式相机控制方法</strong>——说明 RL 对齐没有以牺牲画质换几何。</p>
+
+    <span class="anchor" id="e-user"></span>
+    <h3 class="sub">5.3 用户研究 + 指标验证</h3>
+    <div class="twocol">
+      <div class="card">
+        <div class="vs-h vs-gen">👥 用户研究（vs Wan 2.1）</div>
+        <ul>
+          <li>2AFC、严格双盲、左右随机；25 人、30 条复杂 prompt。</li>
+          <li>几何一致性胜率 <strong>92%</strong>、相机控制 <strong>76%</strong>、整体偏好 <strong>86%</strong>。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="vs-h vs-gen">✅ 指标验证（很重要）</div>
+        <ul>
+          <li>另做 20 人 / 30 对：人类对 3D 一致性的偏好与那个自动指标的排序<strong>有 91.17% 吻合</strong>。</li>
+          <li>→ 证明“重建后重渲染算 PSNR”是几何一致性的<strong>可靠感知代理</strong>，不是自说自话。</li>
+        </ul>
+      </div>
+    </div>
+
+    <span class="anchor" id="e-cam"></span>
+    <h3 class="sub">5.4 相机控制精度：打平专门方法</h3>
+    <table>
+      <caption>表 C · 相机控制评测（越低越好）</caption>
+      <thead><tr><th>方法</th><th class="down">RotErr</th><th class="down">TransErr</th><th class="down">CamMC</th></tr></thead>
+      <tbody>
+        <tr><td>ReCamMaster（专门相机控制）</td><td>1.53</td><td>3.12</td><td>4.17</td></tr>
+        <tr><td>CamCloneMaster（专门相机控制）</td><td>1.36</td><td>2.02</td><td>3.05</td></tr>
+        <tr><td>Wan2.1-T2V-1.3B（基线）</td><td>9.29</td><td>62.94</td><td>66.21</td></tr>
+        <tr><td><strong>World-R1-Small</strong></td><td>1.50</td><td>2.76</td><td>3.39</td></tr>
+        <tr><td><strong>World-R1-Large</strong></td><td class="best">1.21</td><td class="best">1.30</td><td class="best">2.95</td></tr>
+      </tbody>
+    </table>
+    <p>它只是个后训练对齐、<strong>没有任何相机控制架构</strong>，却和专门做相机控制的方法<strong>打平甚至更好</strong>，远超 Wan 基线。</p>
+
+    <span class="anchor" id="e-more"></span>
+    <h3 class="sub">5.5 更多补充实验（都在证明“增益来自视频本身”）</h3>
+    <ul>
+      <li><strong>重建无关的 MVCS</strong>（换一个不依赖 3DGS 的多视角一致性指标）：Small 0.989 vs Wan 0.974，Large 0.993 vs Wan 0.963 → 增益来自生成视频，<strong>不是重建管线的偏置</strong>。</li>
+      <li><strong>数据 scaling</strong>：1K→2K→3K prompt，PSNR 25.82→26.54→27.63、VBench 83.23→85.21 <strong>单调上升</strong>，数据高效且还没到头。</li>
+      <li><strong>长视频泛化</strong>：只在短片训练，但 <strong>121 帧</strong>长视频上 Large 26.32 vs Wan 18.32 PSNR → 学到的几何对齐能迁移到训练时长之外。</li>
+      <li><strong>对比 3D-aware 方法</strong>（Table H）：World-R1 拿到最强 3D 一致性，且强调这套后训练范式与改架构的 3D-aware 设计<strong>互补、可叠加</strong>。</li>
+    </ul>
+    <table>
+      <caption>表 G · 按场景复杂度拆解（PSNR，World-R1-Small vs Wan2.1-1.3B）</caption>
+      <thead><tr><th>场景类型</th><th>占比</th><th class="up">Wan2.1-1.3B</th><th class="up">World-R1-Small</th></tr></thead>
+      <tbody>
+        <tr><td>静态场景</td><td>30.1%</td><td>20.14</td><td class="best">30.52</td></tr>
+        <tr><td>单物体动态</td><td>29.0%</td><td>17.86</td><td class="best">28.17</td></tr>
+        <tr><td>多物体动态</td><td>21.5%</td><td>15.23</td><td class="best">25.41</td></tr>
+        <tr><td>非刚性运动</td><td>19.4%</td><td>14.58</td><td class="best">24.73</td></tr>
+        <tr><td>长程动态（最难）</td><td>12.9%</td><td>12.53</td><td class="best">23.59</td></tr>
+      </tbody>
+    </table>
+    <p>每一类都超过基线；最难的是<strong>长程 + 非刚性</strong>，受基模型组合与运动能力上限拖累。</p>
+
+    <!-- ============ 6 消融 ============ -->
+    <span class="anchor" id="ablation"></span>
+    <h2 class="sec"><span class="num">6</span>消融与 Reward Hacking 分析</h2>
+    <div class="sec-rule"></div>
+
+    <div class="callout c-warn">
+      <div class="h">⚠️ RL 对齐的头号风险：钻指标空子</div>
+      若只盯一个窄的 3D 指标，模型可能学到<strong>退化捷径</strong>：生成<strong>近乎静止</strong>的片段——静止画面最容易被重建、3D 分最高，但既不跟随相机运动、也杀死了动态。
+    </div>
+    <p>三道防线对冲：① <strong>复合奖励</strong>（meta+recon+traj+general），没有单一指标能独大；② <strong>轨迹项</strong>惩罚“该动却不动”；③ <strong>周期解耦训练</strong>防止塌缩成僵硬生成。</p>
+
+    <table>
+      <caption>表 J · 训练 / 条件消融（World-R1-Small；分解奖励分）—— 这张表把 reward hacking 坐实了</caption>
+      <thead><tr><th>变体</th><th class="up">PSNR</th><th class="up">SSIM</th><th class="down">LPIPS</th><th class="up">VBench</th><th>S_gen</th></tr></thead>
+      <tbody>
+        <tr><td><strong>完整 World-R1-Small</strong></td><td>27.63</td><td>0.858</td><td>0.201</td><td class="best">85.21</td><td>0.37</td></tr>
+        <tr><td>去掉 noise wrapping</td><td>24.46</td><td>0.745</td><td>0.298</td><td>76.39</td><td class="best" style="color:#c2410c">−0.42</td></tr>
+        <tr><td>去掉周期解耦训练</td><td>27.89</td><td>0.898</td><td>0.192</td><td>82.64</td><td>0.18</td></tr>
+        <tr><td>去掉 3D 奖励</td><td>18.93</td><td>0.502</td><td>0.496</td><td>84.96</td><td>0.33</td></tr>
+        <tr><td>去掉通用奖励</td><td>27.57</td><td>0.849</td><td>0.206</td><td>83.44</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="callout c-idea">
+      <div class="h">💡 三个最有 insight 的读数</div>
+      <ul style="margin:6px 0 0">
+        <li><strong>去掉 noise wrapping</strong>：S_gen 直接掉到 <strong>−0.42</strong>、VBench 76.39 → 隐式相机注入是地基，没它训练就崩。</li>
+        <li><strong>去掉周期解耦训练</strong>：PSNR/SSIM/LPIPS <strong>反而更好</strong>（27.89 / 0.898 / 0.192），但 VBench 掉到 82.64 ——这正是 <strong>reward hacking 的教科书证据</strong>：重建分更高，真实视频质量却更差，因为模型偷偷往“过度刚性/近静止”塌缩。那个正则化器牺牲了一点重建分，换回了真正的动态与画质。</li>
+        <li><strong>去掉 3D 奖励</strong>：PSNR 崩到 18.93 但 VBench 84.96 在 → 几何确实是 3D 奖励逼出来的，而非基模型自带。</li>
+      </ul>
+    </div>
+    <p style="font-size:14.5px;color:var(--ink-2)">（另有 Table I 对 S_meta / S_recon / S_traj 逐项消融：去掉任一项 3D 一致性都下降，S_recon 影响最大。）</p>
+
+    <!-- ============ 7 总结 ============ -->
+    <span class="anchor" id="takeaway"></span>
+    <h2 class="sec"><span class="num">7</span>总结：贡献 · 局限 · 意义</h2>
+    <div class="sec-rule"></div>
+
+    <h3 class="sub">主要贡献</h3>
+    <ol>
+      <li><strong>新范式</strong>：用 RL 把视频生成与 3D 基础模型对齐，<strong>免去大规模 3D 数据集与推理时 3D 约束</strong>。</li>
+      <li><strong>复合奖励系统</strong>：整合预训练 3D 基础模型（DA3→3DGS）与 VLM（Qwen3-VL），经 Flow-GRPO 优化，让模型通过判别式反馈内化几何一致性。</li>
+      <li><strong>纯文本数据集</strong>：多类、多级相机控制，用于后训练，解耦几何学习与视觉偏置。</li>
+      <li>大量实验证明：显著增强世界建模能力（3D 一致性大涨），同时<strong>保住甚至提升</strong>通用画质。</li>
+    </ol>
+
+    <h3 class="sub">局限</h3>
+    <ul>
+      <li><strong>RL 仍然贵</strong>：在线 RL 需反复 rollout + 评奖励，比监督后训练昂贵得多——更高效的 rollout / 更省的奖励评估 / 更稳的视频 RL 是未来方向。</li>
+      <li><strong>受基座上限约束</strong>：World-R1 叠在视频基模型之上，密集多物体、精细非刚性、手部细节、超长程演化等难例仍会继承基模型的毛病。</li>
+    </ul>
+
+    <div class="callout c-note">
+      <div class="h">🎯 为什么重要</div>
+      它把“让视频模型 3D 一致”从<strong>架构/数据问题</strong>转化为<strong>纯后训练 RL 对齐问题</strong>——所以保住多样性与画质、能做 T2V、推理零额外开销。
+      其中 <strong>元视角 + analysis-by-synthesis</strong> 是点睛之笔：用现成 3D/VLM 模型当裁判，把“是否真 3D 一致”变成可优化的标量信号。
+      而 reward-hacking 分析（尤其 Table J）严谨地证明了<strong>“增益真的来自生成视频本身，而非指标漏洞或重建管线假象”</strong>——这恰是 RL-based 方法最容易被质疑、也防得最严的一点。
+    </div>
+
+    <!-- ============ glossary ============ -->
+    <span class="anchor" id="glossary"></span>
+    <h2 class="sec"><span class="num">📖</span>术语速查表</h2>
+    <div class="sec-rule"></div>
+    <div class="card glossary">
+      <dl>
+        <dt>几何幻觉 Geometric Hallucination</dt><dd>视频模型在大相机运动/长时场景下出现的物体变形、消失、穿模等非物理现象。</dd>
+        <dt>analysis-by-synthesis</dt><dd>“合成-再分析”：把生成视频重建成 3D（3DGS）再回验是否自洽，以此区分真 3D 与 2D 漂移。</dd>
+        <dt>3DGS / Depth Anything 3</dt><dd>3D Gaussian Splatting，显式 3D 表示；DA3 是用于从视频恢复 3DGS 的 3D 基础模型。</dd>
+        <dt>元视角 Meta-view</dt><dd>从一个大幅偏离生成轨迹的全新视角渲染重建结果，用于暴露原机位看不到的几何缺陷。</dd>
+        <dt>noise wrapping</dt><dd>把相机轨迹投影成光流、再以质量传输 warp 初始噪声，从而零参数地隐式注入相机控制。</dd>
+        <dt>Flow-GRPO / -Fast</dt><dd>把 GRPO 适配到 flow-matching：ODE→SDE 引入探索、group 归一化优势、KL 约束；-Fast 用更少步加速。</dd>
+        <dt>周期解耦训练</dt><dd>每隔若干步关掉 3D 奖励、只在动态场景上用通用奖励微调，作正则化防止压死非刚性动态。</dd>
+        <dt>Reward Hacking</dt><dd>模型钻奖励空子（如生成近静止片段骗高重建分），用复合奖励 + 轨迹项 + 周期解耦对冲。</dd>
+        <dt>MVCS</dt><dd>Multi-View Consistency Score，一个不依赖 3DGS 重建的多视角一致性指标。</dd>
+        <dt>HPSv3</dt><dd>人类偏好评分模型，用作通用画质奖励 R_gen。</dd>
+        <dt>Wan 2.1 / CogVideoX</dt><dd>开源文生视频基础模型；World-R1 以 Wan 2.1（1.3B / 14B）为基座。</dd>
+        <dt>T2V / I2V</dt><dd>文生视频 / 图生视频；World-R1 支持 T2V，而多数 3D-aware 方法只能 I2V。</dd>
+      </dl>
+    </div>
+
+    <footer>
+      <p><strong>来源</strong>：Weijie Wang 等（Microsoft Research · 浙江大学）. <em style="background:none;color:inherit;padding:0">World-R1: Reinforcing 3D Constraints for Text-to-Video Generation</em>. arXiv:2604.24764v4（37 页，投 ICML）。</p>
+      <div class="reslinks">
+        <a href="https://arxiv.org/pdf/2604.24764" target="_blank" rel="noopener">📄 arXiv PDF</a>
+        <a href="https://arxiv.org/abs/2604.24764" target="_blank" rel="noopener">📑 arXiv 摘要页</a>
+        <a href="https://aka.ms/world-r1" target="_blank" rel="noopener">🌐 项目主页</a>
+      </div>
+      <p style="margin-top:14px">本讲解文档由 Claude 基于论文全文（含图表与附录）整理，为帮助理解的二次解读；具体数值、公式与结论以原论文为准。</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+  // 滚动高亮当前章节
+  (function(){
+    const links = Array.from(document.querySelectorAll('nav.toc a'));
+    const map = links.map(a=>{
+      const id = a.getAttribute('href').slice(1);
+      return {a, el: document.getElementById(id)};
+    }).filter(x=>x.el);
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          const id = e.target.id;
+          links.forEach(l=>l.classList.toggle('active', l.getAttribute('href')==='#'+id));
+        }
+      });
+    }, {rootMargin:'-15% 0px -75% 0px', threshold:0});
+    map.forEach(x=>obs.observe(x.el));
+  })();
+</script>
+</body>
+</html>

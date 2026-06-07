@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVIDIA OmniDreams 中文讲解 · 实时生成式世界模型与自动驾驶闭环仿真</title>
+<style>
+  :root{
+    --green:#76b900;
+    --green-d:#5a8f00;
+    --green-l:#eaf5d6;
+    --ink:#16181d;
+    --ink-2:#3a3f4b;
+    --muted:#6b7280;
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --line:#e6eaf0;
+    --code:#0d1117;
+    --blue:#2563eb;
+    --amber:#b45309;
+    --amber-bg:#fef6e7;
+    --shadow:0 1px 3px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Helvetica Neue",Arial,sans-serif;
+    line-height:1.85;font-size:16.5px;-webkit-font-smoothing:antialiased;
+  }
+  .layout{display:flex;max-width:1280px;margin:0 auto;gap:0}
+  /* ---------- sidebar ---------- */
+  nav.toc{
+    width:280px;flex:0 0 280px;position:sticky;top:0;height:100vh;overflow-y:auto;
+    padding:26px 18px 60px;border-right:1px solid var(--line);background:#fbfdff;
+  }
+  nav.toc .brand{font-weight:800;font-size:15px;letter-spacing:.3px;color:var(--ink);margin-bottom:4px}
+  nav.toc .brand span{color:var(--green)}
+  nav.toc .sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+  nav.toc a{
+    display:block;color:var(--ink-2);text-decoration:none;font-size:13.5px;
+    padding:5px 10px;border-radius:7px;margin:1px 0;border-left:2px solid transparent;line-height:1.4;
+  }
+  nav.toc a:hover{background:var(--green-l);color:var(--ink)}
+  nav.toc a.active{background:var(--green-l);color:var(--green-d);font-weight:700;border-left-color:var(--green)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12px;color:var(--muted)}
+  /* ---------- content ---------- */
+  main{flex:1 1 auto;min-width:0;padding:0 clamp(20px,4vw,64px) 120px}
+  header.hero{
+    margin:0 calc(-1*clamp(20px,4vw,64px)) 40px;
+    padding:54px clamp(20px,4vw,64px) 44px;
+    background:linear-gradient(135deg,#0d1117 0%,#1c2b14 55%,#2d4a12 100%);
+    color:#fff;
+  }
+  header.hero .tag{
+    display:inline-block;background:rgba(118,185,0,.18);color:#b6e36a;
+    border:1px solid rgba(118,185,0,.4);padding:4px 12px;border-radius:999px;
+    font-size:12.5px;font-weight:600;letter-spacing:.5px;margin-bottom:18px;
+  }
+  header.hero h1{font-size:clamp(26px,3.6vw,40px);line-height:1.25;margin:0 0 14px;font-weight:800}
+  header.hero h1 .g{color:var(--green)}
+  header.hero .meta{color:#c8d0dc;font-size:14px;margin-bottom:22px}
+  header.hero .meta b{color:#fff;font-weight:600}
+  header.hero p.lead{font-size:16.5px;color:#e6ebf2;max-width:760px;margin:0}
+  .pills{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+  .pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+    padding:8px 14px;border-radius:10px;font-size:13px;color:#eaf0f6}
+  .pill b{color:var(--green);font-weight:700}
+  .reslinks{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px}
+  .reslinks a{
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+    background:var(--green);color:#0d1117;font-weight:700;font-size:13.5px;
+    padding:9px 16px;border-radius:10px;border:1px solid var(--green);
+    transition:background .15s,transform .15s;
+  }
+  .reslinks a:hover{background:#8fd400;transform:translateY(-1px)}
+  footer .reslinks{margin-top:10px}
+  footer .reslinks a{background:transparent;color:var(--green-d);border-color:var(--green-d);font-size:13px}
+  footer .reslinks a:hover{background:var(--green-l);transform:none}
+
+  h2.sec{font-size:25px;font-weight:800;margin:54px 0 6px;padding-top:14px;letter-spacing:.2px}
+  h2.sec .num{color:var(--green);font-weight:800;margin-right:10px}
+  .sec-rule{height:3px;width:54px;background:var(--green);border-radius:3px;margin:0 0 22px}
+  h3.sub{font-size:19px;font-weight:700;margin:34px 0 10px;color:var(--ink)}
+  h4{font-size:16px;font-weight:700;margin:22px 0 8px;color:var(--ink-2)}
+  p{margin:12px 0}
+  strong{color:var(--ink)}
+  em{color:var(--green-d);font-style:normal;font-weight:600;background:var(--green-l);padding:1px 5px;border-radius:4px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+
+  /* callouts */
+  .callout{border-radius:12px;padding:16px 20px;margin:18px 0;border:1px solid;font-size:15.5px}
+  .callout .h{font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .c-idea{background:var(--green-l);border-color:#cfe6a0}
+  .c-idea .h{color:var(--green-d)}
+  .c-note{background:#eef4ff;border-color:#cfe0ff}
+  .c-note .h{color:var(--blue)}
+  .c-warn{background:var(--amber-bg);border-color:#f3d9a6}
+  .c-warn .h{color:var(--amber)}
+
+  /* highlight number cards */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:22px 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .stat .v{font-size:26px;font-weight:800;color:var(--green-d);line-height:1.1}
+  .stat .l{font-size:13px;color:var(--muted);margin-top:6px}
+
+  table{border-collapse:collapse;width:100%;margin:18px 0;font-size:14.5px;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  caption{caption-side:top;text-align:left;font-size:13.5px;color:var(--muted);margin-bottom:8px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:#0d1117;color:#fff;font-weight:600;font-size:13.5px}
+  tbody tr:nth-child(even){background:#fafbfd}
+  tbody tr:hover{background:var(--green-l)}
+  td.best{color:var(--green-d);font-weight:700}
+  .up::after{content:" ↑";color:var(--green)}
+  .down::after{content:" ↓";color:#c2410c}
+
+  ul,ol{margin:12px 0;padding-left:24px}
+  li{margin:7px 0}
+  code{background:#eef1f6;color:#b91c5c;padding:2px 6px;border-radius:5px;font-size:13.5px;
+    font-family:"SF Mono",Menlo,Consolas,monospace}
+  sup{font-size:.75em}
+
+  /* diagrams */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:22px 0;justify-content:center}
+  .node{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px 16px;
+    min-width:148px;text-align:center;box-shadow:var(--shadow)}
+  .node .t{font-size:11px;letter-spacing:1px;color:var(--green-d);font-weight:700;text-transform:uppercase}
+  .node .n{font-weight:700;font-size:15px;margin:4px 0 2px}
+  .node .d{font-size:12px;color:var(--muted)}
+  .arrow{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 6px;color:var(--green);font-weight:700;min-width:78px}
+  .arrow .lbl{font-size:11px;color:var(--muted);margin-bottom:2px}
+  .arrow .a{font-size:22px;line-height:1}
+
+  .pipe{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0;counter-reset:step}
+  .pstep{flex:1 1 180px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--green);
+    border-radius:10px;padding:12px 14px;position:relative;box-shadow:var(--shadow)}
+  .pstep .k{font-size:11.5px;font-weight:700;color:var(--green-d);letter-spacing:.5px}
+  .pstep .n{font-weight:700;font-size:14.5px;margin:3px 0}
+  .pstep .d{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+  .twocol .card{margin:0}
+  .vs-h{font-weight:700;font-size:15px;margin-bottom:6px}
+  .vs-recon{color:#c2410c}
+  .vs-gen{color:var(--green-d)}
+
+  .glossary dt{font-weight:700;color:var(--green-d);margin-top:12px}
+  .glossary dd{margin:2px 0 0 0;color:var(--ink-2);font-size:14.5px}
+
+  footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+
+  .anchor{position:relative;top:-10px;visibility:hidden}
+
+  @media(max-width:920px){
+    nav.toc{display:none}
+    .twocol{grid-template-columns:1fr}
+    body{font-size:16px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ============ SIDEBAR ============ -->
+  <nav class="toc" id="toc">
+    <div class="brand">NVIDIA <span>OmniDreams</span></div>
+    <div class="sub">中文深度讲解 · arXiv:2606.03159v1</div>
+    <a href="#tldr">⚡ 一分钟速览</a>
+    <a href="#bg">1 · 背景与动机</a>
+    <a href="#openvsclosed" class="lvl2">1.1 开环 vs 闭环</a>
+    <a href="#recon-vs-gen" class="lvl2">1.2 重建式 vs 生成式仿真</a>
+    <a href="#idea">2 · 核心思想：闭环世界模型</a>
+    <a href="#key-design" class="lvl2">2.1 闭环位置与四个关键设计</a>
+    <a href="#cond" class="lvl2">2.2 三路条件输入</a>
+    <a href="#data">3 · 数据与构建</a>
+    <a href="#data-sets" class="lvl2">3.1 两套数据集</a>
+    <a href="#data-cond" class="lvl2">3.2 条件信号的抽取</a>
+    <a href="#data-filter" class="lvl2">3.3 质量过滤与 SIL-Wheel</a>
+    <a href="#data-usage" class="lvl2">3.4 数据用途与划分</a>
+    <a href="#arch">4 · 模型架构</a>
+    <a href="#size" class="lvl2">4.1 模型大小一览</a>
+    <a href="#arch-causal" class="lvl2">4.2 因果自回归与两个变体</a>
+    <a href="#arch-ctrl" class="lvl2">4.3 轻量控制分支</a>
+    <a href="#arch-mv" class="lvl2">4.4 多视角注意力分解</a>
+    <a href="#train">5 · 训练流水线</a>
+    <a href="#infer">6 · 推理优化（免训练）</a>
+    <a href="#infer-opt" class="lvl2">6.1 五项推理优化</a>
+    <a href="#infer-mgpu" class="lvl2">6.2 多 GPU 上下文并行</a>
+    <a href="#infer-flash" class="lvl2">6.3 FlashDreams</a>
+    <a href="#loop">7 · 闭环集成与 AlpaSim</a>
+    <a href="#loop-prop" class="lvl2">7.1 三大特性与挑战</a>
+    <a href="#loop-alpasim" class="lvl2">7.2 AlpaSim 网络化集成</a>
+    <a href="#loop-session" class="lvl2">7.3 Session 与分块生成</a>
+    <a href="#wam">8 · 当作驾驶策略（WAM）</a>
+    <a href="#fixer">9 · 当作重建修复器</a>
+    <a href="#exp">10 · 实验结果</a>
+    <a href="#exp-quality" class="lvl2">10.1 仿真质量</a>
+    <a href="#exp-long" class="lvl2">10.2 长序列 rollout</a>
+    <a href="#exp-longtail" class="lvl2">10.3 长尾与反事实</a>
+    <a href="#exp-loop" class="lvl2">10.4 闭环评测 vs NuRec</a>
+    <a href="#exp-related" class="lvl2">10.5 在相关工作中的定位</a>
+    <a href="#takeaway">11 · 总结：贡献 / 局限 / 意义</a>
+    <a href="#cont-contrib" class="lvl2">11.1 主要贡献</a>
+    <a href="#cont-limit" class="lvl2">11.2 局限与权衡</a>
+    <a href="#glossary">📖 术语表</a>
+  </nav>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+    <header class="hero">
+      <span class="tag">NVIDIA 技术报告 · 自动驾驶 · 世界模型</span>
+      <h1><span class="g">OmniDreams</span>：用于自动驾驶<br>闭环仿真的实时生成式世界模型</h1>
+      <div class="meta">
+        <b>NVIDIA</b> · <i style="background:none;color:#b6e36a;padding:0">Real-Time Generative World Model for Closed-Loop Autonomous Vehicle Simulation</i><br>
+        arXiv:2606.03159v1 · 2026-06-03 · 39 页技术报告
+      </div>
+      <div class="reslinks">
+        <a href="https://arxiv.org/pdf/2606.03159v1" target="_blank" rel="noopener">📄 arXiv PDF</a>
+        <a href="https://research.nvidia.com/labs/sil/projects/omnidreams-blog/" target="_blank" rel="noopener">🌐 项目主页（NVIDIA SIL）</a>
+        <a href="https://github.com/nv-tlabs/omni-dreams" target="_blank" rel="noopener">💻 代码（GitHub）</a>
+      </div>
+      <p class="lead">
+        一句话：把 NVIDIA 的视频基础模型 <b>Cosmos</b> 改造成一个<b>能实时、自回归、按动作生成多摄像头视频</b>的世界模型，
+        让它在闭环中充当自动驾驶的“传感器渲染器”——驾驶策略每发出一个动作，它就生成下一帧应当观测到的画面，
+        从而在长尾、反事实、罕见场景下安全地评测乃至训练驾驶策略。
+      </p>
+      <div class="pills">
+        <span class="pill">单摄像头 <b>68 FPS</b> @720p / 单卡 GB300</span>
+        <span class="pill">四摄像头 <b>105 FPS</b> / 16×GB300</span>
+        <span class="pill">作策略：<b>~2B</b> 参数优于 <b>~10B</b> 的 Alpamayo 1.5</span>
+        <span class="pill">碰撞率 <b>6.9% → 4.2%</b></span>
+      </div>
+    </header>
+
+    <!-- ============ TLDR ============ -->
+    <span class="anchor" id="tldr"></span>
+    <h2 class="sec"><span class="num">⚡</span>一分钟速览</h2>
+    <div class="sec-rule"></div>
+
+    <div class="callout c-idea">
+      <div class="h">💡 一句话核心</div>
+      传统重建式仿真（NeRF / 3DGS）只能“回放”采集过的场景，相机一旦离开采集轨迹画质就明显劣化。OmniDreams 用<strong>生成式世界模型</strong>取而代之：
+      它从海量视频中学到“世界应当呈现何种样貌、如何演化”的先验，因此能在<strong>未见过的轨迹、天气、物体</strong>下，
+      依然实时合成出逼真、时序一致的相机画面，并对驾驶策略的动作即时响应。
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">Cosmos</div><div class="l">基座视频模型，中训练 / 后训练而来</div></div>
+      <div class="stat"><div class="v">自回归扩散</div><div class="l">因果生成 + 流式 KV cache</div></div>
+      <div class="stat"><div class="v">3 路条件</div><div class="l">文本 + 抽象场景图 + 历史帧</div></div>
+      <div class="stat"><div class="v">15 国</div><div class="l">真实路测数据，1080p / 7 摄像头</div></div>
+      <div class="stat"><div class="v">SV / MV</div><div class="l">单视角 / 多视角（最多 7 路）</div></div>
+      <div class="stat"><div class="v">实时</div><div class="l">≥30 FPS 闭环可交互</div></div>
+    </div>
+
+    <p>本报告其实讲了 <strong>四件事</strong>，可以拆开理解：</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">主线</div><div class="n">① 闭环传感器仿真器</div><div class="d">与 AlpaSim（编排器）+ Alpamayo 1（策略）组成闭环，替代 NuRec 充当渲染器。</div></div>
+      <div class="pstep"><div class="k">惊喜①</div><div class="n">② 世界-动作模型 WAM</div><div class="d">同一骨干微调成驾驶策略，2B 参数即超越 10B 的 VLA。</div></div>
+      <div class="pstep"><div class="k">惊喜②</div><div class="n">③ 扩散修复器</div><div class="d">为重建式仿真器修复伪影，去除新视角下的鬼影 / 模糊。</div></div>
+      <div class="pstep"><div class="k">工程</div><div class="n">④ FlashDreams 推理栈</div><div class="d">开源的流式自回归视频模型推理框架，已支持 Wan2.1 等。</div></div>
+    </div>
+
+    <!-- ============ 1 背景 ============ -->
+    <span class="anchor" id="bg"></span>
+    <h2 class="sec"><span class="num">1</span>背景与动机：为什么需要“生成式”世界模型</h2>
+    <div class="sec-rule"></div>
+
+    <p>
+      自动驾驶（AV）正进入新阶段：具备“推理”能力的视觉-语言-动作（VLA）模型可以一边思考一边规划轨迹。但核心难题始终是——
+      <strong>如何在安全攸关的长尾场景中测试这些策略</strong>，再将其部署到实车。这需要一个既<strong>可交互</strong>又<strong>可扩展</strong>的仿真器。
+    </p>
+
+    <span class="anchor" id="openvsclosed"></span>
+    <h3 class="sub">1.1 开环 vs 闭环：到底差在哪？</h3>
+    <p>这是理解整篇论文的<strong>基础</strong>。区别只有一句话：<strong>策略的动作会不会反过来影响它之后观测到的画面。</strong></p>
+    <div class="twocol">
+      <div class="card">
+        <div class="vs-h vs-recon">🔁 开环 Open-Loop（回放录像）</div>
+        <ul>
+          <li>向策略输入一段<strong>预先录制</strong>的真实驾驶日志，观测序列<strong>固定不变</strong>。</li>
+          <li>策略每步输出动作 / 轨迹，与司机当时的<strong>真实动作</strong>比较（L2、ADE / FDE）。</li>
+          <li>策略输出<strong>不反馈</strong>到环境：无论它如何决策，下一帧永远是录像里的下一帧。</li>
+          <li>✅ 简单、可复现、成本低；❌ <strong>无法暴露误差累积</strong>——一旦偏离便永远观测不到“偏离之后的世界”。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="vs-h vs-gen">♻️ 闭环 Closed-Loop（动作真实驱动）</div>
+        <ul>
+          <li>动作<strong>真实驱动</strong>仿真：动作 → 更新世界状态 → 渲染<strong>新状态</strong>下的下一帧 → 反馈给策略 → 再出动作……</li>
+          <li>策略会观测到<strong>自身造成的后果</strong>：压线后，下一帧即是压线视角。</li>
+          <li>误差会<strong>累积并反馈</strong>，能暴露真正的失效（碰撞、驶离路面 off-road、轨迹蛇行 swerving）。</li>
+          <li>指标是“结果型”：碰撞率、压线率、是否完成路线；❌ 代价是必须有一个能对<strong>任意</strong>动作渲染出正确观测的仿真器。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout c-idea">
+      <div class="h">💡 一个具体例子</div>
+      录像中专家在某弯道轻微向左转向。<strong>开环</strong>：即便策略选择直行，下一帧仍是“专家过弯后”的画面，单步误差很小、看似无异常。<strong>闭环</strong>：策略直行 → 仿真器将车辆置于直行后的位置 → 渲染出“驶向路肩”的<strong>全新画面</strong> → 策略面对真实后果 → 大概率驶离路面。同一策略，只有闭环才能将这一错误放大并捕获。这正是 <em>开环差距 open-loop gap</em> / 协变量偏移（covariate shift）。
+    </div>
+    <div class="callout c-note">
+      <div class="h">🔗 为什么这正是 OmniDreams 的切入点</div>
+      闭环要求仿真器能渲染<strong>策略实际行驶的那条新轨迹</strong>上的画面——它可能大幅偏离原始录像。重建式（NuRec）一旦偏离采集轨迹画质便急剧下降（论文 Fig.14：偏离 4m+ 时 FVD 升至 207），而 OmniDreams 凭借生成先验在新轨迹上仍保持保真（~125）。<strong>同样的“开环→闭环”思想也出现在训练侧</strong>：teacher forcing（输入真值历史，类比开环）会导致曝光偏差，而 Self Forcing 在训练时即让模型闭环自我 rollout（见第 5 节）——这是同一协变量偏移原理的两次体现。
+    </div>
+
+    <span class="anchor" id="recon-vs-gen"></span>
+    <h3 class="sub">1.2 重建式 vs 生成式仿真</h3>
+    <p>在“传感器渲染器”这一角色上，存在两条技术路线，OmniDreams 选择了后者：</p>
+    <div class="twocol">
+      <div class="card">
+        <div class="vs-h vs-recon">🟠 重建式仿真（NeRF / 3DGS / NuRec）</div>
+        <ul>
+          <li>从真实采集数据<strong>重建</strong>场景，照片级逼真、贴近现实。</li>
+          <li>支持在已重建场景内做 “what-if” 测试。</li>
+          <li><strong>根本局限</strong>：被原始采集数据牢牢锚定。一旦偏离采集走廊、需引入新内容、或切换到差异较大的条件，便难以泛化——新视角下出现模糊、鬼影、内容缺失。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="vs-h vs-gen">🟢 生成式世界模型（OmniDreams）</div>
+        <ul>
+          <li>在海量视觉数据上学到<strong>世界如何演化</strong>的先验。</li>
+          <li>能合成极具挑战性的现象：暴雨、暴雪、大风，以及车顶上的床垫等<strong>异常物体</strong>。</li>
+          <li>能生成复杂的智能体行为：行人、随本车靠近而<strong>骤变</strong>的关节运动与制动。</li>
+          <li>代价：相比重建式<strong>所需算力大得多</strong>。</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ============ 2 核心思想 ============ -->
+    <span class="anchor" id="idea"></span>
+    <h2 class="sec"><span class="num">2</span>核心思想：闭环中的生成式世界模型</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="key-design"></span>
+    <h3 class="sub">2.1 闭环中的位置与四个关键设计</h3>
+    <p>OmniDreams 是一个<strong>动作条件（action-conditioned）的自回归生成式世界模型</strong>，在 Cosmos-Predict 2.5 上经中训练 + 后训练得到。它在闭环中的位置如下（对应论文 Fig.1）：</p>
+
+    <div class="flow">
+      <div class="node"><div class="t">Agent 智能体</div><div class="n">Policy / 用户</div><div class="d">Alpamayo 1 策略<br>（转向 · 油门 · 制动）</div></div>
+      <div class="arrow"><span class="lbl">动作 action</span><span class="a">→</span></div>
+      <div class="node"><div class="t">Simulator 编排</div><div class="n">AlpaSim</div><div class="d">仿真运行时<br>更新场景几何与智能体</div></div>
+      <div class="arrow"><span class="lbl">抽象状态更新</span><span class="a">→</span></div>
+      <div class="node" style="border-color:var(--green)"><div class="t">World Model</div><div class="n">OmniDreams</div><div class="d">自回归因果视频生成<br>→ 照片级相机画面</div></div>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:-6px">
+      ↑ OmniDreams 合成的相机帧再返回给策略，闭合整个回路。
+    </p>
+
+    <h4>四个关键设计</h4>
+    <ul>
+      <li><strong>自回归扩散视频生成式仿真器</strong>：与开源策略 Alpamayo 1、编排器 AlpaSim 组成闭环。</li>
+      <li><strong>历史 KV cache 复用</strong>：生成新帧时会注意到此前生成所缓存的 Key / Value，从而保证长序列 rollout 的一致性。</li>
+      <li><strong>条件化于仿真状态与驾驶动作</strong>：照片级生成被<strong>锚定</strong>在过去帧、当前仿真状态与当前动作上。</li>
+      <li><strong>实时交互渲染</strong>：2B 单摄像头版本在单卡 GB300 上 720p（704×1280）可达 <em>68 FPS</em>；2B 四摄像头版本在 16 卡 GB300 上可达 <em>105 FPS</em>。</li>
+    </ul>
+
+    <span class="anchor" id="cond"></span>
+    <h3 class="sub">2.2 三路条件输入（对应 Fig.3）</h3>
+    <p>每生成下一步的传感器帧，OmniDreams 同时接收三类信号（第一步还额外接收一张 RGB 首帧）：</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">CONDITION 1</div><div class="n">📝 文本提示</div><div class="d">描述天气、光照、时段等环境属性，<strong>不改变几何</strong>。经 Cosmos 文本编码器，通过交叉注意力（cross-attention）注入。</div></div>
+      <div class="pstep"><div class="k">CONDITION 2</div><div class="n">🗺️ 抽象世界场景图</div><div class="d">即 abstract state：渲染出的车道线、路杆等高精地图 + 动态物体的 3D 边界框（cuboid），编码了<strong>未来本车轨迹</strong>与他车行为。</div></div>
+      <div class="pstep"><div class="k">CONDITION 3</div><div class="n">🧠 记忆缓存</div><div class="d">存储此前生成 token 的<strong>流式 KV cache</strong>，提供时序上下文，保证长时一致。</div></div>
+    </div>
+    <div class="callout c-idea">
+      <div class="h">💡 直觉</div>
+      文本控制“外观”（样貌 / 天气），抽象场景图控制“在何处、向何方”（几何 / 轨迹 / 他车），KV cache 维持“时序连贯”。
+      三者解耦，因此可以<strong>只改天气而不改道路</strong>，或<strong>只改轨迹而不改背景</strong>——这正是后文“可控反事实编辑”的基础。
+    </div>
+
+    <!-- ============ 3 数据 ============ -->
+    <span class="anchor" id="data"></span>
+    <h2 class="sec"><span class="num">3</span>数据与构建</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="data-sets"></span>
+    <h3 class="sub">3.1 两套数据集</h3>
+    <p>训练一个闭环世界模型对数据管线有特殊要求：需在<strong>结构化场景表征 + 本车轨迹 + 文本环境描述</strong>的条件下，合成照片级、时序一致的传感器观测。论文使用了两套真实路测数据：</p>
+    <ul>
+      <li><strong>RDS（Real Driving Scene）</strong>：3M 段 20s 片段，7 路同步摄像头，用于<strong>中训练（mid-training，介于预训练与后训练之间）</strong>，同时包含在 Cosmos-Predict 2.5-AV 预训练集中。</li>
+      <li><strong>RDS-HQ-1M</strong>：1.14M 段（10s / 20s 混合），高质量 + 精确的世界场景标注，用于<strong>微调与后训练</strong>。</li>
+    </ul>
+
+    <table>
+      <caption>表 1 · OmniDreams 训练数据总览</caption>
+      <thead><tr><th>统计项</th><th>数值</th></tr></thead>
+      <tbody>
+        <tr><td>总驾驶时长（RDS）</td><td>16,600 小时</td></tr>
+        <tr><td>总驾驶时长（RDS-HQ-1M）</td><td>4,944 小时</td></tr>
+        <tr><td>序列数</td><td>504,488（10s）+ 637,797（20s）= 1,142,285</td></tr>
+        <tr><td>帧分辨率</td><td>704 × 1280</td></tr>
+        <tr><td>每帧摄像头视角</td><td>共 7 路，训练用 4 路</td></tr>
+        <tr><td>地理区域</td><td>15 国：US, DE, JP, KR, GB, FR, ES, SE, PT, DK, FI, PL, IT, AT, BE</td></tr>
+      </tbody>
+    </table>
+
+    <span class="anchor" id="data-cond"></span>
+    <h3 class="sub">3.2 条件信号是怎么抽取出来的</h3>
+    <ul>
+      <li><strong>世界场景图（抽象状态）</strong>：高精地图（车道线、路沿、路杆、停止线、人行横道、路面标记、红绿灯、交通标志，均来自预建的城市级地图并严格匹配到行驶路线）+ 对动态物体（车辆、行人、弱势道路使用者 VRU）做 3D 检测与跟踪（在 10 FPS 上检测、插值到 30 FPS）。再按每个相机视角渲染成像素对齐的线条 / 面 / 2D 投影立方体框；立方体框按<strong>朝向上色</strong>以提供深度线索。</li>
+      <li><strong>文本提示</strong>：用视觉-语言模型（VLM，Qwen2.5-VL-7B）对 10s 窗口、7 路摄像头分别<strong>生成描述文本（caption）</strong>，每段生成短（~40 词）/ 中（~80 词）/ 长（~200 词）三种长度，按 0.1 / 0.2 / 0.7 概率采样，使模型对提示长度具备鲁棒性。</li>
+    </ul>
+
+    <span class="anchor" id="data-filter"></span>
+    <h3 class="sub">3.3 质量过滤与 SIL-Wheel 策展平台</h3>
+    <p>多阶段过滤：剔除传感器 / 标注不可靠、预测分歧的片段；用 VLM 检测色差等视觉伪影；按本车轨迹 + 视觉特征<strong>去重</strong>（对高速直行这类重复片段做下采样）。
+      此外用 NVIDIA SIL 的视频检索与策展平台 <strong>SIL-Wheel</strong> 在片段（clip）粒度上完成三件事：① 构造后训练切片（上采样罕见天气 / 施工区 / 弱势道路使用者等）；② 构造留出评测切片（支持长尾、分场景报告）；③ 数据巡检（校验自动标注质量）。</p>
+
+    <span class="anchor" id="data-usage"></span>
+    <h3 class="sub">3.4 数据用途与划分（哪一份用于哪一步）</h3>
+    <table>
+      <caption>各数据集 / 子集的规模与用途</caption>
+      <thead><tr><th>数据 / 子集</th><th>规模</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><strong>RDS</strong></td><td>3M 段 ×20s · 16,600 小时 · 7 摄像头</td><td>中训练；同时在 Cosmos-Predict 2.5-AV 预训练集中</td></tr>
+        <tr><td><strong>RDS-HQ-1M</strong></td><td>1,142,285 段 · 4,944 小时</td><td>微调 + 后训练（高质量 + 精确世界场景标注）</td></tr>
+        <tr><td>├ 10s 片段</td><td>504,488（~44%）</td><td>—</td></tr>
+        <tr><td>├ 20s 片段</td><td>637,797（~56%）</td><td>—</td></tr>
+        <tr><td>留出评测集</td><td>5,000 段（按场景类别平衡）</td><td>评测 / 测试（仿真质量指标在其中采样 1,000 段）</td></tr>
+        <tr><td>└ 60s 子集</td><td>其中 300 段</td><td>长时（分钟级）时序一致性评测</td></tr>
+        <tr><td>蒸馏子集</td><td>58k 高质量、挑战性强的视频</td><td>Self-Forcing 蒸馏（密集车流 / 复杂光照等）</td></tr>
+        <tr><td>WAM 闭环评测</td><td>574 场景 · 20s rollout</td><td>对比 Alpamayo 1.5（第 8 节）</td></tr>
+        <tr><td>闭环 vs NuRec</td><td>501 场景（Physical AI AV NuRec 数据集子集）</td><td>仅替换传感器仿真器的对比（10.4）</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:14.5px;color:var(--ink-2)">
+      <strong>采集规格回顾</strong>：均为真实路测日志，<strong>15 国</strong>、源 <strong>1080p</strong>、<strong>7 路同步摄像头</strong>（前广角、前长焦、前左、前右、后左、后右、后长焦）、<strong>30 FPS</strong>；训练分辨率下采样至 <strong>704×1280</strong>，训练实际使用 <strong>4 路</strong>。条件信号方面，3D 边界框检测与跟踪在 <strong>10 FPS</strong> 上进行、再插值到 30 FPS；文本描述由 <strong>Qwen2.5-VL-7B</strong> 在 10s 窗口、逐摄像头生成，短（~40 词）/ 中（~80 词）/ 长（~200 词）按 <strong>0.1 / 0.2 / 0.7</strong> 概率采样。
+    </p>
+
+    <!-- ============ 4 架构 ============ -->
+    <span class="anchor" id="arch"></span>
+    <h2 class="sec"><span class="num">4</span>模型架构</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="size"></span>
+    <h3 class="sub">4.1 模型有多大？参数量与规格一览</h3>
+    <div class="callout c-idea">
+      <div class="h">💡 一句话</div>
+      OmniDreams 本体是<strong>约 2B（20 亿）参数</strong>的模型——<strong>SV 与 MV 两个变体都基于这一 2B 骨干</strong>，MV 只是在其上额外增加了<strong>跨视角注意力层</strong>与<strong>逐视角嵌入（view embedding）</strong>（见 4.4）。基座为 Cosmos-Predict 2.5；用于对比的 VLA 策略 Alpamayo 1.5 约 <strong>10B</strong>，因此 OmniDreams 作为策略时以约 <strong>1/5 的参数量</strong>实现超越。
+    </div>
+    <table>
+      <caption>OmniDreams 两个变体规格对比（数值据论文正文）</caption>
+      <thead><tr><th>维度</th><th>OmniDreams-SV（单视角）</th><th>OmniDreams-MV（多视角）</th></tr></thead>
+      <tbody>
+        <tr><td>参数量</td><td class="best">~2B</td><td class="best">~2B（+ 跨视角注意力 / 视角嵌入）</td></tr>
+        <tr><td>摄像头</td><td>1 路前向（WAM 用 120° 前广角）</td><td>4 路同步：前、左交叉、右交叉、前长焦</td></tr>
+        <tr><td>每步生成帧数</td><td>8 帧（= 2 个 latent 帧）</td><td>16 帧（= 4 个 latent 帧）</td></tr>
+        <tr><td>局部注意力窗口</td><td>6 latent 帧（24 RGB 帧）</td><td>8 latent 帧（32 RGB 帧）</td></tr>
+        <tr><td>实时性能（GB300）</td><td>单卡 68 FPS @704×1280</td><td>16 卡 105 FPS / 摄像头</td></tr>
+        <tr><td>基座</td><td>Cosmos-Predict 2.5</td><td>Cosmos-Predict 2.5</td></tr>
+      </tbody>
+    </table>
+    <h4>当成驾驶策略（WAM）时新增的小模块</h4>
+    <ul>
+      <li><strong>DINOv2 编码器</strong>：以 <code>dinov2_vitb14</code>（即 ViT-B/14）初始化，提供 patch 特征条件 + 30° 前长焦摄像头。</li>
+      <li><strong>历史 token</strong>：将过去 1.6s 的本车运动经一个小型 MLP 嵌入。</li>
+      <li><strong>轨迹头</strong>：一个 <strong>12 层 U-Net 形 MLP</strong>，输出未来轨迹隐变量（τ ∈ ℝ<sup>64×3</sup>），即 <strong>64 个航点（waypoint）</strong> / 未来 6.4s @10Hz。</li>
+      <li>2B 的 DiT 骨干保持不变；推理时 4 个流匹配步仅在该轻量轨迹 MLP 内执行。</li>
+    </ul>
+    <div class="callout c-warn">
+      <div class="h">⚠️ 论文未公布的细节</div>
+      论文将参数量给为<strong>近似值</strong>（“~2B” / “~10B”），<strong>并未</strong>公布主 DiT 的精确层数、隐藏维度（hidden dim）、注意力头数（Fig.4 仅标注泛指的 “× N blocks”）。因此“2B”是论文报告口径的数量级，并非精确到亿位的数字。
+    </div>
+
+    <span class="anchor" id="arch-causal"></span>
+    <h3 class="sub">4.2 因果自回归扩散与两个变体</h3>
+    <div class="callout c-note">
+      <div class="h">🔑 为什么用“因果自回归扩散”而非常规视频扩散？</div>
+      闭环要求<strong>即时响应</strong>动作变化。常规离线视频模型（Sora / Wan 等）采用双向、整段去噪，无法在线实时调整。OmniDreams 改用
+      <strong>因果扩散</strong>：每次预测仅依赖过去观测与当前条件；时序一致性由<strong>流式 KV cache</strong> 保证——复用已计算的注意力 K / V，
+      无需重算整段序列，从而在长时域上高效且稳定地 rollout。
+    </div>
+    <p>两个变体：</p>
+    <ul>
+      <li><strong>OmniDreams-SV（单视角）</strong>：仅生成单个前向摄像头，每步 8 帧（= 2 个 latent 帧）。</li>
+      <li><strong>OmniDreams-MV（多视角）</strong>：联合生成 4 路同步视角（前、左交叉、右交叉、前长焦），每步 16 帧（= 4 个 latent 帧）。</li>
+    </ul>
+
+    <span class="anchor" id="arch-ctrl"></span>
+    <h3 class="sub">4.3 轻量控制分支（不是 ControlNet）</h3>
+    <p>OmniDreams 不另设一个网络处理控制输入，而是把结构化仿真状态用<strong>一个小型 MLP</strong> 编码成紧凑的“控制 token”，与视觉 token 的隐变量表征对齐后<strong>拼接（concatenate）</strong>，再送入 transformer。优点：计算开销极小；通过将控制信号与视觉内容清晰分离，<strong>稳定了自回归生成</strong>；并保持了实时所需的吞吐。</p>
+
+    <span class="anchor" id="arch-mv"></span>
+    <h3 class="sub">4.4 一致的多视角生成：注意力的二维分解</h3>
+    <p>朴素做法是让所有视角、所有时间的 token 做全自注意力，复杂度高达 <code>O(N²T²)</code>（N = 视角数，T = 时长），实时不可行。OmniDreams 将注意力<strong>分解为两部分</strong>：</p>
+    <div class="twocol">
+      <div class="card">
+        <div class="vs-h vs-gen">⏱️ 时序注意力（Temporal）</div>
+        <p style="margin:6px 0 0">在<strong>每个视角内部独立</strong>进行。token 通过因果 KV cache 注意到本视角的过去帧，捕捉运动动态、维持时序一致。</p>
+      </div>
+      <div class="card">
+        <div class="vs-h vs-gen">👁️ 跨视角注意力（Cross-View）</div>
+        <p style="margin:6px 0 0">在<strong>每个时间步</strong>跨视角进行。不同视角的 token 相互注意，使共享的几何、物体位置、运动在各摄像头间<strong>保持一致</strong>。</p>
+      </div>
+    </div>
+    <p>分解后总复杂度降至 <code>O(NT²) + O(N²)</code>，效率显著提升，支持更高分辨率、更长上下文、更多视角（最多 7 路环视）。
+    在结构上（Fig.4），相比单视角的 Cosmos-Predict 2.5 骨干，MV 的每个 Cross Block 额外加入：(i) <strong>逐视角的视角嵌入</strong>，与时间嵌入相加，作为对 shift / scale / gate 的 AdaLN 调制；(ii) 在文本交叉注意力之后插入一层<strong>跨视角注意力</strong>。</p>
+
+    <!-- ============ 5 训练 ============ -->
+    <span class="anchor" id="train"></span>
+    <h2 class="sec"><span class="num">5</span>训练流水线：多阶段“改造” Cosmos</h2>
+    <div class="sec-rule"></div>
+
+    <p>从双向的 Cosmos-Predict 2.5 出发，逐级将其改造成实时、可控、长时一致的因果世界模型：</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">STEP 1</div><div class="n">AV 中训练</div><div class="d">在 RDS 上中训练，提升自动驾驶领域能力。</div></div>
+      <div class="pstep"><div class="k">STEP 2（仅 MV）</div><div class="n">多视角适配</div><div class="d">加入跨视角注意力层，学习跨摄像头对应与一致性。视角嵌入与跨视角输出投影<strong>零初始化</strong>以保证稳定收敛。</div></div>
+      <div class="pstep"><div class="k">STEP 3</div><div class="n">Diffusion Forcing</div><div class="d">因果掩码训练，将双向模型转为自回归因果模型。</div></div>
+      <div class="pstep"><div class="k">STEP 4</div><div class="n">世界场景图控制</div><div class="d">后训练阶段加入零初始化的控制分支，先训 93 帧再扩展到 189 帧以学习长时一致性。</div></div>
+      <div class="pstep"><div class="k">STEP 5</div><div class="n">Self-Forcing 蒸馏</div><div class="d">实现少步生成，并用 DMD 消除自回归误差累积。</div></div>
+      <div class="pstep"><div class="k">STEP 6</div><div class="n">渐进式长上下文教师</div><div class="d">用更长上下文的双向模型作为教师，继续蒸馏以抑制“漂移伪影”。</div></div>
+    </div>
+
+    <h4>① 流匹配（Rectified Flow）目标</h4>
+    <p>基础训练目标为流匹配：<code>L = E[‖u_θ(x_t,t) − v_t‖²]</code>，其中 <code>x_t=(1−t)x+tε</code>、<code>v_t=ε−x</code>，可附加条件 <code>c</code>（文本、首帧、控制信号）。</p>
+
+    <h4>② Diffusion Forcing（因果化的关键）</h4>
+    <p>沿用 Chen et al. 2024：对每个 token <strong>独立采样</strong>一个扩散时刻 <code>t_i</code>（取自对数正态分布），并施加因果掩码，使 <code>x^i</code> 只能注意到 ≤ i 的帧。这样一次前向即可并行计算不同噪声级，天然支持自回归。还可推广到<strong>块自回归</strong>（k 帧一组），实现上采用 Flex-Attention。目标：<code>L_DF = E[‖u_θ(x_t^{1:T}, t) − v_t‖²]</code>。</p>
+
+    <h4>③ Self Forcing + DMD 蒸馏（治“曝光偏差”）</h4>
+    <div class="callout c-warn">
+      <div class="h">⚠️ 曝光偏差（exposure bias）</div>
+      标准 teacher forcing 在训练时每帧都看到<strong>干净的真值</strong>历史，但推理时只能看到自身生成的（含瑕疵的）输出 → 分布失配 → 长序列 rollout 的误差<strong>逐步累积放大</strong>。
+    </div>
+    <p><strong>Self Forcing</strong>（Huang et al. 2025）在训练时即让模型<strong>自我 rollout</strong>，每帧条件在自身此前生成的输出上（K=2 步扩散，时间步调度 [1000, 450]）。为保证可训练：梯度仅回传到<strong>随机抽样的单个去噪步</strong>，并从前帧的 KV cache 嵌入<strong>切断梯度</strong>；采用滚动 KV cache（保留最近 L 帧、驱逐最旧帧）将推理复杂度从 <code>O(TL²)</code> 降到 <code>O(TL)</code>，支持任意长度序列。</p>
+    <p>蒸馏目标采用 <strong>DMD（分布匹配蒸馏 Distribution Matching Distillation）</strong>：最小化自我 rollout 视频分布 <code>p_θ</code> 与真实分布 <code>p_data</code> 之间的反向 KL 散度：<code>L_DMD = E[½‖x̂ − (f_ψ(x̂_t,t) − f_φ(x̂_t,t))‖²]</code>，其中 <code>f_φ</code> 是冻结的真实 score、<code>f_ψ</code> 是学习的伪 score。score 之差在<strong>全序列视频级</strong>将生成器推向真实数据流形，无需逐像素的配对监督。</p>
+
+    <h4>④ 渐进式长上下文教师（治“漂移伪影”）</h4>
+    <p>当滚动 KV cache 在长生成中超出训练上下文窗口时，会出现累积的<strong>漂移伪影（shifting artifacts）</strong>。对策：先训练一个上下文窗口更长的<strong>双向</strong>模型（其不受滚动缓存问题影响），再将其作为教师，继续蒸馏先前由短上下文教师蒸馏过的模型。蒸馏阶段使用了 58k 段高质量、挑战性强（密集车流、复杂光照、复杂道路几何）的子集。</p>
+
+    <!-- ============ 6 推理 ============ -->
+    <span class="anchor" id="infer"></span>
+    <h2 class="sec"><span class="num">6</span>推理优化（全部免训练）</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="infer-opt"></span>
+    <h3 class="sub">6.1 五项推理优化</h3>
+    <div class="callout c-idea">
+      <div class="h">💡 关键</div>
+      本节所有优化均为 <em>免训练（training-free）</em>——不改动任何扩散模型权重，仅优化推理系统。结果：MV 四视角 16 帧块在 16 卡 GB300 上 151ms（<strong>105 FPS / 摄像头</strong>）；SV 单视角 8 帧块在单卡 GB300 上 118ms（<strong>68 FPS</strong>）。
+    </div>
+    <ul>
+      <li><strong>局部时序注意力</strong>：固定窗口——SV 用 6 个 latent 帧（24 RGB 帧），MV 用 8 个 latent 帧（32 RGB 帧），在显存与速度间权衡。</li>
+      <li><strong>流式静态形状 KV cache</strong>：预分配固定大小，整段 rollout 张量形状不变；缓存更新置于<strong>独立线程</strong>，使主线程免受缓存更新延迟影响。</li>
+      <li><strong>编译 + CUDA Graphs</strong>：由于 KV cache 形状固定，DiT 前向运行在单一静态形状上，用 <code>torch.compile</code> 捕获为 CUDA Graph，首块惰性捕获、后续复用。</li>
+      <li><strong>轻量编解码器</strong>：用 LightX2V 的 LightVAE / LightTAE 替换 Cosmos 原 VAE；SV 用 LightVAE 编码，MV 用 pixel-shuffle（延迟可忽略）；二者均用 LightTAE 解码（解码延迟极低）。</li>
+      <li><strong>上提步不变算子</strong>：将 RoPE 频率、patchify / unpatchify 等仅依赖块形状、与去噪步无关的计算，提到去噪循环<strong>之外</strong>，每块只算一次。</li>
+    </ul>
+
+    <div class="twocol">
+      <div>
+        <table>
+          <caption>表 2 · SV 单视角每块时延（8 RGB / 2 latent 帧，GB300）</caption>
+          <thead><tr><th>阶段</th><th>1×</th><th>8×</th></tr></thead>
+          <tbody>
+            <tr><td>世界场景编码</td><td>28ms</td><td>26ms</td></tr>
+            <tr><td>扩散 DiT</td><td>84ms</td><td>47ms</td></tr>
+            <tr><td>RGB 解码</td><td>6ms</td><td>5ms</td></tr>
+            <tr><td>KV 更新（独立线程）</td><td>42ms</td><td>22ms</td></tr>
+            <tr><td><strong>总计</strong></td><td>118ms</td><td>78ms</td></tr>
+            <tr><td><strong>有效 FPS</strong></td><td class="best">68</td><td class="best">103</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <table>
+          <caption>表 3 · MV 四视角每块时延（16 RGB / 4 latent 帧，GB300）</caption>
+          <thead><tr><th>阶段</th><th>1×</th><th>16×</th></tr></thead>
+          <tbody>
+            <tr><td>扩散 DiT</td><td>1184ms</td><td>121ms</td></tr>
+            <tr><td>RGB 解码</td><td>105ms</td><td>30ms</td></tr>
+            <tr><td>KV 更新（独立线程）</td><td>558ms</td><td>67ms</td></tr>
+            <tr><td><strong>总计</strong></td><td>1289ms</td><td>151ms</td></tr>
+            <tr><td><strong>有效 FPS / 摄像头</strong></td><td>12</td><td class="best">105</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <span class="anchor" id="infer-mgpu"></span>
+    <h3 class="sub">6.2 多 GPU 推理：三轴上下文并行</h3>
+    <p>DiT 暴露三条天然的并行轴：<strong>视角轴 V</strong>、块内<strong>时间轴 T</strong>、单帧注意力内的<strong>空间轴 HW</strong>。采用层次化上下文并行，16 卡配置为 <code>V=4, T=4, HW=1</code>，分片顺序 <code>V → T → HW</code>。由于自注意力按摄像头独立、且是 DiT 的主导开销，沿 V 分片<strong>从不拆分</strong>单次自注意力调用——4 路 V 在 4 卡内近线性加速；其余工作优先用 T 分片（保持每时间步的跨视角注意力块完整），只有超过 16 卡时才对 HW 分片。上下文并行注意力采用自研的 ring-attention，将 KV 分片传输与本地注意力计算<strong>重叠</strong>。</p>
+
+    <span class="anchor" id="infer-flash"></span>
+    <h3 class="sub">6.3 FlashDreams：将这套推理栈开源</h3>
+    <p>上述方案（流式静态 KV cache、局部窗口注意力、CUDA Graph 捕获）<strong>不限于本模型架构</strong>，已打包为开源流式推理栈 <strong>FlashDreams</strong>，并在 Wan2.1 系骨干上验证：Self Forcing 文生视频在单卡 GB200 上提速最高 1.95×；Lingbot-World（基于 Wan2.1-14B 的自回归相机控制世界模型）在 4×H100 上提速最高 2.49×。此外还附带端到端服务栈（gRPC + webRTC）。</p>
+
+    <!-- ============ 7 闭环 ============ -->
+    <span class="anchor" id="loop"></span>
+    <h2 class="sec"><span class="num">7</span>闭环集成与 AlpaSim</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="loop-prop"></span>
+    <h3 class="sub">7.1 视频模型当渲染器的三大特性与挑战</h3>
+    <p>闭环使用时，视频模型被打包为一个<strong>有状态的“视频模型服务器”</strong>，通过 gRPC 与仿真客户端通信（Fig.6 展示两次连续往返）：每次往返中，客户端发来一段轨迹 + 文本提示 +（仅首块）初始帧；服务器渲染世界场景条件、运行因果 DiT 的<strong>两步去噪</strong> + 流式 KV cache、解码为 RGB、回传 JPEG 编码帧。服务器在整段 rollout 中<strong>保持状态</strong>（KV cache、CUDA Graph、渲染器状态均跨块复用），后续请求只需携带新轨迹与提示。</p>
+    <p>将视频模型用作渲染器，会带来三个工程挑战：</p>
+    <ul>
+      <li><strong>分布式推理</strong>：高帧率下采用多进程（通常每 GPU 一进程）跨进程通信，无法像普通 Python 依赖那样内嵌进仿真层。</li>
+      <li><strong>自回归 → 内部有状态</strong>：不能以任意顺序渲染帧，仿真器必须跟踪该状态、避免失效。</li>
+      <li><strong>分块生成</strong>：当前视频模型按“块（chunk）”（对应 VAE 时间压缩）生成，意味着要把时间<strong>量化</strong>成区间，每个区间开始时智能体行为必须固定且已知。</li>
+    </ul>
+
+    <span class="anchor" id="loop-alpasim"></span>
+    <h3 class="sub">7.2 AlpaSim 与网络化集成</h3>
+    <p><strong>AlpaSim</strong> 是开源、面向研究的 AV 仿真器，采用微服务架构、gRPC、Docker 部署，异步 RPC 天然带来流水线并行。OmniDreams 在其中<strong>替换掉 NuRec</strong> 充当相机帧渲染器。
+      做法是在视频模型部署的 <strong>rank 0</strong> 上运行一个 gRPC 服务器接收渲染请求，经 NCCL 事件转发给其余 rank；一块渲染完成后在 rank 0 聚合、序列化并回传 AlpaSim——这样无需将 OmniDreams 的依赖 / 代码 / rank 调度逻辑与 AlpaSim 其余组件强行统一。</p>
+
+    <span class="anchor" id="loop-session"></span>
+    <h3 class="sub">7.3 Session 状态与分块生成的两种策略</h3>
+    <p>将 KV cache 状态抽象成 <strong>session</strong>：每次 rollout 开启新 session（含种子首帧 + 世界地图），服务器分配 session ID 并预分配 KV cache，客户端在后续所有请求中携带该 ID。
+      由于一个视频块内的所有帧都须预先给定本车 / 他车轨迹（块中途不能更改，否则整块失效），论文比较了两种策略，AlpaSim 采用 <strong>pre-fetch</strong>：策略与交通模型在块边界一次性生成<strong>多步轨迹</strong>而非单步，按视频帧时刻插值后再请求视频模型——这样能严格保持事件时序顺序，避免隐蔽缺陷（对照的 post-fetch 会打乱事件时序）。</p>
+
+    <!-- ============ 8 WAM ============ -->
+    <span class="anchor" id="wam"></span>
+    <h2 class="sec"><span class="num">8</span>把 OmniDreams 当成驾驶策略（WAM）</h2>
+    <div class="sec-rule"></div>
+
+    <div class="callout c-idea">
+      <div class="h">💡 一个反直觉的问题</div>
+      OmniDreams 在生成式预训练中学到的<strong>内部表征</strong>，本身对“驾驶”是否有用？能否把<strong>同一个骨干</strong>微调成一个有竞争力的<strong>驾驶策略</strong>？答案：能，而且很强。
+    </div>
+
+    <p>将 OmniDreams-SV（2B，120° 前广角）微调成端到端<strong>轨迹预测器</strong>，称为 <strong>世界-动作模型（World-Action Model，WAM）</strong>。从世界场景图微调<em>之前</em>的因果自回归检查点初始化，预测未来 6.4s、10Hz 的本车轨迹（64 个航点）。</p>
+    <h4>架构改动（DiT 骨干保持不变，每帧增加两项）</h4>
+    <ul>
+      <li><strong>DINOv2 特征注入</strong>：来自 <code>dinov2_vitb14</code> 编码器与 30° 前长焦摄像头的 patch 特征，经可学习的线性投影<strong>加到</strong>带噪视频隐变量 token 上，作为额外条件。</li>
+      <li><strong>历史 token</strong>：将过去 1.6s 的本车运动经小型 MLP 嵌入成一个 token，加入每帧 token 集、沿时间轴交错。注意力掩码保持视频-视频的因果性，对历史 token 施加<strong>单向耦合</strong>。该 token 的输出 h 送入 12 层 U-Net 形 MLP，参数化未来轨迹隐变量（τ ∈ ℝ<sup>64×3</sup>）的流匹配速度场。</li>
+    </ul>
+    <p>推理时只运行一次 DiT，4 个流匹配步全部<strong>限制在轻量轨迹 MLP 内</strong>（无需视频去噪），因此极快。</p>
+
+    <div class="card">
+      <h4 style="margin-top:0">闭环对比 Alpamayo 1.5（同一 AlpaSim 栈，574 场景，10Hz 重规划，20s rollout）</h4>
+      <table style="margin-top:6px">
+        <thead><tr><th>指标（越低越好）</th><th>Alpamayo 1.5（~10B, VLA）</th><th>OmniDreams WAM（~2B）</th></tr></thead>
+        <tbody>
+          <tr><td>Collision 总碰撞</td><td>6.9%</td><td class="best">4.2%</td></tr>
+          <tr><td>Collision Front 前向</td><td>1.0%</td><td class="best">0.9%</td></tr>
+          <tr><td>Collision Lateral 侧向</td><td>0.6%</td><td class="best">0.4%</td></tr>
+          <tr><td>Collision Rear 后向</td><td>5.3%</td><td class="best">3.0%</td></tr>
+        </tbody>
+      </table>
+      <p style="margin:10px 0 0;font-size:14.5px;color:var(--ink-2)">
+        以<strong>约 1/5 的参数量</strong>（~2B vs ~10B）超越专门的 VLA 策略。这表明同一个能“渲染”的骨干，其编码的场景状态已足以支撑“驾驶”，
+        并指向一个未来方向：<strong>世界模型与策略联合训练</strong>，让一个模型既能渲染、又能在真实车流中行驶。这与机器人领域 World-Action Model 的近期发现相呼应。
+      </p>
+    </div>
+
+    <!-- ============ 9 Fixer ============ -->
+    <span class="anchor" id="fixer"></span>
+    <h2 class="sec"><span class="num">9</span>把 OmniDreams 当成“重建修复器”</h2>
+    <div class="sec-rule"></div>
+
+    <p>第三个用途：用 OmniDreams 来<strong>改善已有的重建式仿真器</strong>。NeRF / 3DGS 重建对<strong>新视角外推</strong>很敏感——当相机位姿大幅偏离原始采集轨迹时，会出现模糊、内容缺失、鬼影、漂浮几何等视角相关伪影，降低闭环真实度，并给下游策略引入分布偏移。</p>
+    <p>做法：用“重建器产出的退化渲染 + 对应的干净目标图”构造配对数据，后训练一个蒸馏过的 OmniDreams 检查点。关键技巧——<strong>去噪过程不从随机高斯噪声开始，而是从退化渲染本身开始</strong>。模型由此学到一条流，将伪影污染的重建输出映射回干净图像流形，同时<strong>保持</strong>场景布局、相机视角与驾驶相关结构（Fig.7）。推理时它作为一个自回归<strong>修正模块</strong>叠加在预重建场景之上，依靠因果历史与 KV cache 维持时序一致——让重建式仿真器既保留其几何 grounding，又能享受生成式世界模型的视觉先验。</p>
+
+    <!-- ============ 10 实验 ============ -->
+    <span class="anchor" id="exp"></span>
+    <h2 class="sec"><span class="num">10</span>实验结果</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="exp-quality"></span>
+    <h3 class="sub">10.1 仿真质量</h3>
+    <p>OmniDreams 能生成直接影响 AV 决策的物理真实动态与交通线索：弱势道路使用者（VRU）的关节运动、雨刮器——这些对标准重建方法历来很难。同时保持关键语义与控制线索（红绿灯、车道线、交通标志、精确道路结构）。下表（在 RDS-HQ-1M 留出集 5000 段中采样 1000 段评测）对比 SV 的三个训练阶段：</p>
+    <table>
+      <caption>表 4 · OmniDreams-SV 各训练阶段对比（FVD 越低越好；检测 / 车道指标越高越好）</caption>
+      <thead><tr><th>训练阶段</th><th class="down">FVD</th><th class="down">Temporal Sampson</th><th class="up">LET-AP</th><th class="up">车道 F1</th><th class="up">类别准确率</th></tr></thead>
+      <tbody>
+        <tr><td>双向（AV 适配）</td><td>26.8</td><td class="best">1.83</td><td>0.378</td><td>0.823</td><td>0.957</td></tr>
+        <tr><td>因果（Diffusion Forcing）</td><td>31.7</td><td>1.87</td><td>0.221</td><td>0.775</td><td>0.941</td></tr>
+        <tr><td><strong>蒸馏（Self Forcing）</strong></td><td class="best">24.8</td><td>1.90</td><td class="best">0.400</td><td class="best">0.828</td><td class="best">0.961</td></tr>
+      </tbody>
+    </table>
+    <p>值得注意的是：<strong>蒸馏后的少步因果模型反而取得最佳 FVD（24.8）</strong>，且对条件信号的保真度最高，这得益于精心构造的高质量蒸馏数据集。表 5 还显示，为追求最快推理而换用 LightTAE 解码器会带来相应的质量折损（FVD 24.8 → 45.4）。</p>
+
+    <span class="anchor" id="exp-long"></span>
+    <h3 class="sub">10.2 长序列 rollout</h3>
+    <p>长时稳定依赖三项设计：因果自回归 + 流式 KV cache、带<strong>渐进长上下文教师</strong>的 Self Forcing 蒸馏、带<strong>注意力 sink token</strong>（首帧 token）的有界局部窗口。实践中即便运行数分钟（30 FPS）仍能维持不错的质量。表 6 量化了 20s rollout 的分段 FVD：</p>
+    <table>
+      <caption>表 6 · 20s rollout 分段 FVD（越低越好，Δ = 末窗 − 首窗）</caption>
+      <thead><tr><th>训练教师</th><th class="down">0–5s</th><th class="down">5–10s</th><th class="down">10–15s</th><th class="down">15–20s</th><th class="down">均值</th><th class="down">Δ</th></tr></thead>
+      <tbody>
+        <tr><td>短上下文教师</td><td>109.3</td><td>183.0</td><td>258.3</td><td>409.2</td><td>240.0</td><td>299.9</td></tr>
+        <tr><td><strong>渐进长上下文教师</strong></td><td class="best">95.5</td><td class="best">151.0</td><td class="best">202.5</td><td class="best">268.4</td><td class="best">179.4</td><td class="best">172.9</td></tr>
+      </tbody>
+    </table>
+
+    <span class="anchor" id="exp-longtail"></span>
+    <h3 class="sub">10.3 长尾覆盖与反事实变化</h3>
+    <ul>
+      <li><strong>可控场景编辑</strong>：通过修改文本提示（天气 / 光照 / 时段）、抽象世界场景图（车道几何 + 边界框）与首帧种子，<strong>单个</strong>训练好的检查点即可定向生成行人、雪天、夜晚 + 交通锥等变体（Fig.10），且<strong>未被编辑的属性</strong>（道路几何、远景）保持视觉稳定。</li>
+      <li><strong>分布外（OOD）物体建模</strong>：直接在首帧插入恐龙、长颈鹿等罕见物体，但它们在世界场景图中没有对应的 cuboid，导致信号冲突。对策——采用<strong>随机动态 cuboid dropout</strong> 后训练（训练时随机移除动态智能体的 cuboid，保留停放车辆等静态 cuboid），迫使模型从视觉历史 / 首帧 / 周边上下文<strong>推断</strong>物体的存在与运动。于是推理时插入的 OOD 物体能在生成视频中自然地传播运动（Fig.11）。</li>
+    </ul>
+
+    <span class="anchor" id="exp-loop"></span>
+    <h3 class="sub">10.4 闭环评测：OmniDreams 是真实世界的“忠实代理”吗？</h3>
+    <p>核心实验：在同一 AlpaSim 栈中<strong>仅替换传感器仿真器</strong>（NVIDIA NuRec vs OmniDreams），编排器、交通 / 物理服务、逐场景初始状态全部固定，于是 rollout 指标的差异就<strong>隔离出了传感器仿真器对策略行为的影响</strong>。使用 Physical AI AV NuRec 数据集的 501 场景子集，20s rollout、每 533ms 重规划，评测四个策略类（OmniDreams WAM、Alpamayo 1.5 的 4 / 2 / 1 摄像头变体）。</p>
+    <div class="callout c-idea">
+      <div class="h">✅ 关键结论 1：策略排名得以保持（Fig.13）</div>
+      在 NuRec 下策略的相对排名（WAM > Alpamayo 4cam > 2cam > 1cam），切换到 OmniDreams 下<strong>完全保持</strong>。
+      由于 NuRec 紧贴原始录制、是真实世界的强代理，这说明 <strong>OmniDreams 本身即为闭环策略评测的忠实代理</strong>——
+      开发者在 OmniDreams 中比较候选策略，会得出与对照真实日志数据相同的结论。
+    </div>
+    <div class="callout c-idea">
+      <div class="h">✅ 关键结论 2：轨迹偏离越大，OmniDreams 优势越明显（Fig.14）</div>
+      按“距原始录制轨迹的距离”分箱计算 FVD：随着新轨迹偏离真值，<strong>NuRec 的视觉质量迅速劣化</strong>（4m+ 时 FVD 升至 207），
+      而 <strong>OmniDreams 几乎保持恒定</strong>（约 125），二者出现 82.2 的 FVD 差距。这正是重建式渲染器最吃力之处：新视角、光流变化、遮挡边界移动都需要外推到采集范围之外；
+      OmniDreams 能利用学到的视频先验 + 世界场景条件，合成超出录制相机路径的合理观测。对动态物体的渲染也更自然（Fig.15）。
+    </div>
+    <p><strong>权衡</strong>：NuRec 只需标定首帧 + 抽象世界场景图（AV 数据管线即可产出），并暴露重建式无法原生提供的可控性 / 事故覆盖手段；但生成式仿真器<strong>原生所需算力远多于重建式</strong>——这是质量与算力之间的取舍。</p>
+
+    <span class="anchor" id="exp-related"></span>
+    <h3 class="sub">10.5 在相关工作中的定位</h3>
+    <p>论文将仿真器的“感知真实度”分为历史上的三档，并主张世界模型开辟了<strong>第 4 档</strong>：</p>
+    <div class="pipe">
+      <div class="pstep"><div class="k">第 1 档</div><div class="n">非视觉 / 抽象图形</div><div class="d">面向大规模 RL，如 Waymax、PufferDrive。</div></div>
+      <div class="pstep"><div class="k">第 2 档</div><div class="n">美术资产的物理 / 视觉真实</div><div class="d">如 CARLA、MetaDrive。</div></div>
+      <div class="pstep"><div class="k">第 3 档</div><div class="n">神经重建</div><div class="d">数据驱动 + 高视觉质量，如 DriveArena、HUGSIM、WorldEngine、AlpaSim。</div></div>
+      <div class="pstep" style="border-left-color:var(--green-d);background:var(--green-l)"><div class="k">第 4 档（本文）</div><div class="n">生成式世界模型</div><div class="d">OmniDreams：闭环可交互、流式 KV cache、少步蒸馏，将每块时延压入 100+ FPS。</div></div>
+    </div>
+
+    <!-- ============ 11 takeaway ============ -->
+    <span class="anchor" id="takeaway"></span>
+    <h2 class="sec"><span class="num">11</span>总结：贡献 · 局限 · 意义</h2>
+    <div class="sec-rule"></div>
+
+    <span class="anchor" id="cont-contrib"></span>
+    <h3 class="sub">11.1 主要贡献</h3>
+    <ol>
+      <li><strong>首个实时闭环生成式 AV 世界模型</strong>：从 Cosmos 中训练 / 后训练，结合自回归 + 流式 KV cache + 少步蒸馏，将每块时延压入 100+ FPS，并真正接入开源策略（Alpamayo 1）与仿真器（AlpaSim）。</li>
+      <li><strong>三路条件 + 轻量控制分支 + 注意力分解</strong>：实现可控、跨视角一致、最多 7 路环视的多视角实时生成。</li>
+      <li><strong>WAM 结果</strong>：同骨干微调成策略，2B 参数在闭环中超越 10B VLA——是首批证明“世界-动作模型在驾驶上可优于 VLA”的工作之一。</li>
+      <li><strong>忠实代理验证</strong>：闭环中策略排名在 NuRec 与 OmniDreams 间保持一致，且轨迹偏离越远生成式越稳定。</li>
+      <li><strong>开源系统 FlashDreams</strong>：通用的流式自回归视频 / 世界模型推理栈。</li>
+    </ol>
+
+    <span class="anchor" id="cont-limit"></span>
+    <h3 class="sub">11.2 局限与权衡</h3>
+    <ul>
+      <li><strong>算力开销大</strong>：生成式仿真器原生比重建式昂贵得多（这也是需要大量推理优化的原因）。</li>
+      <li><strong>仍受分块语义约束</strong>：当前每块内的智能体行为需提前固定；逐帧生成是未来方向。</li>
+      <li><strong>长序列 rollout 仍有漂移</strong>：靠渐进长上下文教师抑制，但 Δ 仍不为零。</li>
+    </ul>
+
+    <div class="callout c-note">
+      <div class="h">🎯 为什么重要</div>
+      它标志着 AV 仿真从“纯重建 / 回放”走向“<strong>生成式世界模型</strong>”：能造出标准仿真器难以重现的长尾边缘场景，
+      为严格评测乃至训练下一代 VLA 策略提供可扩展工具，在“仿真测试”与“安全实车部署”之间架起桥梁。
+      更深一层——同一个能“生成世界画面”的模型也能“输出驾驶动作”，预示着<strong>世界模型与策略统一</strong>的可能。
+    </div>
+
+    <!-- ============ glossary ============ -->
+    <span class="anchor" id="glossary"></span>
+    <h2 class="sec"><span class="num">📖</span>术语速查表</h2>
+    <div class="sec-rule"></div>
+    <div class="card glossary">
+      <dl>
+        <dt>闭环仿真 Closed-Loop</dt><dd>策略主动驾驶、动作改变环境、再接收新观测的循环；区别于回放录像的开环。</dd>
+        <dt>世界模型 World Model</dt><dd>学习世界状态如何随动作演化、并能据此生成未来观测的模型。</dd>
+        <dt>VLA / WAM</dt><dd>VLA = 视觉-语言-动作模型；WAM = 世界-动作模型，将视频输入映射到动作、<strong>无显式语言模态</strong>。</dd>
+        <dt>自回归扩散 / 因果掩码</dt><dd>每帧仅依赖过去帧与当前条件进行去噪生成，支持在线实时响应。</dd>
+        <dt>KV cache / 流式静态 KV cache</dt><dd>缓存注意力 Key / Value 以摊销跨步计算；后者形状固定，支持 CUDA Graph 与滚动驱逐。</dd>
+        <dt>Diffusion Forcing</dt><dd>每个 token 独立采样噪声级的训练范式，使一个模型既能做下一帧预测又能做整段去噪。</dd>
+        <dt>Self Forcing</dt><dd>训练时自我 rollout、每帧条件在自身上一帧的生成上，弥合训练-推理差距（治曝光偏差）。</dd>
+        <dt>DMD 分布匹配蒸馏</dt><dd>用真 / 伪 score 之差，在全序列视频级将生成分布推向真实分布，无需逐像素的配对监督。</dd>
+        <dt>注意力 sink token</dt><dd>KV cache 中保留的少量固定前缀（首帧 token），在局部窗口注意力下维持长程稳定。</dd>
+        <dt>抽象世界场景图</dt><dd>高精地图（车道线、路杆等）+ 动态物体 3D 立方体框组成的结构化条件，编码几何与未来轨迹。</dd>
+        <dt>FVD</dt><dd>Fréchet Video Distance，分布级视频质量指标，越低越好。</dd>
+        <dt>Cosmos / Cosmos-Predict 2.5</dt><dd>NVIDIA 视频基础模型平台，OmniDreams 的基座。</dd>
+        <dt>AlpaSim / Alpamayo / NuRec</dt><dd>分别是 NVIDIA 开源 AV 仿真编排器 / 开源 AV 策略栈 / 神经重建渲染器（被 OmniDreams 替换）。</dd>
+        <dt>SV / MV</dt><dd>单视角 / 多视角（4 路：前、左交叉、右交叉、前长焦；最多支持 7 路环视）。</dd>
+      </dl>
+    </div>
+
+    <footer>
+      <p><strong>来源</strong>：NVIDIA. <em style="background:none;color:inherit;padding:0">NVIDIA OmniDreams: Real-Time Generative World Model for Closed-Loop Autonomous Vehicle Simulation</em>. arXiv:2606.03159v1, 2026-06-03（39 页）。</p>
+      <div class="reslinks">
+        <a href="https://arxiv.org/pdf/2606.03159v1" target="_blank" rel="noopener">📄 arXiv PDF</a>
+        <a href="https://arxiv.org/abs/2606.03159" target="_blank" rel="noopener">📑 arXiv 摘要页</a>
+        <a href="https://research.nvidia.com/labs/sil/projects/omnidreams-blog/" target="_blank" rel="noopener">🌐 项目主页（NVIDIA SIL）</a>
+        <a href="https://github.com/nv-tlabs/omni-dreams" target="_blank" rel="noopener">💻 代码（GitHub）</a>
+        <a href="https://huggingface.co/nvidia/omni-dreams-models" target="_blank" rel="noopener">🤗 模型权重（HF）</a>
+        <a href="https://github.com/NVIDIA/flashdreams" target="_blank" rel="noopener">⚡ FlashDreams 推理栈</a>
+      </div>
+      <p style="margin-top:14px">本讲解文档由 Claude 基于论文全文（含图表）整理，为帮助理解的二次解读；具体数值、公式与结论以原论文为准。</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+  // 滚动高亮当前章节
+  (function(){
+    const links = Array.from(document.querySelectorAll('nav.toc a'));
+    const map = links.map(a=>{
+      const id = a.getAttribute('href').slice(1);
+      return {a, el: document.getElementById(id)};
+    }).filter(x=>x.el);
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          const id = e.target.id;
+          links.forEach(l=>l.classList.toggle('active', l.getAttribute('href')==='#'+id));
+        }
+      });
+    }, {rootMargin:'-15% 0px -75% 0px', threshold:0});
+    map.forEach(x=>obs.observe(x.el));
+  })();
+</script>
+</body>
+</html>
