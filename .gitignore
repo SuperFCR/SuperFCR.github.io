@@ -4,8 +4,6 @@ __pycache__/
 *$py.class
 assets/.DS_Store
 .DS_Store
-# store custom attributes of a folder
-.DS_Store
 
 
 # C extensions
@@ -16,7 +14,7 @@ assets/.DS_Store
 build/
 develop-eggs/
 dist/
-ownloads/
+downloads/
 eggs/
 .eggs/
 lib/
@@ -157,7 +155,7 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-./config/data_backup.json
+/config/data_backup.json
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

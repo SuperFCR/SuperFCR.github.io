@@ -185,11 +185,14 @@
             border-radius: 12px;
             background: #fcfdff;
             overflow: hidden;
-            transition: all 0.25s ease;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
         }
 
-        .project-group:hover {
+        .project-group:hover,
+        .project-group.is-pinned {
             border-color: #cbd5e1;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(32, 84, 136, 0.08);
         }
 
         .project-group summary {
@@ -239,6 +242,41 @@
             display: block;
             padding-right: 28px;
             letter-spacing: 0.1px;
+        }
+
+        .project-state {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+            padding: 2px 7px;
+            border: 1px solid #dbe3ef;
+            border-radius: 999px;
+            color: #64748b;
+            background: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+
+        .project-group:not([open]) .project-state::before {
+            content: 'Show';
+        }
+
+        .project-group[open]:not(.is-pinned) .project-state::before {
+            content: 'Preview';
+        }
+
+        .project-group.is-pinned .project-state {
+            color: #fff;
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .project-group.is-pinned .project-state::before {
+            content: 'Pinned';
         }
 
         .project-preview-inline {
@@ -300,7 +338,8 @@
         .paper-img {
             width: 220px;
             height: 135px;
-            object-fit: cover;
+            object-fit: contain;
+            background: #fff;
             border-radius: 6px;
             border: 1px solid #f0f0f0;
             flex-shrink: 0;
@@ -481,7 +520,7 @@
                     <a href="mailto:{{personal.email}}" class="social-btn">
                         <img src="./assets/imgs/envelope.png" alt="Email"> Email
                     </a>
-                    <a href="{{personal.googleScholar}}" target="_blank" class="social-btn">
+                    <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-btn">
                         <img src="./assets/imgs/google.png" alt="Scholar">
                         Scholar
                         {{#if personal.citations}}
@@ -490,7 +529,7 @@
                             </span>
                         {{/if}}
                     </a>
-                    <a href="{{personal.github}}" target="_blank" class="social-btn">
+                    <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-btn">
                         <img src="./assets/imgs/github.png" alt="Github"> Github
                     </a>
                 </div>
@@ -547,9 +586,9 @@
         </div>
 
         <!-- T2I Model -->
-        <details class="project-group" open>
+        <details class="project-group">
             <summary>
-                <span class="summary-title">♠ T2I Model & R1-like Reasoning</span>
+                <span class="summary-title">♠ T2I Model & R1-like Reasoning <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     {{#each projects.t2i_model}}
                     <span class="preview-item">{{{title}}}</span>
@@ -567,7 +606,7 @@
                         <div class="tag-row">
                             <span class="badge badge-venue">{{venue}}</span>
                             {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank">
+                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 {{type}}
                                 {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
                             </a>
@@ -583,7 +622,7 @@
         <!-- 3D Reconstruction -->
         <details class="project-group">
             <summary>
-                <span class="summary-title">♠ 3D Reconstruction & Generative Model</span>
+                <span class="summary-title">♠ 3D Reconstruction & Generative Model <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     {{#each projects.3d_reconstruction}}
                     <span class="preview-item">{{{title}}}</span>
@@ -601,7 +640,7 @@
                         <div class="tag-row">
                             <span class="badge badge-venue">{{venue}}</span>
                             {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank">
+                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 {{type}}
                                 {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
                             </a>
@@ -617,7 +656,7 @@
         <!-- Neuromorphic Vision -->
         <details class="project-group">
             <summary>
-                <span class="summary-title">♠ Neuromorphic Vision</span>
+                <span class="summary-title">♠ Neuromorphic Vision <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     {{#each projects.neuromorphic_vision}}
                     <span class="preview-item">{{{title}}}</span>
@@ -634,7 +673,7 @@
                         <div class="tag-row">
                             <span class="badge badge-venue">{{venue}}</span>
                             {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank">
+                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 {{type}}
                                 {{#if stars}}
                                     <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
@@ -668,7 +707,7 @@
                     <p class="experience-title">{{title}}, {{organization}}</p>
                     <div class="experience-period">{{period}}</div>
                     {{#if host}}
-                    <div class="experience-host">Host by {{{host}}}</div>
+                    <div class="experience-host">Hosted by {{{host}}}</div>
                     {{/if}}
                 </div>
             </div>
@@ -707,7 +746,7 @@
     <!-- Footer Map -->
     <div style="margin-top: 30px; text-align: center; opacity: 0.6; filter: grayscale(100%); transition: 0.3s;">
         <a href="https://clustrmaps.com/site/1c5bo" title="Visit tracker">
-            <img style="width: 150px;" src="//www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff" />
+            <img style="width: 150px;" src="https://www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff" alt="Visitor map" />
         </a>
     </div>
     <style>div[style*="filter"]:hover { filter: grayscale(0%); opacity: 1; }</style>
@@ -717,13 +756,70 @@
             &copy; 2025 <strong>{{personal.name}}</strong>. All rights reserved.
         </div>
         <div style="margin-top: 8px; font-size: 0.85rem;">
-            Generated by <a href="https://github.com/SuperFCR" target="_blank" class="footer-link">SuperFCR</a>
+            Generated by <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="footer-link">SuperFCR</a>
             <span style="margin: 0 6px; color: #ddd;">|</span>
             Assisted by <span class="ai-text">Gemini 3</span>
         </div>
-    </footer>
+</footer>
 
 </div>
+
+<script>
+(() => {
+    const groups = Array.from(document.querySelectorAll('.project-group'));
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const enterDelay = 180;
+    const leaveDelay = 450;
+
+    groups.forEach((group) => {
+        const summary = group.querySelector('summary');
+        let enterTimer = null;
+        let leaveTimer = null;
+        let pinned = false;
+        let hovering = false;
+
+        const setExpanded = (expanded) => {
+            group.open = expanded;
+            summary.setAttribute('aria-expanded', String(expanded));
+        };
+
+        const clearTimers = () => {
+            window.clearTimeout(enterTimer);
+            window.clearTimeout(leaveTimer);
+        };
+
+        const setPinned = (value) => {
+            pinned = value;
+            group.classList.toggle('is-pinned', pinned);
+            setExpanded(pinned || hovering);
+        };
+
+        summary.setAttribute('aria-expanded', String(group.open));
+
+        summary.addEventListener('click', (event) => {
+            event.preventDefault();
+            clearTimers();
+            setPinned(!pinned);
+        });
+
+        if (!canHover) return;
+
+        group.addEventListener('mouseenter', () => {
+            hovering = true;
+            window.clearTimeout(leaveTimer);
+            enterTimer = window.setTimeout(() => setExpanded(true), enterDelay);
+        });
+
+        group.addEventListener('mouseleave', () => {
+            hovering = false;
+            window.clearTimeout(enterTimer);
+            leaveTimer = window.setTimeout(() => {
+                if (!pinned) setExpanded(false);
+            }, leaveDelay);
+        });
+    });
+})();
+</script>
 
 </body>
 </html>

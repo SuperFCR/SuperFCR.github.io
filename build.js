@@ -24,7 +24,7 @@ if (fs.existsSync(githubPath)) {
             data.projects[category].forEach(project => {
                 if (project.links) {
                     project.links.forEach(link => {
-                        if (starsMap[link.url]) {
+                        if (Object.prototype.hasOwnProperty.call(starsMap, link.url)) {
                             link.stars = starsMap[link.url]; 
                         }
                     });

@@ -7,19 +7,20 @@
 <title>Blogs · Chaoran Feng</title>
 <style>
   :root{
-    --paper:#fbfaf7;
-    --wash:#f3efe7;
+    --paper:#fbfbfa;
+    --wash:#f2f4f7;
     --panel:#ffffff;
-    --ink:#25211d;
-    --ink-soft:#514940;
-    --muted:#77706a;
-    --line:#ded7cc;
-    --clay:#c65f3f;
-    --clay-d:#8d3f2c;
-    --olive:#626f47;
-    --blue:#385f71;
-    --violet:#66558e;
-    --shadow:0 18px 50px rgba(66,53,39,.10),0 1px 0 rgba(255,255,255,.75) inset;
+    --ink:#1f2933;
+    --ink-soft:#4b5563;
+    --muted:#7b8190;
+    --line:#d8dee8;
+    --rule:#b8c1cf;
+    --clay:#9a4a35;
+    --clay-d:#783523;
+    --olive:#516642;
+    --blue:#28536b;
+    --violet:#554c7f;
+    --shadow:0 12px 36px rgba(31,41,51,.08),0 1px 0 rgba(255,255,255,.8) inset;
     --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
     --serif:Georgia,"Times New Roman","Songti SC",serif;
   }
@@ -29,8 +30,9 @@
     margin:0;
     color:var(--ink);
     background:
-      radial-gradient(circle at top left,rgba(198,95,63,.13),transparent 34rem),
-      linear-gradient(180deg,var(--paper) 0%,#f7f5ef 42%,#efeee8 100%);
+      linear-gradient(90deg,rgba(216,222,232,.55) 1px,transparent 1px),
+      linear-gradient(180deg,var(--paper) 0%,#f7f8fa 46%,#eef1f5 100%);
+    background-size:64px 64px,auto;
     font-family:var(--sans);
     -webkit-font-smoothing:antialiased;
   }
@@ -39,8 +41,8 @@
     position:sticky;
     top:0;
     z-index:10;
-    border-bottom:1px solid rgba(91,75,55,.16);
-    background:rgba(251,250,247,.78);
+    border-bottom:1px solid rgba(31,41,51,.12);
+    background:rgba(251,251,250,.86);
     backdrop-filter:blur(18px) saturate(1.25);
   }
   .nav-inner{
@@ -86,9 +88,9 @@
     align-items:center;
     gap:4px;
     padding:5px;
-    border:1px solid rgba(91,75,55,.14);
-    border-radius:8px;
-    background:rgba(255,255,255,.45);
+    border:1px solid rgba(31,41,51,.12);
+    border-radius:6px;
+    background:rgba(255,255,255,.62);
   }
   .nav-links a{
     display:inline-flex;
@@ -114,46 +116,55 @@
   .page{
     max-width:1120px;
     margin:0 auto;
-    padding:58px 24px 82px;
+    padding:54px 24px 82px;
   }
   .intro{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 284px;
-    gap:36px;
-    align-items:end;
-    padding:22px 0 34px;
+    grid-template-columns:minmax(0,1fr) 320px;
+    gap:34px;
+    align-items:start;
+    padding:22px 0 28px;
   }
   .eyebrow{
-    color:var(--clay-d);
-    font-size:13px;
+    color:var(--blue);
+    font-size:12px;
     font-weight:700;
     letter-spacing:.08em;
     text-transform:uppercase;
-    margin:0 0 16px;
+    margin:0 0 14px;
   }
   h1{
     margin:0;
-    max-width:780px;
+    max-width:760px;
     font-family:var(--serif);
-    font-size:clamp(42px,8vw,88px);
-    line-height:.93;
+    font-size:clamp(38px,6.2vw,70px);
+    line-height:1.02;
     font-weight:500;
     letter-spacing:0;
   }
   .lead{
-    max-width:680px;
-    margin:24px 0 0;
+    max-width:720px;
+    margin:22px 0 0;
     color:var(--ink-soft);
     font-family:var(--serif);
-    font-size:clamp(18px,2.2vw,23px);
-    line-height:1.55;
+    font-size:clamp(17px,2vw,21px);
+    line-height:1.65;
+  }
+  .subline{
+    max-width:720px;
+    margin:18px 0 0;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.75;
+    border-left:3px solid var(--rule);
+    padding-left:14px;
   }
   .note{
-    border:1px solid rgba(91,75,55,.16);
-    border-radius:8px;
-    padding:18px 18px 17px;
-    background:rgba(255,255,255,.46);
-    box-shadow:0 10px 30px rgba(66,53,39,.07);
+    border:1px solid rgba(31,41,51,.14);
+    border-radius:6px;
+    padding:18px;
+    background:rgba(255,255,255,.76);
+    box-shadow:0 10px 30px rgba(31,41,51,.06);
   }
   .note .k{
     margin:0 0 8px;
@@ -169,14 +180,29 @@
     font-size:14px;
     line-height:1.65;
   }
+  .archive-stats{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid rgba(31,41,51,.1);
+  }
+  .stat{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .stat strong{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink)}
+  .stat span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
   .section-head{
     display:flex;
     justify-content:space-between;
     align-items:end;
     gap:16px;
-    margin:24px 0 18px;
+    margin:20px 0 18px;
     padding-top:20px;
-    border-top:1px solid rgba(91,75,55,.16);
+    border-top:1px solid rgba(31,41,51,.16);
   }
   .section-head h2{
     margin:0;
@@ -195,24 +221,24 @@
     gap:16px;
   }
   .post-card{
-    min-height:312px;
+    min-height:286px;
     display:flex;
     flex-direction:column;
-    border:1px solid rgba(91,75,55,.16);
-    border-radius:8px;
-    background:rgba(255,255,255,.72);
+    border:1px solid rgba(31,41,51,.13);
+    border-radius:6px;
+    background:rgba(255,255,255,.82);
     box-shadow:var(--shadow);
     overflow:hidden;
     transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease,background .22s ease;
   }
   .post-card:hover{
     transform:translateY(-4px);
-    border-color:rgba(141,63,44,.36);
+    border-color:rgba(40,83,107,.32);
     background:#fff;
     box-shadow:0 24px 64px rgba(66,53,39,.14);
   }
   .post-top{
-    height:8px;
+    height:5px;
     background:var(--accent);
   }
   .post-body{
@@ -231,10 +257,10 @@
     min-height:25px;
     display:inline-flex;
     align-items:center;
-    border:1px solid rgba(91,75,55,.16);
-    border-radius:7px;
+    border:1px solid rgba(31,41,51,.13);
+    border-radius:5px;
     padding:0 8px;
-    background:#fbfaf7;
+    background:#f8fafc;
     color:var(--muted);
     font-size:12px;
     font-weight:700;
@@ -244,8 +270,8 @@
     margin:0;
     color:var(--ink);
     font-family:var(--serif);
-    font-size:25px;
-    line-height:1.14;
+    font-size:23px;
+    line-height:1.18;
     font-weight:600;
     letter-spacing:0;
   }
@@ -257,7 +283,7 @@
   }
   .post-action{
     margin-top:auto;
-    padding-top:26px;
+    padding-top:24px;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -272,24 +298,25 @@
     border-radius:8px;
     display:grid;
     place-items:center;
-    border:1px solid rgba(91,75,55,.16);
-    background:#fbfaf7;
+    border:1px solid rgba(31,41,51,.14);
+    background:#f8fafc;
     transition:transform .2s ease,background .2s ease;
   }
-  .post-card:hover .arrow{transform:translateX(3px);background:#f3efe7}
+  .post-card:hover .arrow{transform:translateX(3px);background:#eef3f8}
   .world{--accent:var(--violet)}
   .omni{--accent:var(--olive)}
   .jepa{--accent:var(--blue)}
   footer{
     margin-top:44px;
     padding-top:20px;
-    border-top:1px solid rgba(91,75,55,.16);
+    border-top:1px solid rgba(31,41,51,.16);
     color:var(--muted);
     font-size:13px;
   }
   @media(max-width:900px){
     .intro{grid-template-columns:1fr;gap:22px}
-    .note{max-width:520px}
+    .note{max-width:620px}
+    .archive-stats{max-width:420px}
     .posts{grid-template-columns:1fr}
     .post-card{min-height:0}
   }
@@ -302,6 +329,7 @@
     .intro{padding-top:14px}
     .lead{font-size:18px}
     .section-head{align-items:flex-start;flex-direction:column}
+    .archive-stats{grid-template-columns:1fr}
     .post-body{padding:20px 18px 18px}
     .post-title{font-size:23px}
   }
@@ -314,11 +342,11 @@
         <span class="brand-mark"><img src="../assets/imgs/favicon.png" alt=""></span>
         <span class="brand-text">
           <strong>Chaoran Feng</strong>
-          <span>research notes</span>
+          <span>paper reading archive</span>
         </span>
       </a>
       <div class="nav-links">
-        <a href="#latest">Latest</a>
+        <a href="#latest">Archive</a>
         <a href="#world-models">World Models</a>
         <a href="#representation">Representation</a>
       </div>
@@ -328,20 +356,26 @@
   <main class="page">
     <header class="intro">
       <div>
-        <p class="eyebrow">Blogs</p>
-        <h1>Reading notes for generative worlds.</h1>
-        <p class="lead">一些论文、系统和世界模型方向的中文长文整理。这个入口保持独立，不从主页导航露出，适合直接访问和分享。</p>
+        <p class="eyebrow">Research Notes / Reading Archive</p>
+        <h1>Notes on generative models, world simulators, and representation learning.</h1>
+        <p class="lead">这里整理一些论文阅读、系统拆解和个人研究笔记，主要关注生成式世界模型、视频生成、3D/4D 表征与视觉基础模型。</p>
+        <p class="subline">The notes are written as long-form technical summaries: less news feed, more annotated bibliography, implementation context, and research questions worth revisiting.</p>
       </div>
       <aside class="note" aria-label="Archive note">
-        <p class="k">Direct URL</p>
-        <p>访问 <strong>/blogs/</strong> 即进入这个栏目；每篇文章仍保持自己的独立页面与侧边目录。</p>
+        <p class="k">Archive Scope</p>
+        <p>独立入口：<strong>/blogs/</strong>。每篇文章保留独立页面、侧边目录和参考链接，适合直接分享给组会或 paper reading 讨论。</p>
+        <div class="archive-stats" aria-label="Archive statistics">
+          <span class="stat"><strong>3</strong><span>notes</span></span>
+          <span class="stat"><strong>3</strong><span>topics</span></span>
+          <span class="stat"><strong>CN</strong><span>long-form</span></span>
+        </div>
       </aside>
     </header>
 
     <section id="latest" aria-labelledby="latest-title">
       <div class="section-head">
-        <h2 id="latest-title">Latest Articles</h2>
-        <div class="count">3 posts</div>
+        <h2 id="latest-title">Annotated Reading Notes</h2>
+        <div class="count">3 entries · updated occasionally</div>
       </div>
 
       <div class="posts">
@@ -356,7 +390,7 @@
             <h3 class="post-title">OmniDreams：用于自动驾驶闭环仿真的实时生成式世界模型</h3>
             <p class="post-desc">拆解 NVIDIA OmniDreams 的闭环仿真范式、条件输入、实时推理优化，以及它在自动驾驶评测中的位置。</p>
             <div class="post-action">
-              <span>Read article</span>
+              <span>Open note</span>
               <span class="arrow" aria-hidden="true">→</span>
             </div>
           </article>
@@ -373,7 +407,7 @@
             <h3 class="post-title">World-R1：用强化学习把 3D 约束逼进文生视频模型</h3>
             <p class="post-desc">围绕 3D consistency、相机控制和 Flow-GRPO，解释 World-R1 如何让视频生成模型更遵守空间约束。</p>
             <div class="post-action">
-              <span>Read article</span>
+              <span>Open note</span>
               <span class="arrow" aria-hidden="true">→</span>
             </div>
           </article>
@@ -390,7 +424,7 @@
             <h3 class="post-title">从 I-JEPA 到 V-JEPA 2.1：预测式视觉表征学习的四步演进</h3>
             <p class="post-desc">把 I-JEPA、V-JEPA、V-JEPA 2 和 V-JEPA 2.1 放在一条线上，梳理隐空间预测、世界模型和稠密特征的演化。</p>
             <div class="post-action">
-              <span>Read article</span>
+              <span>Open note</span>
               <span class="arrow" aria-hidden="true">→</span>
             </div>
           </article>
@@ -399,7 +433,7 @@
     </section>
 
     <footer>
-      <span>Chaoran Feng · Research Blog Archive</span>
+      <span>Chaoran Feng · Research Notes Archive</span>
     </footer>
   </main>
 </body>
