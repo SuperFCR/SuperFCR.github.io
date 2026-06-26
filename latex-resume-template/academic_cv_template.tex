@@ -1,0 +1,286 @@
+%% Academic CV Template
+%% Inspired by academic homepage layouts
+%% Author: Template based on SuperFCR.github.io design
+%% Date: 2024
+
+\documentclass[11pt, a4paper]{article}
+
+% Required packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{mathptmx} % Times-like font (serif)
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+
+% Page setup
+\geometry{
+    left=1in,
+    right=1in,
+    top=1in,
+    bottom=1in,
+    marginparwidth=0pt,
+    marginparsep=0pt
+}
+
+% Color definitions (matching the web design)
+\definecolor{darkblue}{RGB}{38,48,84}      % #263054 for headings
+\definecolor{linkblue}{RGB}{16,66,159}     % #10429f for links
+\definecolor{lightgray}{RGB}{119,119,119}  % #777 for secondary text
+\definecolor{backgroundgray}{RGB}{253,253,253} % #fdfdfd for backgrounds
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue,
+    filecolor=linkblue,
+    pdfborder={0 0 0}
+}
+
+% Custom commands for consistent styling
+\newcommand{\sectioncolor}[1]{\textcolor{darkblue}{#1}}
+\newcommand{\linkcolor}[1]{\textcolor{linkblue}{#1}}
+\newcommand{\secondarycolor}[1]{\textcolor{lightgray}{#1}}
+
+% Section title formatting
+\titleformat{\section}[hang]
+{\Large\bfseries\sectioncolor}
+{}{0pt}
+{}
+[\titlerule]
+
+\titleformat{\subsection}[hang]
+{\large\bfseries\sectioncolor}
+{}{0pt}
+{}
+
+% Custom section command with bottom border
+\newcommand{\cvsection}[1]{
+    \vspace{10pt}
+    {\Large\bfseries\sectioncolor{#1}}
+    \vspace{2pt}
+    \hrule height 1pt
+    \vspace{8pt}
+}
+
+% Custom commands for contact icons
+\newcommand{\emailicon}{\faEnvelope}
+\newcommand{\scholaricon}{\faGraduationCap}
+\newcommand{\githubicon}{\faGithub}
+\newcommand{\linkedinicon}{\faLinkedin}
+\newcommand{\phoneicon}{\faPhone}
+\newcommand{\locationicon}{\faMapMarker}
+
+% Custom environment for publication entries
+\newenvironment{pubentry}[4]{
+    \vspace{8pt}
+    \begin{tabular}{@{}p{0.75\textwidth}@{}}
+    \textbf{#1} \\
+    \secondarycolor{#2} \\
+    #3 \\
+    \textit{#4}
+    \end{tabular}
+    \vspace{6pt}
+}{}
+
+% Custom environment for project entries
+\newenvironment{projectentry}[3]{
+    \vspace{10pt}
+    \textbf{#1} \\
+    \secondarycolor{#2} \\
+    #3
+    \vspace{6pt}
+}{}
+
+% Remove page numbering
+\pagestyle{empty}
+
+% Document begins
+\begin{document}
+
+% Header section with name and contact info
+\begin{center}
+    % Name
+    {\Huge\bfseries\sectioncolor{Your Full Name}}
+    
+    \vspace{8pt}
+    
+    % Title/Position
+    {\large\sectioncolor{\faGraduationCap\ Your Academic Title/Position}}
+    
+    \vspace{10pt}
+    
+    % Institution and Location
+    {\href{https://your-institution.edu}{Your Department/School} \\
+    Your University \\
+    Your City, Country}
+    
+    \vspace{12pt}
+    
+    % Contact Information
+    \begin{tabular}{c c c}
+        \emailicon\ \href{mailto:your.email@domain.com}{your.email@domain.com} &
+        \scholaricon\ \href{https://scholar.google.com/citations?user=YOUR_ID}{Google Scholar} &
+        \githubicon\ \href{https://github.com/yourusername}{GitHub}
+    \end{tabular}
+\end{center}
+
+\vspace{20pt}
+
+% Main content area
+\begin{minipage}[t]{0.7\textwidth}
+
+% Education Section
+\cvsection{Education}
+
+\begin{itemize}[leftmargin=0pt, itemsep=6pt]
+    \item \textbf{[2024-Now]} \faSmile\ I'm pursuing my [Degree] in [Field], [University], supervised by \href{https://advisor-website.com}{Prof. [Advisor Name]} and \href{https://co-advisor-website.com}{Prof. [Co-Advisor Name]}.
+    
+    \item \textbf{[2020-2024]} \faParty\ I received my [Previous Degree] from \href{https://university-website.edu}{[Previous University]}, awarded the Outstanding Graduate (Top X\%), ranking \textbf{1\textsuperscript{st}}/X for [duration].
+\end{itemize}
+
+% Biography Section
+\cvsection{Biography}
+
+I am a [current position] in [department] at [institution], holding a [previous degree] from [previous institution]. During my [previous studies], I achieved a GPA of X.X/4.0, ranking \textbf{1\textsuperscript{st}}/X in both major and overall scores.
+
+\vspace{8pt}
+
+\faMapPin\ My research interests focus on \textit{[Research Area 1]}, \textit{[Research Area 2]}, and \textit{[Research Area 3]}.
+
+% News Section
+\cvsection{News}
+
+\begin{itemize}[leftmargin=0pt, itemsep=4pt]
+    \item \textbf{[2024-12]} Two papers are accepted by \textit{Conference 2024}.
+    
+    \item \textbf{[2024-10]} \faFire\ We release \href{https://arxiv.org/pdf/example}{``Project Name''}, a novel approach for [brief description].
+    
+    \item \textbf{[2024-08]} A paper is accepted by \textit{Conference/Journal 2024}.
+    
+    \item \textbf{[2024-06]} \faFire\ We release \href{https://arxiv.org/pdf/example}{``Another Project''}, [brief description of the work].
+    
+    \item \textbf{[2024-03]} Presented our work at [Conference/Workshop Name].
+\end{itemize}
+
+% Selected Projects Section
+\cvsection{Selected Projects}
+
+\textbf{* Equal Contribution \quad \# Project Lead}
+
+\vspace{8pt}
+
+{\color{darkblue}\textbf{\faSpade\ [Research Category 1]}}
+
+\begin{itemize}[leftmargin=0pt, itemsep=8pt]
+    \item \begin{projectentry}
+        {\faFire\ [Project Title 1]: [Subtitle]}
+        {[Author List with formatting]}
+        {[Brief project description and key contributions.]}
+        \end{projectentry}
+        \textit{[Venue/Conference]} | \href{https://paper-link.com}{Paper} | \href{https://github.com/username/repo}{Code}
+        
+    \item \begin{projectentry}
+        {\faRocket\ [Project Title 2]: [Subtitle]}
+        {[Author List]}
+        {[Project description and impact.]}
+        \end{projectentry}
+        \textit{[Venue]} | \href{https://paper-link.com}{Paper} | \href{https://github.com/username/repo}{Code \faStar 100+}
+\end{itemize}
+
+\vspace{10pt}
+
+{\color{darkblue}\textbf{\faSpade\ [Research Category 2]}}
+
+\begin{itemize}[leftmargin=0pt, itemsep=8pt]
+    \item \begin{projectentry}
+        {\faBolt\ [Project Title 3]: [Subtitle]}
+        {[Author List]}
+        {[Description of the third project.]}
+        \end{projectentry}
+        \textit{[Conference/Journal]} | \href{https://paper-link.com}{Paper} | \href{https://project-website.com}{Website}
+        
+    \item \begin{projectentry}
+        {\faUser\ [Project Title 4]: [Subtitle]}
+        {[Author List]}
+        {[Description focusing on key innovations and results.]}
+        \end{projectentry}
+        \textit{Under Review} | \href{https://paper-link.com}{Paper}
+\end{itemize}
+
+\end{minipage}%
+\hfill%
+\begin{minipage}[t]{0.25\textwidth}
+
+% Profile Photo Placeholder
+\vspace{-60pt} % Adjust to align with name
+\begin{center}
+    \fbox{\begin{minipage}{3cm}
+        \centering
+        \vspace{1.5cm}
+        \textcolor{lightgray}{Photo}
+        \vspace{1.5cm}
+    \end{minipage}}
+\end{center}
+
+\vspace{20pt}
+
+% Awards Section (in sidebar)
+\cvsection{Awards}
+
+\begin{itemize}[leftmargin=0pt, itemsep=4pt, label={}]
+    \item \textbf{[2024]} \faGraduationCap\ Outstanding Graduate Award
+    
+    \item \textbf{[2023]} \faTrophy\ 1\textsuperscript{st} Prize in [Competition Name]
+    
+    \item \textbf{[2022]} \faStar\ [Scholarship Name], highest honor
+    
+    \item \textbf{[2021-2023]} \faStar\ National Scholarship (3 times)
+    
+    \item \textbf{[2021-2023]} \faStar\ Academic Excellence (1\textsuperscript{st}/X)
+\end{itemize}
+
+\vspace{15pt}
+
+% Professional Activities
+\cvsection{Professional Activities}
+
+\textbf{Conference Reviewer:}
+\begin{itemize}[leftmargin=10pt, itemsep=2pt, label={\tiny\faCircle}]
+    \item ICLR [25]
+    \item CVPR [25] 
+    \item ICCV [25]
+    \item NeurIPS [24-25]
+    \item AAAI [25-26]
+\end{itemize}
+
+\vspace{8pt}
+
+\textbf{Journal Reviewer:}
+\begin{itemize}[leftmargin=10pt, itemsep=2pt, label={\tiny\faCircle}]
+    \item IEEE TPAMI
+    \item IEEE TCSVT
+    \item Computer Vision and Image Understanding
+\end{itemize}
+
+\end{minipage}
+
+\vspace{20pt}
+
+% Footer
+\begin{center}
+    \secondarycolor{\small Last updated: \today}
+\end{center}
+
+\end{document}
