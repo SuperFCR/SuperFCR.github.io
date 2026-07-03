@@ -222,7 +222,7 @@
       }
     ]
   },
-  "experiences": [
+  "_experiences_disabled": [
     {
       "title": "Research Intern",
       "organization": "Horizon Robotics",
@@ -239,6 +239,7 @@
     }
 
   ],
+  "experiences": [],
   "awards": [
     {
       "date": "[2025-09]",
