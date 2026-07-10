@@ -139,7 +139,15 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(32, 84, 136, 0.15);
         }
-        .social-btn img { width: 16px; opacity: 0.8; }
+        .social-btn img { width: 16px; height: 16px; opacity: 0.8; flex: 0 0 auto; }
+
+        .social-citation {
+            margin-left: 2px;
+            font-weight: 700;
+            color: var(--primary);
+            opacity: 0.92;
+            white-space: nowrap;
+        }
 
 
         .bio-text-box {
@@ -492,6 +500,24 @@
             .container { padding: 30px 20px; margin: 10px; }
             .header-top { flex-direction: column-reverse; align-items: flex-start; gap: 20px;}
             .avatar { width: 100%; max-width: 100%; height: auto; margin-bottom: 20px; }
+            .social-links {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                width: 100%;
+            }
+            .social-btn {
+                justify-content: center;
+                min-width: 0;
+                padding: 7px 8px;
+                gap: 4px;
+                font-size: 0.78rem;
+                white-space: nowrap;
+            }
+            .social-citation {
+                margin-left: 0;
+                font-size: 0.74rem;
+            }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
             .experience-grid { grid-template-columns: 1fr; }
@@ -545,17 +571,17 @@
                 
                 <div class="social-links">
                     <a href="mailto:fcr1500583403@gmail.com" class="social-btn">
-                        <img src="./assets/imgs/envelope.png" alt="Email"> Email
+                        <img src="./assets/imgs/envelope.png" alt="" aria-hidden="true"> Email
                     </a>
                     <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-btn">
-                        <img src="./assets/imgs/google.png" alt="Scholar">
+                        <img src="./assets/imgs/google.png" alt="" aria-hidden="true">
                         Scholar
-                            <span style="margin-left: 4px; font-weight: 600; color: var(--primary); opacity: 0.9;">
+                            <span class="social-citation">
                                 ⭐️712
                             </span>
                     </a>
                     <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn">
-                        <img src="./assets/imgs/github.png" alt="Github"> Github
+                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> Github
                     </a>
                 </div>
             </div>
@@ -596,6 +622,13 @@
     <section>
         <h2>📰 News</h2>
         <ul class="news-list">
+            <li class="news-item">
+                <span class="news-date">[2026-07]</span>
+                <span>
+                    🔥 
+                    We release <a href="https://arxiv.org/abs/2607.07675">"LingBot-Video"</a>, a large-scale MoE video foundation model for embodied intelligence with post-training reward and RL alignment.
+                </span>
+            </li>
             <li class="news-item">
                 <span class="news-date">[2026-02]</span>
                 <span>

@@ -26,6 +26,11 @@
   "biography": "I am a second-year M.S. student in ECE at Peking University and my research interests focus on <i>3D Vision</i>, <i>Neuromorphic Vision</i>, and <i>Generative Models</i>. Due to policies at Pengcheng Lab, some of my code and data are protected and cannot be shared publicly. However, if you'd like to compare with our proposed methods, feel free to reach out to me via email for further discussion.<br><br>🎓 I am currently applying for Fall 2027 Ph.D. positions. I warmly welcome potential advisors and collaborators to contact me.",
   "news": [
     {
+      "date": "[2026-07]",
+      "emoji": "🔥",
+      "content": "We release <a href=\"https://arxiv.org/abs/2607.07675\">\"LingBot-Video\"</a>, a large-scale MoE video foundation model for embodied intelligence with post-training reward and RL alignment."
+    },
+    {
       "date": "[2026-02]",
       "content": "Two papers are accepted by <i>CVPR 2026</i>, Style-GRPO and SpatialT2I."
     },
