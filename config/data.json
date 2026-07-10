@@ -77,7 +77,7 @@
         "authors": "Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng",
         "description": "A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.",
         "venue": "Technical Report",
-        "image": "./assets/pipelines/Pipeline_lingbot_video.svg",
+        "image": "./assets/pipelines/Pipeline_lingbot_video.webp",
         "links": [
           {"type": "Paper", "url": "https://arxiv.org/abs/2607.07675"},
           {"type": "Project Page", "url": "https://technology.robbyant.com/lingbot-video"},
