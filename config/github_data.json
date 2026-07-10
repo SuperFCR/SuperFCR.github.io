@@ -1,10 +1,11 @@
 {
-  "https://github.com/DAGroup-PKU/SpatialT2I": 84,
+  "https://github.com/PKU-YuanGroup/DeblurNVS": 15,
   "https://github.com/PKU-YuanGroup/EvaGaussians": 60,
-  "https://github.com/PKU-YuanGroup/GS2E": 20,
-  "https://github.com/PKU-YuanGroup/NeuralGS": 182,
+  "https://github.com/PotatoBigRoom/CoherentGS": 98,
+  "https://github.com/PKU-YuanGroup/NeuralGS": 183,
+  "https://github.com/PKU-YuanGroup/WISE": 210,
+  "https://github.com/Robbyant/lingbot-video": 629,
   "https://github.com/PKU-YuanGroup/Cycle3D": 219,
-  "https://github.com/PKU-YuanGroup/WISE": 205,
-  "https://github.com/PotatoBigRoom/CoherentGS": 95,
-  "https://github.com/PKU-YuanGroup/DeblurNVS": 9
+  "https://github.com/PKU-YuanGroup/GS2E": 20,
+  "https://github.com/DAGroup-PKU/SpatialT2I": 85
 }
