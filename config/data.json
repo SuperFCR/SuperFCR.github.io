@@ -242,21 +242,18 @@
   "experiences": [
     {
       "title": "Research Intern",
-      "organization": "Ant Research",
-      "period": "Mar. 2026 - Now",
-      "host": "<a href=\"https://arxiv.org/search/cs?searchtype=author&query=Cheng,+K+L\" target=\"_blank\" rel=\"noopener noreferrer\">Ka Leong Cheng</a> (<a href=\"https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao\" target=\"_blank\" rel=\"noopener noreferrer\">page</a>)",
-      "logo": "./assets/logo/ant_logo.jpg"
-    }
-  ],
-  "_experiences_disabled": [
-    {
-      "title": "Research Intern",
       "organization": "Horizon Robotics",
       "period": "Mar. 2025 - Sep. 2025",
       "host": "Yanfeng Zhao",
       "logo": "./assets/logo/horizon_logo.jpg"
+    },
+    {
+      "title": "Research Intern",
+      "organization": "Ant Research",
+      "period": "Mar. 2026 - Now",
+      "host": "<a href=\"https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao\" target=\"_blank\" rel=\"noopener noreferrer\">Ka Leong Cheng</a>",
+      "logo": "./assets/logo/ant_logo.jpg"
     }
-
   ],
   "awards": [
     {
