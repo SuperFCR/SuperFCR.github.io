@@ -189,7 +189,7 @@
         }
 
         .project-group:hover,
-        .project-group.is-pinned {
+        .project-group.is-expanded {
             border-color: #cbd5e1;
             background: #fff;
             box-shadow: 0 10px 24px rgba(32, 84, 136, 0.08);
@@ -208,7 +208,7 @@
             user-select: none;
             background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
             border-bottom: 1px solid transparent;
-            transition: all 0.2s ease;
+            transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
         }
 
         .project-group summary::-webkit-details-marker {
@@ -229,13 +229,28 @@
             top: 19px;
         }
 
-        .project-group[open] summary::after {
+        .project-group.is-expanded summary::after {
             transform: rotate(180deg);
         }
 
         .project-body {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 16px;
+            transform: translateY(-4px);
+            transition: max-height 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                        opacity 0.28s ease,
+                        padding-top 0.36s ease,
+                        padding-bottom 0.36s ease,
+                        transform 0.36s ease;
+        }
+
+        .project-group.is-expanded .project-body {
+            max-height: var(--project-body-height, 2400px);
+            opacity: 1;
             padding: 8px 16px 4px;
-            animation: projectReveal 0.22s ease;
+            transform: translateY(0);
         }
 
         .summary-title {
@@ -261,22 +276,18 @@
             vertical-align: middle;
         }
 
-        .project-group:not([open]) .project-state::before {
+        .project-group:not(.is-expanded) .project-state::before {
             content: 'Show';
         }
 
-        .project-group[open]:not(.is-pinned) .project-state::before {
-            content: 'Preview';
-        }
-
-        .project-group.is-pinned .project-state {
+        .project-group.is-expanded .project-state {
             color: #fff;
             background: var(--primary);
             border-color: var(--primary);
         }
 
-        .project-group.is-pinned .project-state::before {
-            content: 'Pinned';
+        .project-group.is-expanded .project-state::before {
+            content: 'Open';
         }
 
         .project-preview-inline {
@@ -308,11 +319,6 @@
 
         .project-group[open] .project-preview-inline {
             display: none;
-        }
-
-        @keyframes projectReveal {
-            from { opacity: 0; transform: translateY(-3px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .paper-card {
@@ -490,7 +496,8 @@
             .paper-img { width: 100%; height: auto; }
             .experience-grid { grid-template-columns: 1fr; }
             .project-group summary { font-size: 0.96rem; padding: 12px 14px; }
-            .project-body { padding: 8px 10px 2px; }
+            .project-body { padding: 0 10px; }
+            .project-group.is-expanded .project-body { padding: 8px 10px 2px; }
             .project-group summary::after { right: 14px; top: 16px; }
             .project-preview-inline {
                 grid-template-columns: 1fr;
@@ -667,12 +674,37 @@
             <summary>
                 <span class="summary-title">♠ T2I Model & R1-like Reasoning <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
+                    <span class="preview-item">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</span>
                     <span class="preview-item">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</span>
                     <span class="preview-item">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</span>
                     <span class="preview-item">🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation</span>
                 </span>
             </summary>
             <div class="project-body">
+                <div class="paper-card">
+                    <div class="paper-content">
+                        <a href="https://arxiv.org/abs/2607.07675" class="paper-title">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</a>
+                        <div class="paper-authors">Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng</div>
+                        <div class="paper-desc">A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.</div>
+                        
+                        <div class="tag-row">
+                            <span class="badge badge-venue">Technical Report</span>
+                            <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                                Paper
+                                
+                            </a>
+                            <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                                Project Page
+                                
+                            </a>
+                            <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                                Code
+                                
+                            </a>
+                        </div>
+                    </div>
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.svg" alt="Project Image" loading="lazy">
+                </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="./assets/files/StyleGRPO.pdf" class="paper-title">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</a>
@@ -707,7 +739,7 @@
                             </a>
                             <a href="https://github.com/DAGroup-PKU/SpatialT2I" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                 <span style="margin-left:2px; opacity:0.8;">★85</span> 
+                                 <span style="margin-left:2px; opacity:0.8;">★84</span> 
                             </a>
                         </div>
                     </div>
@@ -727,7 +759,7 @@
                             </a>
                             <a href="https://github.com/PKU-YuanGroup/WISE" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                 <span style="margin-left:2px; opacity:0.8;">★210</span> 
+                                 <span style="margin-left:2px; opacity:0.8;">★205</span> 
                             </a>
                         </div>
                     </div>
@@ -777,7 +809,7 @@
                             </a>
                             <a href="https://github.com/PKU-YuanGroup/DeblurNVS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                 <span style="margin-left:2px; opacity:0.8;">★15</span> 
+                                 <span style="margin-left:2px; opacity:0.8;">★9</span> 
                             </a>
                         </div>
                     </div>
@@ -797,7 +829,7 @@
                             </a>
                             <a href="https://github.com/PotatoBigRoom/CoherentGS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                 <span style="margin-left:2px; opacity:0.8;">★96</span> 
+                                 <span style="margin-left:2px; opacity:0.8;">★95</span> 
                             </a>
                         </div>
                     </div>
@@ -853,7 +885,7 @@
                             </a>
                             <a href="https://github.com/PKU-YuanGroup/NeuralGS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 Code
-                                 <span style="margin-left:2px; opacity:0.8;">★183</span> 
+                                 <span style="margin-left:2px; opacity:0.8;">★182</span> 
                             </a>
                         </div>
                     </div>
@@ -966,6 +998,20 @@
     </section>
 
 
+    <!-- Experience -->
+    <section>
+        <h2>💼 Experience</h2>
+        <div class="experience-grid">
+            <div class="experience-card">
+                <img class="experience-logo" src="./assets/logo/ant_logo.jpg" alt="Ant Research logo" loading="lazy">
+                <div>
+                    <p class="experience-title">Research Intern, Ant Research</p>
+                    <div class="experience-period">Mar. 2026 - Now</div>
+                    <div class="experience-host">Hosted by <a href="https://arxiv.org/search/cs?searchtype=author&query=Cheng,+K+L" target="_blank" rel="noopener noreferrer">Ka Leong Cheng</a> (<a href="https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener noreferrer">page</a>)</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
 
 
@@ -1051,55 +1097,95 @@
 <script>
 (() => {
     const groups = Array.from(document.querySelectorAll('.project-group'));
-    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const enterDelay = 180;
-    const leaveDelay = 450;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     groups.forEach((group) => {
         const summary = group.querySelector('summary');
-        let enterTimer = null;
-        let leaveTimer = null;
-        let pinned = false;
-        let hovering = false;
+        const body = group.querySelector('.project-body');
+        let closeTimer = null;
+
+        const setHeight = () => {
+            if (!body) return;
+            group.style.setProperty('--project-body-height', `${body.scrollHeight}px`);
+        };
+
+        const openGroup = () => {
+            if (!body) return;
+            window.clearTimeout(closeTimer);
+            group.open = true;
+            setHeight();
+            requestAnimationFrame(() => {
+                group.classList.add('is-expanded');
+                summary.setAttribute('aria-expanded', 'true');
+            });
+        };
+
+        const closeGroup = () => {
+            if (!body || !group.open) return;
+            window.clearTimeout(closeTimer);
+
+            if (reduceMotion.matches) {
+                group.classList.remove('is-expanded');
+                group.open = false;
+                summary.setAttribute('aria-expanded', 'false');
+                return;
+            }
+
+            setHeight();
+            requestAnimationFrame(() => {
+                group.classList.remove('is-expanded');
+                group.style.setProperty('--project-body-height', '0px');
+                summary.setAttribute('aria-expanded', 'false');
+            });
+
+            closeTimer = window.setTimeout(() => {
+                if (!group.classList.contains('is-expanded')) group.open = false;
+            }, 520);
+        };
 
         const setExpanded = (expanded) => {
-            group.open = expanded;
-            summary.setAttribute('aria-expanded', String(expanded));
+            if (expanded) {
+                groups.forEach((other) => {
+                    if (other !== group && other.open) {
+                        const otherSummary = other.querySelector('summary');
+                        const otherBody = other.querySelector('.project-body');
+                        if (otherBody) other.style.setProperty('--project-body-height', `${otherBody.scrollHeight}px`);
+                        requestAnimationFrame(() => {
+                            other.classList.remove('is-expanded');
+                            other.style.setProperty('--project-body-height', '0px');
+                            if (otherSummary) otherSummary.setAttribute('aria-expanded', 'false');
+                        });
+                        window.setTimeout(() => {
+                            if (!other.classList.contains('is-expanded')) other.open = false;
+                        }, 520);
+                    }
+                });
+                openGroup();
+                return;
+            }
+
+            closeGroup();
         };
 
-        const clearTimers = () => {
-            window.clearTimeout(enterTimer);
-            window.clearTimeout(leaveTimer);
-        };
-
-        const setPinned = (value) => {
-            pinned = value;
-            group.classList.toggle('is-pinned', pinned);
-            setExpanded(pinned || hovering);
-        };
-
-        summary.setAttribute('aria-expanded', String(group.open));
+        summary.setAttribute('aria-expanded', String(group.classList.contains('is-expanded')));
 
         summary.addEventListener('click', (event) => {
             event.preventDefault();
-            clearTimers();
-            setPinned(!pinned);
+            setExpanded(!group.classList.contains('is-expanded'));
         });
 
-        if (!canHover) return;
-
-        group.addEventListener('mouseenter', () => {
-            hovering = true;
-            window.clearTimeout(leaveTimer);
-            enterTimer = window.setTimeout(() => setExpanded(true), enterDelay);
+        body?.addEventListener('transitionend', (event) => {
+            if (event.propertyName !== 'max-height') return;
+            if (!group.classList.contains('is-expanded')) group.open = false;
+            if (group.classList.contains('is-expanded')) setHeight();
         });
+    });
 
-        group.addEventListener('mouseleave', () => {
-            hovering = false;
-            window.clearTimeout(enterTimer);
-            leaveTimer = window.setTimeout(() => {
-                if (!pinned) setExpanded(false);
-            }, leaveDelay);
+    window.addEventListener('resize', () => {
+        groups.forEach((group) => {
+            if (!group.classList.contains('is-expanded')) return;
+            const body = group.querySelector('.project-body');
+            if (body) group.style.setProperty('--project-body-height', `${body.scrollHeight}px`);
         });
     });
 })();

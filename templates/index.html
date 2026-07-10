@@ -189,7 +189,7 @@
         }
 
         .project-group:hover,
-        .project-group.is-pinned {
+        .project-group.is-expanded {
             border-color: #cbd5e1;
             background: #fff;
             box-shadow: 0 10px 24px rgba(32, 84, 136, 0.08);
@@ -208,7 +208,7 @@
             user-select: none;
             background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
             border-bottom: 1px solid transparent;
-            transition: all 0.2s ease;
+            transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
         }
 
         .project-group summary::-webkit-details-marker {
@@ -229,13 +229,28 @@
             top: 19px;
         }
 
-        .project-group[open] summary::after {
+        .project-group.is-expanded summary::after {
             transform: rotate(180deg);
         }
 
         .project-body {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 16px;
+            transform: translateY(-4px);
+            transition: max-height 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                        opacity 0.28s ease,
+                        padding-top 0.36s ease,
+                        padding-bottom 0.36s ease,
+                        transform 0.36s ease;
+        }
+
+        .project-group.is-expanded .project-body {
+            max-height: var(--project-body-height, 2400px);
+            opacity: 1;
             padding: 8px 16px 4px;
-            animation: projectReveal 0.22s ease;
+            transform: translateY(0);
         }
 
         .summary-title {
@@ -261,22 +276,18 @@
             vertical-align: middle;
         }
 
-        .project-group:not([open]) .project-state::before {
+        .project-group:not(.is-expanded) .project-state::before {
             content: 'Show';
         }
 
-        .project-group[open]:not(.is-pinned) .project-state::before {
-            content: 'Preview';
-        }
-
-        .project-group.is-pinned .project-state {
+        .project-group.is-expanded .project-state {
             color: #fff;
             background: var(--primary);
             border-color: var(--primary);
         }
 
-        .project-group.is-pinned .project-state::before {
-            content: 'Pinned';
+        .project-group.is-expanded .project-state::before {
+            content: 'Open';
         }
 
         .project-preview-inline {
@@ -308,11 +319,6 @@
 
         .project-group[open] .project-preview-inline {
             display: none;
-        }
-
-        @keyframes projectReveal {
-            from { opacity: 0; transform: translateY(-3px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .paper-card {
@@ -490,7 +496,8 @@
             .paper-img { width: 100%; height: auto; }
             .experience-grid { grid-template-columns: 1fr; }
             .project-group summary { font-size: 0.96rem; padding: 12px 14px; }
-            .project-body { padding: 8px 10px 2px; }
+            .project-body { padding: 0 10px; }
+            .project-group.is-expanded .project-body { padding: 8px 10px 2px; }
             .project-group summary::after { right: 14px; top: 16px; }
             .project-preview-inline {
                 grid-template-columns: 1fr;
@@ -787,55 +794,95 @@
 <script>
 (() => {
     const groups = Array.from(document.querySelectorAll('.project-group'));
-    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const enterDelay = 180;
-    const leaveDelay = 450;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     groups.forEach((group) => {
         const summary = group.querySelector('summary');
-        let enterTimer = null;
-        let leaveTimer = null;
-        let pinned = false;
-        let hovering = false;
+        const body = group.querySelector('.project-body');
+        let closeTimer = null;
+
+        const setHeight = () => {
+            if (!body) return;
+            group.style.setProperty('--project-body-height', `${body.scrollHeight}px`);
+        };
+
+        const openGroup = () => {
+            if (!body) return;
+            window.clearTimeout(closeTimer);
+            group.open = true;
+            setHeight();
+            requestAnimationFrame(() => {
+                group.classList.add('is-expanded');
+                summary.setAttribute('aria-expanded', 'true');
+            });
+        };
+
+        const closeGroup = () => {
+            if (!body || !group.open) return;
+            window.clearTimeout(closeTimer);
+
+            if (reduceMotion.matches) {
+                group.classList.remove('is-expanded');
+                group.open = false;
+                summary.setAttribute('aria-expanded', 'false');
+                return;
+            }
+
+            setHeight();
+            requestAnimationFrame(() => {
+                group.classList.remove('is-expanded');
+                group.style.setProperty('--project-body-height', '0px');
+                summary.setAttribute('aria-expanded', 'false');
+            });
+
+            closeTimer = window.setTimeout(() => {
+                if (!group.classList.contains('is-expanded')) group.open = false;
+            }, 520);
+        };
 
         const setExpanded = (expanded) => {
-            group.open = expanded;
-            summary.setAttribute('aria-expanded', String(expanded));
+            if (expanded) {
+                groups.forEach((other) => {
+                    if (other !== group && other.open) {
+                        const otherSummary = other.querySelector('summary');
+                        const otherBody = other.querySelector('.project-body');
+                        if (otherBody) other.style.setProperty('--project-body-height', `${otherBody.scrollHeight}px`);
+                        requestAnimationFrame(() => {
+                            other.classList.remove('is-expanded');
+                            other.style.setProperty('--project-body-height', '0px');
+                            if (otherSummary) otherSummary.setAttribute('aria-expanded', 'false');
+                        });
+                        window.setTimeout(() => {
+                            if (!other.classList.contains('is-expanded')) other.open = false;
+                        }, 520);
+                    }
+                });
+                openGroup();
+                return;
+            }
+
+            closeGroup();
         };
 
-        const clearTimers = () => {
-            window.clearTimeout(enterTimer);
-            window.clearTimeout(leaveTimer);
-        };
-
-        const setPinned = (value) => {
-            pinned = value;
-            group.classList.toggle('is-pinned', pinned);
-            setExpanded(pinned || hovering);
-        };
-
-        summary.setAttribute('aria-expanded', String(group.open));
+        summary.setAttribute('aria-expanded', String(group.classList.contains('is-expanded')));
 
         summary.addEventListener('click', (event) => {
             event.preventDefault();
-            clearTimers();
-            setPinned(!pinned);
+            setExpanded(!group.classList.contains('is-expanded'));
         });
 
-        if (!canHover) return;
-
-        group.addEventListener('mouseenter', () => {
-            hovering = true;
-            window.clearTimeout(leaveTimer);
-            enterTimer = window.setTimeout(() => setExpanded(true), enterDelay);
+        body?.addEventListener('transitionend', (event) => {
+            if (event.propertyName !== 'max-height') return;
+            if (!group.classList.contains('is-expanded')) group.open = false;
+            if (group.classList.contains('is-expanded')) setHeight();
         });
+    });
 
-        group.addEventListener('mouseleave', () => {
-            hovering = false;
-            window.clearTimeout(enterTimer);
-            leaveTimer = window.setTimeout(() => {
-                if (!pinned) setExpanded(false);
-            }, leaveDelay);
+    window.addEventListener('resize', () => {
+        groups.forEach((group) => {
+            if (!group.classList.contains('is-expanded')) return;
+            const body = group.querySelector('.project-body');
+            if (body) group.style.setProperty('--project-body-height', `${body.scrollHeight}px`);
         });
     });
 })();

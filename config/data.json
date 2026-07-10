@@ -68,6 +68,18 @@
   "projects": {
     "t2i_model": [
       {
+        "title": "🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence",
+        "authors": "Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng",
+        "description": "A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.",
+        "venue": "Technical Report",
+        "image": "./assets/pipelines/Pipeline_lingbot_video.svg",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2607.07675"},
+          {"type": "Project Page", "url": "https://technology.robbyant.com/lingbot-video"},
+          {"type": "Code", "url": "https://github.com/Robbyant/lingbot-video"}
+        ]
+      },
+      {
         "title": "🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling",
         "authors": "<u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
         "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
@@ -222,6 +234,15 @@
       }
     ]
   },
+  "experiences": [
+    {
+      "title": "Research Intern",
+      "organization": "Ant Research",
+      "period": "Mar. 2026 - Now",
+      "host": "<a href=\"https://arxiv.org/search/cs?searchtype=author&query=Cheng,+K+L\" target=\"_blank\" rel=\"noopener noreferrer\">Ka Leong Cheng</a> (<a href=\"https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao\" target=\"_blank\" rel=\"noopener noreferrer\">page</a>)",
+      "logo": "./assets/logo/ant_logo.jpg"
+    }
+  ],
   "_experiences_disabled": [
     {
       "title": "Research Intern",
@@ -229,17 +250,9 @@
       "period": "Mar. 2025 - Sep. 2025",
       "host": "Yanfeng Zhao",
       "logo": "./assets/logo/horizon_logo.jpg"
-    },
-    {
-      "title": "Research Intern",
-      "organization": "Ant Research",
-      "period": "Mar. 2026 - Now",
-      "host": "Jialiang Zheng",
-      "logo": "./assets/logo/ant_logo.jpg"
     }
 
   ],
-  "experiences": [],
   "awards": [
     {
       "date": "[2025-09]",
