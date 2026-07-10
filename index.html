@@ -28,6 +28,18 @@
             --shadow-hover: 0 12px 24px -6px rgba(32, 84, 136, 0.15), 0 0 0 1px rgba(32, 84, 136, 0.1);
         }
 
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: Georgia, 'Times New Roman', serif;
             background-color: var(--bg-page);
@@ -50,6 +62,7 @@
         }
 
         .container {
+            width: min(900px, calc(100% - 32px));
             max-width: 900px;
             margin: 0 auto;
             background: var(--bg-paper);
@@ -497,9 +510,32 @@
         }
 
         @media (max-width: 768px) {
-            .container { padding: 30px 20px; margin: 10px; }
+            body {
+                padding: 0;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                min-height: 100vh;
+                margin: 0;
+                padding: 28px 18px;
+                border: 0;
+                border-radius: 0;
+            }
             .header-top { flex-direction: column-reverse; align-items: flex-start; gap: 20px;}
+            .header-info,
+            .header-photo {
+                width: 100%;
+                min-width: 0;
+            }
             .avatar { width: 100%; max-width: 100%; height: auto; margin-bottom: 20px; }
+            .name-title { font-size: clamp(2.1rem, 10vw, 2.65rem); }
+            .role-info { font-size: 1rem; }
+            .bio-text-box {
+                padding: 22px;
+                font-size: 1rem;
+                text-align: left;
+            }
             .social-links {
                 display: grid;
                 grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1036,11 +1072,19 @@
         <h2>💼 Experience</h2>
         <div class="experience-grid">
             <div class="experience-card">
+                <img class="experience-logo" src="./assets/logo/horizon_logo.jpg" alt="Horizon Robotics logo" loading="lazy">
+                <div>
+                    <p class="experience-title">Research Intern, Horizon Robotics</p>
+                    <div class="experience-period">Mar. 2025 - Sep. 2025</div>
+                    <div class="experience-host">Hosted by Yanfeng Zhao</div>
+                </div>
+            </div>
+            <div class="experience-card">
                 <img class="experience-logo" src="./assets/logo/ant_logo.jpg" alt="Ant Research logo" loading="lazy">
                 <div>
                     <p class="experience-title">Research Intern, Ant Research</p>
                     <div class="experience-period">Mar. 2026 - Now</div>
-                    <div class="experience-host">Hosted by <a href="https://arxiv.org/search/cs?searchtype=author&query=Cheng,+K+L" target="_blank" rel="noopener noreferrer">Ka Leong Cheng</a> (<a href="https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener noreferrer">page</a>)</div>
+                    <div class="experience-host">Hosted by <a href="https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener noreferrer">Ka Leong Cheng</a></div>
                 </div>
             </div>
         </div>
