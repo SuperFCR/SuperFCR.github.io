@@ -1,0 +1,194 @@
+%% Simple Academic CV Template
+%% Clean single-column layout
+%% Author: Template based on SuperFCR.github.io design
+%% Date: 2024
+
+\documentclass[11pt, a4paper]{article}
+
+% Required packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{mathptmx} % Times-like font (serif)
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{fontawesome5}
+\usepackage{amsmath}
+
+% Page setup
+\geometry{
+    left=1.2in,
+    right=1.2in,
+    top=1in,
+    bottom=1in
+}
+
+% Color definitions (matching the web design)
+\definecolor{darkblue}{RGB}{38,48,84}      % #263054 for headings
+\definecolor{linkblue}{RGB}{16,66,159}     % #10429f for links
+\definecolor{lightgray}{RGB}{119,119,119}  % #777 for secondary text
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue,
+    filecolor=linkblue,
+    pdfborder={0 0 0}
+}
+
+% Custom commands
+\newcommand{\sectioncolor}[1]{\textcolor{darkblue}{#1}}
+\newcommand{\secondarycolor}[1]{\textcolor{lightgray}{#1}}
+
+% Section title formatting
+\titleformat{\section}
+{\Large\bfseries\sectioncolor}
+{}{0pt}
+{}
+[\vspace{2pt}\titlerule\vspace{8pt}]
+
+% Custom section command
+\newcommand{\cvsection}[1]{%
+    \vspace{10pt}%
+    {\Large\bfseries\sectioncolor{#1}}%
+    \vspace{2pt}%
+    \hrule height 1pt%
+    \vspace{8pt}%
+}
+
+% Remove page numbering
+\pagestyle{empty}
+
+% Document begins
+\begin{document}
+
+% Header section
+\begin{center}
+    {\Huge\bfseries\sectioncolor{Your Full Name}}
+    
+    \vspace{8pt}
+    
+    {\large\sectioncolor{\faGraduationCap\ Your Academic Title/Position}}
+    
+    \vspace{10pt}
+    
+    \href{https://your-institution.edu}{Your Department/School} \\
+    Your University \\
+    Your City, Country
+    
+    \vspace{12pt}
+    
+    \begin{tabular}{@{}c@{\hspace{15pt}}c@{\hspace{15pt}}c@{}}
+        \faEnvelope\ \href{mailto:your.email@domain.com}{your.email@domain.com} &
+        \faGraduationCap\ \href{https://scholar.google.com/citations?user=YOUR_ID}{Google Scholar} &
+        \faGithub\ \href{https://github.com/yourusername}{GitHub}
+    \end{tabular}
+\end{center}
+
+\vspace{25pt}
+
+% Education Section
+\cvsection{Education}
+
+\begin{itemize}[leftmargin=0pt, itemsep=8pt]
+    \item \textbf{2024-Now} I'm pursuing my Degree in Field, University, supervised by \href{https://advisor-website.com}{Prof. Advisor Name} and \href{https://co-advisor-website.com}{Prof. Co-Advisor Name}.
+    
+    \item \textbf{2020-2024} I received my Previous Degree from \href{https://university-website.edu}{Previous University}, awarded the Outstanding Graduate (Top X\%), ranking \textbf{1\textsuperscript{st}}/X for duration.
+\end{itemize}
+
+% Biography Section
+\cvsection{Biography}
+
+I am a current position in department at institution, holding a previous degree from previous institution. During my previous studies, I achieved a GPA of X.X/4.0, ranking \textbf{1\textsuperscript{st}}/X in both major and overall scores.
+
+My research interests focus on \textit{Research Area 1}, \textit{Research Area 2}, and \textit{Research Area 3}.
+
+% Research Interests Section
+\cvsection{Research Interests}
+
+\begin{itemize}[leftmargin=15pt, itemsep=4pt]
+    \item \textbf{Research Area 1:} Brief description of your work in this area
+    \item \textbf{Research Area 2:} Description of your interests and contributions
+    \item \textbf{Research Area 3:} Overview of your research direction
+\end{itemize}
+
+% Publications/Projects Section
+\cvsection{Selected Publications \& Projects}
+
+\textbf{Conference Publications}
+
+\begin{enumerate}[leftmargin=15pt, itemsep=8pt]
+    \item \textbf{Paper Title:} Subtitle if applicable \\
+    \secondarycolor{Author List} \\
+    \textit{Conference/Journal Name, Year} \\
+    \href{https://paper-link.com}{Paper} | \href{https://github.com/username/repo}{Code} | \href{https://project-website.com}{Project Page}
+    
+    \item \textbf{Paper Title 2:} Subtitle \\
+    \secondarycolor{Author List} \\
+    \textit{Conference/Journal Name, Year} \\
+    \href{https://paper-link.com}{Paper} | \href{https://github.com/username/repo}{Code}
+    
+    \item \textbf{Paper Title 3:} Subtitle \\
+    \secondarycolor{Author List} \\
+    \textit{Conference/Journal Name, Year} \\
+    \href{https://paper-link.com}{Paper}
+\end{enumerate}
+
+% Awards and Honors Section
+\cvsection{Awards \& Honors}
+
+\begin{itemize}[leftmargin=0pt, itemsep=6pt]
+    \item \textbf{2024} Outstanding Graduate Award, Institution (Top X\%)
+    \item \textbf{2023} Scholarship/Award Name, Institution
+    \item \textbf{2022} Competition/Honor Name, Ranking/Description
+    \item \textbf{2021-2023} Recurring Award, Institution (X times)
+\end{itemize}
+
+% Professional Activities Section
+\cvsection{Professional Activities}
+
+\textbf{Conference Reviewing:}
+\begin{itemize}[leftmargin=15pt, itemsep=2pt, label={\scriptsize\faCircle}]
+    \item Conference Name Years
+    \item Conference Name Years
+    \item Conference Name Years
+\end{itemize}
+
+\textbf{Journal Reviewing:}
+\begin{itemize}[leftmargin=15pt, itemsep=2pt, label={\scriptsize\faCircle}]
+    \item Journal Name
+    \item Journal Name
+\end{itemize}
+
+% Skills Section
+\cvsection{Technical Skills}
+
+\begin{itemize}[leftmargin=0pt, itemsep=4pt]
+    \item \textbf{Programming Languages:} Python, C++, MATLAB, R, JavaScript
+    \item \textbf{Machine Learning:} PyTorch, TensorFlow, scikit-learn, OpenCV
+    \item \textbf{Tools \& Platforms:} Git, Docker, Linux, AWS, Google Cloud
+    \item \textbf{Other:} LaTeX, Markdown, SQL, Bash scripting
+\end{itemize}
+
+% Teaching Section
+\cvsection{Teaching Experience}
+
+\begin{itemize}[leftmargin=0pt, itemsep=6pt]
+    \item \textbf{Teaching Assistant} - Course Name, Institution, Semester Year
+    \item \textbf{Tutor} - Subject, Institution, Duration
+\end{itemize}
+
+\vspace{20pt}
+
+% Footer
+\begin{center}
+    \secondarycolor{\small Last updated: \today}
+\end{center}
+
+\end{document}

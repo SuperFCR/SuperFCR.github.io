@@ -1,0 +1,281 @@
+%% Academic CV Template - Example with Real Data
+%% Based on Chaoran Feng's academic profile
+%% Author: Template based on SuperFCR.github.io design
+%% Date: 2024
+
+\documentclass[11pt, a4paper]{article}
+
+% Required packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{mathptmx} % Times-like font (serif)
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+
+% Page setup
+\geometry{
+    left=1in,
+    right=1in,
+    top=1in,
+    bottom=1in,
+    marginparwidth=0pt,
+    marginparsep=0pt
+}
+
+% Color definitions (matching the web design)
+\definecolor{darkblue}{RGB}{38,48,84}      % #263054 for headings
+\definecolor{linkblue}{RGB}{16,66,159}     % #10429f for links
+\definecolor{lightgray}{RGB}{119,119,119}  % #777 for secondary text
+\definecolor{backgroundgray}{RGB}{253,253,253} % #fdfdfd for backgrounds
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue,
+    filecolor=linkblue,
+    pdfborder={0 0 0}
+}
+
+% Custom commands for consistent styling
+\newcommand{\sectioncolor}[1]{\textcolor{darkblue}{#1}}
+\newcommand{\linkcolor}[1]{\textcolor{linkblue}{#1}}
+\newcommand{\secondarycolor}[1]{\textcolor{lightgray}{#1}}
+
+% Section title formatting
+\titleformat{\section}[hang]
+{\Large\bfseries\sectioncolor}
+{}{0pt}
+{}
+[\titlerule]
+
+\titleformat{\subsection}[hang]
+{\large\bfseries\sectioncolor}
+{}{0pt}
+{}
+
+% Custom section command with bottom border
+\newcommand{\cvsection}[1]{
+    \vspace{10pt}
+    {\Large\bfseries\sectioncolor{#1}}
+    \vspace{2pt}
+    \hrule height 1pt
+    \vspace{8pt}
+}
+
+% Custom commands for contact icons
+\newcommand{\emailicon}{\faEnvelope}
+\newcommand{\scholaricon}{\faGraduationCap}
+\newcommand{\githubicon}{\faGithub}
+\newcommand{\linkedinicon}{\faLinkedin}
+\newcommand{\phoneicon}{\faPhone}
+\newcommand{\locationicon}{\faMapMarker}
+
+% Custom environment for project entries
+\newenvironment{projectentry}[3]{
+    \vspace{8pt}
+    \textbf{#1} \\
+    \secondarycolor{#2} \\
+    #3
+    \vspace{6pt}
+}{}
+
+% Remove page numbering
+\pagestyle{empty}
+
+% Document begins
+\begin{document}
+
+% Header section with name and contact info
+\begin{center}
+    % Name
+    {\Huge\bfseries\sectioncolor{Chaoran Feng}}
+    
+    \vspace{8pt}
+    
+    % Title/Position
+    {\large\sectioncolor{\faGraduationCap\ Master Student}}
+    
+    \vspace{10pt}
+    
+    % Institution and Location
+    {\href{https://www.ece.pku.edu.cn/}{School of Electric and Computer Engineering} \\
+    Peking University \\
+    Beijing, China}
+    
+    \vspace{12pt}
+    
+    % Contact Information
+    \begin{tabular}{c c c}
+        \emailicon\ \href{mailto:fcr1500583403@gmail.com}{fcr1500583403@gmail.com} &
+        \scholaricon\ \href{https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en}{Google Scholar} &
+        \githubicon\ \href{https://github.com/SuperFCR}{GitHub}
+    \end{tabular}
+\end{center}
+
+\vspace{20pt}
+
+% Main content area
+\begin{minipage}[t]{0.7\textwidth}
+
+% Education Section
+\cvsection{Education}
+
+\begin{itemize}[leftmargin=0pt, itemsep=6pt]
+    \item \textbf{[2024-Now]}  I'm pursuing my M.S. degree in ECE, PKU, supervised by \href{https://yuanli2333.github.io/}{Prof. Li Yuan} and \href{https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en}{Prof. Yonghong Tian}.
+    
+    \item \textbf{[2020-2024]}  I received my B.E. degree from \href{https://en.dlut.edu.cn/}{Dalian University of Technology}, awarded the Outstanding Graduate (Top 3\%), ranking \textbf{1\textsuperscript{st}}/85 for three years (2021-2023).
+\end{itemize}
+
+% Biography Section
+\cvsection{Biography}
+
+I am a first-year M.S. student in ECE at Peking University, holding a B.E. degree from Dalian University of Technology. During my undergraduate studies, I achieved a GPA of 3.8/4.0, ranking \textbf{1\textsuperscript{st}}/85 in both major and overall scores.
+
+\vspace{8pt}
+
+ My research interests focus on \textit{3D Vision}, \textit{Neuromorphic Vision}, and \textit{Generative Model}.
+
+% News Section
+\cvsection{News}
+
+\begin{itemize}[leftmargin=0pt, itemsep=4pt]
+    \item \textbf{[2025-07]} A paper is accepted by \textit{ACMMM 2025}, E-4DGS. The code and paper are coming soon.
+    
+    \item \textbf{[2025-06]} Two papers are accepted by \textit{ICCV 2025}, \href{https://arxiv.org/pdf/2405.20224}{``EvaGaussians''} and \href{https://iccv.thecvf.com/virtual/2025/poster/2554}{``Tune-Your-Style''}.
+    
+    \item \textbf{[2025-03]}  We release \href{https://arxiv.org/pdf/2503.23162}{``NeuralGS''}, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs.
+    
+    \item \textbf{[2025-01]}  We release \href{https://arxiv.org/pdf/2501.02807}{``AE-NeRF''}, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes.
+    
+    \item \textbf{[2024-12]} Two papers are accepted by \textit{AAAI 2025}.
+\end{itemize}
+
+% Selected Projects Section
+\cvsection{Selected Projects}
+
+\textbf{* Equal Contribution \quad \# Project Lead}
+
+\vspace{8pt}
+
+{\color{darkblue}\textbf{$\spadesuit$ 3D Reconstruction \ and Generative Model}}
+
+\begin{itemize}[leftmargin=0pt, itemsep=8pt]
+    \item \begin{projectentry}
+        { Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting}
+        {Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, \textbf{\underline{Chaoran Feng*}}, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†}
+        {A novel style transfer framework with 3D Gaussian Splatting.}
+        \end{projectentry}
+        \textit{ICCV 2025} | \href{https://iccv.thecvf.com/virtual/2025/poster/2554}{Paper}
+        
+    \item \begin{projectentry}
+        { Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle}
+        {Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, \textbf{\underline{Chaoran Feng}}, Yatian Pang, Bin Lin, Li Yuan†}
+        {The project is about 3D generation using a generation-reconstruction cycle for a unified diffusion process.}
+        \end{projectentry}
+        \textit{AAAI 2025} | \href{https://arxiv.org/pdf/2407.19548}{Paper} | \href{https://github.com/PKU-YuanGroup/Cycle3D}{Code 200+}
+        
+    \item \begin{projectentry}
+        { NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations}
+        {Zhenyu Tang*, \textbf{\underline{Chaoran Feng*}}, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†}
+        {A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.}
+        \end{projectentry}
+        \textit{Arxiv 2025} | \href{https://arxiv.org/pdf/2503.23162}{Paper} | \href{https://github.com/PKU-YuanGroup/NeuralGS}{Code 150+}
+\end{itemize}
+
+\vspace{10pt}
+
+{\color{darkblue}\textbf{$\spadesuit$ Neuromorphic Vision}}
+
+\begin{itemize}[leftmargin=0pt, itemsep=8pt]
+    \item \begin{projectentry}
+        { EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images}
+        {Wangbo Yu*, \textbf{\underline{Chaoran Feng*}}, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†}
+        {Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.}
+        \end{projectentry}
+        \textit{ICCV 2025} | \href{https://arxiv.org/abs/2405.20224}{Paper} | \href{https://github.com/SuperFCR}{Code 50+}
+        
+    \item \begin{projectentry}
+        { AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes}
+        {\textbf{\underline{Chaoran Feng}}, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†}
+        {3D reconstruction with event streams under noisy poses and unbounded scenes.}
+        \end{projectentry}
+        \textit{AAAI 2025} | \href{https://arxiv.org/pdf/2501.02807}{Paper} | \href{https://drexubery.github.io/EvaGaussians/}{Code}
+\end{itemize}
+
+\end{minipage}%
+\hfill%
+\begin{minipage}[t]{0.25\textwidth}
+
+% Profile Photo Placeholder
+\vspace{-60pt} % Adjust to align with name
+\begin{center}
+    \fbox{\begin{minipage}{3cm}
+        \centering
+        \vspace{1.5cm}
+        \textcolor{lightgray}{Profile Photo}
+        \vspace{1.5cm}
+    \end{minipage}}
+\end{center}
+
+\vspace{20pt}
+
+% Awards Section (in sidebar)
+\cvsection{Awards}
+
+\begin{itemize}[leftmargin=0pt, itemsep=4pt, label={}]
+    \item \textbf{[2024]}  Outstanding Graduate, Dalian University of Technology (Top \textbf{3\%})
+    
+    \item \textbf{[2023]}  1\textsuperscript{st} Prize in the China Robotics and AI Competition (Ranked \textbf{1\textsuperscript{st}}/100+)
+    
+    \item \textbf{[2022]}  Qubochuan Scholarship, highest scholarship of DUT, awarded to only 10 recipients each year
+    
+    \item \textbf{[2021-2023]}  Nation Scholarship (3 times), Dalian University of Technology
+    
+    \item \textbf{[2021-2023]}  Academic Excellence Scholarship (First Class) (Ranked \textbf{1\textsuperscript{st}}/85), DUT
+\end{itemize}
+
+\vspace{15pt}
+
+% Professional Activities
+\cvsection{Professional Activities}
+
+\textbf{Conference Reviewer:}
+\begin{itemize}[leftmargin=10pt, itemsep=2pt, label={\tiny \bullet}]
+    \item ICLR [25]
+    \item CVPR [25] 
+    \item ICCV [25]
+    \item NeurIPS [24-25]
+    \item AAAI [25-26]
+    \item IJCAI [25]
+    \item ACM MM [25]
+\end{itemize}
+
+\vspace{8pt}
+
+\textbf{Journal Reviewer:}
+\begin{itemize}[leftmargin=10pt, itemsep=2pt, label={\tiny \bullet}]
+    \item TCSVT
+\end{itemize}
+
+\end{minipage}
+
+\vspace{20pt}
+
+% Footer
+\begin{center}
+    \secondarycolor{\small Last updated: \today}
+\end{center}
+
+\end{document}
