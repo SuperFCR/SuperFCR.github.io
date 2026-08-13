@@ -910,11 +910,11 @@
                     <a href="mailto:chaoran.feng@stu.pku.edu.cn" class="social-btn">
                         <img src="./assets/imgs/envelope.png" alt="" aria-hidden="true"> Email
                     </a>
-                    <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-btn">
+                    <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="scholar">
                         <img src="./assets/imgs/google.png" alt="" aria-hidden="true">
                         Scholar
                     </a>
-                    <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn">
+                    <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="github">
                         <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> Github
                     </a>
                 </div>
@@ -1047,7 +1047,7 @@
         </div>
 
         <!-- T2I Model -->
-        <details class="project-group">
+        <details class="project-group" data-research-area="multimodal_generation">
             <summary>
                 <span class="summary-title">♠ Multimodal Generation <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
@@ -1140,7 +1140,7 @@
         </details>
 
         <!-- 3D Reconstruction -->
-        <details class="project-group">
+        <details class="project-group" data-research-area="3d_vision">
             <summary>
                 <span class="summary-title">♠ 3D Vision <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
@@ -1276,7 +1276,7 @@
         </details>
 
         <!-- Neuromorphic Vision -->
-        <details class="project-group">
+        <details class="project-group" data-research-area="neuromorphic_vision">
             <summary>
                 <span class="summary-title">♠ Neuromorphic Vision <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
@@ -1471,8 +1471,53 @@
         }
     }
 
+    const trackAnalyticsEvent = (eventName, parameters = {}) => {
+        if (typeof window.gtag !== 'function') return;
+        window.gtag('event', eventName, parameters);
+    };
+
+    const normalizeAnalyticsId = (value) => value
+        .normalize('NFKD')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 80);
+
+    document.querySelectorAll('a[href^="mailto:"]').forEach((link) => {
+        link.addEventListener('click', () => {
+            trackAnalyticsEvent('contact_click', { channel: 'email' });
+        });
+    });
+
+    document.querySelectorAll('[data-analytics-event][data-analytics-channel]').forEach((link) => {
+        link.addEventListener('click', () => {
+            trackAnalyticsEvent(link.dataset.analyticsEvent, {
+                channel: link.dataset.analyticsChannel
+            });
+        });
+    });
+
     const groups = Array.from(document.querySelectorAll('.project-group'));
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    document.querySelectorAll('.paper-title, .badge-link').forEach((link) => {
+        link.addEventListener('click', () => {
+            const card = link.closest('.paper-card');
+            const group = link.closest('.project-group');
+            const title = card?.querySelector('.paper-title')?.textContent.trim() || 'unknown_project';
+            const shortTitle = title.includes(':') ? title.split(':', 1)[0] : title;
+            const resourceLabel = link.classList.contains('paper-title')
+                ? 'title'
+                : link.textContent.replace(/★.*$/s, '').trim();
+
+            trackAnalyticsEvent('select_content', {
+                content_type: 'paper_resource',
+                content_id: normalizeAnalyticsId(shortTitle) || 'unknown_project',
+                research_area: group?.dataset.researchArea || 'unknown',
+                resource_type: normalizeAnalyticsId(resourceLabel) || 'link'
+            });
+        });
+    });
 
     groups.forEach((group) => {
         const summary = group.querySelector('summary');
@@ -1546,7 +1591,16 @@
 
         summary.addEventListener('click', (event) => {
             event.preventDefault();
-            setExpanded(!group.classList.contains('is-expanded'));
+            const willExpand = !group.classList.contains('is-expanded');
+            if (willExpand) {
+                const researchArea = group.dataset.researchArea || 'unknown';
+                trackAnalyticsEvent('select_content', {
+                    content_type: 'research_area',
+                    content_id: researchArea,
+                    research_area: researchArea
+                });
+            }
+            setExpanded(willExpand);
         });
 
         body?.addEventListener('transitionend', (event) => {
