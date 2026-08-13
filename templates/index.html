@@ -43,6 +43,11 @@
         body {
             font-family: Georgia, 'Times New Roman', serif;
             background-color: var(--bg-page);
+            background-image:
+                radial-gradient(circle at 8% 10%, rgba(62, 110, 157, 0.10) 0, rgba(62, 110, 157, 0) 30%),
+                radial-gradient(circle at 92% 18%, rgba(129, 117, 166, 0.08) 0, rgba(129, 117, 166, 0) 28%),
+                radial-gradient(circle at 78% 88%, rgba(205, 155, 91, 0.07) 0, rgba(205, 155, 91, 0) 30%);
+            background-attachment: fixed;
             color: var(--text-main);
             margin: 0;
             padding: 40px 0;
@@ -62,11 +67,11 @@
         }
 
         .container {
-            width: min(900px, calc(100% - 32px));
-            max-width: 900px;
+            width: min(1020px, calc(100% - 32px));
+            max-width: 1020px;
             margin: 0 auto;
             background: var(--bg-paper);
-            padding: 50px 60px; 
+            padding: 44px 60px;
             border-radius: 8px; 
             box-shadow: 0 4px 30px rgba(0,0,0,0.08);
             border: 1px solid #e1e4e8;
@@ -78,14 +83,16 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        header { margin-bottom: 50px; }
+        header { margin-bottom: 0; }
+
+        section { margin-top: 30px; }
 
         .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center; 
             gap: 40px;
-            margin-bottom: 30px; 
+            margin-bottom: 20px;
         }
 
         .header-info {
@@ -104,9 +111,37 @@
             font-size: 1.15rem;
             color: var(--text-sec);
             font-style: italic;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
             line-height: 1.5;
         }
+
+        .location-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            color: #64748b;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .location-time-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .location-time-icon {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex: 0 0 auto;
+        }
+        .location-time-divider { color: #cbd5e1; }
 
         .avatar {
             width: 280px;  
@@ -154,24 +189,19 @@
         }
         .social-btn img { width: 16px; height: 16px; opacity: 0.8; flex: 0 0 auto; }
 
-        .social-citation {
-            margin-left: 2px;
-            font-weight: 700;
-            color: var(--primary);
-            opacity: 0.92;
-            white-space: nowrap;
-        }
-
-
         .bio-text-box {
             width: 100%; /* 占满 */
             background: var(--bg-bio);
-            padding: 28px;
+            padding: 22px;
             box-sizing: border-box;
             border-radius: var(--radius);
             border: 1px solid #eef2f6;
+            color: #374151;
+            font-family: Georgia, 'Times New Roman', serif;
             font-size: 1.05rem;
-            text-align: justify;
+            line-height: 1.65;
+            letter-spacing: normal;
+            text-align: left;
             transition: all 0.3s;
             margin-top: 10px;
         }
@@ -179,14 +209,27 @@
             border-color: #dbeafe;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
+        .bio-email {
+            font-family: inherit;
+            font-size: 1em;
+            font-weight: normal;
+            white-space: nowrap;
+        }
+        .bio-email::before {
+            content: '✉';
+            margin-right: 5px;
+            font-family: sans-serif;
+            font-weight: normal;
+        }
 
         h2 {
             font-size: 1.5rem;
+            line-height: 1.3;
             color: var(--accent);
             border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 10px;
-            margin-top: 50px;
-            margin-bottom: 25px;
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 14px;
             font-weight: normal;
         }
 
@@ -201,13 +244,15 @@
         }
 
         .project-group {
-            margin: 20px 0 24px;
+            margin: 0;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             background: #fcfdff;
             overflow: hidden;
             transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
         }
+
+        .project-group + .project-group { margin-top: 10px; }
 
         .project-group:hover,
         .project-group.is-expanded {
@@ -219,7 +264,7 @@
         .project-group summary {
             list-style: none;
             cursor: pointer;
-            padding: 14px 18px 16px;
+            padding: 12px 16px 13px;
             display: block;
             position: relative;
             font-family: 'Inter', sans-serif;
@@ -246,8 +291,8 @@
             color: #64748b;
             transition: transform 0.22s ease;
             position: absolute;
-            right: 18px;
-            top: 19px;
+            right: 16px;
+            top: 17px;
         }
 
         .project-group.is-expanded summary::after {
@@ -258,7 +303,7 @@
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            padding: 0 16px;
+            padding: 0 12px;
             transform: translateY(-4px);
             transition: max-height 0.48s cubic-bezier(0.22, 1, 0.36, 1),
                         opacity 0.28s ease,
@@ -270,7 +315,7 @@
         .project-group.is-expanded .project-body {
             max-height: var(--project-body-height, 2400px);
             opacity: 1;
-            padding: 8px 16px 4px;
+            padding: 6px 12px 0;
             transform: translateY(0);
         }
 
@@ -314,8 +359,8 @@
         .project-preview-inline {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 7px;
-            margin-top: 10px;
+            gap: 5px;
+            margin-top: 8px;
             padding-right: 28px;
         }
 
@@ -328,14 +373,10 @@
             font-size: 0.83rem;
             font-weight: 550;
             line-height: 1.3;
-            padding: 6px 10px;
+            padding: 5px 9px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        .project-preview-inline .preview-item:nth-child(n+5) {
-            display: none;
         }
 
         .project-group[open] .project-preview-inline {
@@ -344,9 +385,9 @@
 
         .paper-card {
             display: flex;
-            gap: 24px;
-            padding: 24px;
-            margin-bottom: 24px;
+            gap: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
             background: #fff;
             border: 1px solid #eaecf0;
             border-radius: var(--radius);
@@ -417,15 +458,16 @@
         .badge-link { border: 1px solid var(--primary) !important; ; color: var(--primary); background: transparent; }
         .badge-link:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
 
-        .news-list { list-style: none; padding: 0; }
+        .news-list { list-style: none; margin: 0; padding: 0; }
         .news-item {
             display: flex;
             gap: 15px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             font-size: 1rem;
             align-items: baseline;
             transition: transform 0.2s;
         }
+        .news-item:last-child { margin-bottom: 0; }
         .news-item:hover { transform: translateX(4px); }
         
         .news-date {
@@ -437,22 +479,195 @@
             color: #475569;
             min-width: 85px;
             text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .research-intro {
+            margin: 0 0 12px;
+            color: #475569;
+            font-size: 1rem;
+            line-height: 1.55;
+            text-wrap: pretty;
+        }
+        .research-topics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .research-topic {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid #e3eaf2;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 75%);
+            color: #24344d;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+        .research-topic::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            margin-right: 9px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(32, 84, 136, 0.09);
+            flex: 0 0 auto;
+        }
+
+        .education-list {
+            display: grid;
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .education-item {
+            display: grid;
+            grid-template-columns: 118px minmax(0, 1fr);
+            column-gap: 16px;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            padding: 13px 16px 13px 18px;
+            border: 1px solid #e5edf6;
+            border-radius: 10px;
+            background: linear-gradient(110deg, #f7faff 0%, #ffffff 62%);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .education-item::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), #6b8fb5);
+        }
+        .education-item:hover {
+            transform: translateX(3px);
+            border-color: #cfdeed;
+            box-shadow: 0 5px 14px rgba(32, 84, 136, 0.07);
+        }
+        .education-period {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: max-content;
+            padding: 3px 9px;
+            border: 1px solid #dbe7f3;
+            border-radius: 999px;
+            background: #fff;
+            color: var(--primary);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            white-space: nowrap;
+        }
+        .education-detail {
+            min-width: 0;
+            font-size: 1rem;
+            line-height: 1.45;
+        }
+        .education-main {
+            display: block;
+            color: #273142;
+        }
+        .education-main strong {
+            color: #111827;
+            font-weight: 600;
+        }
+        .education-note {
+            display: block;
+            margin-top: 3px;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+        }
+        .education-note::before {
+            content: '↳';
+            margin-right: 5px;
+            color: #94a3b8;
+        }
+
+        .awards-list {
+            display: grid;
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .award-item {
+            display: grid;
+            grid-template-columns: 118px minmax(0, 1fr);
+            column-gap: 16px;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 11px 16px 11px 18px;
+            border: 1px solid #eee9de;
+            border-radius: 10px;
+            background: linear-gradient(110deg, #fffaf1 0%, #ffffff 58%);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .award-item::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, #d49a2f, #efc66d);
+        }
+        .award-item:hover {
+            transform: translateX(3px);
+            border-color: #e5d5b5;
+            box-shadow: 0 5px 14px rgba(142, 102, 30, 0.07);
+        }
+        .award-date {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: max-content;
+            padding: 3px 9px;
+            border: 1px solid #eadcbd;
+            border-radius: 999px;
+            background: #fff;
+            color: #8a641d;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1.45;
+            white-space: nowrap;
+        }
+        .award-detail {
+            min-width: 0;
+            color: #273142;
+            font-size: 0.98rem;
+            line-height: 1.42;
         }
 
         .experience-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px 22px;
+            gap: 10px 14px;
         }
 
         .experience-card {
             display: flex;
             align-items: flex-start;
-            gap: 14px;
+            gap: 12px;
             background: #fff;
             border: 1px solid #eaecf0;
             border-radius: var(--radius);
-            padding: 14px 16px;
+            padding: 12px 14px;
             transition: all 0.25s ease;
         }
 
@@ -509,6 +724,54 @@
             line-height: 1.35;
         }
 
+        .section-note {
+            margin: 0 0 10px;
+            color: #777;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.35;
+        }
+
+        .activities-list {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--text-sec);
+        }
+        .activities-list li + li { margin-top: 2px; }
+
+        .page-footer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 30px;
+            padding-top: 16px;
+            border-top: 1px solid #eef2f6;
+            color: #64748b;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+        .visitor-map {
+            display: block;
+            flex: 0 0 auto;
+            border-bottom: 0 !important;
+            line-height: 0;
+            opacity: 0.68;
+            filter: grayscale(75%);
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+        .visitor-map:hover {
+            border-bottom: 0 !important;
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+        .visitor-map img {
+            display: block;
+            width: 112px;
+            height: auto;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 0;
@@ -550,13 +813,24 @@
                 font-size: 0.78rem;
                 white-space: nowrap;
             }
-            .social-citation {
-                margin-left: 0;
-                font-size: 0.74rem;
-            }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
+            .education-item {
+                grid-template-columns: 1fr;
+                row-gap: 6px;
+                padding: 12px 14px 12px 16px;
+            }
+            .award-item {
+                grid-template-columns: 1fr;
+                row-gap: 6px;
+                padding: 11px 14px 11px 16px;
+            }
+            .research-topics { grid-template-columns: 1fr; }
             .experience-grid { grid-template-columns: 1fr; }
+            .page-footer {
+                align-items: flex-start;
+            }
+            .visitor-map img { width: 96px; }
             .project-group summary { font-size: 0.96rem; padding: 12px 14px; }
             .project-body { padding: 0 10px; }
             .project-group.is-expanded .project-body { padding: 8px 10px 2px; }
@@ -604,6 +878,24 @@
                     {{personal.title}} <span style="color:#ddd; margin:0 8px;">|</span> {{personal.school}}
 
                 </div>
+
+                <div class="location-time">
+                    <span class="location-time-item">
+                        <svg class="location-time-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path>
+                            <circle cx="12" cy="10" r="2.5"></circle>
+                        </svg>
+                        {{personal.location}}
+                    </span>
+                    <span class="location-time-divider" aria-hidden="true">•</span>
+                    <span class="location-time-item">
+                        <svg class="location-time-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                        <time id="local-time" data-time-zone="{{personal.timeZone}}">--:--</time>
+                    </span>
+                </div>
                 
                 <div class="social-links">
                     <a href="mailto:{{personal.email}}" class="social-btn">
@@ -612,11 +904,6 @@
                     <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-btn">
                         <img src="./assets/imgs/google.png" alt="" aria-hidden="true">
                         Scholar
-                        {{#if personal.citations}}
-                            <span class="social-citation">
-                                {{personal.citations}}
-                            </span>
-                        {{/if}}
                     </a>
                     <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-btn">
                         <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> Github
@@ -634,16 +921,29 @@
         </div>
     </header>
 
+    {{#if research}}
+    <!-- Research Interests -->
+    <section class="research-section">
+        <h2>🔬 Research Interests</h2>
+        <p class="research-intro">{{{research.intro}}}</p>
+        <ul class="research-topics">
+            {{#each research.topics}}
+            <li class="research-topic">{{this}}</li>
+            {{/each}}
+        </ul>
+    </section>
+    {{/if}}
+
     <!-- Education -->
-    <section>
+    <section class="education-section">
         <h2>🎓 Education</h2>
-        <ul class="news-list">
+        <ul class="education-list">
             {{#each education}}
-            <li class="news-item">
-                <span class="news-date">{{period}}</span>
-                <span>
-                    {{#if emoji}}{{emoji}} {{/if}}
-                    {{{description}}}
+            <li class="education-item">
+                <span class="education-period">{{period}}</span>
+                <span class="education-detail">
+                    <span class="education-main">{{{description}}}</span>{{#if note}}
+                    <span class="education-note">{{{note}}}</span>{{/if}}
                 </span>
             </li>
             {{/each}}
@@ -652,7 +952,7 @@
 
 
     <!-- News -->
-    <section>
+    <section{{#unless showNews}} hidden{{/unless}}>
         <h2>📰 News</h2>
         <ul class="news-list">
             {{#each news}}
@@ -670,14 +970,14 @@
     <!-- Selected Projects -->
     <section>
         <h2>🗂️ Selected Projects</h2>
-        <div style="font-size: 0.9rem; color: #777; margin-bottom: 25px; font-family: 'Inter', sans-serif;">
+        <div class="section-note">
             * Equal Contribution &nbsp; # Project Lead
         </div>
 
         <!-- T2I Model -->
         <details class="project-group">
             <summary>
-                <span class="summary-title">♠ Generative Models & R1-like Reasoning <span class="project-state" aria-hidden="true"></span></span>
+                <span class="summary-title">♠ Multimodal Generation <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     {{#each projects.t2i_model}}
                     <span class="preview-item">{{{title}}}</span>
@@ -697,7 +997,9 @@
                             {{#each links}}
                             <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 {{type}}
-                                {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
+                                {{#if stars}}
+                                    <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
+                                {{/if}}
                             </a>
                             {{/each}}
                         </div>
@@ -711,7 +1013,7 @@
         <!-- 3D Reconstruction -->
         <details class="project-group">
             <summary>
-                <span class="summary-title">♠ 3D Reconstruction & Generative Model <span class="project-state" aria-hidden="true"></span></span>
+                <span class="summary-title">♠ 3D Vision <span class="project-state" aria-hidden="true"></span></span>
                 <span class="project-preview-inline">
                     {{#each projects.3d_reconstruction}}
                     <span class="preview-item">{{{title}}}</span>
@@ -731,7 +1033,9 @@
                             {{#each links}}
                             <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
                                 {{type}}
-                                {{#if stars}} <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span> {{/if}}
+                                {{#if stars}}
+                                    <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
+                                {{/if}}
                             </a>
                             {{/each}}
                         </div>
@@ -808,14 +1112,13 @@
 
 
     <!-- Awards -->
-    <section>
+    <section id="awards" class="awards-section">
         <h2>🏆 Awards</h2>
-        <ul class="news-list">
+        <ul class="awards-list">
             {{#each awards}}
-            <li class="news-item">
-                <span class="news-date">{{date}}</span>
-                <span>
-                    {{#if emoji}}{{emoji}} {{/if}}
+            <li class="award-item">
+                <span class="award-date">{{date}}</span>
+                <span class="award-detail">
                     {{{content}}}
                 </span>
             </li>
@@ -826,35 +1129,51 @@
     <!-- Professional Activities -->
     <section>
         <h2>🧑‍💻 Professional Activities</h2>
-        <ul style="color: var(--text-sec); padding-left: 20px;">
+        <ul class="activities-list">
             <li><strong>Conference Reviewer:</strong> {{activities.conference_reviewer}}</li>
             <li><strong>Journal Reviewer:</strong> {{activities.journal_reviewer}}</li>
         </ul>
     </section>
 
-    <!-- Footer Map -->
-    <div style="margin-top: 30px; text-align: center; opacity: 0.6; filter: grayscale(100%); transition: 0.3s;">
-        <a href="https://clustrmaps.com/site/1c5bo" title="Visit tracker">
-            <img style="width: 150px;" src="https://www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff" alt="Visitor map" />
+    <footer id="footer" class="page-footer">
+        <div class="footer-copy">
+            &copy; {{footer.copyrightYear}} <strong>{{personal.name}}</strong>. All rights reserved.
+            <div style="margin-top: 8px; font-size: 0.85rem;">
+                Last updated: {{footer.lastUpdated}}
+            </div>
+        </div>
+        {{#if footer.visitorTracker}}
+        <a class="visitor-map" href="{{footer.visitorTracker.pageUrl}}" target="_blank" rel="noopener noreferrer" title="Visitor statistics">
+            <img src="{{footer.visitorTracker.imageUrl}}" alt="Visitor map" loading="lazy">
         </a>
-    </div>
-    <style>div[style*="filter"]:hover { filter: grayscale(0%); opacity: 1; }</style>
-
-    <footer class="page-footer">
-        <div>
-            &copy; 2025 <strong>{{personal.name}}</strong>. All rights reserved.
-        </div>
-        <div style="margin-top: 8px; font-size: 0.85rem;">
-            Generated by <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="footer-link">SuperFCR</a>
-            <span style="margin: 0 6px; color: #ddd;">|</span>
-            Assisted by <span class="ai-text">Gemini 3</span>
-        </div>
+        {{/if}}
 </footer>
 
 </div>
 
 <script>
 (() => {
+    const localTime = document.getElementById('local-time');
+    if (localTime && window.Intl) {
+        try {
+            const formatter = new Intl.DateTimeFormat('en-GB', {
+                timeZone: localTime.dataset.timeZone || 'Asia/Shanghai',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            const updateLocalTime = () => {
+                const now = new Date();
+                localTime.textContent = formatter.format(now);
+                localTime.dateTime = now.toISOString();
+            };
+            updateLocalTime();
+            window.setInterval(updateLocalTime, 30000);
+        } catch (error) {
+            console.warn('Unable to display local time:', error);
+        }
+    }
+
     const groups = Array.from(document.querySelectorAll('.project-group'));
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 

@@ -5,25 +5,42 @@
     "citations": "N/A",
     "school": "School of Electronics and Computer Engineering",
     "university": "Peking University",
-    "location": "Beijing, China",
-    "email": "fcr1500583403@gmail.com",
+    "location": "Shenzhen, China",
+    "timeZone": "Asia/Shanghai",
+    "email": "chaoran.feng@stu.pku.edu.cn",
     "profileImage": "./assets/imgs/bio.jpg",
     "googleScholar": "https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en",
     "github": "https://github.com/SuperFCR"
   },
+  "footer": {
+    "copyrightYear": "2026",
+    "lastUpdated": "August 2026",
+    "visitorTracker": {
+      "pageUrl": "https://clustrmaps.com/site/1c5bo",
+      "imageUrl": "https://www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff"
+    }
+  },
   "education": [
     {
-      "period": "[2020-2024]",
-      "emoji": "🎉",
-      "description": "I received my B.E. degree from <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>, awarded the Outstanding Graduate (Top 3%), ranking <b>1<sup>st</sup></b>/85 for three years (2021-2023)."
+      "period": "2024–2027",
+      "description": "<strong>M.S. Student</strong>, School of Electronics and Computer Engineering, <a href=\"https://english.pku.edu.cn/\">Peking University</a>.",
+      "note": "Advised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
     },
     {
-      "period": "[2024-2027]",
-      "emoji": "💪",
-      "description": "I'm pursuing my M.S. degree in ECE, PKU, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
+      "period": "2020–2024",
+      "description": "<strong>B.E. Student</strong>, School of Future Technology, <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>."
     }
   ],
-  "biography": "I am a second-year M.S. student in ECE at Peking University and my research interests focus on <i>3D Vision</i>, <i>Neuromorphic Vision</i>, and <i>Generative Models</i>.<br><br>🎓 I am currently applying for Fall 2027 Ph.D. positions. I warmly welcome potential advisors and collaborators to contact me.",
+  "biography": "🎓 I am currently seeking Fall 2027 Ph.D. opportunities and full-time positions. I warmly welcome potential advisors, collaborators, and employers to contact me at <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a>.",
+  "research": {
+    "intro": "I work in the fields of Multimodal Generation and 3D Vision, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">Prof. Yonghong Tian</a> at <a href=\"https://pku-yuan.com\">YuanGroup</a>, Peking University. I strive to develop impactful research projects. Now, I focus on the following topics:",
+    "topics": [
+      "Multimodal Generation",
+      "Video World Models",
+      "Video Action Models"
+    ]
+  },
+  "showNews": false,
   "news": [
     {
       "date": "[2026-07]",
@@ -257,34 +274,24 @@
   ],
   "awards": [
     {
-      "date": "[2025-09]",
-      "emoji": "🌟",
+      "date": "2025.09",
       "content": "Ping'an Scholarship, Peking University"
     },
     {
-      "date": "[2024-06]",
-      "emoji": "🎓",
-      "content": "Outstanding Graduate, Dalian University of Technology (Top <b>3%</b>)"
+      "date": "2024.06",
+      "content": "Outstanding Graduate (Top <b>3%</b>), Dalian University of Technology"
     },
     {
-      "date": "[2023-05]",
-      "emoji": "🏆",
-      "content": "1<sup>st</sup> Prize in the China Robotics and Artificial Intelligence Competition (Ranked <b>1<sup>st</sup></b>/100+)"
+      "date": "2022.10",
+      "content": "Qubochuan Scholarship (Top 10 Recipients/Year), Dalian University of Technology"
     },
     {
-      "date": "[2022-10]",
-      "emoji": "🌟",
-      "content": "Qubochuan Scholarship, highest scholarship of DUT, awarded to only 10 recipients each year"
+      "date": "2021–2023",
+      "content": "National Scholarship, Dalian University of Technology"
     },
     {
-      "date": "[2021,2022,2023]",
-      "emoji": "🌟",
-      "content": "National Scholarship, three times, Dalian University of Technology"
-    },
-    {
-      "date": "[2021,2022,2023]",
-      "emoji": "🌟",
-      "content": "Academic Excellence Scholarship (First Class) (Ranked <b>1<sup>st</sup></b>/85), Dalian University of Technology"
+      "date": "2021–2023",
+      "content": "Academic Excellence Scholarship, Dalian University of Technology"
     }
   ],
   "activities": {
