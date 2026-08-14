@@ -132,6 +132,11 @@
             margin-bottom: 10px;
             line-height: 1.5;
         }
+        .role-divider {
+            margin: 0 8px;
+            color: #ddd;
+        }
+        .role-university { display: none; }
 
         .location-time {
             display: flex;
@@ -539,6 +544,23 @@
             background: var(--primary);
             box-shadow: 0 0 0 4px rgba(32, 84, 136, 0.09);
             flex: 0 0 auto;
+            transform-origin: center;
+            animation: research-pulse 2.8s ease-in-out infinite;
+        }
+        .research-topic:nth-child(2)::before { animation-delay: 0.45s; }
+        .research-topic:nth-child(3)::before { animation-delay: 0.9s; }
+
+        @keyframes research-pulse {
+            0%, 100% {
+                opacity: 0.72;
+                transform: scale(0.92);
+                box-shadow: 0 0 0 3px rgba(32, 84, 136, 0.09);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.12);
+                box-shadow: 0 0 0 7px rgba(32, 84, 136, 0);
+            }
         }
 
         .education-list {
@@ -803,18 +825,60 @@
                 border: 0;
                 border-radius: 0;
             }
-            .header-top { flex-direction: column-reverse; align-items: flex-start; gap: 20px;}
+            .header-top {
+                flex-direction: column-reverse;
+                align-items: flex-start;
+                gap: 18px;
+            }
             .header-info,
             .header-photo {
                 width: 100%;
                 min-width: 0;
             }
-            .avatar { width: 100%; max-width: 100%; height: auto; margin-bottom: 20px; }
-            .name-title { font-size: clamp(2.1rem, 10vw, 2.65rem); }
-            .role-info { font-size: 1rem; }
+            .header-photo {
+                display: flex;
+                justify-content: center;
+            }
+            .avatar {
+                width: min(230px, 72vw);
+                max-width: 100%;
+                height: auto;
+                margin: 0;
+                transform: rotate(0deg);
+            }
+            .avatar:hover {
+                transform: scale(1.01);
+            }
+            .name-title {
+                font-size: clamp(1.65rem, 8vw, 1.9rem);
+                letter-spacing: -0.35px;
+                white-space: nowrap;
+            }
+            .name-chinese {
+                margin-left: -0.08em;
+                font-size: 0.68em;
+                letter-spacing: 0.02em;
+                vertical-align: 0.03em;
+            }
+            .role-info {
+                display: flex;
+                align-items: baseline;
+                flex-wrap: nowrap;
+                margin-bottom: 10px;
+                font-size: 0.95rem;
+                line-height: 1.45;
+                white-space: nowrap;
+            }
+            .role-school { display: none; }
+            .role-university { display: inline; }
+            .role-divider {
+                display: inline;
+                margin: 0 7px;
+            }
             .bio-text-box {
-                padding: 22px;
-                font-size: 1rem;
+                padding: 16px;
+                font-size: 0.95rem;
+                line-height: 1.55;
                 text-align: left;
             }
             .social-links {
@@ -895,8 +959,7 @@
                     Chaoran Feng<span class="name-chinese" lang="zh-CN">（冯超然）</span>
                 </div>
                 <div class="role-info">
-                    Master Student <span style="color:#ddd; margin:0 8px;">|</span> School of Electronics and Computer Engineering
-
+                    <span class="role-title">Master Student</span><span class="role-divider" aria-hidden="true">|</span><span class="role-school">School of Electronics and Computer Engineering</span><span class="role-university">Peking University</span>
                 </div>
 
                 <div class="location-time">
