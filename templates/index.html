@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{locale.htmlLang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{personal.name}}'s homepage">
-    <title> Falcary's Homepage </title>
+{{#if locale.baseHref}}    <base href="{{locale.baseHref}}">{{/if}}
+    <meta name="description" content="{{meta.description}}">
+    <title>{{meta.title}}</title>
+    <link rel="alternate" hreflang="en" href="./">
+    <link rel="alternate" hreflang="zh-CN" href="./zh/">
+    <link rel="alternate" hreflang="x-default" href="./">
 
     {{#if analytics.measurementId}}
     <!-- Google tag (gtag.js) -->
@@ -20,8 +24,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="preload" href="assets/fonts/profile-fangsong.woff2" as="font" type="font/woff2" crossorigin>
 
     <style>
+        @font-face {
+            font-family: 'Profile Fangsong';
+            src: url('assets/fonts/profile-fangsong.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            unicode-range: U+51AF, U+7136, U+8D85, U+FF08-FF09;
+        }
+
         :root {
             --primary: #205488;        
             --primary-hover: #001F3F;  
@@ -65,6 +79,11 @@
             line-height: 1.6;
         }
 
+        html[lang="zh-CN"] body {
+            font-family: Georgia, 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'STSong', serif;
+            line-height: 1.72;
+        }
+
         a {
             color: var(--primary);
             text-decoration: none;
@@ -78,6 +97,7 @@
         }
 
         .container {
+            position: relative;
             width: min(1020px, calc(100% - 32px));
             max-width: 1020px;
             margin: 0 auto;
@@ -87,6 +107,45 @@
             box-shadow: 0 4px 30px rgba(0,0,0,0.08);
             border: 1px solid #e1e4e8;
             animation: fadeIn 0.8s ease-out;
+        }
+
+        .page-topbar {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            z-index: 20;
+        }
+        .language-switcher {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border: 1px solid #dbe3ec;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .language-option {
+            min-width: 38px;
+            padding: 6px 9px;
+            border: 0 !important;
+            border-radius: 999px;
+            color: #64748b;
+            text-align: center;
+            text-decoration: none;
+        }
+        .language-option:hover {
+            border: 0 !important;
+            color: var(--primary);
+            background: #f1f5f9;
+        }
+        .language-option.is-active {
+            color: #fff;
+            background: var(--primary);
+            pointer-events: none;
         }
 
         @keyframes fadeIn {
@@ -120,11 +179,22 @@
         }
         .name-chinese {
             margin-left: -0.1em;
-            font-family: 'FangSong_GB2312', 'FangSong', 'STFangsong', serif;
+            font-family: 'Profile Fangsong', 'FangSong_GB2312', 'FangSong', 'STFangsong', serif;
             font-size: 0.85em;
             font-weight: normal;
             letter-spacing: 0.02em;
             vertical-align: 0.01em;
+            white-space: nowrap;
+        }
+        .name-chinese-primary {
+            margin-left: 0;
+            font-size: 1em;
+        }
+        .name-english-secondary {
+            margin-left: 0.08em;
+            font-size: 0.68em;
+            letter-spacing: -0.02em;
+            vertical-align: 0.08em;
             white-space: nowrap;
         }
         .role-info {
@@ -367,19 +437,14 @@
             vertical-align: middle;
         }
 
-        .project-group:not(.is-expanded) .project-state::before {
-            content: 'Show';
-        }
-
         .project-group.is-expanded .project-state {
             color: #fff;
             background: var(--primary);
             border-color: var(--primary);
         }
-
-        .project-group.is-expanded .project-state::before {
-            content: 'Open';
-        }
+        .project-state-expanded { display: none; }
+        .project-group.is-expanded .project-state-collapsed { display: none; }
+        .project-group.is-expanded .project-state-expanded { display: inline; }
 
         .project-preview-inline {
             display: grid;
@@ -752,6 +817,12 @@
             margin: 0;
         }
 
+        html[lang="zh-CN"] .experience-title,
+        html[lang="zh-CN"] .experience-period,
+        html[lang="zh-CN"] .experience-host {
+            font-family: 'Inter', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+        }
+
         .experience-period {
             font-family: 'Inter', sans-serif;
             color: #64748b;
@@ -814,6 +885,28 @@
             height: auto;
         }
 
+        html[lang="zh-CN"] .role-info,
+        html[lang="zh-CN"] .paper-desc {
+            font-style: normal;
+        }
+        html[lang="zh-CN"] .bio-text-box,
+        html[lang="zh-CN"] .research-intro,
+        html[lang="zh-CN"] .paper-desc,
+        html[lang="zh-CN"] .education-detail,
+        html[lang="zh-CN"] .award-detail {
+            line-height: 1.72;
+            overflow-wrap: anywhere;
+        }
+        html[lang="zh-CN"] .social-btn,
+        html[lang="zh-CN"] .project-group summary,
+        html[lang="zh-CN"] .project-state,
+        html[lang="zh-CN"] .research-topic,
+        html[lang="zh-CN"] .badge,
+        html[lang="zh-CN"] .section-note,
+        html[lang="zh-CN"] .page-footer {
+            font-family: 'Inter', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 0;
@@ -826,6 +919,12 @@
                 padding: 28px 18px;
                 border: 0;
                 border-radius: 0;
+            }
+            .page-topbar {
+                position: static;
+                display: flex;
+                justify-content: flex-end;
+                margin: -10px 0 8px;
             }
             .header-top {
                 flex-direction: column-reverse;
@@ -861,6 +960,14 @@
                 font-size: 0.68em;
                 letter-spacing: 0.02em;
                 vertical-align: 0.03em;
+            }
+            .name-chinese-primary {
+                font-size: 1em;
+            }
+            .name-english-secondary {
+                margin-left: 0.05em;
+                font-size: 0.56em;
+                vertical-align: 0.1em;
             }
             .role-info {
                 display: flex;
@@ -911,6 +1018,41 @@
             }
             .research-topics { grid-template-columns: 1fr; }
             .experience-grid { grid-template-columns: 1fr; }
+            html[lang="zh-CN"] .experience-card {
+                align-items: center;
+                gap: 11px;
+                padding: 13px;
+            }
+            html[lang="zh-CN"] .experience-logo,
+            html[lang="zh-CN"] .experience-logo-fallback {
+                width: 48px;
+                height: 48px;
+            }
+            html[lang="zh-CN"] .experience-title {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+                font-size: 0.98rem;
+                line-height: 1.32;
+            }
+            html[lang="zh-CN"] .experience-title-joiner {
+                display: none;
+            }
+            html[lang="zh-CN"] .experience-organization {
+                color: #334155;
+                font-size: 0.88rem;
+                font-weight: 600;
+                letter-spacing: 0.01em;
+            }
+            html[lang="zh-CN"] .experience-period {
+                margin-top: 5px;
+                font-size: 0.82rem;
+            }
+            html[lang="zh-CN"] .experience-host {
+                margin-top: 4px;
+                font-size: 0.86rem;
+            }
             .page-footer {
                 align-items: flex-start;
             }
@@ -953,12 +1095,23 @@
 
 <div class="container">
 
+    <div class="page-topbar">
+        <nav class="language-switcher" aria-label="{{ui.languageSwitcherLabel}}">
+            <a href="{{locale.englishHref}}" hreflang="en" lang="en" class="language-option{{#unless locale.isChinese}} is-active{{/unless}}"{{#unless locale.isChinese}} aria-current="page"{{/unless}} data-analytics-event="language_switch" data-analytics-channel="en">{{ui.englishLabel}}</a>
+            <a href="{{locale.chineseHref}}" hreflang="zh-CN" lang="zh-CN" class="language-option{{#if locale.isChinese}} is-active{{/if}}"{{#if locale.isChinese}} aria-current="page"{{/if}} data-analytics-event="language_switch" data-analytics-channel="zh-CN">{{ui.chineseLabel}}</a>
+        </nav>
+    </div>
+
     <!-- Header -->
     <header>
         <div class="header-top">
             <div class="header-info">
                 <div class="name-title">
+                    {{#if locale.isChinese}}
+                    <span class="name-chinese name-chinese-primary">{{personal.nameChinese}}</span><span class="name-english-secondary" lang="en">（{{personal.name}}）</span>
+                    {{else}}
                     {{personal.name}}{{#if personal.nameChinese}}<span class="name-chinese" lang="zh-CN">（{{personal.nameChinese}}）</span>{{/if}}
+                    {{/if}}
                 </div>
                 <div class="role-info">
                     <span class="role-title">{{personal.title}}</span><span class="role-divider" aria-hidden="true">|</span><span class="role-school">{{personal.school}}</span><span class="role-university">{{personal.university}}</span>
@@ -978,26 +1131,26 @@
                             <circle cx="12" cy="12" r="9"></circle>
                             <path d="M12 7v5l3 2"></path>
                         </svg>
-                        <time id="local-time" data-time-zone="{{personal.timeZone}}">--:--</time>
+                        <time id="local-time" data-time-zone="{{personal.timeZone}}" data-locale="{{locale.dateTimeLocale}}">--:--</time>
                     </span>
                 </div>
                 
                 <div class="social-links">
                     <a href="mailto:{{personal.email}}" class="social-btn">
-                        <img src="./assets/imgs/envelope.png" alt="" aria-hidden="true"> Email
+                        <img src="./assets/imgs/envelope.png" alt="" aria-hidden="true"> {{ui.email}}
                     </a>
                     <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="scholar">
                         <img src="./assets/imgs/google.png" alt="" aria-hidden="true">
-                        Scholar
+                        {{ui.scholar}}
                     </a>
                     <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="github">
-                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> Github
+                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> {{ui.github}}
                     </a>
                 </div>
             </div>
 
             <div class="header-photo">
-                <img class="avatar" src="{{personal.profileImage}}" alt="Profile">
+                <img class="avatar" src="{{personal.profileImage}}" alt="{{ui.profileImageAlt}}">
             </div>
         </div>
 
@@ -1009,7 +1162,7 @@
     {{#if research}}
     <!-- Research Interests -->
     <section class="research-section">
-        <h2>🔬 Research Interests</h2>
+        <h2>🔬 {{ui.sections.research}}</h2>
         <p class="research-intro">{{{research.intro}}}</p>
         <ul class="research-topics">
             {{#each research.topics}}
@@ -1021,7 +1174,7 @@
 
     <!-- Education -->
     <section class="education-section">
-        <h2>🎓 Education</h2>
+        <h2>🎓 {{ui.sections.education}}</h2>
         <ul class="education-list">
             {{#each education}}
             <li class="education-item">
@@ -1038,7 +1191,7 @@
 
     <!-- News -->
     <section{{#unless showNews}} hidden{{/unless}}>
-        <h2>📰 News</h2>
+        <h2>📰 {{ui.sections.news}}</h2>
         <ul class="news-list">
             {{#each news}}
             <li class="news-item">
@@ -1054,70 +1207,39 @@
 
     <!-- Selected Projects -->
     <section>
-        <h2>🗂️ Selected Projects</h2>
+        <h2>🗂️ {{ui.sections.projects}}</h2>
         <div class="section-note">
-            * Equal Contribution &nbsp; # Project Lead
+            {{ui.equalContribution}} &nbsp; {{ui.projectLead}}
         </div>
 
-        <!-- T2I Model -->
-        <details class="project-group" data-research-area="multimodal_generation">
+        {{#each projectGroups}}
+        <details class="project-group" data-research-area="{{analyticsArea}}">
             <summary>
-                <span class="summary-title">♠ Multimodal Generation <span class="project-state" aria-hidden="true"></span></span>
+                <span class="summary-title">♠ {{label}}
+                    <span class="project-state" aria-hidden="true">
+                        <span class="project-state-collapsed">{{@root.ui.projectStateShow}}</span>
+                        <span class="project-state-expanded">{{@root.ui.projectStateHide}}</span>
+                    </span>
+                </span>
                 <span class="project-preview-inline">
-                    {{#each projects.t2i_model}}
+                    {{#each items}}
                     <span class="preview-item">{{{title}}}</span>
                     {{/each}}
                 </span>
             </summary>
             <div class="project-body">
-                {{#each projects.t2i_model}}
+                {{#each items}}
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
                         <div class="paper-authors">{{{authors}}}</div>
                         <div class="paper-desc">{{{description}}}</div>
-                        
-                        <div class="tag-row">
-                            <span class="badge badge-venue">{{venue}}</span>
-                            {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
-                                {{type}}
-                                {{#if stars}}
-                                    <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
-                                {{/if}}
-                            </a>
-                            {{/each}}
-                        </div>
-                    </div>
-                    <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
-                </div>
-                {{/each}}
-            </div>
-        </details>
 
-        <!-- 3D Reconstruction -->
-        <details class="project-group" data-research-area="3d_vision">
-            <summary>
-                <span class="summary-title">♠ 3D Vision <span class="project-state" aria-hidden="true"></span></span>
-                <span class="project-preview-inline">
-                    {{#each projects.3d_reconstruction}}
-                    <span class="preview-item">{{{title}}}</span>
-                    {{/each}}
-                </span>
-            </summary>
-            <div class="project-body">
-                {{#each projects.3d_reconstruction}}
-                <div class="paper-card">
-                    <div class="paper-content">
-                        <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
-                        <div class="paper-authors">{{{authors}}}</div>
-                        <div class="paper-desc">{{{description}}}</div>
-                        
                         <div class="tag-row">
                             <span class="badge badge-venue">{{venue}}</span>
                             {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
-                                {{type}}
+                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="{{type}}">
+                                {{label}}
                                 {{#if stars}}
                                     <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
                                 {{/if}}
@@ -1125,67 +1247,35 @@
                             {{/each}}
                         </div>
                     </div>
-                    <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="{{image}}" alt="{{@root.ui.projectImageAlt}}" loading="lazy">
                 </div>
                 {{/each}}
             </div>
         </details>
-
-        <!-- Neuromorphic Vision -->
-        <details class="project-group" data-research-area="neuromorphic_vision">
-            <summary>
-                <span class="summary-title">♠ Neuromorphic Vision <span class="project-state" aria-hidden="true"></span></span>
-                <span class="project-preview-inline">
-                    {{#each projects.neuromorphic_vision}}
-                    <span class="preview-item">{{{title}}}</span>
-                    {{/each}}
-                </span>
-            </summary>
-            <div class="project-body">
-                {{#each projects.neuromorphic_vision}}
-                <div class="paper-card">
-                    <div class="paper-content">
-                        <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
-                        <div class="paper-authors">{{{authors}}}</div>
-                        <div class="paper-desc">{{{description}}}</div>
-                        <div class="tag-row">
-                            <span class="badge badge-venue">{{venue}}</span>
-                            {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer">
-                                {{type}}
-                                {{#if stars}}
-                                    <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
-                                {{/if}}
-                            </a>
-                            {{/each}}
-                        </div>
-                    </div>
-                    <img class="paper-img" src="{{image}}" alt="Project Image" loading="lazy">
-                </div>
-                {{/each}}
-            </div>
-        </details>
+        {{/each}}
 
     </section>
 
 
     {{#if experiences}}
     <!-- Experience -->
-    <section>
-        <h2>💼 Experience</h2>
+    <section id="experience">
+        <h2>💼 {{ui.sections.experience}}</h2>
         <div class="experience-grid">
             {{#each experiences}}
             <div class="experience-card">
                 {{#if logo}}
-                <img class="experience-logo" src="{{logo}}" alt="{{organization}} logo" loading="lazy">
+                <img class="experience-logo" src="{{logo}}" alt="{{organization}}{{@root.ui.organizationLogoSuffix}}" loading="lazy">
                 {{else}}
                 <div class="experience-logo-fallback">{{#if emoji}}{{emoji}}{{else}}💼{{/if}}</div>
                 {{/if}}
                 <div>
-                    <p class="experience-title">{{title}}, {{organization}}</p>
+                    <p class="experience-title">
+                        <span class="experience-role">{{title}}</span><span class="experience-title-joiner">{{@root.ui.experienceTitleJoiner}}</span><span class="experience-organization">{{organization}}</span>
+                    </p>
                     <div class="experience-period">{{period}}</div>
                     {{#if host}}
-                    <div class="experience-host">Hosted by {{{host}}}</div>
+                    <div class="experience-host">{{@root.ui.hostedBy}} {{{host}}}</div>
                     {{/if}}
                 </div>
             </div>
@@ -1198,7 +1288,7 @@
 
     <!-- Awards -->
     <section id="awards" class="awards-section">
-        <h2>🏆 Awards</h2>
+        <h2>🏆 {{ui.sections.awards}}</h2>
         <ul class="awards-list">
             {{#each awards}}
             <li class="award-item">
@@ -1213,23 +1303,23 @@
 
     <!-- Professional Activities -->
     <section>
-        <h2>🧑‍💻 Professional Activities</h2>
+        <h2>🧑‍💻 {{ui.sections.activities}}</h2>
         <ul class="activities-list">
-            <li><strong>Conference Reviewer:</strong> {{activities.conference_reviewer}}</li>
-            <li><strong>Journal Reviewer:</strong> {{activities.journal_reviewer}}</li>
+            <li><strong>{{ui.conferenceReviewer}}</strong> {{activities.conference_reviewer}}</li>
+            <li><strong>{{ui.journalReviewer}}</strong> {{activities.journal_reviewer}}</li>
         </ul>
     </section>
 
     <footer id="footer" class="page-footer">
         <div class="footer-copy">
-            &copy; {{footer.copyrightYear}} <strong>{{personal.name}}</strong>. All rights reserved.
+            &copy; {{footer.copyrightYear}} <strong>{{personal.name}}</strong>{{ui.copyrightJoiner}}{{ui.allRightsReserved}}
             <div style="margin-top: 8px; font-size: 0.85rem;">
-                Last updated: {{footer.lastUpdated}}
+                {{ui.lastUpdated}}{{#unless locale.isChinese}} {{/unless}}{{footer.lastUpdated}}
             </div>
         </div>
         {{#if footer.visitorTracker}}
-        <a class="visitor-map" href="{{footer.visitorTracker.pageUrl}}" target="_blank" rel="noopener noreferrer" title="Visitor statistics">
-            <img src="{{footer.visitorTracker.imageUrl}}" alt="Visitor map" loading="lazy">
+        <a class="visitor-map" href="{{footer.visitorTracker.pageUrl}}" target="_blank" rel="noopener noreferrer" title="{{ui.visitorStatistics}}">
+            <img src="{{footer.visitorTracker.imageUrl}}" alt="{{ui.visitorMapAlt}}" loading="lazy">
         </a>
         {{/if}}
 </footer>
@@ -1241,7 +1331,7 @@
     const localTime = document.getElementById('local-time');
     if (localTime && window.Intl) {
         try {
-            const formatter = new Intl.DateTimeFormat('en-GB', {
+            const formatter = new Intl.DateTimeFormat(localTime.dataset.locale || 'en-GB', {
                 timeZone: localTime.dataset.timeZone || 'Asia/Shanghai',
                 hour: '2-digit',
                 minute: '2-digit',
@@ -1296,7 +1386,7 @@
             const shortTitle = title.includes(':') ? title.split(':', 1)[0] : title;
             const resourceLabel = link.classList.contains('paper-title')
                 ? 'title'
-                : link.textContent.replace(/★.*$/s, '').trim();
+                : link.dataset.resourceType || link.textContent.replace(/★.*$/s, '').trim();
 
             trackAnalyticsEvent('select_content', {
                 content_type: 'paper_resource',

@@ -8,6 +8,7 @@ If you modify your webpage based on this template, please kindly note the source
 - **Data-driven**: Separate content from presentation logic
 - **Easy maintenance**: Update content by editing JSON configuration
 - **Automatic generation**: One command to rebuild your entire homepage
+- **Bilingual output**: One shared template generates English (`/`) and Chinese (`/zh/`) pages
 - **Responsive design**: Clean and professional layout
 - **Customizable**: Easy to modify styles and structure
 
@@ -16,7 +17,10 @@ If you modify your webpage based on this template, please kindly note the source
 ```
 homepage/
 ├── config/
-│   └── data.json           # Data configuration file
+│   ├── data.json           # Shared content, links, authors, and assets
+│   └── locales/
+│       ├── en.json         # English interface strings
+│       └── zh-CN.json      # Chinese strings and content overrides
 ├── templates/
 │   └── index.html          # Handlebars HTML template
 ├── assets/
@@ -27,7 +31,8 @@ homepage/
 ├── build.js                # Build script
 ├── package.json            # Project configuration
 ├── README.md               # Documentation
-└── index.html              # Generated final homepage
+├── index.html              # Generated English homepage
+└── zh/index.html           # Generated Chinese homepage
 ```
 
 ## 🛠️ Setup & Usage
@@ -38,7 +43,7 @@ npm install
 ```
 
 ### 2. Configure Your Data
-Edit the `config/data.json` file with your personal information, projects, awards, etc.
+Edit `config/data.json` for shared information, projects, links, authors, and assets. Edit the files in `config/locales/` for language-specific interface strings and translations.
 
 ### 3. Generate Website
 ```bash
@@ -49,7 +54,19 @@ npm run build
 ```
 
 ### 4. View Results
-Open the generated `index.html` file in your browser.
+Open `index.html` for English or `zh/index.html` for Chinese.
+
+## 🌐 Localization Architecture
+
+The build keeps a single source of truth for research metadata:
+
+- `config/data.json` stores shared content such as paper titles, authors, venues, links, images, and analytics identifiers.
+- `config/locales/en.json` stores English interface labels and metadata.
+- `config/locales/zh-CN.json` stores Chinese interface labels plus a `content` object that overrides only translated fields.
+- `templates/index.html` is shared by both languages. Project categories and cards are rendered through one reusable loop.
+- `npm run build` deep-merges each locale with the shared data and produces both static pages.
+
+When adding a publication, add it once to `config/data.json`, then add a matching Chinese `description` entry at the same position in `config/locales/zh-CN.json`. Links, stars, images, authors, and venues are inherited automatically.
 
 ## 📝 Configuration Guide
 
@@ -77,7 +94,8 @@ Array format, each entry contains:
 - `description`: Detailed description with HTML support
 
 ### Projects (`projects`)
-Organized into two categories:
+Organized into three categories:
+- `t2i_model`: Multimodal generation projects
 - `3d_reconstruction`: 3D reconstruction related projects
 - `neuromorphic_vision`: Neuromorphic vision projects
 
@@ -133,8 +151,9 @@ Edit the `<style>` block in `templates/index.html` to customize the website appe
 
 The `build.js` script:
 - Reads data from `config/data.json`
+- Merges language-specific files from `config/locales/`
 - Compiles `templates/index.html` with Handlebars
-- Outputs the final `index.html` file
+- Outputs `index.html` and `zh/index.html`
 - Injects optional Google Scholar citations and GitHub stars when the generated JSON files exist
 
 ### Error Handling

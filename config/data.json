@@ -44,6 +44,20 @@
       "Video Generation with 3D Priors"
     ]
   },
+  "projectCategories": [
+    {
+      "key": "t2i_model",
+      "analyticsArea": "multimodal_generation"
+    },
+    {
+      "key": "3d_reconstruction",
+      "analyticsArea": "3d_vision"
+    },
+    {
+      "key": "neuromorphic_vision",
+      "analyticsArea": "neuromorphic_vision"
+    }
+  ],
   "showNews": false,
   "news": [
     {

@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Chaoran Feng's homepage">
-    <title> Falcary's Homepage </title>
+
+    <meta name="description" content="Academic homepage of Chaoran Feng, a researcher in multimodal generation and 3D vision.">
+    <title>Chaoran Feng | Academic Homepage</title>
+    <link rel="alternate" hreflang="en" href="./">
+    <link rel="alternate" hreflang="zh-CN" href="./zh/">
+    <link rel="alternate" hreflang="x-default" href="./">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3G650ZKVZ"></script>
@@ -18,8 +22,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="preload" href="assets/fonts/profile-fangsong.woff2" as="font" type="font/woff2" crossorigin>
 
     <style>
+        @font-face {
+            font-family: 'Profile Fangsong';
+            src: url('assets/fonts/profile-fangsong.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            unicode-range: U+51AF, U+7136, U+8D85, U+FF08-FF09;
+        }
+
         :root {
             --primary: #205488;        
             --primary-hover: #001F3F;  
@@ -63,6 +77,11 @@
             line-height: 1.6;
         }
 
+        html[lang="zh-CN"] body {
+            font-family: Georgia, 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'STSong', serif;
+            line-height: 1.72;
+        }
+
         a {
             color: var(--primary);
             text-decoration: none;
@@ -76,6 +95,7 @@
         }
 
         .container {
+            position: relative;
             width: min(1020px, calc(100% - 32px));
             max-width: 1020px;
             margin: 0 auto;
@@ -85,6 +105,45 @@
             box-shadow: 0 4px 30px rgba(0,0,0,0.08);
             border: 1px solid #e1e4e8;
             animation: fadeIn 0.8s ease-out;
+        }
+
+        .page-topbar {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            z-index: 20;
+        }
+        .language-switcher {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px;
+            border: 1px solid #dbe3ec;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-size: 0.74rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .language-option {
+            min-width: 38px;
+            padding: 6px 9px;
+            border: 0 !important;
+            border-radius: 999px;
+            color: #64748b;
+            text-align: center;
+            text-decoration: none;
+        }
+        .language-option:hover {
+            border: 0 !important;
+            color: var(--primary);
+            background: #f1f5f9;
+        }
+        .language-option.is-active {
+            color: #fff;
+            background: var(--primary);
+            pointer-events: none;
         }
 
         @keyframes fadeIn {
@@ -118,11 +177,22 @@
         }
         .name-chinese {
             margin-left: -0.1em;
-            font-family: 'FangSong_GB2312', 'FangSong', 'STFangsong', serif;
+            font-family: 'Profile Fangsong', 'FangSong_GB2312', 'FangSong', 'STFangsong', serif;
             font-size: 0.85em;
             font-weight: normal;
             letter-spacing: 0.02em;
             vertical-align: 0.01em;
+            white-space: nowrap;
+        }
+        .name-chinese-primary {
+            margin-left: 0;
+            font-size: 1em;
+        }
+        .name-english-secondary {
+            margin-left: 0.08em;
+            font-size: 0.68em;
+            letter-spacing: -0.02em;
+            vertical-align: 0.08em;
             white-space: nowrap;
         }
         .role-info {
@@ -365,19 +435,14 @@
             vertical-align: middle;
         }
 
-        .project-group:not(.is-expanded) .project-state::before {
-            content: 'Show';
-        }
-
         .project-group.is-expanded .project-state {
             color: #fff;
             background: var(--primary);
             border-color: var(--primary);
         }
-
-        .project-group.is-expanded .project-state::before {
-            content: 'Open';
-        }
+        .project-state-expanded { display: none; }
+        .project-group.is-expanded .project-state-collapsed { display: none; }
+        .project-group.is-expanded .project-state-expanded { display: inline; }
 
         .project-preview-inline {
             display: grid;
@@ -750,6 +815,12 @@
             margin: 0;
         }
 
+        html[lang="zh-CN"] .experience-title,
+        html[lang="zh-CN"] .experience-period,
+        html[lang="zh-CN"] .experience-host {
+            font-family: 'Inter', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+        }
+
         .experience-period {
             font-family: 'Inter', sans-serif;
             color: #64748b;
@@ -812,6 +883,28 @@
             height: auto;
         }
 
+        html[lang="zh-CN"] .role-info,
+        html[lang="zh-CN"] .paper-desc {
+            font-style: normal;
+        }
+        html[lang="zh-CN"] .bio-text-box,
+        html[lang="zh-CN"] .research-intro,
+        html[lang="zh-CN"] .paper-desc,
+        html[lang="zh-CN"] .education-detail,
+        html[lang="zh-CN"] .award-detail {
+            line-height: 1.72;
+            overflow-wrap: anywhere;
+        }
+        html[lang="zh-CN"] .social-btn,
+        html[lang="zh-CN"] .project-group summary,
+        html[lang="zh-CN"] .project-state,
+        html[lang="zh-CN"] .research-topic,
+        html[lang="zh-CN"] .badge,
+        html[lang="zh-CN"] .section-note,
+        html[lang="zh-CN"] .page-footer {
+            font-family: 'Inter', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 0;
@@ -824,6 +917,12 @@
                 padding: 28px 18px;
                 border: 0;
                 border-radius: 0;
+            }
+            .page-topbar {
+                position: static;
+                display: flex;
+                justify-content: flex-end;
+                margin: -10px 0 8px;
             }
             .header-top {
                 flex-direction: column-reverse;
@@ -859,6 +958,14 @@
                 font-size: 0.68em;
                 letter-spacing: 0.02em;
                 vertical-align: 0.03em;
+            }
+            .name-chinese-primary {
+                font-size: 1em;
+            }
+            .name-english-secondary {
+                margin-left: 0.05em;
+                font-size: 0.56em;
+                vertical-align: 0.1em;
             }
             .role-info {
                 display: flex;
@@ -909,6 +1016,41 @@
             }
             .research-topics { grid-template-columns: 1fr; }
             .experience-grid { grid-template-columns: 1fr; }
+            html[lang="zh-CN"] .experience-card {
+                align-items: center;
+                gap: 11px;
+                padding: 13px;
+            }
+            html[lang="zh-CN"] .experience-logo,
+            html[lang="zh-CN"] .experience-logo-fallback {
+                width: 48px;
+                height: 48px;
+            }
+            html[lang="zh-CN"] .experience-title {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+                font-size: 0.98rem;
+                line-height: 1.32;
+            }
+            html[lang="zh-CN"] .experience-title-joiner {
+                display: none;
+            }
+            html[lang="zh-CN"] .experience-organization {
+                color: #334155;
+                font-size: 0.88rem;
+                font-weight: 600;
+                letter-spacing: 0.01em;
+            }
+            html[lang="zh-CN"] .experience-period {
+                margin-top: 5px;
+                font-size: 0.82rem;
+            }
+            html[lang="zh-CN"] .experience-host {
+                margin-top: 4px;
+                font-size: 0.86rem;
+            }
             .page-footer {
                 align-items: flex-start;
             }
@@ -951,6 +1093,13 @@
 
 <div class="container">
 
+    <div class="page-topbar">
+        <nav class="language-switcher" aria-label="Language">
+            <a href="./index.html" hreflang="en" lang="en" class="language-option is-active" aria-current="page" data-analytics-event="language_switch" data-analytics-channel="en">EN</a>
+            <a href="./zh/index.html" hreflang="zh-CN" lang="zh-CN" class="language-option" data-analytics-event="language_switch" data-analytics-channel="zh-CN">中文</a>
+        </nav>
+    </div>
+
     <!-- Header -->
     <header>
         <div class="header-top">
@@ -976,7 +1125,7 @@
                             <circle cx="12" cy="12" r="9"></circle>
                             <path d="M12 7v5l3 2"></path>
                         </svg>
-                        <time id="local-time" data-time-zone="Asia/Shanghai">--:--</time>
+                        <time id="local-time" data-time-zone="Asia/Shanghai" data-locale="en-GB">--:--</time>
                     </span>
                 </div>
                 
@@ -989,13 +1138,13 @@
                         Scholar
                     </a>
                     <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="github">
-                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> Github
+                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> GitHub
                     </a>
                 </div>
             </div>
 
             <div class="header-photo">
-                <img class="avatar" src="./assets/imgs/bio.jpg" alt="Profile">
+                <img class="avatar" src="./assets/imgs/bio.jpg" alt="Portrait of Chaoran Feng">
             </div>
         </div>
 
@@ -1117,13 +1266,17 @@
     <section>
         <h2>🗂️ Selected Projects</h2>
         <div class="section-note">
-            * Equal Contribution &nbsp; # Project Lead
+            * Equal contribution &nbsp; # Project lead
         </div>
 
-        <!-- T2I Model -->
         <details class="project-group" data-research-area="multimodal_generation">
             <summary>
-                <span class="summary-title">♠ Multimodal Generation <span class="project-state" aria-hidden="true"></span></span>
+                <span class="summary-title">♠ Multimodal Generation
+                    <span class="project-state" aria-hidden="true">
+                        <span class="project-state-collapsed">Show</span>
+                        <span class="project-state-expanded">Hide</span>
+                    </span>
+                </span>
                 <span class="project-preview-inline">
                     <span class="preview-item">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</span>
                     <span class="preview-item">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</span>
@@ -1137,86 +1290,89 @@
                         <a href="https://arxiv.org/abs/2607.07675" class="paper-title">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</a>
                         <div class="paper-authors">Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng</div>
                         <div class="paper-desc">A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">Technical Report</span>
-                            <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
                                 Project Page
                             </a>
-                            <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★629</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="./assets/files/StyleGRPO.pdf" class="paper-title">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</a>
                         <div class="paper-authors"><u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
-                            <a href="./assets/files/StyleGRPO.pdf" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="./assets/files/StyleGRPO.pdf" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_stylegrpo.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_stylegrpo.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2602.24233" class="paper-title">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</a>
                         <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Yufan Deng, Jie Wu, Xiaojie Li, Rui Wang, Yunpeng Chen, Daquan Zhou</div>
                         <div class="paper-desc">A novel framework for enhancing spatial understanding in image generation via reward modeling.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
-                            <a href="https://arxiv.org/abs/2602.24233" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/abs/2602.24233" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://dagroup-pku.github.io/SpatialT2I/" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://dagroup-pku.github.io/SpatialT2I/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
                                 Project Page
                             </a>
-                            <a href="https://github.com/DAGroup-PKU/SpatialT2I" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/DAGroup-PKU/SpatialT2I" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★85</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_spatialt2i.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_spatialt2i.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2503.07265" class="paper-title">🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation</a>
                         <div class="paper-authors">Yuwei Niu, Munan Ning, Mengren Zheng, Weiyang Jin, Bin Lin, Peng Jin, Jiaqi Liao, <u><b>Chaoran Feng</b></u>, Fanqing Meng, Kunpeng Ning, Bin Zhu, Li Yuan</div>
                         <div class="paper-desc">The first benchmark for evaluating world-knowledge-informed semantic understanding in text-to-image generation, with 1,000 prompts across cultural common sense, spatio-temporal reasoning, and natural science.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">ICML 2026</span>
-                            <a href="https://arxiv.org/abs/2503.07265" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/abs/2503.07265" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/WISE" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PKU-YuanGroup/WISE" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★210</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_wise.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_wise.png" alt="Project preview" loading="lazy">
                 </div>
             </div>
         </details>
-
-        <!-- 3D Reconstruction -->
         <details class="project-group" data-research-area="3d_vision">
             <summary>
-                <span class="summary-title">♠ 3D Vision <span class="project-state" aria-hidden="true"></span></span>
+                <span class="summary-title">♠ 3D Vision
+                    <span class="project-state" aria-hidden="true">
+                        <span class="project-state-collapsed">Show</span>
+                        <span class="project-state-expanded">Hide</span>
+                    </span>
+                </span>
                 <span class="project-preview-inline">
                     <span class="preview-item">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</span>
                     <span class="preview-item">🌫️ DeblurNVS: Geometric Latent Diffusion for Novel View Synthesis from Sparse Motion-Blurred Images</span>
@@ -1233,126 +1389,129 @@
                         <a href="#" class="paper-title">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</a>
                         <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†</div>
                         <div class="paper-desc">An Event-Augmented 3D Diffusion framework for generalizable novel view synthesis from event streams and sparse RGB inputs.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">ICLR 2026</span>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_ea3d.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_ea3d.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2606.01315" class="paper-title">🌫️ DeblurNVS: Geometric Latent Diffusion for Novel View Synthesis from Sparse Motion-Blurred Images</a>
                         <div class="paper-authors">Changyue Shi, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†</div>
                         <div class="paper-desc">A geometric latent diffusion framework for high-fidelity novel view synthesis directly from sparse motion-blurred images without per-scene optimization.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">arXiv 2026</span>
-                            <a href="https://arxiv.org/abs/2606.01315" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/abs/2606.01315" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/DeblurNVS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PKU-YuanGroup/DeblurNVS" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★15</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_deblurnvs.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_deblurnvs.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2512.10369" class="paper-title">🍿 Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhankuo Xu, Yingtao Li, Jianbin Zhao, Jiashu Yang, Wangbo Yu, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework for coherent 3D Gaussian Splatting from sparse and motion-blurred views using physics-aware deblurring priors coupled with diffusion-driven geometry completion.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
-                            <a href="https://arxiv.org/abs/2512.10369" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/abs/2512.10369" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PotatoBigRoom/CoherentGS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PotatoBigRoom/CoherentGS" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★98</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_coherentgs.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_coherentgs.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="paper-title">🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting</a>
                         <div class="paper-authors">Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†</div>
                         <div class="paper-desc">A novel style transfer framework with 3D Gaussian Splatting.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
-                            <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_tune_your_style.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_tune_your_style.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2407.19548" class="paper-title">🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</a>
                         <div class="paper-authors">Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†</div>
                         <div class="paper-desc">The project is about 3D generation using a generation-reconstruction cycle for a unified diffusion process.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
-                            <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/Cycle3D" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PKU-YuanGroup/Cycle3D" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★219</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_cycle3d.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_cycle3d.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2503.23162" class="paper-title">🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</a>
                         <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†</div>
                         <div class="paper-desc">A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2026</span>
-                            <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/NeuralGS" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PKU-YuanGroup/NeuralGS" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★183</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_neuralgs.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_neuralgs.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://ieeexplore.ieee.org/document/11223960" class="paper-title">👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction</a>
                         <div class="paper-authors">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, and Yonghong Tian†</div>
                         <div class="paper-desc">One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.</div>
-                        
+
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
-                            <a href="https://ieeexplore.ieee.org/document/11223960" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://ieeexplore.ieee.org/document/11223960" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_nofa++.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_nofa++.png" alt="Project preview" loading="lazy">
                 </div>
             </div>
         </details>
-
-        <!-- Neuromorphic Vision -->
         <details class="project-group" data-research-area="neuromorphic_vision">
             <summary>
-                <span class="summary-title">♠ Neuromorphic Vision <span class="project-state" aria-hidden="true"></span></span>
+                <span class="summary-title">♠ Neuromorphic Vision
+                    <span class="project-state" aria-hidden="true">
+                        <span class="project-state-collapsed">Show</span>
+                        <span class="project-state-expanded">Hide</span>
+                    </span>
+                </span>
                 <span class="project-preview-inline">
                     <span class="preview-item">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</span>
                     <span class="preview-item">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</span>
@@ -1366,70 +1525,74 @@
                         <a href="https://arxiv.org/pdf/2505.15287" class="paper-title">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</a>
                         <div class="paper-authors">Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†</div>
                         <div class="paper-desc">The large-scale event dataset and a novel pipeline to simulate the event stream with 3DGS.</div>
+
                         <div class="tag-row">
                             <span class="badge badge-venue">NeurIPS 2025 D&amp;B Track</span>
-                            <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PKU-YuanGroup/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★20</span>
                             </a>
-                            <a href="https://huggingface.co/datasets/Falcary/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://huggingface.co/datasets/Falcary/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Datasets">
                                 Datasets
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_gs2e.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_gs2e.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2508.09912" class="paper-title">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.</div>
+
                         <div class="tag-row">
                             <span class="badge badge-venue">ACM MM 2025</span>
-                            <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_e_4dgs.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_e_4dgs.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2405.20224" class="paper-title">✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images</a>
                         <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.</div>
+
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
-                            <a href="https://arxiv.org/abs/2405.20224" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/abs/2405.20224" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://github.com/PKU-YuanGroup/EvaGaussians" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://github.com/PKU-YuanGroup/EvaGaussians" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                                     <span style="margin-left:2px; opacity:0.8;">★60</span>
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_evagaussian.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_evagaussian.png" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2501.02807" class="paper-title">⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">3D reconstruction with event streams under noisy poses and unbounded scenes.</div>
+
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
-                            <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
-                            <a href="https://drexubery.github.io/EvaGaussians/" class="badge badge-link" target="_blank" rel="noopener noreferrer">
+                            <a href="https://drexubery.github.io/EvaGaussians/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
                                 Code
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_ae_nerf.png" alt="Project Image" loading="lazy">
+                    <img class="paper-img" src="./assets/pipelines/Pipeline_ae_nerf.png" alt="Project preview" loading="lazy">
                 </div>
             </div>
         </details>
@@ -1438,13 +1601,15 @@
 
 
     <!-- Experience -->
-    <section>
+    <section id="experience">
         <h2>💼 Experience</h2>
         <div class="experience-grid">
             <div class="experience-card">
                 <img class="experience-logo" src="./assets/logo/horizon_logo.jpg" alt="Horizon Robotics logo" loading="lazy">
                 <div>
-                    <p class="experience-title">Research Intern, Horizon Robotics</p>
+                    <p class="experience-title">
+                        <span class="experience-role">Research Intern</span><span class="experience-title-joiner">, </span><span class="experience-organization">Horizon Robotics</span>
+                    </p>
                     <div class="experience-period">Mar. 2025 - Sep. 2025</div>
                     <div class="experience-host">Hosted by Yanfeng Zhao</div>
                 </div>
@@ -1452,7 +1617,9 @@
             <div class="experience-card">
                 <img class="experience-logo" src="./assets/logo/ant_logo.jpg" alt="Ant Research logo" loading="lazy">
                 <div>
-                    <p class="experience-title">Research Intern, Ant Research</p>
+                    <p class="experience-title">
+                        <span class="experience-role">Research Intern</span><span class="experience-title-joiner">, </span><span class="experience-organization">Ant Research</span>
+                    </p>
                     <div class="experience-period">Mar. 2026 - Now</div>
                     <div class="experience-host">Hosted by <a href="https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener noreferrer">Ka Leong Cheng</a></div>
                 </div>
@@ -1527,7 +1694,7 @@
     const localTime = document.getElementById('local-time');
     if (localTime && window.Intl) {
         try {
-            const formatter = new Intl.DateTimeFormat('en-GB', {
+            const formatter = new Intl.DateTimeFormat(localTime.dataset.locale || 'en-GB', {
                 timeZone: localTime.dataset.timeZone || 'Asia/Shanghai',
                 hour: '2-digit',
                 minute: '2-digit',
@@ -1582,7 +1749,7 @@
             const shortTitle = title.includes(':') ? title.split(':', 1)[0] : title;
             const resourceLabel = link.classList.contains('paper-title')
                 ? 'title'
-                : link.textContent.replace(/★.*$/s, '').trim();
+                : link.dataset.resourceType || link.textContent.replace(/★.*$/s, '').trim();
 
             trackAnalyticsEvent('select_content', {
                 content_type: 'paper_resource',

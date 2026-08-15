@@ -1,0 +1,201 @@
+{
+  "locale": {
+    "htmlLang": "zh-CN",
+    "isChinese": true,
+    "baseHref": "../",
+    "dateTimeLocale": "zh-CN",
+    "englishHref": "./index.html",
+    "chineseHref": "./zh/index.html"
+  },
+  "meta": {
+    "title": "冯超然｜学术主页",
+    "description": "冯超然的个人学术主页，研究方向包括多模态生成与三维视觉。"
+  },
+  "ui": {
+    "languageSwitcherLabel": "语言切换",
+    "englishLabel": "EN",
+    "chineseLabel": "中文",
+    "email": "邮箱",
+    "scholar": "谷歌学术",
+    "github": "GitHub",
+    "profileImageAlt": "冯超然的个人照片",
+    "projectImageAlt": "项目示意图",
+    "organizationLogoSuffix": "标志",
+    "sections": {
+      "research": "研究方向",
+      "education": "教育经历",
+      "news": "近期动态",
+      "projects": "代表性项目",
+      "experience": "研究经历",
+      "awards": "荣誉奖励",
+      "activities": "学术服务"
+    },
+    "projectGroupLabels": {
+      "t2i_model": "多模态生成",
+      "3d_reconstruction": "三维视觉",
+      "neuromorphic_vision": "神经形态视觉"
+    },
+    "projectStateShow": "展开",
+    "projectStateHide": "收起",
+    "equalContribution": "* 共同一作",
+    "projectLead": "# 项目负责人",
+    "resourceLabels": {
+      "Paper": "论文",
+      "Project Page": "项目主页",
+      "Code": "代码",
+      "Datasets": "数据集"
+    },
+    "experienceTitleJoiner": "，",
+    "hostedBy": "合作导师：",
+    "conferenceReviewer": "会议审稿人：",
+    "journalReviewer": "期刊审稿人：",
+    "copyrightJoiner": "，",
+    "allRightsReserved": "版权所有。",
+    "lastUpdated": "最后更新：",
+    "visitorStatistics": "访客统计",
+    "visitorMapAlt": "访客分布图"
+  },
+  "content": {
+    "personal": {
+      "title": "硕士研究生",
+      "school": "北京大学·信息工程学院",
+      "university": "北京大学",
+      "location": "中国深圳"
+    },
+    "footer": {
+      "lastUpdated": "2026年8月"
+    },
+    "education": [
+      {
+        "description": "<strong>硕士研究生</strong>，计算机科学与技术专业，信息工程学院，<a href=\"https://www.pku.edu.cn/\">北京大学</a>。",
+        "note": "导师：<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>、<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">田永鸿教授</a>。"
+      },
+      {
+        "description": "<strong>工学学士</strong>，人工智能专业，未来技术学院，<a href=\"https://www.dlut.edu.cn/\">大连理工大学</a>。"
+      }
+    ],
+    "biography": "🎓 我正在寻找 2027 年秋季入学的博士机会及全职工作机会。欢迎潜在导师、合作者和用人单位通过 <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a> 与我联系。",
+    "research": {
+      "intro": "我的研究方向为多模态生成与三维视觉，目前在北京大学 <a href=\"https://pku-yuan.com\">YuanGroup</a> 开展研究，由<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>和<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">田永鸿教授</a>指导。我致力于具有实际影响力的研究工作，现阶段主要关注以下方向：",
+      "topics": [
+        "多模态生成",
+        "视频世界模型",
+        "融合三维先验的视频生成"
+      ]
+    },
+    "news": [
+      {
+        "content": "我们发布了面向具身智能的大规模 MoE 视频基础模型 <a href=\"https://arxiv.org/abs/2607.07675\">LingBot-Video</a>，并通过后训练奖励与强化学习进行对齐。"
+      },
+      {
+        "content": "两篇论文被 <i>CVPR 2026</i> 接收：Style-GRPO 与 SpatialT2I。"
+      },
+      {
+        "content": "两篇论文被 <i>AAAI 2026</i> 接收：<a href=\"https://arxiv.org/pdf/2503.23162\">NeuralGS</a> 与 <a href=\"https://arxiv.org/pdf/2412.15321\">Next Patch Prediction</a>。"
+      },
+      {
+        "content": "论文 <a href=\"https://arxiv.org/pdf/2505.15287\">GS2E</a> 被 <i>NeurIPS 2025</i> 接收。"
+      },
+      {
+        "content": "论文 <a href=\"https://arxiv.org/pdf/2508.09912\">E-4DGS</a> 被 <i>ACM MM 2025</i> 接收。"
+      },
+      {
+        "content": "两篇论文被 <i>ICCV 2025</i> 接收：<a href=\"https://arxiv.org/pdf/2405.20224\">EvaGaussians</a> 与 <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">Tune-Your-Style</a>。"
+      },
+      {
+        "content": "我们发布了 <a href=\"https://arxiv.org/pdf/2503.23162\">NeuralGS</a>，通过多个轻量 MLP 的神经场表征紧凑编码三维高斯属性。"
+      },
+      {
+        "content": "我们发布了 <a href=\"https://arxiv.org/pdf/2501.02807\">AE-NeRF</a>，面向位姿噪声与大尺度无界场景中的事件流三维重建。"
+      },
+      {
+        "content": "两篇论文被 <i>AAAI 2025</i> 接收。"
+      },
+      {
+        "content": "我们发布了 <a href=\"https://arxiv.org/pdf/2405.20224\">EvaGaussians</a>，首次利用稀疏 RGB 帧与事件流重建清晰静态三维场景。"
+      }
+    ],
+    "projects": {
+      "t2i_model": [
+        {
+          "description": "面向具身智能的 DiT-MoE 视频预训练范式；主要负责后训练奖励设计，以及针对物理合理性与任务完成度对齐的强化学习框架。"
+        },
+        {
+          "description": "一种由奖励建模引导、基于语义感知偏好优化的图像风格迁移框架。"
+        },
+        {
+          "description": "一种通过奖励建模增强图像生成空间理解能力的框架。"
+        },
+        {
+          "description": "首个面向文生图模型世界知识语义理解的评测基准，包含 1,000 条提示词，覆盖文化常识、时空推理与自然科学。"
+        }
+      ],
+      "3d_reconstruction": [
+        {
+          "description": "一种事件增强的三维扩散框架，可根据事件流与稀疏 RGB 输入实现具有泛化能力的新视角合成。"
+        },
+        {
+          "description": "一种几何潜空间扩散框架，无需逐场景优化，即可从稀疏运动模糊图像直接合成高保真新视角。"
+        },
+        {
+          "description": "面向稀疏运动模糊视图的连贯三维高斯重建框架，将物理感知去模糊先验与扩散驱动的几何补全相结合。"
+        },
+        {
+          "description": "一种基于三维高斯泼溅、支持强度调节的三维风格迁移框架。"
+        },
+        {
+          "description": "通过生成—重建循环统一扩散过程，实现高质量且一致的图生三维生成。"
+        },
+        {
+          "description": "使用神经场与轻量 MLP 紧凑编码三维高斯，适用于大规模场景表达。"
+        },
+        {
+          "description": "无需微调的单图 NeRF 人脸化身重建方法，可实现高保真重建与动态驱动。"
+        }
+      ],
+      "neuromorphic_vision": [
+        {
+          "description": "面向事件流生成的大规模数据集与新型仿真管线，以三维高斯泼溅作为高效数据生成器。"
+        },
+        {
+          "description": "一种利用多视角事件相机重建高速运动场景的高保真动态三维重建框架。"
+        },
+        {
+          "description": "一种面向位姿噪声与动态场景、由事件辅助的运动模糊图像三维重建方法。"
+        },
+        {
+          "description": "一种适用于位姿噪声和大尺度无界场景的事件流神经辐射场三维重建方法。"
+        }
+      ]
+    },
+    "experiences": [
+      {
+        "title": "3D生成算法实习生",
+        "organization": "Horizon Robotics",
+        "period": "2025年3月—2025年9月"
+      },
+      {
+        "title": "视频生成算法实习生",
+        "organization": "AntGroup Lingbot",
+        "period": "2026年3月至今"
+      }
+    ],
+    "awards": [
+      {
+        "content": "北京大学平安奖学金"
+      },
+      {
+        "content": "大连理工大学优秀毕业生（前 <b>3%</b>）"
+      },
+      {
+        "content": "大连理工大学屈伯川奖学金（每年 10 人）"
+      },
+      {
+        "content": "大连理工大学国家奖学金"
+      },
+      {
+        "content": "大连理工大学学习优秀奖学金"
+      }
+    ]
+  }
+}

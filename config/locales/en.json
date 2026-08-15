@@ -1,0 +1,57 @@
+{
+  "locale": {
+    "htmlLang": "en",
+    "isChinese": false,
+    "dateTimeLocale": "en-GB",
+    "englishHref": "./index.html",
+    "chineseHref": "./zh/index.html"
+  },
+  "meta": {
+    "title": "Chaoran Feng | Academic Homepage",
+    "description": "Academic homepage of Chaoran Feng, a researcher in multimodal generation and 3D vision."
+  },
+  "ui": {
+    "languageSwitcherLabel": "Language",
+    "englishLabel": "EN",
+    "chineseLabel": "中文",
+    "email": "Email",
+    "scholar": "Scholar",
+    "github": "GitHub",
+    "profileImageAlt": "Portrait of Chaoran Feng",
+    "projectImageAlt": "Project preview",
+    "organizationLogoSuffix": " logo",
+    "sections": {
+      "research": "Research Interests",
+      "education": "Education",
+      "news": "News",
+      "projects": "Selected Projects",
+      "experience": "Experience",
+      "awards": "Awards",
+      "activities": "Professional Activities"
+    },
+    "projectGroupLabels": {
+      "t2i_model": "Multimodal Generation",
+      "3d_reconstruction": "3D Vision",
+      "neuromorphic_vision": "Neuromorphic Vision"
+    },
+    "projectStateShow": "Show",
+    "projectStateHide": "Hide",
+    "equalContribution": "* Equal contribution",
+    "projectLead": "# Project lead",
+    "resourceLabels": {
+      "Paper": "Paper",
+      "Project Page": "Project Page",
+      "Code": "Code",
+      "Datasets": "Datasets"
+    },
+    "experienceTitleJoiner": ", ",
+    "hostedBy": "Hosted by",
+    "conferenceReviewer": "Conference Reviewer:",
+    "journalReviewer": "Journal Reviewer:",
+    "copyrightJoiner": ". ",
+    "allRightsReserved": "All rights reserved.",
+    "lastUpdated": "Last updated:",
+    "visitorStatistics": "Visitor statistics",
+    "visitorMapAlt": "Visitor map"
+  }
+}
