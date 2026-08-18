@@ -280,7 +280,8 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(32, 84, 136, 0.15);
         }
-        .social-btn img { width: 16px; height: 16px; opacity: 0.8; flex: 0 0 auto; }
+        .social-btn img,
+        .social-btn svg { width: 16px; height: 16px; opacity: 0.8; flex: 0 0 auto; }
 
         .bio-text-box {
             width: 100%; /* 占满 */
@@ -990,7 +991,7 @@
             }
             .social-links {
                 display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 8px;
                 width: 100%;
             }
@@ -1139,6 +1140,13 @@
                     </a>
                     <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="github">
                         <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> GitHub
+                    </a>
+                    <a href="./assets/files/ChaoranFeng_CV.pdf" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="cv">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M6 3h8l4 4v14H6z"></path>
+                            <path d="M14 3v5h5M9 13h6M9 17h6"></path>
+                        </svg>
+                        简历
                     </a>
                 </div>
             </div>

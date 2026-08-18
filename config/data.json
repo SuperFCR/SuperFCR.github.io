@@ -11,7 +11,8 @@
     "email": "chaoran.feng@stu.pku.edu.cn",
     "profileImage": "./assets/imgs/bio.jpg",
     "googleScholar": "https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en",
-    "github": "https://github.com/SuperFCR"
+    "github": "https://github.com/SuperFCR",
+    "cv": "./assets/files/ChaoranFeng_CV.pdf"
   },
   "analytics": {
     "measurementId": "G-E3G650ZKVZ"
