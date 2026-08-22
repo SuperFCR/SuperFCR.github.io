@@ -109,6 +109,18 @@
   "projects": {
     "t2i_model": [
       {
+        "title": "🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models",
+        "authors": "Haiyang Zhou, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Xunyu Zhou, Yonghong Tian, Li Yuan",
+        "description": "A unified visual world model for controllable large-baseline novel view synthesis from monocular images or videos, combining occlusion-aware 3D point-cloud guidance with video diffusion for precise camera control and geometrically consistent generation.",
+        "venue": "arXiv 2026",
+        "image": "./assets/pipelines/Pipeline_uniworld_view.jpg",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2608.04701"},
+          {"type": "Project Page", "url": "https://zhouhyocean.github.io/uniworld-view/"},
+          {"type": "Code", "url": "https://github.com/PKU-YuanGroup/UniWorld-View"}
+        ]
+      },
+      {
         "title": "🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence",
         "authors": "Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng",
         "description": "A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.",
