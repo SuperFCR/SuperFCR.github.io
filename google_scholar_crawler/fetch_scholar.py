@@ -1,90 +1,153 @@
-import requests
-from bs4 import BeautifulSoup
 import json
 import os
 import re
-import time
+from pathlib import Path
 
-# 你的 Scholar ID
-AUTHOR_ID = 'Thyo5v4AAAAJ' 
+import requests
+from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-# ----------------- 1. Scholar 抓取函数 -----------------
+
+AUTHOR_ID = "Thyo5v4AAAAJ"
+SCHOLAR_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    )
+}
+
+
+def write_json_atomic(path, data):
+    """Write generated data without risking a partially written cache file."""
+    path = Path(path)
+    temporary_path = path.with_suffix(f"{path.suffix}.tmp")
+    with temporary_path.open("w", encoding="utf-8") as output:
+        json.dump(data, output, ensure_ascii=False, indent=2)
+        output.write("\n")
+    os.replace(temporary_path, path)
+
+
 def fetch_scholar_data():
     print(f"🚀 [Scholar] Starting fetch for ID: {AUTHOR_ID}")
     url = f"https://scholar.google.com/citations?user={AUTHOR_ID}&hl=en"
-    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200: return None
+        response = requests.get(url, headers=SCHOLAR_HEADERS, timeout=10)
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         stats = soup.find_all("td", class_="gsc_rsb_std")
-        if stats:
-            print(f"✅ [Scholar] Success! Citations: {stats[0].text}")
-            return {"citedby": stats[0].text, "h_index": stats[1].text}
-    except Exception as e:
-        print(f"❌ [Scholar] Error: {e}")
+        if len(stats) >= 3:
+            print(
+                "✅ [Scholar] Success! "
+                f"Citations: {stats[0].text}, h-index: {stats[2].text}"
+            )
+            return {"citedby": stats[0].text, "h_index": stats[2].text}
+        print("⚠️ [Scholar] Statistics were not present in the response.")
+    except requests.RequestException as error:
+        print(f"❌ [Scholar] Error: {error}")
     return None
 
-# ----------------- 2. GitHub Star 抓取函数 -----------------
+
+def github_session():
+    retry_policy = Retry(
+        total=3,
+        connect=3,
+        read=3,
+        status=3,
+        backoff_factor=1,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=("GET",),
+        respect_retry_after_header=True,
+    )
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=retry_policy))
+    session.headers.update(
+        {
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "SuperFCR-homepage-updater",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+    )
+
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        session.headers["Authorization"] = f"Bearer {token}"
+    return session
+
+
+def repositories_from_config(config_path):
+    try:
+        with Path(config_path).open("r", encoding="utf-8") as config_file:
+            data = json.load(config_file)
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Could not read project configuration: {error}") from error
+
+    repositories = {}
+    for projects in data.get("projects", {}).values():
+        for project in projects:
+            for link in project.get("links", []):
+                url = link.get("url", "")
+                match = re.search(r"github\.com/([^/]+)/([^/?#]+)", url)
+                if not match:
+                    continue
+                owner, repository = match.groups()
+                repository = re.sub(r"\.git$", "", repository)
+                repositories[url] = f"{owner}/{repository}"
+    return repositories
+
+
 def fetch_github_stars(config_path):
     print(f"🚀 [GitHub] Reading repo links from {config_path}")
-    
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except Exception as e:
-        print(f"❌ [GitHub] Could not read config file: {e}")
-        return {}
+    repositories = repositories_from_config(config_path)
+    print(f"🔎 [GitHub] Found {len(repositories)} repositories.")
 
     stars_map = {}
-    repos_to_fetch = set()
-
-    if 'projects' in data:
-        for category in data['projects']:
-            for project in data['projects'][category]:
-                if 'links' in project:
-                    for link in project['links']:
-                        url = link.get('url', '')
-                        match = re.search(r'github\.com/([^/]+)/([^/]+)', url)
-                        if match:
-                            repo_api = f"{match.group(1)}/{match.group(2)}"
-                            repo_api = repo_api.replace(".git", "").rstrip("/")
-                            repos_to_fetch.add((url, repo_api))
-
-    print(f"🔎 [GitHub] Found {len(repos_to_fetch)} repositories.")
-
-    for full_url, repo_name in repos_to_fetch:
-        api_url = f"https://api.github.com/repos/{repo_name}"
-        try:
-            resp = requests.get(api_url, timeout=5)
-            if resp.status_code == 200:
-                info = resp.json()
-                stars = info.get('stargazers_count', 0)
+    failures = []
+    with github_session() as session:
+        for full_url, repo_name in sorted(repositories.items()):
+            api_url = f"https://api.github.com/repos/{repo_name}"
+            try:
+                response = session.get(api_url, timeout=10)
+                response.raise_for_status()
+                stars = response.json().get("stargazers_count")
+                if not isinstance(stars, int):
+                    raise ValueError("response did not contain an integer stargazers_count")
                 stars_map[full_url] = stars
                 print(f"   🌟 {repo_name}: {stars}")
-            else:
-                print(f"   ⚠️ Failed {repo_name}: {resp.status_code}")
-            
-            time.sleep(0.5) 
-        except Exception as e:
-            print(f"   ❌ Error fetching {repo_name}: {e}")
+            except (requests.RequestException, ValueError) as error:
+                failures.append(f"{repo_name}: {error}")
+                print(f"   ❌ Error fetching {repo_name}: {error}")
 
+    if failures:
+        details = "; ".join(failures)
+        raise RuntimeError(
+            "GitHub star refresh was incomplete; keeping the previous cache. "
+            f"Failures: {details}"
+        )
     return stars_map
 
-if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_dir = os.path.join(script_dir, '..', 'config')
-    data_json_path = os.path.join(config_dir, 'data.json')
-    
-    os.makedirs(config_dir, exist_ok=True)
+
+def main():
+    script_dir = Path(__file__).resolve().parent
+    config_dir = script_dir.parent / "config"
+    data_json_path = config_dir / "data.json"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
     scholar_data = fetch_scholar_data()
     if scholar_data:
-        with open(os.path.join(config_dir, 'scholar_data.json'), 'w') as f:
-            json.dump(scholar_data, f, indent=2)
-            
-    github_data = fetch_github_stars(data_json_path)
-    if github_data:
-        with open(os.path.join(config_dir, 'github_data.json'), 'w') as f:
-            json.dump(github_data, f, indent=2)
-        print(f"💾 GitHub Data saved to config/github_data.json")
+        write_json_atomic(config_dir / "scholar_data.json", scholar_data)
+
+    try:
+        github_data = fetch_github_stars(data_json_path)
+    except RuntimeError as error:
+        print(f"❌ [GitHub] {error}")
+        raise SystemExit(1) from error
+
+    write_json_atomic(config_dir / "github_data.json", github_data)
+    print("💾 GitHub Data saved to config/github_data.json")
+
+
+if __name__ == "__main__":
+    main()

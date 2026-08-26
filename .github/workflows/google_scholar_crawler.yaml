@@ -1,49 +1,62 @@
-name: Update Homepage & Citations
+name: Update Homepage Data
+
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   workflow_dispatch:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+
+concurrency:
+  group: homepage-data-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Install Python dependencies
-      run: |
-        pip install requests beautifulsoup4
+      - name: Install Python dependencies
+        run: python -m pip install --disable-pip-version-check requests beautifulsoup4
 
-    - name: Run Crawler
-      run: python google_scholar_crawler/fetch_scholar.py
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Refresh Scholar and GitHub data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python google_scholar_crawler/fetch_scholar.py
 
-    - name: Install Node dependencies
-      run: npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
 
-    - name: Build Website
-      run: node build.js
-    - name: Commit and Push
-      run: |
-        git config --global user.name "GitHub Action"
-        git config --global user.email "action@github.com"
-        
-        # 添加所有可能有变化的文件
-        git add index.html config/scholar_data.json
-        
-        # 提交并推送
-        git commit -m "🤖 Auto-update: Citations updated" || echo "No changes to commit"
-        git push
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build website
+        run: npm run build
+
+      - name: Commit and push generated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- config/github_data.json config/scholar_data.json index.html zh/index.html
+
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+          else
+            git commit -m "chore: refresh homepage data [skip ci]"
+            git push
+          fi
