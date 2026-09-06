@@ -94,6 +94,12 @@ Array format, each entry contains:
 - `description`: Detailed description with HTML support
 
 ### Projects (`projects`)
+`projectShowcaseIds` in `config/data.json` selects and orders the entries shown
+in the separate **Projects** section. The other entries appear under **Selected
+Research Papers**, grouped by research direction. Each entry is rendered once;
+the source arrays and their locale overrides stay in their original order.
+Both sections share the original card in `templates/partials/paper.html`.
+
 Organized into three categories:
 - `t2i_model`: Multimodal generation projects
 - `3d_reconstruction`: 3D reconstruction related projects

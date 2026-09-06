@@ -1263,9 +1263,9 @@
         </ul>
     </section>
 
-    <!-- Selected Projects -->
-    <section>
-        <h2 data-section-id="projects">🗂️ 代表性项目</h2>
+    <!-- Selected Research Papers -->
+    <section id="research-papers">
+        <h2 data-section-id="projects">🗂️ 代表性论文</h2>
         <div class="section-note">
             * 共同一作 &nbsp; # 项目负责人
         </div>
@@ -1279,64 +1279,17 @@
                     </span>
                 </span>
                 <span class="project-preview-inline">
-                    <span class="preview-item">🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models</span>
-                    <span class="preview-item">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</span>
                     <span class="preview-item">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</span>
                     <span class="preview-item">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</span>
                     <span class="preview-item">🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation</span>
                 </span>
             </summary>
             <div class="project-body">
-                <div class="paper-card" data-content-id="uniworld_view">
-                    <div class="paper-content">
-                        <a href="https://arxiv.org/abs/2608.04701" class="paper-title" data-resource-type="Paper">🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models</a>
-                        <div class="paper-authors">Haiyang Zhou, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Xunyu Zhou, Yonghong Tian, Li Yuan</div>
-                        <div class="paper-desc">一个面向单目图像或视频、支持大基线可控新视角合成的统一视觉世界模型；将遮挡感知的三维点云引导与视频扩散相结合，实现精准相机控制与几何一致的内容生成。</div>
-
-                        <div class="tag-row">
-                            <span class="badge badge-venue">arXiv 2026</span>
-                            <a href="https://arxiv.org/abs/2608.04701" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
-                                论文
-                            </a>
-                            <a href="https://zhouhyocean.github.io/uniworld-view/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
-                                项目主页
-                            </a>
-                            <a href="https://github.com/PKU-YuanGroup/UniWorld-View" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
-                                代码
-                                    <span style="margin-left:2px; opacity:0.8;">★149</span>
-                            </a>
-                        </div>
-                    </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_uniworld_view.jpg" alt="项目示意图" loading="lazy">
-                </div>
-                <div class="paper-card" data-content-id="lingbot_video">
-                    <div class="paper-content">
-                        <a href="https://arxiv.org/abs/2607.07675" class="paper-title" data-resource-type="Paper">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</a>
-                        <div class="paper-authors">Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng</div>
-                        <div class="paper-desc">面向具身智能的 DiT-MoE 视频预训练范式；主要负责后训练奖励设计，以及针对物理合理性与任务完成度对齐的强化学习框架。</div>
-
-                        <div class="tag-row">
-                            <span class="badge badge-venue">Technical Report</span>
-                            <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
-                                论文
-                            </a>
-                            <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
-                                项目主页
-                            </a>
-                            <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
-                                代码
-                                    <span style="margin-left:2px; opacity:0.8;">★945</span>
-                            </a>
-                        </div>
-                    </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="项目示意图" loading="lazy">
-                </div>
-                <div class="paper-card" data-content-id="style_grpo">
+                <div class="paper-card" data-content-id="style_grpo" data-research-area="multimodal_generation">
                     <div class="paper-content">
                         <a href="./assets/files/StyleGRPO.pdf" class="paper-title" data-resource-type="Paper">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</a>
                         <div class="paper-authors"><u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†</div>
                         <div class="paper-desc">一种由奖励建模引导、基于语义感知偏好优化的图像风格迁移框架。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
                             <a href="./assets/files/StyleGRPO.pdf" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1346,12 +1299,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_stylegrpo.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="enhancing_spatial_understanding_in_image_generation_via_reward_modeling">
+                <div class="paper-card" data-content-id="enhancing_spatial_understanding_in_image_generation_via_reward_modeling" data-research-area="multimodal_generation">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2602.24233" class="paper-title" data-resource-type="Paper">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</a>
                         <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Yufan Deng, Jie Wu, Xiaojie Li, Rui Wang, Yunpeng Chen, Daquan Zhou</div>
                         <div class="paper-desc">一种通过奖励建模增强图像生成空间理解能力的框架。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
                             <a href="https://arxiv.org/abs/2602.24233" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1368,12 +1320,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_spatialt2i.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="wise">
+                <div class="paper-card" data-content-id="wise" data-research-area="multimodal_generation">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2503.07265" class="paper-title" data-resource-type="Paper">🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation</a>
                         <div class="paper-authors">Yuwei Niu, Munan Ning, Mengren Zheng, Weiyang Jin, Bin Lin, Peng Jin, Jiaqi Liao, <u><b>Chaoran Feng</b></u>, Fanqing Meng, Kunpeng Ning, Bin Zhu, Li Yuan</div>
                         <div class="paper-desc">首个面向文生图模型世界知识语义理解的评测基准，包含 1,000 条提示词，覆盖文化常识、时空推理与自然科学。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICML 2026</span>
                             <a href="https://arxiv.org/abs/2503.07265" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1408,24 +1359,22 @@
                 </span>
             </summary>
             <div class="project-body">
-                <div class="paper-card" data-content-id="ea3d">
+                <div class="paper-card" data-content-id="ea3d" data-research-area="3d_vision">
                     <div class="paper-content">
                         <span class="paper-title">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</span>
                         <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†</div>
                         <div class="paper-desc">一种事件增强的三维扩散框架，可根据事件流与稀疏 RGB 输入实现具有泛化能力的新视角合成。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICLR 2026</span>
                         </div>
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_ea3d.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="deblurnvs">
+                <div class="paper-card" data-content-id="deblurnvs" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2606.01315" class="paper-title" data-resource-type="Paper">🌫️ DeblurNVS: Geometric Latent Diffusion for Novel View Synthesis from Sparse Motion-Blurred Images</a>
                         <div class="paper-authors">Changyue Shi, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†</div>
                         <div class="paper-desc">一种几何潜空间扩散框架，无需逐场景优化，即可从稀疏运动模糊图像直接合成高保真新视角。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">arXiv 2026</span>
                             <a href="https://arxiv.org/abs/2606.01315" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1439,12 +1388,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_deblurnvs.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="breaking_the_vicious_cycle">
+                <div class="paper-card" data-content-id="breaking_the_vicious_cycle" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2512.10369" class="paper-title" data-resource-type="Paper">🍿 Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhankuo Xu, Yingtao Li, Jianbin Zhao, Jiashu Yang, Wangbo Yu, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">面向稀疏运动模糊视图的连贯三维高斯重建框架，将物理感知去模糊先验与扩散驱动的几何补全相结合。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
                             <a href="https://arxiv.org/abs/2512.10369" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1458,12 +1406,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_coherentgs.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="tune_your_style">
+                <div class="paper-card" data-content-id="tune_your_style" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="paper-title" data-resource-type="Paper">🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting</a>
                         <div class="paper-authors">Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†</div>
                         <div class="paper-desc">一种基于三维高斯泼溅、支持强度调节的三维风格迁移框架。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
                             <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1473,12 +1420,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_tune_your_style.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="cycle3d">
+                <div class="paper-card" data-content-id="cycle3d" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2407.19548" class="paper-title" data-resource-type="Paper">🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</a>
                         <div class="paper-authors">Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†</div>
                         <div class="paper-desc">通过生成—重建循环统一扩散过程，实现高质量且一致的图生三维生成。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
                             <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1492,12 +1438,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_cycle3d.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="neuralgs">
+                <div class="paper-card" data-content-id="neuralgs" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2503.23162" class="paper-title" data-resource-type="Paper">🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</a>
                         <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†</div>
                         <div class="paper-desc">使用神经场与轻量 MLP 紧凑编码三维高斯，适用于大规模场景表达。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2026</span>
                             <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1511,12 +1456,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_neuralgs.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="nofa">
+                <div class="paper-card" data-content-id="nofa" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://ieeexplore.ieee.org/document/11223960" class="paper-title" data-resource-type="Paper">👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction</a>
                         <div class="paper-authors">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, and Yonghong Tian†</div>
                         <div class="paper-desc">无需微调的单图 NeRF 人脸化身重建方法，可实现高保真重建与动态驱动。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
                             <a href="https://ieeexplore.ieee.org/document/11223960" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1544,12 +1488,11 @@
                 </span>
             </summary>
             <div class="project-body">
-                <div class="paper-card" data-content-id="gs2e">
+                <div class="paper-card" data-content-id="gs2e" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2505.15287" class="paper-title" data-resource-type="Paper">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</a>
                         <div class="paper-authors">Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†</div>
                         <div class="paper-desc">面向事件流生成的大规模数据集与新型仿真管线，以三维高斯泼溅作为高效数据生成器。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">NeurIPS 2025 D&amp;B Track</span>
                             <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1566,12 +1509,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_gs2e.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="e_4dgs">
+                <div class="paper-card" data-content-id="e_4dgs" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2508.09912" class="paper-title" data-resource-type="Paper">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">一种利用多视角事件相机重建高速运动场景的高保真动态三维重建框架。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ACM MM 2025</span>
                             <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1581,12 +1523,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_e_4dgs.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="evagaussians">
+                <div class="paper-card" data-content-id="evagaussians" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2405.20224" class="paper-title" data-resource-type="Paper">✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images</a>
                         <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">一种面向位姿噪声与动态场景、由事件辅助的运动模糊图像三维重建方法。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
                             <a href="https://arxiv.org/abs/2405.20224" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1600,12 +1541,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_evagaussian.png" alt="项目示意图" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="ae_nerf">
+                <div class="paper-card" data-content-id="ae_nerf" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2501.02807" class="paper-title" data-resource-type="Paper">⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">一种适用于位姿噪声和大尺度无界场景的事件流神经辐射场三维重建方法。</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
                             <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1621,6 +1561,54 @@
             </div>
         </details>
 
+    </section>
+
+
+    <!-- Projects -->
+    <section id="projects">
+        <h2 data-section-id="project_showcase">🛠️ 项目</h2>
+        <div class="paper-card" data-content-id="lingbot_video" data-research-area="multimodal_generation">
+            <div class="paper-content">
+                <a href="https://arxiv.org/abs/2607.07675" class="paper-title" data-resource-type="Paper">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</a>
+                <div class="paper-authors">Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng</div>
+                <div class="paper-desc">面向具身智能的 DiT-MoE 视频预训练范式；主要负责后训练奖励设计，以及针对物理合理性与任务完成度对齐的强化学习框架。</div>
+                <div class="tag-row">
+                    <span class="badge badge-venue">Technical Report</span>
+                    <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                        论文
+                    </a>
+                    <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
+                        项目主页
+                    </a>
+                    <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
+                        代码
+                            <span style="margin-left:2px; opacity:0.8;">★945</span>
+                    </a>
+                </div>
+            </div>
+            <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="项目示意图" loading="lazy">
+        </div>
+        <div class="paper-card" data-content-id="uniworld_view" data-research-area="multimodal_generation">
+            <div class="paper-content">
+                <a href="https://arxiv.org/abs/2608.04701" class="paper-title" data-resource-type="Paper">🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models</a>
+                <div class="paper-authors">Haiyang Zhou, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Xunyu Zhou, Yonghong Tian, Li Yuan</div>
+                <div class="paper-desc">一个面向单目图像或视频、支持大基线可控新视角合成的统一视觉世界模型；将遮挡感知的三维点云引导与视频扩散相结合，实现精准相机控制与几何一致的内容生成。</div>
+                <div class="tag-row">
+                    <span class="badge badge-venue">arXiv 2026</span>
+                    <a href="https://arxiv.org/abs/2608.04701" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                        论文
+                    </a>
+                    <a href="https://zhouhyocean.github.io/uniworld-view/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
+                        项目主页
+                    </a>
+                    <a href="https://github.com/PKU-YuanGroup/UniWorld-View" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
+                        代码
+                            <span style="margin-left:2px; opacity:0.8;">★149</span>
+                    </a>
+                </div>
+            </div>
+            <img class="paper-img" src="./assets/pipelines/Pipeline_uniworld_view.jpg" alt="项目示意图" loading="lazy">
+        </div>
     </section>
 
 

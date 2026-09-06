@@ -1263,9 +1263,9 @@
         </ul>
     </section>
 
-    <!-- Selected Projects -->
-    <section>
-        <h2 data-section-id="projects">🗂️ Selected Projects</h2>
+    <!-- Selected Research Papers -->
+    <section id="research-papers">
+        <h2 data-section-id="projects">🗂️ Selected Research Papers</h2>
         <div class="section-note">
             * Equal contribution &nbsp; # Project lead
         </div>
@@ -1279,64 +1279,17 @@
                     </span>
                 </span>
                 <span class="project-preview-inline">
-                    <span class="preview-item">🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models</span>
-                    <span class="preview-item">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</span>
                     <span class="preview-item">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</span>
                     <span class="preview-item">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</span>
                     <span class="preview-item">🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation</span>
                 </span>
             </summary>
             <div class="project-body">
-                <div class="paper-card" data-content-id="uniworld_view">
-                    <div class="paper-content">
-                        <a href="https://arxiv.org/abs/2608.04701" class="paper-title" data-resource-type="Paper">🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models</a>
-                        <div class="paper-authors">Haiyang Zhou, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Xunyu Zhou, Yonghong Tian, Li Yuan</div>
-                        <div class="paper-desc">A unified visual world model for controllable large-baseline novel view synthesis from monocular images or videos, combining occlusion-aware 3D point-cloud guidance with video diffusion for precise camera control and geometrically consistent generation.</div>
-
-                        <div class="tag-row">
-                            <span class="badge badge-venue">arXiv 2026</span>
-                            <a href="https://arxiv.org/abs/2608.04701" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
-                                Paper
-                            </a>
-                            <a href="https://zhouhyocean.github.io/uniworld-view/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
-                                Project Page
-                            </a>
-                            <a href="https://github.com/PKU-YuanGroup/UniWorld-View" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
-                                Code
-                                    <span style="margin-left:2px; opacity:0.8;">★149</span>
-                            </a>
-                        </div>
-                    </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_uniworld_view.jpg" alt="Project preview" loading="lazy">
-                </div>
-                <div class="paper-card" data-content-id="lingbot_video">
-                    <div class="paper-content">
-                        <a href="https://arxiv.org/abs/2607.07675" class="paper-title" data-resource-type="Paper">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</a>
-                        <div class="paper-authors">Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng</div>
-                        <div class="paper-desc">A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.</div>
-
-                        <div class="tag-row">
-                            <span class="badge badge-venue">Technical Report</span>
-                            <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
-                                Paper
-                            </a>
-                            <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
-                                Project Page
-                            </a>
-                            <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
-                                Code
-                                    <span style="margin-left:2px; opacity:0.8;">★945</span>
-                            </a>
-                        </div>
-                    </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="Project preview" loading="lazy">
-                </div>
-                <div class="paper-card" data-content-id="style_grpo">
+                <div class="paper-card" data-content-id="style_grpo" data-research-area="multimodal_generation">
                     <div class="paper-content">
                         <a href="./assets/files/StyleGRPO.pdf" class="paper-title" data-resource-type="Paper">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</a>
                         <div class="paper-authors"><u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
                             <a href="./assets/files/StyleGRPO.pdf" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1346,12 +1299,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_stylegrpo.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="enhancing_spatial_understanding_in_image_generation_via_reward_modeling">
+                <div class="paper-card" data-content-id="enhancing_spatial_understanding_in_image_generation_via_reward_modeling" data-research-area="multimodal_generation">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2602.24233" class="paper-title" data-resource-type="Paper">👹 Enhancing Spatial Understanding in Image Generation via Reward Modeling</a>
                         <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Yufan Deng, Jie Wu, Xiaojie Li, Rui Wang, Yunpeng Chen, Daquan Zhou</div>
                         <div class="paper-desc">A novel framework for enhancing spatial understanding in image generation via reward modeling.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
                             <a href="https://arxiv.org/abs/2602.24233" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1368,12 +1320,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_spatialt2i.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="wise">
+                <div class="paper-card" data-content-id="wise" data-research-area="multimodal_generation">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2503.07265" class="paper-title" data-resource-type="Paper">🍟 WISE: A World Knowledge-Informed Semantic Evaluation for Text-to-Image Generation</a>
                         <div class="paper-authors">Yuwei Niu, Munan Ning, Mengren Zheng, Weiyang Jin, Bin Lin, Peng Jin, Jiaqi Liao, <u><b>Chaoran Feng</b></u>, Fanqing Meng, Kunpeng Ning, Bin Zhu, Li Yuan</div>
                         <div class="paper-desc">The first benchmark for evaluating world-knowledge-informed semantic understanding in text-to-image generation, with 1,000 prompts across cultural common sense, spatio-temporal reasoning, and natural science.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICML 2026</span>
                             <a href="https://arxiv.org/abs/2503.07265" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1408,24 +1359,22 @@
                 </span>
             </summary>
             <div class="project-body">
-                <div class="paper-card" data-content-id="ea3d">
+                <div class="paper-card" data-content-id="ea3d" data-research-area="3d_vision">
                     <div class="paper-content">
                         <span class="paper-title">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</span>
                         <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†</div>
                         <div class="paper-desc">An Event-Augmented 3D Diffusion framework for generalizable novel view synthesis from event streams and sparse RGB inputs.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICLR 2026</span>
                         </div>
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_ea3d.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="deblurnvs">
+                <div class="paper-card" data-content-id="deblurnvs" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2606.01315" class="paper-title" data-resource-type="Paper">🌫️ DeblurNVS: Geometric Latent Diffusion for Novel View Synthesis from Sparse Motion-Blurred Images</a>
                         <div class="paper-authors">Changyue Shi, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†</div>
                         <div class="paper-desc">A geometric latent diffusion framework for high-fidelity novel view synthesis directly from sparse motion-blurred images without per-scene optimization.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">arXiv 2026</span>
                             <a href="https://arxiv.org/abs/2606.01315" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1439,12 +1388,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_deblurnvs.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="breaking_the_vicious_cycle">
+                <div class="paper-card" data-content-id="breaking_the_vicious_cycle" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2512.10369" class="paper-title" data-resource-type="Paper">🍿 Breaking the Vicious Cycle: Coherent 3D Gaussian Splatting from Sparse and Motion-Blurred Views</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhankuo Xu, Yingtao Li, Jianbin Zhao, Jiashu Yang, Wangbo Yu, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework for coherent 3D Gaussian Splatting from sparse and motion-blurred views using physics-aware deblurring priors coupled with diffusion-driven geometry completion.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
                             <a href="https://arxiv.org/abs/2512.10369" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1458,12 +1406,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_coherentgs.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="tune_your_style">
+                <div class="paper-card" data-content-id="tune_your_style" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="paper-title" data-resource-type="Paper">🎨 Tune-Your-Style: Intensity-tunable 3D Style Transfer with Gaussian Splatting</a>
                         <div class="paper-authors">Yian Zhao, Rushi Ye, Ruochong Zheng, Zesen Cheng, <u><b>Chaoran Feng</b></u>, Jiashu Yang, Pengchong Qiao, Chang Liu, Jie Chen†</div>
                         <div class="paper-desc">A novel style transfer framework with 3D Gaussian Splatting.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
                             <a href="https://iccv.thecvf.com/virtual/2025/poster/2554" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1473,12 +1420,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_tune_your_style.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="cycle3d">
+                <div class="paper-card" data-content-id="cycle3d" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2407.19548" class="paper-title" data-resource-type="Paper">🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</a>
                         <div class="paper-authors">Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†</div>
                         <div class="paper-desc">The project is about 3D generation using a generation-reconstruction cycle for a unified diffusion process.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
                             <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1492,12 +1438,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_cycle3d.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="neuralgs">
+                <div class="paper-card" data-content-id="neuralgs" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2503.23162" class="paper-title" data-resource-type="Paper">🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</a>
                         <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†</div>
                         <div class="paper-desc">A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2026</span>
                             <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1511,12 +1456,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_neuralgs.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="nofa">
+                <div class="paper-card" data-content-id="nofa" data-research-area="3d_vision">
                     <div class="paper-content">
                         <a href="https://ieeexplore.ieee.org/document/11223960" class="paper-title" data-resource-type="Paper">👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction</a>
                         <div class="paper-authors">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, and Yonghong Tian†</div>
                         <div class="paper-desc">One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
                             <a href="https://ieeexplore.ieee.org/document/11223960" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1544,12 +1488,11 @@
                 </span>
             </summary>
             <div class="project-body">
-                <div class="paper-card" data-content-id="gs2e">
+                <div class="paper-card" data-content-id="gs2e" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2505.15287" class="paper-title" data-resource-type="Paper">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</a>
                         <div class="paper-authors">Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†</div>
                         <div class="paper-desc">The large-scale event dataset and a novel pipeline to simulate the event stream with 3DGS.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">NeurIPS 2025 D&amp;B Track</span>
                             <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1566,12 +1509,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_gs2e.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="e_4dgs">
+                <div class="paper-card" data-content-id="e_4dgs" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2508.09912" class="paper-title" data-resource-type="Paper">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ACM MM 2025</span>
                             <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1581,12 +1523,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_e_4dgs.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="evagaussians">
+                <div class="paper-card" data-content-id="evagaussians" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2405.20224" class="paper-title" data-resource-type="Paper">✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images</a>
                         <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
                             <a href="https://arxiv.org/abs/2405.20224" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1600,12 +1541,11 @@
                     </div>
                     <img class="paper-img" src="./assets/pipelines/Pipeline_evagaussian.png" alt="Project preview" loading="lazy">
                 </div>
-                <div class="paper-card" data-content-id="ae_nerf">
+                <div class="paper-card" data-content-id="ae_nerf" data-research-area="neuromorphic_vision">
                     <div class="paper-content">
                         <a href="https://arxiv.org/pdf/2501.02807" class="paper-title" data-resource-type="Paper">⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">3D reconstruction with event streams under noisy poses and unbounded scenes.</div>
-
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
                             <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
@@ -1621,6 +1561,54 @@
             </div>
         </details>
 
+    </section>
+
+
+    <!-- Projects -->
+    <section id="projects">
+        <h2 data-section-id="project_showcase">🛠️ Projects</h2>
+        <div class="paper-card" data-content-id="lingbot_video" data-research-area="multimodal_generation">
+            <div class="paper-content">
+                <a href="https://arxiv.org/abs/2607.07675" class="paper-title" data-resource-type="Paper">🤖 LingBot-Video: Scaling Mixture-of-Experts Video Pretraining for Embodied Intelligence</a>
+                <div class="paper-authors">Shuailei Ma, Jiaqi Liao, Xinyang Wang, Jingjing Wang, <u><b>Chaoran Feng</b></u>, Zijing Hu, Chong Bao, Zichen Xi, Yuqi Gan, Weisen Wang, Yanhong Zeng, Qin Zhao, Zifan Shi, Wei Wu, Hao Ouyang, Qiuyu Wang, Shangzhan Zhang, Jiahao Shao, Yipengjing Sun, Liangxiao Hu, Lunke Pan, Nan Xue, Kecheng Zheng, Yinghao Xu, Xing Zhu, Yujun Shen, Ka Leong Cheng</div>
+                <div class="paper-desc">A DiT-based MoE video pretraining paradigm tailored for embodied intelligence. Contributed post-training reward design and the RL framework for physical rationality and task completion alignment.</div>
+                <div class="tag-row">
+                    <span class="badge badge-venue">Technical Report</span>
+                    <a href="https://arxiv.org/abs/2607.07675" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                        Paper
+                    </a>
+                    <a href="https://technology.robbyant.com/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
+                        Project Page
+                    </a>
+                    <a href="https://github.com/Robbyant/lingbot-video" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
+                        Code
+                            <span style="margin-left:2px; opacity:0.8;">★945</span>
+                    </a>
+                </div>
+            </div>
+            <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="Project preview" loading="lazy">
+        </div>
+        <div class="paper-card" data-content-id="uniworld_view" data-research-area="multimodal_generation">
+            <div class="paper-content">
+                <a href="https://arxiv.org/abs/2608.04701" class="paper-title" data-resource-type="Paper">🌐 UniWorld-View: Large-Baseline View Synthesis via Video Diffusion Models</a>
+                <div class="paper-authors">Haiyang Zhou, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Xunyu Zhou, Yonghong Tian, Li Yuan</div>
+                <div class="paper-desc">A unified visual world model for controllable large-baseline novel view synthesis from monocular images or videos, combining occlusion-aware 3D point-cloud guidance with video diffusion for precise camera control and geometrically consistent generation.</div>
+                <div class="tag-row">
+                    <span class="badge badge-venue">arXiv 2026</span>
+                    <a href="https://arxiv.org/abs/2608.04701" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                        Paper
+                    </a>
+                    <a href="https://zhouhyocean.github.io/uniworld-view/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Project Page">
+                        Project Page
+                    </a>
+                    <a href="https://github.com/PKU-YuanGroup/UniWorld-View" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
+                        Code
+                            <span style="margin-left:2px; opacity:0.8;">★149</span>
+                    </a>
+                </div>
+            </div>
+            <img class="paper-img" src="./assets/pipelines/Pipeline_uniworld_view.jpg" alt="Project preview" loading="lazy">
+        </div>
     </section>
 
 

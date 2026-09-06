@@ -103,11 +103,28 @@ const preparePageData = (localeConfig) => {
         }
     }
 
-    data.projectGroups = data.projectCategories.map((category) => ({
-        ...category,
-        label: data.ui.projectGroupLabels[category.key] || category.key,
-        items: data.projects[category.key] || []
-    }));
+    const showcaseIds = data.projectShowcaseIds || [];
+    if (new Set(showcaseIds).size !== showcaseIds.length) {
+        throw new Error('Duplicate projectShowcaseIds');
+    }
+    const allProjects = new Map();
+    data.projectGroups = data.projectCategories.map((category) => {
+        const items = (data.projects[category.key] || []).map((project) => {
+            const item = { ...project, analyticsArea: category.analyticsArea };
+            allProjects.set(item.analyticsId, item);
+            return item;
+        });
+        return {
+            ...category,
+            label: data.ui.projectGroupLabels[category.key] || category.key,
+            items: items.filter((item) => !showcaseIds.includes(item.analyticsId))
+        };
+    }).filter((group) => group.items.length);
+    data.showcaseProjects = showcaseIds.map((id) => {
+        const project = allProjects.get(id);
+        if (!project) throw new Error(`Unknown projectShowcaseId: ${id}`);
+        return project;
+    });
 
     return data;
 };
@@ -119,6 +136,7 @@ Handlebars.registerHelper('breaklines', function breaklines(text) {
 
 console.log('🔨 Compiling localized pages...');
 const template = Handlebars.compile(templateSource);
+Handlebars.registerPartial('paper', fs.readFileSync(fromRoot('templates/partials/paper.html'), 'utf8'));
 
 for (const page of pages) {
     const localeConfig = readJson(path.join('config', 'locales', page.localeFile));

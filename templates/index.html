@@ -1206,8 +1206,8 @@
         </ul>
     </section>
 
-    <!-- Selected Projects -->
-    <section>
+    <!-- Selected Research Papers -->
+    <section id="research-papers">
         <h2 data-section-id="projects">🗂️ {{ui.sections.projects}}</h2>
         <div class="section-note">
             {{ui.equalContribution}} &nbsp; {{ui.projectLead}}
@@ -1230,36 +1230,24 @@
             </summary>
             <div class="project-body">
                 {{#each items}}
-                <div class="paper-card" data-content-id="{{analyticsId}}">
-                    <div class="paper-content">
-                        {{#if links.[0].url}}
-                        <a href="{{links.[0].url}}" class="paper-title" data-resource-type="{{links.[0].type}}">{{{title}}}</a>
-                        {{else}}
-                        <span class="paper-title">{{{title}}}</span>
-                        {{/if}}
-                        <div class="paper-authors">{{{authors}}}</div>
-                        <div class="paper-desc">{{{description}}}</div>
-
-                        <div class="tag-row">
-                            <span class="badge badge-venue">{{venue}}</span>
-                            {{#each links}}
-                            <a href="{{url}}" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="{{type}}">
-                                {{label}}
-                                {{#if stars}}
-                                    <span style="margin-left:2px; opacity:0.8;">★{{stars}}</span>
-                                {{/if}}
-                            </a>
-                            {{/each}}
-                        </div>
-                    </div>
-                    <img class="paper-img" src="{{image}}" alt="{{@root.ui.projectImageAlt}}" loading="lazy">
-                </div>
+                {{> paper}}
                 {{/each}}
             </div>
         </details>
         {{/each}}
 
     </section>
+
+
+    {{#if showcaseProjects}}
+    <!-- Projects -->
+    <section id="projects">
+        <h2 data-section-id="project_showcase">🛠️ {{ui.sections.projectShowcase}}</h2>
+        {{#each showcaseProjects}}
+        {{> paper}}
+        {{/each}}
+    </section>
+    {{/if}}
 
 
     {{#if experiences}}

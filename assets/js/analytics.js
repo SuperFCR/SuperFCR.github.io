@@ -14,7 +14,7 @@
     };
     const projectParameters = (card) => ({
         content_id: card.dataset.contentId,
-        research_area: card.closest('.project-group')?.dataset.researchArea || 'unknown'
+        research_area: card.dataset.researchArea || card.closest('.project-group')?.dataset.researchArea || 'unknown'
     });
 
     // click covers mouse/touch/keyboard; auxclick adds middle-button navigation.
