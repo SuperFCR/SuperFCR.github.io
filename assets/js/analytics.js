@@ -56,7 +56,7 @@
     // Observe the title: unlike a whole card, it fits in a small mobile viewport.
     document.querySelectorAll('.paper-card[data-content-id]').forEach((card) => {
         const title = card.querySelector('.paper-title');
-        if (title) makeRecord(title, 'project_impression', projectParameters(card));
+        if (title) makeRecord(title, 'project_impression', { ...projectParameters(card), content_type: 'paper_resource' });
     });
     document.querySelectorAll('[data-section-id]').forEach((heading) => {
         makeRecord(heading, 'section_view', { section_id: heading.dataset.sectionId });

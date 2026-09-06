@@ -14,7 +14,7 @@ All events carry `page_language` (`en` or `zh-CN`). The Google tag also receives
 | language_switch | channel, from_language, to_language | Click to a different page language only |
 | select_content | content_type=research_area, content_id, research_area | Explicitly expand a research group |
 | select_content | content_type=paper_resource, content_id, research_area, resource_type, link_position=title/badge | Valid project resource click |
-| project_impression | content_id, research_area | At least 50% of the project title visible continuously for 1 second while the tab is visible and group expanded; once per project per page instance |
+| project_impression | content_type=paper_resource, content_id, research_area | At least 50% of the project title visible continuously for 1 second while the tab is visible and group expanded; once per project per page instance |
 | section_view | section_id | At least 50% of the section heading visible continuously for 1 second in the foreground; once per section per page instance |
 
 The project title is the visibility target so very tall mobile cards remain measurable. A title impression is a content exposure proxy, not proof of reading. Closing the group, leaving the viewport or hiding the tab resets unfinished dwell. Completed impressions remain deduplicated through back/forward cache restores.
