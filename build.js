@@ -55,6 +55,14 @@ const readJson = (relativePath) => fs.readJsonSync(fromRoot(relativePath));
 
 console.log('📖 Reading shared content and locale configuration...');
 const baseData = readJson('config/data.json');
+const analyticsIds = new Set();
+for (const project of Object.values(baseData.projects).flat()) {
+    const id = project.analyticsId;
+    if (!/^[a-z][a-z0-9_]{0,79}$/.test(id || '') || analyticsIds.has(id)) {
+        throw new Error(`Missing, invalid or duplicate analyticsId for ${project.title}`);
+    }
+    analyticsIds.add(id);
+}
 const templateSource = fs.readFileSync(fromRoot('templates/index.html'), 'utf8');
 
 const scholarPath = fromRoot('config/scholar_data.json');

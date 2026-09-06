@@ -11,14 +11,7 @@
     <link rel="alternate" hreflang="x-default" href="./">
 
     {{#if analytics.measurementId}}
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{analytics.measurementId}}"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '{{analytics.measurementId}}');
-    </script>
+    <script src="assets/js/analytics-init.js?v=20260906" data-measurement-id="{{analytics.measurementId}}"></script>
     {{/if}}
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1170,7 +1163,7 @@
     {{#if research}}
     <!-- Research Interests -->
     <section class="research-section">
-        <h2>🔬 {{ui.sections.research}}</h2>
+        <h2 data-section-id="research">🔬 {{ui.sections.research}}</h2>
         <p class="research-intro">{{{research.intro}}}</p>
         <ul class="research-topics">
             {{#each research.topics}}
@@ -1182,7 +1175,7 @@
 
     <!-- Education -->
     <section class="education-section">
-        <h2>🎓 {{ui.sections.education}}</h2>
+        <h2 data-section-id="education">🎓 {{ui.sections.education}}</h2>
         <ul class="education-list">
             {{#each education}}
             <li class="education-item">
@@ -1199,7 +1192,7 @@
 
     <!-- News -->
     <section{{#unless showNews}} hidden{{/unless}}>
-        <h2>📰 {{ui.sections.news}}</h2>
+        <h2 data-section-id="news">📰 {{ui.sections.news}}</h2>
         <ul class="news-list">
             {{#each news}}
             <li class="news-item">
@@ -1215,7 +1208,7 @@
 
     <!-- Selected Projects -->
     <section>
-        <h2>🗂️ {{ui.sections.projects}}</h2>
+        <h2 data-section-id="projects">🗂️ {{ui.sections.projects}}</h2>
         <div class="section-note">
             {{ui.equalContribution}} &nbsp; {{ui.projectLead}}
         </div>
@@ -1237,9 +1230,13 @@
             </summary>
             <div class="project-body">
                 {{#each items}}
-                <div class="paper-card">
+                <div class="paper-card" data-content-id="{{analyticsId}}">
                     <div class="paper-content">
-                        <a href="{{#if links.[0].url}}{{links.[0].url}}{{else}}#{{/if}}" class="paper-title">{{{title}}}</a>
+                        {{#if links.[0].url}}
+                        <a href="{{links.[0].url}}" class="paper-title" data-resource-type="{{links.[0].type}}">{{{title}}}</a>
+                        {{else}}
+                        <span class="paper-title">{{{title}}}</span>
+                        {{/if}}
                         <div class="paper-authors">{{{authors}}}</div>
                         <div class="paper-desc">{{{description}}}</div>
 
@@ -1268,7 +1265,7 @@
     {{#if experiences}}
     <!-- Experience -->
     <section id="experience">
-        <h2>💼 {{ui.sections.experience}}</h2>
+        <h2 data-section-id="experience">💼 {{ui.sections.experience}}</h2>
         <div class="experience-grid">
             {{#each experiences}}
             <div class="experience-card">
@@ -1296,7 +1293,7 @@
 
     <!-- Awards -->
     <section id="awards" class="awards-section">
-        <h2>🏆 {{ui.sections.awards}}</h2>
+        <h2 data-section-id="awards">🏆 {{ui.sections.awards}}</h2>
         <ul class="awards-list">
             {{#each awards}}
             <li class="award-item">
@@ -1311,7 +1308,7 @@
 
     <!-- Professional Activities -->
     <section>
-        <h2>🧑‍💻 {{ui.sections.activities}}</h2>
+        <h2 data-section-id="activities">🧑‍💻 {{ui.sections.activities}}</h2>
         <ul class="activities-list">
             <li><strong>{{ui.conferenceReviewer}}</strong> {{activities.conference_reviewer}}</li>
             <li><strong>{{ui.journalReviewer}}</strong> {{activities.journal_reviewer}}</li>
@@ -1334,6 +1331,7 @@
 
 </div>
 
+<script src="assets/js/analytics.js?v=20260906"></script>
 <script>
 (() => {
     const localTime = document.getElementById('local-time');
@@ -1357,53 +1355,9 @@
         }
     }
 
-    const trackAnalyticsEvent = (eventName, parameters = {}) => {
-        if (typeof window.gtag !== 'function') return;
-        window.gtag('event', eventName, parameters);
-    };
-
-    const normalizeAnalyticsId = (value) => value
-        .normalize('NFKD')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_+|_+$/g, '')
-        .slice(0, 80);
-
-    document.querySelectorAll('a[href^="mailto:"]').forEach((link) => {
-        link.addEventListener('click', () => {
-            trackAnalyticsEvent('contact_click', { channel: 'email' });
-        });
-    });
-
-    document.querySelectorAll('[data-analytics-event][data-analytics-channel]').forEach((link) => {
-        link.addEventListener('click', () => {
-            trackAnalyticsEvent(link.dataset.analyticsEvent, {
-                channel: link.dataset.analyticsChannel
-            });
-        });
-    });
-
+    const trackAnalyticsEvent = (name, parameters) => window.homepageAnalytics?.track(name, parameters);
     const groups = Array.from(document.querySelectorAll('.project-group'));
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    document.querySelectorAll('.paper-title, .badge-link').forEach((link) => {
-        link.addEventListener('click', () => {
-            const card = link.closest('.paper-card');
-            const group = link.closest('.project-group');
-            const title = card?.querySelector('.paper-title')?.textContent.trim() || 'unknown_project';
-            const shortTitle = title.includes(':') ? title.split(':', 1)[0] : title;
-            const resourceLabel = link.classList.contains('paper-title')
-                ? 'title'
-                : link.dataset.resourceType || link.textContent.replace(/★.*$/s, '').trim();
-
-            trackAnalyticsEvent('select_content', {
-                content_type: 'paper_resource',
-                content_id: normalizeAnalyticsId(shortTitle) || 'unknown_project',
-                research_area: group?.dataset.researchArea || 'unknown',
-                resource_type: normalizeAnalyticsId(resourceLabel) || 'link'
-            });
-        });
-    });
 
     groups.forEach((group) => {
         const summary = group.querySelector('summary');

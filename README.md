@@ -100,6 +100,7 @@ Organized into three categories:
 - `neuromorphic_vision`: Neuromorphic vision projects
 
 Each project contains:
+- `analyticsId`: Required stable, unique analytics ID; preserve it when renaming a project
 - `title`: Project title with emoji
 - `authors`: Author list (HTML supported for formatting)
 - `description`: Project description
@@ -233,3 +234,7 @@ This personal academic homepage is inspired by the elegant designs and structure
 ---
 
 *This template was created for academic personal homepages but can be adapted for various professional use cases.*
+
+## Analytics
+
+See [ANALYTICS.md](ANALYTICS.md) for event definitions, exposure rules, GA4 setup and local testing behavior.
