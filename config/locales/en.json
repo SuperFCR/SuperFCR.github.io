@@ -33,7 +33,7 @@
     },
     "projectGroupLabels": {
       "t2i_model": "Multimodal Generation",
-      "3d_reconstruction": "3D Vision",
+      "3d_reconstruction": "3D Vision & World Modeling",
       "neuromorphic_vision": "Neuromorphic Vision"
     },
     "projectStateShow": "Show",
@@ -44,7 +44,8 @@
       "Paper": "Paper",
       "Project Page": "Project Page",
       "Code": "Code",
-      "Datasets": "Datasets"
+      "Datasets": "Datasets",
+      "HF / Upvote": "HF / Upvote"
     },
     "experienceTitleJoiner": ", ",
     "hostedBy": "Hosted by",

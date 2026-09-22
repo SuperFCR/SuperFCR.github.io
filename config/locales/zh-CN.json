@@ -34,7 +34,7 @@
     },
     "projectGroupLabels": {
       "t2i_model": "多模态生成",
-      "3d_reconstruction": "三维视觉",
+      "3d_reconstruction": "三维视觉与世界建模",
       "neuromorphic_vision": "神经形态视觉"
     },
     "projectStateShow": "展开",
@@ -45,7 +45,8 @@
       "Paper": "论文",
       "Project Page": "项目主页",
       "Code": "代码",
-      "Datasets": "数据集"
+      "Datasets": "数据集",
+      "HF / Upvote": "HF / 支持"
     },
     "experienceTitleJoiner": "，",
     "hostedBy": "合作导师：",
@@ -65,7 +66,7 @@
       "location": "中国深圳"
     },
     "footer": {
-      "lastUpdated": "2026年8月"
+      "lastUpdated": "2026年9月"
     },
     "education": [
       {
@@ -137,6 +138,9 @@
       ],
       "3d_reconstruction": [
         {
+          "description": "一种具有可按相机视角查询的隐式三维记忆的视频世界模型，可从单张图像或文本提示出发，在相机控制下持续探索场景，并保持跨视角与长时序一致性。"
+        },
+        {
           "description": "一种事件增强的三维扩散框架，可根据事件流与稀疏 RGB 输入实现具有泛化能力的新视角合成。"
         },
         {
@@ -182,7 +186,7 @@
       {
         "title": "视频生成算法实习生",
         "organization": "AntGroup Lingbot",
-        "period": "2026年3月至今"
+        "period": "2026年3月—2026年8月"
       }
     ],
     "awards": [

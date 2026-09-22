@@ -20,7 +20,7 @@
   },
   "footer": {
     "copyrightYear": "2026",
-    "lastUpdated": "August 2026",
+    "lastUpdated": "September 2026",
     "visitorTracker": {
       "pageUrl": "https://clustrmaps.com/site/1c5bo",
       "imageUrl": "https://www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff"
@@ -175,6 +175,20 @@
     ],
     "3d_reconstruction": [
       {
+        "analyticsId": "worldcrafter",
+        "title": "🌍 WorldCrafter: Consistent Video World Model with Implicit 3D-aware Memory",
+        "authors": "Wangbo Yu*, Kunhao Liu*, Wenbo Hu†, Shenghai Yuan, <u><b>Chaoran Feng</b></u>, Haiyang Zhou, Yukun Huang, Yiran Wang, Wang Zhao, Yingmin Luo, Ying Shan",
+        "description": "A video world model with camera-queryable implicit 3D-aware memory, enabling consistent, camera-controlled scene exploration from a single image or text prompt across viewpoints and over long horizons.",
+        "venue": "arXiv 2026",
+        "image": "./assets/pipelines/Pipeline_worldcrafter.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/2609.24984"},
+          {"type": "Project Page", "url": "https://drexubery.github.io/WorldCrafter"},
+          {"type": "Code", "url": "https://github.com/TencentARC/WorldCrafter"},
+          {"type": "HF / Upvote", "url": "https://huggingface.co/papers/2609.24984"}
+        ]
+      },
+      {
         "analyticsId": "ea3d",
         "title": "👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis",
         "authors": "Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†",
@@ -315,7 +329,7 @@
     {
       "title": "Research Intern",
       "organization": "Ant Research",
-      "period": "Mar. 2026 - Now",
+      "period": "Mar. 2026 - Aug. 2026",
       "host": "<a href=\"https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao\" target=\"_blank\" rel=\"noopener noreferrer\">Ka Leong Cheng</a>",
       "logo": "./assets/logo/ant_logo.jpg"
     }
