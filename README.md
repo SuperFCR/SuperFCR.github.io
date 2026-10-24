@@ -96,8 +96,15 @@ Array format, each entry contains:
 ### Projects (`projects`)
 `projectShowcaseIds` in `config/data.json` selects and orders the entries shown
 in the separate **Projects** section. The other entries appear under **Selected
-Research Papers**, grouped by research direction. Each entry is rendered once;
-the source arrays and their locale overrides stay in their original order.
+Research Papers**, with topic filter buttons and a **Selected** view shown by default.
+`selectedPaperIds` defines the curated subset using stable `analyticsId` values;
+the **All** view and topic filters include the full research list.
+Filters use the existing research directions and show publication counts. On
+mobile, they stay in one horizontally scrollable row with subtle edge fades;
+selected or keyboard-focused filters scroll into view without moving the page
+vertically. Without JavaScript, every paper remains readable.
+Each entry is rendered once; the source arrays and their locale overrides stay
+in their original order.
 Both sections share the original card in `templates/partials/paper.html`.
 
 Organized into three categories:

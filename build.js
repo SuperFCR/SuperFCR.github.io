@@ -107,10 +107,19 @@ const preparePageData = (localeConfig) => {
     if (new Set(showcaseIds).size !== showcaseIds.length) {
         throw new Error('Duplicate projectShowcaseIds');
     }
+    const selectedIds = data.selectedPaperIds || [];
+    const selectedIdSet = new Set(selectedIds);
+    if (selectedIdSet.size !== selectedIds.length) {
+        throw new Error('Duplicate selectedPaperIds');
+    }
     const allProjects = new Map();
     data.projectGroups = data.projectCategories.map((category) => {
         const items = (data.projects[category.key] || []).map((project) => {
-            const item = { ...project, analyticsArea: category.analyticsArea };
+            const item = {
+                ...project,
+                analyticsArea: category.analyticsArea,
+                isSelected: selectedIdSet.has(project.analyticsId)
+            };
             allProjects.set(item.analyticsId, item);
             return item;
         });
@@ -120,6 +129,14 @@ const preparePageData = (localeConfig) => {
             items: items.filter((item) => !showcaseIds.includes(item.analyticsId))
         };
     }).filter((group) => group.items.length);
+    for (const id of selectedIds) {
+        if (!allProjects.has(id) || showcaseIds.includes(id)) {
+            throw new Error(`Unknown or non-paper selectedPaperId: ${id}`);
+        }
+    }
+    data.paperCount = data.projectGroups.reduce((count, group) => count + group.items.length, 0);
+    data.selectedPaperCount = selectedIds.length;
+    data.defaultPaperFilter = selectedIds.length ? 'selected' : 'all';
     data.showcaseProjects = showcaseIds.map((id) => {
         const project = allProjects.get(id);
         if (!project) throw new Error(`Unknown projectShowcaseId: ${id}`);

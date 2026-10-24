@@ -12,12 +12,12 @@ All events carry `page_language` (`en` or `zh-CN`). The Google tag also receives
 | profile_link_click | channel=cv/scholar/github, link_position=header | Personal resource click; retained for historical comparisons |
 | cv_click | channel=cv, link_position=header | CV link click, emitted once in code; never additionally derive it in GA Admin |
 | language_switch | channel, from_language, to_language | Click to a different page language only |
-| select_content | content_type=research_area, content_id, research_area | Explicitly expand a research group |
+| select_content | content_type=research_area, content_id, research_area | Explicitly select a research filter; IDs use `selected`, `all`, or a research area |
 | select_content | content_type=paper_resource, content_id, research_area, resource_type, link_position=title/badge | Valid project resource click |
-| project_impression | content_type=paper_resource, content_id, research_area | At least 50% of the project title visible continuously for 1 second while the tab is visible and group expanded; once per project per page instance |
+| project_impression | content_type=paper_resource, content_id, research_area | At least 50% of the project title visible continuously for 1 second while the tab is visible and the project is included by the active filter; once per project per page instance |
 | section_view | section_id | At least 50% of the section heading visible continuously for 1 second in the foreground; once per section per page instance |
 
-The project title is the visibility target so very tall mobile cards remain measurable. A title impression is a content exposure proxy, not proof of reading. Closing the group, leaving the viewport or hiding the tab resets unfinished dwell. Completed impressions remain deduplicated through back/forward cache restores.
+The project title is the visibility target so very tall mobile cards remain measurable. A title impression is a content exposure proxy, not proof of reading. Changing the visible research cards or groups, leaving the viewport or hiding the tab resets unfinished dwell. Filter changes request fresh visibility geometry because removing cards or groups can move other titles into view. Completed impressions remain deduplicated when switching filters and through back/forward cache restores. Selected is the default filter when JavaScript initializes; this initial selection does not emit a selection event. Without JavaScript, all papers remain readable.
 
 Project `analyticsId` values live in `config/data.json`; preserve them when renaming or moving projects. The initial IDs match the previous title-derived IDs. The build rejects missing or duplicate IDs. A project without a resource link renders a non-clickable title.
 
@@ -40,7 +40,7 @@ Do not add generic click, page_view, scroll or file_download handlers: enhanced 
 
 Localhost/file previews never load the Google tag. Their dataLayer remains available for isolated tests. On a production hostname, `?analytics_debug=1` opts only that page into GA DebugView; normal pages omit debug_mode entirely. Do not share the debug URL as an acquisition link.
 
-Validate the built English and Chinese pages, first page_view language, meaningful clicks, accordion exposure, tab visibility, mobile layout and DebugView reception. New reporting dimensions normally require processing time before report data appears.
+Validate the built English and Chinese pages, first page_view language, meaningful clicks, filter selection and exposure, tab visibility, mobile layout and DebugView reception. When checking filters, confirm the default Selected view emits no selection event, hidden papers never emit impressions even within a visible group, switching before 1 second resets unfinished dwell, returning to a paper requires a fresh continuous second of visibility, and completed impressions do not repeat. New reporting dimensions normally require processing time before report data appears.
 
 ## Attribution links
 

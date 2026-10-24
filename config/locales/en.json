@@ -36,8 +36,10 @@
       "3d_reconstruction": "3D Vision & World Modeling",
       "neuromorphic_vision": "Neuromorphic Vision"
     },
-    "projectStateShow": "Show",
-    "projectStateHide": "Hide",
+    "paperFilterLabel": "Filter research papers by topic",
+    "paperFilterAll": "All",
+    "paperFilterSelected": "Selected",
+    "paperFilterResults": "papers shown",
     "equalContribution": "* Equal contribution",
     "projectLead": "# Project lead",
     "resourceLabels": {

@@ -1,5 +1,12 @@
 {
   "projectShowcaseIds": ["lingbot_video", "uniworld_view"],
+  "selectedPaperIds": [
+    "style_grpo",
+    "enhancing_spatial_understanding_in_image_generation_via_reward_modeling",
+    "worldcrafter",
+    "ea3d",
+    "breaking_the_vicious_cycle"
+  ],
   "personal": {
     "name": "Chaoran Feng",
     "nameChinese": "冯超然",

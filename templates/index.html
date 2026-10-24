@@ -322,149 +322,70 @@
             font-weight: normal;
         }
 
-        .category-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--accent);
-            margin: 30px 0 15px 0;
-            padding-left: 12px;
-            border-left: 4px solid var(--primary);
-            font-family: 'Inter', sans-serif;
-        }
+        [hidden] { display: none !important; }
 
-        .project-group {
-            margin: 0;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            background: #fcfdff;
-            overflow: hidden;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-        }
-
-        .project-group + .project-group { margin-top: 10px; }
-
-        .project-group:hover,
-        .project-group.is-expanded {
-            border-color: #cbd5e1;
-            background: #fff;
-            box-shadow: 0 10px 24px rgba(32, 84, 136, 0.08);
-        }
-
-        .project-group summary {
-            list-style: none;
-            cursor: pointer;
-            padding: 12px 16px 13px;
-            display: block;
+        .paper-filter-bar {
             position: relative;
-            font-family: 'Inter', sans-serif;
-            font-size: 1.02rem;
-            font-weight: 700;
-            color: var(--accent);
-            user-select: none;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            border-bottom: 1px solid transparent;
-            transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+            margin-bottom: 20px;
         }
 
-        .project-group summary::-webkit-details-marker {
-            display: none;
+        .paper-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
-        .project-group[open] summary {
-            border-bottom-color: #e5e7eb;
-        }
-
-        .project-group summary::after {
-            content: '\25BE';
-            font-size: 0.85rem;
-            color: #64748b;
-            transition: transform 0.22s ease;
-            position: absolute;
-            right: 16px;
-            top: 17px;
-        }
-
-        .project-group.is-expanded summary::after {
-            transform: rotate(180deg);
-        }
-
-        .project-body {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            padding: 0 12px;
-            transform: translateY(-4px);
-            transition: max-height 0.48s cubic-bezier(0.22, 1, 0.36, 1),
-                        opacity 0.28s ease,
-                        padding-top 0.36s ease,
-                        padding-bottom 0.36s ease,
-                        transform 0.36s ease;
-        }
-
-        .project-group.is-expanded .project-body {
-            max-height: var(--project-body-height, 2400px);
-            opacity: 1;
-            padding: 6px 12px 0;
-            transform: translateY(0);
-        }
-
-        .summary-title {
-            display: block;
-            padding-right: 28px;
-            letter-spacing: 0.1px;
-        }
-
-        .project-state {
+        .paper-filter {
             display: inline-flex;
             align-items: center;
-            margin-left: 8px;
-            padding: 2px 7px;
-            border: 1px solid #dbe3ef;
-            border-radius: 999px;
-            color: #64748b;
+            justify-content: center;
+            gap: 8px;
+            min-height: 38px;
+            padding: 7px 13px;
+            border: 1px solid #d5dfea;
+            border-radius: 7px;
             background: #fff;
+            color: var(--primary);
+            font-family: inherit;
+            font-size: 0.92rem;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .paper-filter:hover {
+            border-color: #91abc5;
+            background: #f5f8fc;
+        }
+
+        .paper-filter[aria-pressed="true"] {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .paper-filter:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 3px;
+        }
+
+        .paper-filter-count {
             font-family: 'Inter', sans-serif;
             font-size: 0.68rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            vertical-align: middle;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.75;
         }
 
-        .project-group.is-expanded .project-state {
-            color: #fff;
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        .project-state-expanded { display: none; }
-        .project-group.is-expanded .project-state-collapsed { display: none; }
-        .project-group.is-expanded .project-state-expanded { display: inline; }
-
-        .project-preview-inline {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 5px;
-            margin-top: 8px;
-            padding-right: 28px;
-        }
-
-        .project-preview-inline .preview-item {
-            display: block;
-            background: #f3f7fc;
-            border: 1px solid #e2e8f0;
-            border-radius: 999px;
-            color: #475569;
-            font-size: 0.83rem;
-            font-weight: 550;
-            line-height: 1.3;
-            padding: 5px 9px;
-            white-space: nowrap;
+        .filter-status {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
             overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .project-group[open] .project-preview-inline {
-            display: none;
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
         }
 
         .paper-card {
@@ -892,8 +813,7 @@
             overflow-wrap: anywhere;
         }
         html[lang="zh-CN"] .social-btn,
-        html[lang="zh-CN"] .project-group summary,
-        html[lang="zh-CN"] .project-state,
+        html[lang="zh-CN"] .paper-filter,
         html[lang="zh-CN"] .research-topic,
         html[lang="zh-CN"] .badge,
         html[lang="zh-CN"] .section-note,
@@ -1051,18 +971,45 @@
                 align-items: flex-start;
             }
             .visitor-map img { width: 96px; }
-            .project-group summary { font-size: 0.96rem; padding: 12px 14px; }
-            .project-body { padding: 0 10px; }
-            .project-group.is-expanded .project-body { padding: 8px 10px 2px; }
-            .project-group summary::after { right: 14px; top: 16px; }
-            .project-preview-inline {
-                grid-template-columns: 1fr;
-                gap: 6px;
-                padding-right: 22px;
+            .paper-filter-bar { margin-bottom: 16px; }
+            .paper-filters {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overscroll-behavior-x: contain;
+                scrollbar-width: none;
+                scroll-padding-inline: 28px;
+                padding: 5px;
+                margin: -5px;
             }
-            .project-preview-inline .preview-item {
-                font-size: 0.8rem;
-                padding: 5px 9px;
+            .paper-filters::-webkit-scrollbar { display: none; }
+            .paper-filter-bar::before,
+            .paper-filter-bar::after {
+                content: '';
+                position: absolute;
+                top: -5px;
+                bottom: -5px;
+                width: 24px;
+                pointer-events: none;
+                opacity: 0;
+                z-index: 1;
+                transition: opacity 0.2s ease;
+            }
+            .paper-filter-bar::before {
+                left: -5px;
+                background: linear-gradient(to right, var(--bg-paper), rgba(255, 255, 255, 0));
+            }
+            .paper-filter-bar::after {
+                right: -5px;
+                background: linear-gradient(to left, var(--bg-paper), rgba(255, 255, 255, 0));
+            }
+            .paper-filter-bar.can-scroll-left::before,
+            .paper-filter-bar.can-scroll-right::after { opacity: 1; }
+            .paper-filter {
+                flex: 0 0 auto;
+                min-height: 44px;
+                padding: 8px 11px;
+                font-size: 0.86rem;
+                white-space: nowrap;
             }
         }
 
@@ -1213,28 +1160,33 @@
             {{ui.equalContribution}} &nbsp; {{ui.projectLead}}
         </div>
 
-        {{#each projectGroups}}
-        <details class="project-group" data-research-area="{{analyticsArea}}">
-            <summary>
-                <span class="summary-title">♠ {{label}}
-                    <span class="project-state" aria-hidden="true">
-                        <span class="project-state-collapsed">{{@root.ui.projectStateShow}}</span>
-                        <span class="project-state-expanded">{{@root.ui.projectStateHide}}</span>
-                    </span>
-                </span>
-                <span class="project-preview-inline">
-                    {{#each items}}
-                    <span class="preview-item">{{{title}}}</span>
-                    {{/each}}
-                </span>
-            </summary>
-            <div class="project-body">
+        <div class="paper-filter-bar" hidden>
+        <div class="paper-filters" role="group" aria-label="{{ui.paperFilterLabel}}" data-default-filter="{{defaultPaperFilter}}">
+            <button class="paper-filter" type="button" data-paper-filter="all" aria-pressed="{{#if selectedPaperCount}}false{{else}}true{{/if}}" aria-controls="research-results">
+                {{ui.paperFilterAll}} <span class="paper-filter-count" aria-hidden="true">{{paperCount}}</span>
+            </button>
+            {{#if selectedPaperCount}}
+            <button class="paper-filter" type="button" data-paper-filter="selected" aria-pressed="true" aria-controls="research-results">
+                {{ui.paperFilterSelected}} <span class="paper-filter-count" aria-hidden="true">{{selectedPaperCount}}</span>
+            </button>
+            {{/if}}
+            {{#each projectGroups}}
+            <button class="paper-filter" type="button" data-paper-filter="{{analyticsArea}}" aria-pressed="false" aria-controls="research-results">
+                {{label}} <span class="paper-filter-count" aria-hidden="true">{{items.length}}</span>
+            </button>
+            {{/each}}
+        </div>
+        </div>
+        <p class="filter-status" role="status" aria-live="polite" aria-atomic="true" data-result-label="{{ui.paperFilterResults}}"></p>
+        <div id="research-results">
+            {{#each projectGroups}}
+            <div class="project-group" data-research-area="{{analyticsArea}}" role="group" aria-label="{{label}}">
                 {{#each items}}
                 {{> paper}}
                 {{/each}}
             </div>
-        </details>
-        {{/each}}
+            {{/each}}
+        </div>
 
     </section>
 
@@ -1319,7 +1271,7 @@
 
 </div>
 
-<script src="assets/js/analytics.js?v=20260906-projects"></script>
+<script src="assets/js/analytics.js?v=20261025-selected"></script>
 <script>
 (() => {
     const localTime = document.getElementById('local-time');
@@ -1343,108 +1295,82 @@
         }
     }
 
-    const trackAnalyticsEvent = (name, parameters) => window.homepageAnalytics?.track(name, parameters);
-    const groups = Array.from(document.querySelectorAll('.project-group'));
+    const filters = document.querySelector('.paper-filters');
+    const results = document.getElementById('research-results');
+    if (!filters || !results) return;
+
+    const buttons = Array.from(filters.querySelectorAll('[data-paper-filter]'));
+    const cards = Array.from(results.querySelectorAll('.paper-card'));
+    const groups = Array.from(results.querySelectorAll('.project-group'));
+    const status = document.querySelector('.filter-status');
+    const filterBar = filters.closest('.paper-filter-bar');
+    const mobileFilters = window.matchMedia('(max-width: 768px)');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    groups.forEach((group) => {
-        const summary = group.querySelector('summary');
-        const body = group.querySelector('.project-body');
-        let closeTimer = null;
+    const updateFilterEdges = () => {
+        const overflow = mobileFilters.matches && filters.scrollWidth > filters.clientWidth + 1;
+        filterBar.classList.toggle('can-scroll-left', overflow && filters.scrollLeft > 1);
+        filterBar.classList.toggle('can-scroll-right', overflow && filters.scrollLeft + filters.clientWidth < filters.scrollWidth - 1);
+    };
 
-        const setHeight = () => {
-            if (!body) return;
-            group.style.setProperty('--project-body-height', `${body.scrollHeight}px`);
-        };
-
-        const openGroup = () => {
-            if (!body) return;
-            window.clearTimeout(closeTimer);
-            group.open = true;
-            setHeight();
-            requestAnimationFrame(() => {
-                group.classList.add('is-expanded');
-                summary.setAttribute('aria-expanded', 'true');
-            });
-        };
-
-        const closeGroup = () => {
-            if (!body || !group.open) return;
-            window.clearTimeout(closeTimer);
-
-            if (reduceMotion.matches) {
-                group.classList.remove('is-expanded');
-                group.open = false;
-                summary.setAttribute('aria-expanded', 'false');
-                return;
-            }
-
-            setHeight();
-            requestAnimationFrame(() => {
-                group.classList.remove('is-expanded');
-                group.style.setProperty('--project-body-height', '0px');
-                summary.setAttribute('aria-expanded', 'false');
-            });
-
-            closeTimer = window.setTimeout(() => {
-                if (!group.classList.contains('is-expanded')) group.open = false;
-            }, 520);
-        };
-
-        const setExpanded = (expanded) => {
-            if (expanded) {
-                groups.forEach((other) => {
-                    if (other !== group && other.open) {
-                        const otherSummary = other.querySelector('summary');
-                        const otherBody = other.querySelector('.project-body');
-                        if (otherBody) other.style.setProperty('--project-body-height', `${otherBody.scrollHeight}px`);
-                        requestAnimationFrame(() => {
-                            other.classList.remove('is-expanded');
-                            other.style.setProperty('--project-body-height', '0px');
-                            if (otherSummary) otherSummary.setAttribute('aria-expanded', 'false');
-                        });
-                        window.setTimeout(() => {
-                            if (!other.classList.contains('is-expanded')) other.open = false;
-                        }, 520);
-                    }
-                });
-                openGroup();
-                return;
-            }
-
-            closeGroup();
-        };
-
-        summary.setAttribute('aria-expanded', String(group.classList.contains('is-expanded')));
-
-        summary.addEventListener('click', (event) => {
-            event.preventDefault();
-            const willExpand = !group.classList.contains('is-expanded');
-            if (willExpand) {
-                const researchArea = group.dataset.researchArea || 'unknown';
-                trackAnalyticsEvent('select_content', {
-                    content_type: 'research_area',
-                    content_id: researchArea,
-                    research_area: researchArea
-                });
-            }
-            setExpanded(willExpand);
+    const revealFilter = (button, animate = true) => {
+        if (!mobileFilters.matches || filters.scrollWidth <= filters.clientWidth + 1) return;
+        const viewport = filters.getBoundingClientRect();
+        const bounds = button.getBoundingClientRect();
+        // Leave room for the edge fades and the keyboard focus outline.
+        const inset = Math.max(5, Math.min(28, (viewport.width - bounds.width) / 2));
+        const left = bounds.left - viewport.left - inset;
+        const right = bounds.right - viewport.right + inset;
+        const distance = left < 0 ? left : right > 0 ? right : 0;
+        if (distance) filters.scrollBy({
+            left: distance,
+            behavior: animate && !reduceMotion.matches ? 'smooth' : 'auto'
         });
+    };
 
-        body?.addEventListener('transitionend', (event) => {
-            if (event.propertyName !== 'max-height') return;
-            if (!group.classList.contains('is-expanded')) group.open = false;
-            if (group.classList.contains('is-expanded')) setHeight();
+    const selectFilter = (button, trackSelection = true) => {
+        if (trackSelection) revealFilter(button);
+        if (trackSelection && button.getAttribute('aria-pressed') === 'true') return;
+        const area = button.dataset.paperFilter;
+        let count = 0;
+
+        cards.forEach((card) => {
+            const visible = area === 'all'
+                || (area === 'selected' ? card.dataset.selected === 'true' : card.dataset.researchArea === area);
+            const hidden = !visible;
+            if (card.hidden !== hidden) card.hidden = hidden;
+            if (visible) count += 1;
         });
-    });
-
-    window.addEventListener('resize', () => {
         groups.forEach((group) => {
-            if (!group.classList.contains('is-expanded')) return;
-            const body = group.querySelector('.project-body');
-            if (body) group.style.setProperty('--project-body-height', `${body.scrollHeight}px`);
+            const hidden = Array.from(group.querySelectorAll('.paper-card')).every((card) => card.hidden);
+            if (group.hidden !== hidden) group.hidden = hidden;
         });
+        buttons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+        if (status) status.textContent = `${count} ${status.dataset.resultLabel}`;
+
+        if (trackSelection) window.homepageAnalytics?.track('select_content', {
+            content_type: 'research_area',
+            content_id: area,
+            research_area: area
+        });
+    };
+
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => selectFilter(button));
+        button.addEventListener('focus', () => revealFilter(button, false));
     });
+    filters.addEventListener('scroll', updateFilterEdges, { passive: true });
+    window.addEventListener('resize', () => {
+        const active = buttons.find((button) => button.getAttribute('aria-pressed') === 'true');
+        if (active) revealFilter(active, false);
+        updateFilterEdges();
+    });
+    // Progressive enhancement: all papers remain readable without JavaScript.
+    const defaultButton = buttons.find((button) => button.dataset.paperFilter === filters.dataset.defaultFilter);
+    if (defaultButton) selectFilter(defaultButton, false);
+    filterBar.hidden = false;
+    if (defaultButton) revealFilter(defaultButton, false);
+    updateFilterEdges();
 })();
 </script>
 

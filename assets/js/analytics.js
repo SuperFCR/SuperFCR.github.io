@@ -62,9 +62,10 @@
         makeRecord(heading, 'section_view', { section_id: heading.dataset.sectionId });
     });
     const eligible = (element, record) => {
-        if (document.visibilityState !== 'visible' || record.ratio < 0.5 || !element.getClientRects().length) return false;
-        const group = element.closest('.project-group');
-        return !group || (group.open && group.classList.contains('is-expanded'));
+        return document.visibilityState === 'visible'
+            && record.ratio >= 0.5
+            && !element.closest('[hidden]')
+            && element.getClientRects().length > 0;
     };
     const cancel = (record) => {
         if (record.timer !== null) window.clearTimeout(record.timer);
@@ -91,10 +92,18 @@
         });
     }, { threshold: [0, 0.5] });
     records.forEach((record, element) => observer.observe(element));
-    // Closing/replacing an accordion cancels the dwell immediately.
-    const mutations = new MutationObserver(() => records.forEach((record, element) => update(element, record)));
+    // Filtering cards or groups cancels unfinished dwell and may move other titles into view.
+    // Request fresh geometry rather than reusing ratios from the previous layout.
+    const mutations = new MutationObserver(() => records.forEach((record, element) => {
+        cancel(record);
+        if (!record.done) {
+            record.ratio = 0;
+            observer.unobserve(element);
+            observer.observe(element);
+        }
+    }));
     document.querySelectorAll('.project-group').forEach((group) => {
-        mutations.observe(group, { attributes: true, attributeFilter: ['open', 'class'] });
+        mutations.observe(group, { attributes: true, attributeFilter: ['hidden'], subtree: true });
     });
     document.addEventListener('visibilitychange', () => {
         records.forEach((record, element) => {

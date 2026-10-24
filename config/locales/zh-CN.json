@@ -37,8 +37,10 @@
       "3d_reconstruction": "三维视觉与世界建模",
       "neuromorphic_vision": "神经形态视觉"
     },
-    "projectStateShow": "展开",
-    "projectStateHide": "收起",
+    "paperFilterLabel": "按研究方向筛选论文",
+    "paperFilterAll": "全部",
+    "paperFilterSelected": "精选",
+    "paperFilterResults": "篇论文已显示",
     "equalContribution": "* 共同一作",
     "projectLead": "# 项目负责人",
     "resourceLabels": {
