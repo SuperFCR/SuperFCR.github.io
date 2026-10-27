@@ -2,6 +2,8 @@
   "locale": {
     "htmlLang": "en",
     "isChinese": false,
+    "path": "",
+    "ogLocale": "en_US",
     "dateTimeLocale": "en-GB",
     "englishHref": "./index.html",
     "chineseHref": "./zh/index.html"
@@ -18,6 +20,18 @@
     "scholar": "Scholar",
     "github": "GitHub",
     "cv": "CV",
+    "socialLabels": {
+      "x": "X (Twitter)",
+      "xiaohongshu": "RedNote",
+      "wechat": "WeChat"
+    },
+    "socialQrCaptions": {
+      "xiaohongshu": "Scan to find me on RedNote",
+      "wechat": "Scan to add me on WeChat"
+    },
+    "socialAccountLabels": {
+      "xiaohongshu": "RedNote ID: "
+    },
     "profileImageAlt": "Portrait of Chaoran Feng",
     "projectImageAlt": "Project preview",
     "organizationLogoSuffix": " logo",

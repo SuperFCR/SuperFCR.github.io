@@ -27,7 +27,8 @@ homepage/
 │   ├── css/
 │   │   └── profile.css     # Legacy stylesheet
 │   ├── imgs/               # Image assets
-│   └── pipelines/          # Project pipeline thumbnails
+│   ├── pipelines/          # Full-size project figures (sources)
+│   └── thumbs/             # Generated WebP thumbnails (do not edit)
 ├── build.js                # Build script
 ├── package.json            # Project configuration
 ├── README.md               # Documentation
@@ -169,6 +170,9 @@ The `build.js` script:
 - Compiles `templates/index.html` with Handlebars
 - Outputs `index.html` and `zh/index.html`
 - Injects optional Google Scholar citations and GitHub stars when the generated JSON files exist
+- Resizes project figures and the profile photo into `assets/thumbs/` (WebP, named by content hash; stale files are removed)
+- Sets "Last updated" and the copyright year from the last commit touching `config/data.json`, `config/locales/` or `templates/`
+- Emits canonical/hreflang URLs, Open Graph tags and JSON-LD from `site.url` in `config/data.json`
 
 ### Error Handling
 The script includes error handling for:

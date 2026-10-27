@@ -7,6 +7,9 @@
     "ea3d",
     "breaking_the_vicious_cycle"
   ],
+  "site": {
+    "url": "https://www.falcary.com/"
+  },
   "personal": {
     "name": "Chaoran Feng",
     "nameChinese": "冯超然",
@@ -20,14 +23,17 @@
     "profileImage": "./assets/imgs/bio.jpg",
     "googleScholar": "https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en",
     "github": "https://github.com/SuperFCR",
-    "cv": "./assets/files/ChaoranFeng_CV.pdf"
+    "cv": "./assets/files/ChaoranFeng_CV.pdf",
+    "social": [
+      {"type": "x", "url": "https://x.com/StarFalcary"},
+      {"type": "xiaohongshu", "qr": "./assets/imgs/xiaohongshu-qr.png", "account": "6939187440"},
+      {"type": "wechat", "qr": "./assets/imgs/wechat-qr.png"}
+    ]
   },
   "analytics": {
     "measurementId": "G-E3G650ZKVZ"
   },
   "footer": {
-    "copyrightYear": "2026",
-    "lastUpdated": "September 2026",
     "visitorTracker": {
       "pageUrl": "https://clustrmaps.com/site/1c5bo",
       "imageUrl": "https://www.clustrmaps.com/map_v2.png?d=BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&cl=ffffff"
@@ -36,17 +42,17 @@
   "education": [
     {
       "period": "2024–2027",
-      "description": "<strong>M.S. Student</strong>, School of Electronics and Computer Engineering, <a href=\"https://english.pku.edu.cn/\">Peking University</a>.",
+      "description": "<strong>M.S. in Computer Science</strong>, School of Electronics and Computer Engineering, <a href=\"https://english.pku.edu.cn/\">Peking University</a>.",
       "note": "Advised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
     },
     {
       "period": "2020–2024",
-      "description": "<strong>B.E. Student</strong>, School of Future Technology, <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>."
+      "description": "<strong>B.E. in Artificial Intelligence</strong>, School of Future Technology, <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>."
     }
   ],
   "biography": "🎓 I am currently seeking Fall 2027 Ph.D. opportunities and full-time positions. I warmly welcome potential advisors, collaborators, and employers to contact me at <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a>.",
   "research": {
-    "intro": "I work in the fields of Multimodal Generation and 3D Vision, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">Prof. Yonghong Tian</a> at <a href=\"https://pku-yuan.com\">YuanGroup</a>, Peking University. I strive to develop impactful research projects. Now, I focus on the following topics:",
+    "intro": "I work in the fields of Multimodal Generation and 3D Vision, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">Prof. Yonghong Tian</a> at <a href=\"https://yuanli2333.github.io/\">YuanGroup</a>, Peking University. I strive to develop impactful research projects. Now, I focus on the following topics:",
     "topics": [
       "Multimodal Generation",
       "Agentic AI",
@@ -80,29 +86,29 @@
     },
     {
       "date": "[2025-11]",
-      "content": "Two papers are accepted by <i>AAAI 2026</i>, <a href=\"https://arxiv.org/pdf/2503.23162\">\"NeuralGS\"</a> and <a href=\"https://arxiv.org/pdf/2412.15321\">\"Next Patch Prediction\"</a>."
+      "content": "Two papers are accepted by <i>AAAI 2026</i>, <a href=\"https://arxiv.org/abs/2503.23162\">\"NeuralGS\"</a> and <a href=\"https://arxiv.org/abs/2412.15321\">\"Next Patch Prediction\"</a>."
     },
     {
       "date": "[2025-09]",
-      "content": "A paper is accepted by <i>NeurIPS 2025</i>, <a href=\"https://arxiv.org/pdf/2505.15287\">\"GS2E\"</a>."
+      "content": "A paper is accepted by <i>NeurIPS 2025</i>, <a href=\"https://arxiv.org/abs/2505.15287\">\"GS2E\"</a>."
     },
     {
       "date": "[2025-07]",
-      "content": "A paper is accepted by <i>ACM MM 2025</i>, <a href=\"https://arxiv.org/pdf/2508.09912\">\"E-4DGS\"</a>."
+      "content": "A paper is accepted by <i>ACM MM 2025</i>, <a href=\"https://arxiv.org/abs/2508.09912\">\"E-4DGS\"</a>."
     },
     {
       "date": "[2025-06]",
-      "content": "Two papers are accepted by <i>ICCV 2025</i>, <a href=\"https://arxiv.org/pdf/2405.20224\">\"EvaGaussians\"</a> and <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">\"Tune-Your-Style\"</a>."
+      "content": "Two papers are accepted by <i>ICCV 2025</i>, <a href=\"https://arxiv.org/abs/2405.20224\">\"EvaGaussians\"</a> and <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">\"Tune-Your-Style\"</a>."
     },
     {
       "date": "[2025-03]",
       "emoji": "🔥",
-      "content": "We release <a href=\"https://arxiv.org/pdf/2503.23162\">\"NeuralGS\"</a>, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs."
+      "content": "We release <a href=\"https://arxiv.org/abs/2503.23162\">\"NeuralGS\"</a>, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs."
     },
     {
       "date": "[2025-01]",
       "emoji": "🔥",
-      "content": "We release <a href=\"https://arxiv.org/pdf/2501.02807\">\"AE-NeRF\"</a>, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes."
+      "content": "We release <a href=\"https://arxiv.org/abs/2501.02807\">\"AE-NeRF\"</a>, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes."
     },
     {
       "date": "[2024-12]",
@@ -111,7 +117,7 @@
     {
       "date": "[2024-05]",
       "emoji": "🔥",
-      "content": "We release <a href=\"https://arxiv.org/pdf/2405.20224\">\"EvaGaussians\"</a>, the first approach that reconstructs sharp static 3D scenes with sparse RGB frames and event streams."
+      "content": "We release <a href=\"https://arxiv.org/abs/2405.20224\">\"EvaGaussians\"</a>, the first approach that reconstructs sharp static 3D scenes with sparse RGB frames and event streams."
     }
   ],
   "projects": {
@@ -145,7 +151,7 @@
       {
         "analyticsId": "style_grpo",
         "title": "🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling",
-        "authors": "<u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†",
+        "authors": "<u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu*, Yingtao Li, Zhenyu Tang, Wangbo Yu, Yian Zhao, Xiaomin Li, Li Yuan†, Yonghong Tian†",
         "description": "A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.",
         "venue": "CVPR 2026",
         "image": "./assets/pipelines/Pipeline_stylegrpo.png",
@@ -198,10 +204,13 @@
       {
         "analyticsId": "ea3d",
         "title": "👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis",
-        "authors": "Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†",
+        "authors": "Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Mingyi Guo, Wei Zhang, Zhengyu Ma, Li Yuan†, Yonghong Tian†",
         "description": "An Event-Augmented 3D Diffusion framework for generalizable novel view synthesis from event streams and sparse RGB inputs.",
         "venue": "ICLR 2026",
-        "image": "./assets/pipelines/Pipeline_ea3d.png"
+        "image": "./assets/pipelines/Pipeline_ea3d.png",
+        "links": [
+          {"type": "Paper", "url": "https://proceedings.iclr.cc/paper_files/paper/2026/hash/959f70ee50044bed305e48e3484005a7-Abstract-Conference.html"}
+        ]
       },
       {
         "analyticsId": "deblurnvs",
@@ -246,26 +255,26 @@
         "venue": "AAAI 2025",
         "image": "./assets/pipelines/Pipeline_cycle3d.png",
         "links": [
-          {"type": "Paper", "url": "https://arxiv.org/pdf/2407.19548"},
+          {"type": "Paper", "url": "https://arxiv.org/abs/2407.19548"},
           {"type": "Code", "url": "https://github.com/PKU-YuanGroup/Cycle3D"}
         ]
       },
       {
         "analyticsId": "neuralgs",
         "title": "🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations",
-        "authors": "Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†",
+        "authors": "Zhenyu Tang*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†",
         "description": "A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.",
         "venue": "AAAI 2026",
         "image": "./assets/pipelines/Pipeline_neuralgs.png",
         "links": [
-          {"type": "Paper", "url": "https://arxiv.org/pdf/2503.23162"},
+          {"type": "Paper", "url": "https://arxiv.org/abs/2503.23162"},
           {"type": "Code", "url": "https://github.com/PKU-YuanGroup/NeuralGS"}
         ]
       },
       {
         "analyticsId": "nofa",
         "title": "👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction",
-        "authors": "Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, and Yonghong Tian†",
+        "authors": "Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, Yonghong Tian†",
         "description": "One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.",
         "venue": "IEEE T-CSVT",
         "image": "./assets/pipelines/Pipeline_nofa++.png",
@@ -283,7 +292,7 @@
         "venue": "NeurIPS 2025 D&B Track",
         "image": "./assets/pipelines/Pipeline_gs2e.png",
         "links": [
-          {"type": "Paper", "url": "https://arxiv.org/pdf/2505.15287"},
+          {"type": "Paper", "url": "https://arxiv.org/abs/2505.15287"},
           {"type": "Code", "url": "https://github.com/PKU-YuanGroup/GS2E"},
           {"type": "Datasets", "url": "https://huggingface.co/datasets/Falcary/GS2E"}
         ]
@@ -296,13 +305,13 @@
         "venue": "ACM MM 2025",
         "image": "./assets/pipelines/Pipeline_e_4dgs.png",
         "links": [
-          {"type": "Paper", "url": "https://arxiv.org/pdf/2508.09912"}
+          {"type": "Paper", "url": "https://arxiv.org/abs/2508.09912"}
         ]
       },
       {
         "analyticsId": "evagaussians",
         "title": "✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images",
-        "authors": "Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†",
+        "authors": "Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†",
         "description": "Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.",
         "venue": "ICCV 2025",
         "image": "./assets/pipelines/Pipeline_evagaussian.png",
@@ -319,8 +328,7 @@
         "venue": "AAAI 2025",
         "image": "./assets/pipelines/Pipeline_ae_nerf.png",
         "links": [
-          {"type": "Paper", "url": "https://arxiv.org/pdf/2501.02807"},
-          {"type": "Code", "url": "https://drexubery.github.io/EvaGaussians/"}
+          {"type": "Paper", "url": "https://arxiv.org/abs/2501.02807"}
         ]
       }
     ]
@@ -328,20 +336,24 @@
   "experiences": [
     {
       "title": "Research Intern",
-      "organization": "Horizon Robotics",
-      "period": "Jan. 2025 - Jul. 2025",
-      "host": "Yanfeng Zhao",
-      "logo": "./assets/logo/horizon_logo.jpg"
-    },
-    {
-      "title": "Research Intern",
       "organization": "Ant Research",
       "period": "Mar. 2026 - Aug. 2026",
       "host": "<a href=\"https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao\" target=\"_blank\" rel=\"noopener noreferrer\">Ka Leong Cheng</a>",
       "logo": "./assets/logo/ant_logo.jpg"
+    },
+    {
+      "title": "Research Intern",
+      "organization": "Horizon Robotics",
+      "period": "Jan. 2025 - Jul. 2025",
+      "host": "Yanfeng Zhao",
+      "logo": "./assets/logo/horizon_logo.jpg"
     }
   ],
   "awards": [
+    {
+      "date": "2026.09",
+      "content": "National Scholarship, Peking University"
+    },
     {
       "date": "2025.09",
       "content": "Ping'an Scholarship, Peking University"

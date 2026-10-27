@@ -6,20 +6,53 @@
 {{#if locale.baseHref}}    <base href="{{locale.baseHref}}">{{/if}}
     <meta name="description" content="{{meta.description}}">
     <title>{{meta.title}}</title>
-    <link rel="alternate" hreflang="en" href="./">
-    <link rel="alternate" hreflang="zh-CN" href="./zh/">
-    <link rel="alternate" hreflang="x-default" href="./">
+    <link rel="canonical" href="{{site.pageUrl}}">
+    <link rel="alternate" hreflang="en" href="{{site.englishUrl}}">
+    <link rel="alternate" hreflang="zh-CN" href="{{site.chineseUrl}}">
+    <link rel="alternate" hreflang="x-default" href="{{site.englishUrl}}">
+    <link rel="icon" type="image/png" href="assets/imgs/favicon.png">
+
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="{{personal.name}}">
+    <meta property="og:title" content="{{meta.title}}">
+    <meta property="og:description" content="{{meta.description}}">
+    <meta property="og:url" content="{{site.pageUrl}}">
+    <meta property="og:locale" content="{{locale.ogLocale}}">
+    <meta property="og:image" content="{{site.image.url}}">
+    <meta property="og:image:width" content="{{site.image.width}}">
+    <meta property="og:image:height" content="{{site.image.height}}">
+    <meta property="og:image:alt" content="{{ui.profileImageAlt}}">
+    <meta name="twitter:card" content="summary">
+    <script type="application/ld+json">{{{jsonLd}}}</script>
 
     {{#if analytics.measurementId}}
     <script src="assets/js/analytics-init.js?v=20260906" data-measurement-id="{{analytics.measurementId}}"></script>
     {{/if}}
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/fonts/profile-fangsong.woff2" as="font" type="font/woff2" crossorigin>
 
     <style>
+        /* Self-hosted Inter (latin subset, variable font): Google Fonts is often
+           unreachable from mainland China. The two faces mirror the 400/600
+           weights the page previously loaded from Google. */
+        @font-face {
+            font-family: 'Inter';
+            src: url('assets/fonts/inter-latin.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('assets/fonts/inter-latin.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
         @font-face {
             font-family: 'Profile Fangsong';
             src: url('assets/fonts/profile-fangsong.woff2') format('woff2');
@@ -99,7 +132,6 @@
             border-radius: 8px; 
             box-shadow: 0 4px 30px rgba(0,0,0,0.08);
             border: 1px solid #e1e4e8;
-            animation: fadeIn 0.8s ease-out;
         }
 
         .page-topbar {
@@ -139,11 +171,6 @@
             color: #fff;
             background: var(--primary);
             pointer-events: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         header { margin-bottom: 0; }
@@ -248,35 +275,78 @@
             z-index: 10;
         }
 
+        /* Icon-only links; each name stays available to screen readers and as a tooltip. */
         .social-links {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
-        .social-btn {
+        .social-item {
+            position: relative;
+            display: inline-flex;
+        }
+        .social-icon {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid #dae1e7 !important;
+            border-radius: 50%;
             background: #fff;
-            border: 1px solid #dae1e7;
-            border-radius: 50px;
-            color: var(--text-main);
-            font-size: 0.9rem;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
             text-decoration: none !important;
-            border-bottom: 1px solid #dae1e7 !important;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .social-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+        .social-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+        .social-icon:hover,
+        .social-icon[aria-expanded="true"] {
+            border-color: var(--primary) !important;
+            background: #fff;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(32, 84, 136, 0.15);
         }
-        .social-btn img,
-        .social-btn svg { width: 16px; height: 16px; opacity: 0.8; flex: 0 0 auto; }
+        .social-icon svg { width: 18px; height: 18px; }
+        .social-qr {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 158px;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+            color: #475569;
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.3;
+            text-align: center;
+            transform: translateX(calc(-50% + var(--qr-shift, 0px)));
+        }
+        .social-qr img {
+            display: block;
+            width: 136px;
+            height: 136px;
+        }
+        .social-qr-account {
+            margin-top: -3px;
+            color: #64748b;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
 
         .bio-text-box {
             width: 100%; /* 占满 */
@@ -291,6 +361,7 @@
             line-height: 1.65;
             letter-spacing: normal;
             text-align: left;
+            text-wrap: pretty;
             transition: all 0.3s;
             margin-top: 10px;
         }
@@ -447,7 +518,7 @@
         .paper-card:hover .paper-title { color: var(--primary); }
 
         .paper-authors { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 6px; }
-        .paper-desc { font-size: 0.9rem; color: #b91c1c; font-style: italic; margin-bottom: 12px; }
+        .paper-desc { font-size: 0.9rem; color: #b91c1c; font-style: italic; margin-bottom: 12px; text-wrap: pretty; }
 
         .tag-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .badge {
@@ -812,7 +883,7 @@
             line-height: 1.72;
             overflow-wrap: anywhere;
         }
-        html[lang="zh-CN"] .social-btn,
+        html[lang="zh-CN"] .social-qr,
         html[lang="zh-CN"] .paper-filter,
         html[lang="zh-CN"] .research-topic,
         html[lang="zh-CN"] .badge,
@@ -904,20 +975,8 @@
                 line-height: 1.55;
                 text-align: left;
             }
-            .social-links {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 8px;
-                width: 100%;
-            }
-            .social-btn {
-                justify-content: center;
-                min-width: 0;
-                padding: 7px 8px;
-                gap: 4px;
-                font-size: 0.78rem;
-                white-space: nowrap;
-            }
+            /* Seven 38px icons stay on one row down to 360px screens. */
+            .social-links { gap: 7px; }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
             .education-item {
@@ -1024,7 +1083,8 @@
             .paper-card:hover,
             .paper-card:hover .paper-img,
             .news-item:hover,
-            .social-btn:hover,
+            .social-icon:hover,
+            .social-icon[aria-expanded="true"],
             .experience-card:hover {
                 transform: none !important;
             }
@@ -1077,28 +1137,31 @@
                 </div>
                 
                 <div class="social-links">
-                    <a href="mailto:{{personal.email}}" class="social-btn">
-                        <img src="./assets/imgs/envelope.png" alt="" aria-hidden="true"> {{ui.email}}
-                    </a>
-                    <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="scholar">
-                        <img src="./assets/imgs/google.png" alt="" aria-hidden="true">
-                        {{ui.scholar}}
-                    </a>
-                    <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="github">
-                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> {{ui.github}}
-                    </a>
-                    <a href="{{personal.cv}}" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="cv">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                            <path d="M6 3h8l4 4v14H6z"></path>
-                            <path d="M14 3v5h5M9 13h6M9 17h6"></path>
-                        </svg>
-                        {{ui.cv}}
-                    </a>
+                    <a href="mailto:{{personal.email}}" class="social-icon" title="{{ui.email}}">{{{icons.email}}}<span class="social-label">{{ui.email}}</span></a>
+                    <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.scholar}}" data-analytics-event="profile_link_click" data-analytics-channel="scholar">{{{icons.googlescholar}}}<span class="social-label">{{ui.scholar}}</span></a>
+                    <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.github}}" data-analytics-event="profile_link_click" data-analytics-channel="github">{{{icons.github}}}<span class="social-label">{{ui.github}}</span></a>
+                    <a href="{{personal.cv}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.cv}}" data-analytics-event="profile_link_click" data-analytics-channel="cv">{{{icons.cv}}}<span class="social-label">{{ui.cv}}</span></a>
+                    {{#each personal.social}}
+                    {{#if qr}}
+                    <span class="social-item">
+                        <a href="{{qr}}" class="social-icon" title="{{label}}" aria-expanded="false" aria-controls="social-qr-{{type}}" data-qr-toggle data-analytics-event="profile_link_click" data-analytics-channel="{{type}}">{{{icon}}}<span class="social-label">{{label}}</span></a>
+                        <span class="social-qr" id="social-qr-{{type}}" hidden>
+                            <img src="{{qr}}" width="136" height="136" alt="{{label}}" loading="lazy">
+                            <span>{{caption}}</span>
+                            {{#if account}}
+                            <span class="social-qr-account">{{accountLabel}}{{account}}</span>
+                            {{/if}}
+                        </span>
+                    </span>
+                    {{else}}
+                    <a href="{{url}}" class="social-icon" title="{{label}}" target="_blank" rel="noopener noreferrer" data-analytics-event="profile_link_click" data-analytics-channel="{{type}}">{{{icon}}}<span class="social-label">{{label}}</span></a>
+                    {{/if}}
+                    {{/each}}
                 </div>
             </div>
 
             <div class="header-photo">
-                <img class="avatar" src="{{personal.profileImage}}" alt="{{ui.profileImageAlt}}">
+                <img class="avatar" src="{{personal.avatar.src}}" width="{{personal.avatar.width}}" height="{{personal.avatar.height}}" alt="{{ui.profileImageAlt}}" fetchpriority="high">
             </div>
         </div>
 
@@ -1294,6 +1357,38 @@
             console.warn('Unable to display local time:', error);
         }
     }
+
+    // QR entries link to the image itself, so they still work without JavaScript.
+    document.querySelectorAll('[data-qr-toggle]').forEach((toggle) => {
+        const popover = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!popover) return;
+        const setOpen = (open) => {
+            popover.hidden = !open;
+            toggle.setAttribute('aria-expanded', String(open));
+            if (!open) return;
+            // Keep the popover on screen when the icon sits near a viewport edge.
+            popover.style.removeProperty('--qr-shift');
+            const bounds = popover.getBoundingClientRect();
+            const margin = 8;
+            const overflowRight = bounds.right - (document.documentElement.clientWidth - margin);
+            const overflowLeft = margin - bounds.left;
+            if (overflowRight > 0) popover.style.setProperty('--qr-shift', `${-overflowRight}px`);
+            else if (overflowLeft > 0) popover.style.setProperty('--qr-shift', `${overflowLeft}px`);
+        };
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            setOpen(popover.hidden);
+        });
+        document.addEventListener('click', (event) => {
+            if (!popover.hidden && !toggle.parentElement.contains(event.target)) setOpen(false);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !popover.hidden) {
+                setOpen(false);
+                toggle.focus();
+            }
+        });
+    });
 
     const filters = document.querySelector('.paper-filters');
     const results = document.getElementById('research-results');

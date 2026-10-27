@@ -9,7 +9,7 @@ All events carry `page_language` (`en` or `zh-CN`). The Google tag also receives
 | Event | Parameters | Trigger |
 |---|---|---|
 | contact_click | channel=email, link_position=header/bio | Mail link click; does not imply an email was sent |
-| profile_link_click | channel=cv/scholar/github, link_position=header | Personal resource click; retained for historical comparisons |
+| profile_link_click | channel=cv/scholar/github/x/xiaohongshu/wechat, link_position=header | Personal resource click; retained for historical comparisons. For QR entries it counts opening or closing the popover |
 | cv_click | channel=cv, link_position=header | CV link click, emitted once in code; never additionally derive it in GA Admin |
 | language_switch | channel, from_language, to_language | Click to a different page language only |
 | select_content | content_type=research_area, content_id, research_area | Explicitly select a research filter; IDs use `selected`, `all`, or a research area |

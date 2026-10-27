@@ -3,6 +3,8 @@
     "htmlLang": "zh-CN",
     "isChinese": true,
     "baseHref": "../",
+    "path": "zh/",
+    "ogLocale": "zh_CN",
     "dateTimeLocale": "zh-CN",
     "englishHref": "./index.html",
     "chineseHref": "./zh/index.html"
@@ -19,6 +21,18 @@
     "scholar": "谷歌学术",
     "github": "GitHub",
     "cv": "简历",
+    "socialLabels": {
+      "x": "X（Twitter）",
+      "xiaohongshu": "小红书",
+      "wechat": "微信"
+    },
+    "socialQrCaptions": {
+      "xiaohongshu": "扫码在小红书找到我",
+      "wechat": "扫码添加微信"
+    },
+    "socialAccountLabels": {
+      "xiaohongshu": "小红书号："
+    },
     "profileImageAlt": "冯超然的个人照片",
     "projectImageAlt": "项目示意图",
     "organizationLogoSuffix": "标志",
@@ -67,9 +81,6 @@
       "university": "北京大学",
       "location": "中国深圳"
     },
-    "footer": {
-      "lastUpdated": "2026年9月"
-    },
     "education": [
       {
         "description": "<strong>硕士研究生</strong>，计算机科学与技术专业，信息工程学院，<a href=\"https://www.pku.edu.cn/\">北京大学</a>。",
@@ -81,7 +92,7 @@
     ],
     "biography": "🎓 我正在寻找 2027 年秋季入学的博士机会及全职工作机会。欢迎潜在导师、合作者和用人单位通过 <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a> 与我联系。",
     "research": {
-      "intro": "我的研究方向为多模态生成与三维视觉，目前在北京大学 <a href=\"https://pku-yuan.com\">YuanGroup</a> 开展研究，由<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>和<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">田永鸿教授</a>指导。我致力于具有实际影响力的研究工作，现阶段主要关注以下方向：",
+      "intro": "我的研究方向为多模态生成与三维视觉，目前在北京大学 <a href=\"https://yuanli2333.github.io/\">YuanGroup</a> 开展研究，由<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>和<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">田永鸿教授</a>指导。我致力于具有实际影响力的研究工作，现阶段主要关注以下方向：",
       "topics": [
         "多模态生成",
         "Agentic AI",
@@ -96,28 +107,28 @@
         "content": "两篇论文被 <i>CVPR 2026</i> 接收：Style-GRPO 与 SpatialT2I。"
       },
       {
-        "content": "两篇论文被 <i>AAAI 2026</i> 接收：<a href=\"https://arxiv.org/pdf/2503.23162\">NeuralGS</a> 与 <a href=\"https://arxiv.org/pdf/2412.15321\">Next Patch Prediction</a>。"
+        "content": "两篇论文被 <i>AAAI 2026</i> 接收：<a href=\"https://arxiv.org/abs/2503.23162\">NeuralGS</a> 与 <a href=\"https://arxiv.org/abs/2412.15321\">Next Patch Prediction</a>。"
       },
       {
-        "content": "论文 <a href=\"https://arxiv.org/pdf/2505.15287\">GS2E</a> 被 <i>NeurIPS 2025</i> 接收。"
+        "content": "论文 <a href=\"https://arxiv.org/abs/2505.15287\">GS2E</a> 被 <i>NeurIPS 2025</i> 接收。"
       },
       {
-        "content": "论文 <a href=\"https://arxiv.org/pdf/2508.09912\">E-4DGS</a> 被 <i>ACM MM 2025</i> 接收。"
+        "content": "论文 <a href=\"https://arxiv.org/abs/2508.09912\">E-4DGS</a> 被 <i>ACM MM 2025</i> 接收。"
       },
       {
-        "content": "两篇论文被 <i>ICCV 2025</i> 接收：<a href=\"https://arxiv.org/pdf/2405.20224\">EvaGaussians</a> 与 <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">Tune-Your-Style</a>。"
+        "content": "两篇论文被 <i>ICCV 2025</i> 接收：<a href=\"https://arxiv.org/abs/2405.20224\">EvaGaussians</a> 与 <a href=\"https://iccv.thecvf.com/virtual/2025/poster/2554\">Tune-Your-Style</a>。"
       },
       {
-        "content": "我们发布了 <a href=\"https://arxiv.org/pdf/2503.23162\">NeuralGS</a>，通过多个轻量 MLP 的神经场表征紧凑编码三维高斯属性。"
+        "content": "我们发布了 <a href=\"https://arxiv.org/abs/2503.23162\">NeuralGS</a>，通过多个轻量 MLP 的神经场表征紧凑编码三维高斯属性。"
       },
       {
-        "content": "我们发布了 <a href=\"https://arxiv.org/pdf/2501.02807\">AE-NeRF</a>，面向位姿噪声与大尺度无界场景中的事件流三维重建。"
+        "content": "我们发布了 <a href=\"https://arxiv.org/abs/2501.02807\">AE-NeRF</a>，面向位姿噪声与大尺度无界场景中的事件流三维重建。"
       },
       {
         "content": "两篇论文被 <i>AAAI 2025</i> 接收。"
       },
       {
-        "content": "我们发布了 <a href=\"https://arxiv.org/pdf/2405.20224\">EvaGaussians</a>，首次利用稀疏 RGB 帧与事件流重建清晰静态三维场景。"
+        "content": "我们发布了 <a href=\"https://arxiv.org/abs/2405.20224\">EvaGaussians</a>，首次利用稀疏 RGB 帧与事件流重建清晰静态三维场景。"
       }
     ],
     "projects": {
@@ -181,17 +192,20 @@
     },
     "experiences": [
       {
-        "title": "3D生成算法实习生",
-        "organization": "Horizon Robotics",
-        "period": "2025年1月—2025年7月"
-      },
-      {
         "title": "视频生成算法实习生",
         "organization": "AntGroup Lingbot",
         "period": "2026年3月—2026年8月"
+      },
+      {
+        "title": "3D生成算法实习生",
+        "organization": "Horizon Robotics",
+        "period": "2025年1月—2025年7月"
       }
     ],
     "awards": [
+      {
+        "content": "北京大学国家奖学金"
+      },
       {
         "content": "北京大学平安奖学金"
       },

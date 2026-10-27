@@ -6,18 +6,51 @@
 
     <meta name="description" content="Academic homepage of Chaoran Feng, a researcher in multimodal generation and 3D vision.">
     <title>Chaoran Feng | Academic Homepage</title>
-    <link rel="alternate" hreflang="en" href="./">
-    <link rel="alternate" hreflang="zh-CN" href="./zh/">
-    <link rel="alternate" hreflang="x-default" href="./">
+    <link rel="canonical" href="https://www.falcary.com/">
+    <link rel="alternate" hreflang="en" href="https://www.falcary.com/">
+    <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://www.falcary.com/">
+    <link rel="icon" type="image/png" href="assets/imgs/favicon.png">
+
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Chaoran Feng">
+    <meta property="og:title" content="Chaoran Feng | Academic Homepage">
+    <meta property="og:description" content="Academic homepage of Chaoran Feng, a researcher in multimodal generation and 3D vision.">
+    <meta property="og:url" content="https://www.falcary.com/">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image" content="https://www.falcary.com/assets/imgs/bio.jpg">
+    <meta property="og:image:width" content="1620">
+    <meta property="og:image:height" content="1080">
+    <meta property="og:image:alt" content="Portrait of Chaoran Feng">
+    <meta name="twitter:card" content="summary">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Chaoran Feng","alternateName":"冯超然","url":"https://www.falcary.com/","image":"https://www.falcary.com/assets/imgs/bio.jpg","email":"mailto:chaoran.feng@stu.pku.edu.cn","jobTitle":"Master Student","affiliation":{"@type":"CollegeOrUniversity","name":"Peking University"},"sameAs":["https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en","https://github.com/SuperFCR"]}</script>
 
     <script src="assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/fonts/profile-fangsong.woff2" as="font" type="font/woff2" crossorigin>
 
     <style>
+        /* Self-hosted Inter (latin subset, variable font): Google Fonts is often
+           unreachable from mainland China. The two faces mirror the 400/600
+           weights the page previously loaded from Google. */
+        @font-face {
+            font-family: 'Inter';
+            src: url('assets/fonts/inter-latin.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('assets/fonts/inter-latin.woff2') format('woff2');
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
         @font-face {
             font-family: 'Profile Fangsong';
             src: url('assets/fonts/profile-fangsong.woff2') format('woff2');
@@ -97,7 +130,6 @@
             border-radius: 8px; 
             box-shadow: 0 4px 30px rgba(0,0,0,0.08);
             border: 1px solid #e1e4e8;
-            animation: fadeIn 0.8s ease-out;
         }
 
         .page-topbar {
@@ -137,11 +169,6 @@
             color: #fff;
             background: var(--primary);
             pointer-events: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         header { margin-bottom: 0; }
@@ -246,35 +273,78 @@
             z-index: 10;
         }
 
+        /* Icon-only links; each name stays available to screen readers and as a tooltip. */
         .social-links {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
-        .social-btn {
+        .social-item {
+            position: relative;
+            display: inline-flex;
+        }
+        .social-icon {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid #dae1e7 !important;
+            border-radius: 50%;
             background: #fff;
-            border: 1px solid #dae1e7;
-            border-radius: 50px;
-            color: var(--text-main);
-            font-size: 0.9rem;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
             text-decoration: none !important;
-            border-bottom: 1px solid #dae1e7 !important;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .social-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+        .social-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+        .social-icon:hover,
+        .social-icon[aria-expanded="true"] {
+            border-color: var(--primary) !important;
+            background: #fff;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(32, 84, 136, 0.15);
         }
-        .social-btn img,
-        .social-btn svg { width: 16px; height: 16px; opacity: 0.8; flex: 0 0 auto; }
+        .social-icon svg { width: 18px; height: 18px; }
+        .social-qr {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 158px;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+            color: #475569;
+            font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.3;
+            text-align: center;
+            transform: translateX(calc(-50% + var(--qr-shift, 0px)));
+        }
+        .social-qr img {
+            display: block;
+            width: 136px;
+            height: 136px;
+        }
+        .social-qr-account {
+            margin-top: -3px;
+            color: #64748b;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
 
         .bio-text-box {
             width: 100%; /* 占满 */
@@ -289,6 +359,7 @@
             line-height: 1.65;
             letter-spacing: normal;
             text-align: left;
+            text-wrap: pretty;
             transition: all 0.3s;
             margin-top: 10px;
         }
@@ -445,7 +516,7 @@
         .paper-card:hover .paper-title { color: var(--primary); }
 
         .paper-authors { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 6px; }
-        .paper-desc { font-size: 0.9rem; color: #b91c1c; font-style: italic; margin-bottom: 12px; }
+        .paper-desc { font-size: 0.9rem; color: #b91c1c; font-style: italic; margin-bottom: 12px; text-wrap: pretty; }
 
         .tag-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .badge {
@@ -810,7 +881,7 @@
             line-height: 1.72;
             overflow-wrap: anywhere;
         }
-        html[lang="zh-CN"] .social-btn,
+        html[lang="zh-CN"] .social-qr,
         html[lang="zh-CN"] .paper-filter,
         html[lang="zh-CN"] .research-topic,
         html[lang="zh-CN"] .badge,
@@ -902,20 +973,8 @@
                 line-height: 1.55;
                 text-align: left;
             }
-            .social-links {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 8px;
-                width: 100%;
-            }
-            .social-btn {
-                justify-content: center;
-                min-width: 0;
-                padding: 7px 8px;
-                gap: 4px;
-                font-size: 0.78rem;
-                white-space: nowrap;
-            }
+            /* Seven 38px icons stay on one row down to 360px screens. */
+            .social-links { gap: 7px; }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
             .education-item {
@@ -1022,7 +1081,8 @@
             .paper-card:hover,
             .paper-card:hover .paper-img,
             .news-item:hover,
-            .social-btn:hover,
+            .social-icon:hover,
+            .social-icon[aria-expanded="true"],
             .experience-card:hover {
                 transform: none !important;
             }
@@ -1071,28 +1131,31 @@
                 </div>
                 
                 <div class="social-links">
-                    <a href="mailto:chaoran.feng@stu.pku.edu.cn" class="social-btn">
-                        <img src="./assets/imgs/envelope.png" alt="" aria-hidden="true"> Email
-                    </a>
-                    <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="scholar">
-                        <img src="./assets/imgs/google.png" alt="" aria-hidden="true">
-                        Scholar
-                    </a>
-                    <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="github">
-                        <img src="./assets/imgs/github.png" alt="" aria-hidden="true"> GitHub
-                    </a>
-                    <a href="./assets/files/ChaoranFeng_CV.pdf" target="_blank" rel="noopener noreferrer" class="social-btn" data-analytics-event="profile_link_click" data-analytics-channel="cv">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                            <path d="M6 3h8l4 4v14H6z"></path>
-                            <path d="M14 3v5h5M9 13h6M9 17h6"></path>
-                        </svg>
-                        CV
-                    </a>
+                    <a href="mailto:chaoran.feng@stu.pku.edu.cn" class="social-icon" title="Email"><svg fill="#CD1212" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg><span class="social-label">Email</span></a>
+                    <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-icon" title="Scholar" data-analytics-event="profile_link_click" data-analytics-channel="scholar"><svg fill="#4285F4" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg><span class="social-label">Scholar</span></a>
+                    <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-icon" title="GitHub" data-analytics-event="profile_link_click" data-analytics-channel="github"><svg fill="#181717" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span class="social-label">GitHub</span></a>
+                    <a href="./assets/files/ChaoranFeng_CV.pdf" target="_blank" rel="noopener noreferrer" class="social-icon" title="CV" data-analytics-event="profile_link_click" data-analytics-channel="cv"><svg fill="#205488" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17.1" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="600" letter-spacing="-0.6">CV</text></svg><span class="social-label">CV</span></a>
+                    <a href="https://x.com/StarFalcary" class="social-icon" title="X (Twitter)" target="_blank" rel="noopener noreferrer" data-analytics-event="profile_link_click" data-analytics-channel="x"><svg fill="#000000" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg><span class="social-label">X (Twitter)</span></a>
+                    <span class="social-item">
+                        <a href="./assets/imgs/xiaohongshu-qr.png" class="social-icon" title="RedNote" aria-expanded="false" aria-controls="social-qr-xiaohongshu" data-qr-toggle data-analytics-event="profile_link_click" data-analytics-channel="xiaohongshu"><svg fill="#FF2442" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6.5 2H18a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 18 18H6.5a1 1 0 0 0 0 2H19a1 1 0 1 1 0 2H6.5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3Zm2.25 4.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h4a.75.75 0 0 0 0-1.5h-4Z"/></svg><span class="social-label">RedNote</span></a>
+                        <span class="social-qr" id="social-qr-xiaohongshu" hidden>
+                            <img src="./assets/imgs/xiaohongshu-qr.png" width="136" height="136" alt="RedNote" loading="lazy">
+                            <span>Scan to find me on RedNote</span>
+                            <span class="social-qr-account">RedNote ID: 6939187440</span>
+                        </span>
+                    </span>
+                    <span class="social-item">
+                        <a href="./assets/imgs/wechat-qr.png" class="social-icon" title="WeChat" aria-expanded="false" aria-controls="social-qr-wechat" data-qr-toggle data-analytics-event="profile_link_click" data-analytics-channel="wechat"><svg fill="#07C160" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg><span class="social-label">WeChat</span></a>
+                        <span class="social-qr" id="social-qr-wechat" hidden>
+                            <img src="./assets/imgs/wechat-qr.png" width="136" height="136" alt="WeChat" loading="lazy">
+                            <span>Scan to add me on WeChat</span>
+                        </span>
+                    </span>
                 </div>
             </div>
 
             <div class="header-photo">
-                <img class="avatar" src="./assets/imgs/bio.jpg" alt="Portrait of Chaoran Feng">
+                <img class="avatar" src="./assets/thumbs/bio-d521c9cd0d.webp" width="560" height="373" alt="Portrait of Chaoran Feng" fetchpriority="high">
             </div>
         </div>
 
@@ -1104,7 +1167,7 @@
     <!-- Research Interests -->
     <section class="research-section">
         <h2 data-section-id="research">🔬 Research Interests</h2>
-        <p class="research-intro">I work in the fields of Multimodal Generation and 3D Vision, supervised by <a href="https://yuanli2333.github.io/">Prof. Li Yuan</a> and <a href="https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en">Prof. Yonghong Tian</a> at <a href="https://pku-yuan.com">YuanGroup</a>, Peking University. I strive to develop impactful research projects. Now, I focus on the following topics:</p>
+        <p class="research-intro">I work in the fields of Multimodal Generation and 3D Vision, supervised by <a href="https://yuanli2333.github.io/">Prof. Li Yuan</a> and <a href="https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en">Prof. Yonghong Tian</a> at <a href="https://yuanli2333.github.io/">YuanGroup</a>, Peking University. I strive to develop impactful research projects. Now, I focus on the following topics:</p>
         <ul class="research-topics">
             <li class="research-topic">Multimodal Generation</li>
             <li class="research-topic">Agentic AI</li>
@@ -1119,14 +1182,14 @@
             <li class="education-item">
                 <span class="education-period">2024–2027</span>
                 <span class="education-detail">
-                    <span class="education-main"><strong>M.S. Student</strong>, School of Electronics and Computer Engineering, <a href="https://english.pku.edu.cn/">Peking University</a>.</span>
+                    <span class="education-main"><strong>M.S. in Computer Science</strong>, School of Electronics and Computer Engineering, <a href="https://english.pku.edu.cn/">Peking University</a>.</span>
                     <span class="education-note">Advised by <a href="https://yuanli2333.github.io/">Prof. Li Yuan</a> and <a href="https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en">Prof. Yonghong Tian</a>.</span>
                 </span>
             </li>
             <li class="education-item">
                 <span class="education-period">2020–2024</span>
                 <span class="education-detail">
-                    <span class="education-main"><strong>B.E. Student</strong>, School of Future Technology, <a href="https://en.dlut.edu.cn/">Dalian University of Technology</a>.</span>
+                    <span class="education-main"><strong>B.E. in Artificial Intelligence</strong>, School of Future Technology, <a href="https://en.dlut.edu.cn/">Dalian University of Technology</a>.</span>
                 </span>
             </li>
         </ul>
@@ -1155,42 +1218,42 @@
                 <span class="news-date">[2025-11]</span>
                 <span>
                     
-                    Two papers are accepted by <i>AAAI 2026</i>, <a href="https://arxiv.org/pdf/2503.23162">"NeuralGS"</a> and <a href="https://arxiv.org/pdf/2412.15321">"Next Patch Prediction"</a>.
+                    Two papers are accepted by <i>AAAI 2026</i>, <a href="https://arxiv.org/abs/2503.23162">"NeuralGS"</a> and <a href="https://arxiv.org/abs/2412.15321">"Next Patch Prediction"</a>.
                 </span>
             </li>
             <li class="news-item">
                 <span class="news-date">[2025-09]</span>
                 <span>
                     
-                    A paper is accepted by <i>NeurIPS 2025</i>, <a href="https://arxiv.org/pdf/2505.15287">"GS2E"</a>.
+                    A paper is accepted by <i>NeurIPS 2025</i>, <a href="https://arxiv.org/abs/2505.15287">"GS2E"</a>.
                 </span>
             </li>
             <li class="news-item">
                 <span class="news-date">[2025-07]</span>
                 <span>
                     
-                    A paper is accepted by <i>ACM MM 2025</i>, <a href="https://arxiv.org/pdf/2508.09912">"E-4DGS"</a>.
+                    A paper is accepted by <i>ACM MM 2025</i>, <a href="https://arxiv.org/abs/2508.09912">"E-4DGS"</a>.
                 </span>
             </li>
             <li class="news-item">
                 <span class="news-date">[2025-06]</span>
                 <span>
                     
-                    Two papers are accepted by <i>ICCV 2025</i>, <a href="https://arxiv.org/pdf/2405.20224">"EvaGaussians"</a> and <a href="https://iccv.thecvf.com/virtual/2025/poster/2554">"Tune-Your-Style"</a>.
+                    Two papers are accepted by <i>ICCV 2025</i>, <a href="https://arxiv.org/abs/2405.20224">"EvaGaussians"</a> and <a href="https://iccv.thecvf.com/virtual/2025/poster/2554">"Tune-Your-Style"</a>.
                 </span>
             </li>
             <li class="news-item">
                 <span class="news-date">[2025-03]</span>
                 <span>
                     🔥 
-                    We release <a href="https://arxiv.org/pdf/2503.23162">"NeuralGS"</a>, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs.
+                    We release <a href="https://arxiv.org/abs/2503.23162">"NeuralGS"</a>, a novel framework that effectively adopts the neural field representation to encode the attributes of 3D Gaussians with multiple tiny MLPs.
                 </span>
             </li>
             <li class="news-item">
                 <span class="news-date">[2025-01]</span>
                 <span>
                     🔥 
-                    We release <a href="https://arxiv.org/pdf/2501.02807">"AE-NeRF"</a>, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes.
+                    We release <a href="https://arxiv.org/abs/2501.02807">"AE-NeRF"</a>, a novel framework for 3D reconstruction using event streams under noisy poses and in unbounded larger scenes.
                 </span>
             </li>
             <li class="news-item">
@@ -1204,7 +1267,7 @@
                 <span class="news-date">[2024-05]</span>
                 <span>
                     🔥 
-                    We release <a href="https://arxiv.org/pdf/2405.20224">"EvaGaussians"</a>, the first approach that reconstructs sharp static 3D scenes with sparse RGB frames and event streams.
+                    We release <a href="https://arxiv.org/abs/2405.20224">"EvaGaussians"</a>, the first approach that reconstructs sharp static 3D scenes with sparse RGB frames and event streams.
                 </span>
             </li>
         </ul>
@@ -1242,7 +1305,7 @@
                 <div class="paper-card" data-content-id="style_grpo" data-research-area="multimodal_generation" data-selected="true">
                     <div class="paper-content">
                         <a href="./assets/files/StyleGRPO.pdf" class="paper-title" data-resource-type="Paper">🎨 Style-GRPO: Semantic-Aware Preference Optimization for Image Style Transfer Guided by Reward Modeling</a>
-                        <div class="paper-authors"><u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu* , Yingtao Li , Zhenyu Tang , Wangbo Yu , Yian Zhao , Xiaomin Li , Li Yuan† , Yonghong Tian†</div>
+                        <div class="paper-authors"><u><b>Chaoran Feng<sup>*,#</sup></b></u>, Jianbin Zhao*, Miao Yu*, Yingtao Li, Zhenyu Tang, Wangbo Yu, Yian Zhao, Xiaomin Li, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework for image style transfer using semantic-aware preference optimization guided by reward modeling.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">CVPR 2026</span>
@@ -1251,7 +1314,7 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_stylegrpo.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_stylegrpo-7b8fa6068e.webp" width="880" height="313" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="enhancing_spatial_understanding_in_image_generation_via_reward_modeling" data-research-area="multimodal_generation" data-selected="true">
                     <div class="paper-content">
@@ -1272,7 +1335,7 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_spatialt2i.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_spatialt2i-7785a446cf.webp" width="880" height="473" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="wise" data-research-area="multimodal_generation" data-selected="false">
                     <div class="paper-content">
@@ -1290,7 +1353,7 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_wise.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_wise-ae1a7d7338.webp" width="880" height="495" alt="Project preview" loading="lazy">
                 </div>
             </div>
             <div class="project-group" data-research-area="3d_vision" role="group" aria-label="3D Vision &amp; World Modeling">
@@ -1316,18 +1379,21 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_worldcrafter.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_worldcrafter-d9e07ebe0b.webp" width="880" height="495" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="ea3d" data-research-area="3d_vision" data-selected="true">
                     <div class="paper-content">
-                        <span class="paper-title">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</span>
-                        <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Li Yuan† , Yonghong Tian†</div>
+                        <a href="https://proceedings.iclr.cc/paper_files/paper/2026/hash/959f70ee50044bed305e48e3484005a7-Abstract-Conference.html" class="paper-title" data-resource-type="Paper">👾 EA3D: Event-Augmented 3D Diffusion for Generalizable Novel View Synthesis</a>
+                        <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jianing Li, Aofan Zhang, Zhenyu Tang, Mingyi Guo, Wei Zhang, Zhengyu Ma, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">An Event-Augmented 3D Diffusion framework for generalizable novel view synthesis from event streams and sparse RGB inputs.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">ICLR 2026</span>
+                            <a href="https://proceedings.iclr.cc/paper_files/paper/2026/hash/959f70ee50044bed305e48e3484005a7-Abstract-Conference.html" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                                Paper
+                            </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_ea3d.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_ea3d-7b235469cb.webp" width="880" height="424" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="deblurnvs" data-research-area="3d_vision" data-selected="false">
                     <div class="paper-content">
@@ -1345,7 +1411,7 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_deblurnvs.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_deblurnvs-95aaf19683.webp" width="880" height="363" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="breaking_the_vicious_cycle" data-research-area="3d_vision" data-selected="true">
                     <div class="paper-content">
@@ -1363,7 +1429,7 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_coherentgs.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_coherentgs-7d6cd1aad4.webp" width="880" height="338" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="tune_your_style" data-research-area="3d_vision" data-selected="false">
                     <div class="paper-content">
@@ -1377,16 +1443,16 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_tune_your_style.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_tune_your_style-5d796fd1d8.webp" width="880" height="310" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="cycle3d" data-research-area="3d_vision" data-selected="false">
                     <div class="paper-content">
-                        <a href="https://arxiv.org/pdf/2407.19548" class="paper-title" data-resource-type="Paper">🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</a>
+                        <a href="https://arxiv.org/abs/2407.19548" class="paper-title" data-resource-type="Paper">🔥 Cycle3D: High-quality and Consistent Image-to-3D Generation via Generation-Reconstruction Cycle</a>
                         <div class="paper-authors">Zhenyu Tang*, Junwu Zhang*, Xinhua Cheng, Wangbo Yu, <u><b>Chaoran Feng</b></u>, Yatian Pang, Bin Lin, Li Yuan†</div>
                         <div class="paper-desc">The project is about 3D generation using a generation-reconstruction cycle for a unified diffusion process.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
-                            <a href="https://arxiv.org/pdf/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                            <a href="https://arxiv.org/abs/2407.19548" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                             <a href="https://github.com/PKU-YuanGroup/Cycle3D" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
@@ -1395,16 +1461,16 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_cycle3d.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_cycle3d-914b3624b6.webp" width="880" height="409" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="neuralgs" data-research-area="3d_vision" data-selected="false">
                     <div class="paper-content">
-                        <a href="https://arxiv.org/pdf/2503.23162" class="paper-title" data-resource-type="Paper">🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</a>
-                        <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng*</b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†</div>
+                        <a href="https://arxiv.org/abs/2503.23162" class="paper-title" data-resource-type="Paper">🌀 NeuralGS: Bridging Neural Fields and 3D Gaussian Splatting for Compact 3D Representations</a>
+                        <div class="paper-authors">Zhenyu Tang*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Xinhua Cheng, Wangbo Yu, Junwu Zhang, Yuan Liu†, Xiaoxiao Long, Wenping Wang, Li Yuan†</div>
                         <div class="paper-desc">A novel framework using neural fields to encode 3D Gaussians with compact MLPs for large-scale scenes.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2026</span>
-                            <a href="https://arxiv.org/pdf/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                            <a href="https://arxiv.org/abs/2503.23162" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                             <a href="https://github.com/PKU-YuanGroup/NeuralGS" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
@@ -1413,12 +1479,12 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_neuralgs.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_neuralgs-59f25cd31f.webp" width="880" height="424" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="nofa" data-research-area="3d_vision" data-selected="false">
                     <div class="paper-content">
                         <a href="https://ieeexplore.ieee.org/document/11223960" class="paper-title" data-resource-type="Paper">👤 NOFA++: Tuning-free NeRF-based One-shot Facial Avatar Reconstruction</a>
-                        <div class="paper-authors">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, and Yonghong Tian†</div>
+                        <div class="paper-authors">Wangbo Yu, <u><b>Chaoran Feng</b></u>, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">One-shot 3D facial avatar reconstruction with high fidelity and dynamic reenactment from a single image.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">IEEE T-CSVT</span>
@@ -1427,18 +1493,18 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_nofa++.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_nofa__-7eef9cead4.webp" width="880" height="419" alt="Project preview" loading="lazy">
                 </div>
             </div>
             <div class="project-group" data-research-area="neuromorphic_vision" role="group" aria-label="Neuromorphic Vision">
                 <div class="paper-card" data-content-id="gs2e" data-research-area="neuromorphic_vision" data-selected="false">
                     <div class="paper-content">
-                        <a href="https://arxiv.org/pdf/2505.15287" class="paper-title" data-resource-type="Paper">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</a>
+                        <a href="https://arxiv.org/abs/2505.15287" class="paper-title" data-resource-type="Paper">🍡 GS2E: Gaussian Splatting is an Effective Data Generator for Event Stream Generation</a>
                         <div class="paper-authors">Yuchen Li*, <u><b>Chaoran Feng<sup>*,#</sup></b></u>, Zhenyu Tang, Kaiyuan Deng, Wangbo Yu, Yonghong Tian†, Li Yuan†</div>
                         <div class="paper-desc">The large-scale event dataset and a novel pipeline to simulate the event stream with 3DGS.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">NeurIPS 2025 D&amp;B Track</span>
-                            <a href="https://arxiv.org/pdf/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                            <a href="https://arxiv.org/abs/2505.15287" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                             <a href="https://github.com/PKU-YuanGroup/GS2E" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
@@ -1450,26 +1516,26 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_gs2e.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_gs2e-eab85d372b.webp" width="880" height="473" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="e_4dgs" data-research-area="neuromorphic_vision" data-selected="false">
                     <div class="paper-content">
-                        <a href="https://arxiv.org/pdf/2508.09912" class="paper-title" data-resource-type="Paper">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</a>
+                        <a href="https://arxiv.org/abs/2508.09912" class="paper-title" data-resource-type="Paper">🎈 E-4DGS: High-Fidelity Dynamic Reconstruction from the Multi-view Event Cameras</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Zhenyu Tang, Wangbo Yu, Yatian Pang, Yian Zhao, Jianbin Zhao, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">A novel framework to reconstruct high-fidelity scenes with fast-motion event cameras.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">ACM MM 2025</span>
-                            <a href="https://arxiv.org/pdf/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                            <a href="https://arxiv.org/abs/2508.09912" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_e_4dgs.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_e_4dgs-03bc6ab6b0.webp" width="880" height="346" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="evagaussians" data-research-area="neuromorphic_vision" data-selected="false">
                     <div class="paper-content">
                         <a href="https://arxiv.org/abs/2405.20224" class="paper-title" data-resource-type="Paper">✨ EvaGaussians: Event Assisted Gaussian Splatting from Blurry Images</a>
-                        <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng*</b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†</div>
+                        <div class="paper-authors">Wangbo Yu*, <u><b>Chaoran Feng<sup>*</sup></b></u>, Jiye Tang, Jiashu Yang, Zhenyu Tang, Xu Jia, Yuchao Yang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">Event-assisted 3D reconstruction from blurry images with noisy poses and dynamic scenes.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">ICCV 2025</span>
@@ -1482,24 +1548,21 @@
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_evagaussian.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_evagaussian-c12bf8b733.webp" width="880" height="524" alt="Project preview" loading="lazy">
                 </div>
                 <div class="paper-card" data-content-id="ae_nerf" data-research-area="neuromorphic_vision" data-selected="false">
                     <div class="paper-content">
-                        <a href="https://arxiv.org/pdf/2501.02807" class="paper-title" data-resource-type="Paper">⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</a>
+                        <a href="https://arxiv.org/abs/2501.02807" class="paper-title" data-resource-type="Paper">⚡ AE-NeRF: Augmenting Event-Based Neural Radiance Fields for Non-ideal Conditions and Larger Scenes</a>
                         <div class="paper-authors"><u><b>Chaoran Feng</b></u>, Wangbo Yu, Xinhua Cheng, Zhenyu Tang, Junwu Zhang, Li Yuan†, Yonghong Tian†</div>
                         <div class="paper-desc">3D reconstruction with event streams under noisy poses and unbounded scenes.</div>
                         <div class="tag-row">
                             <span class="badge badge-venue">AAAI 2025</span>
-                            <a href="https://arxiv.org/pdf/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
+                            <a href="https://arxiv.org/abs/2501.02807" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Paper">
                                 Paper
-                            </a>
-                            <a href="https://drexubery.github.io/EvaGaussians/" class="badge badge-link" target="_blank" rel="noopener noreferrer" data-resource-type="Code">
-                                Code
                             </a>
                         </div>
                     </div>
-                    <img class="paper-img" src="./assets/pipelines/Pipeline_ae_nerf.png" alt="Project preview" loading="lazy">
+                    <img class="paper-img" src="./assets/thumbs/Pipeline_ae_nerf-255d156407.webp" width="880" height="396" alt="Project preview" loading="lazy">
                 </div>
             </div>
         </div>
@@ -1529,7 +1592,7 @@
                     </a>
                 </div>
             </div>
-            <img class="paper-img" src="./assets/pipelines/Pipeline_lingbot_video.webp" alt="Project preview" loading="lazy">
+            <img class="paper-img" src="./assets/thumbs/Pipeline_lingbot_video-ec4d78b777.webp" width="880" height="499" alt="Project preview" loading="lazy">
         </div>
         <div class="paper-card" data-content-id="uniworld_view" data-research-area="multimodal_generation" data-selected="false">
             <div class="paper-content">
@@ -1550,7 +1613,7 @@
                     </a>
                 </div>
             </div>
-            <img class="paper-img" src="./assets/pipelines/Pipeline_uniworld_view.jpg" alt="Project preview" loading="lazy">
+            <img class="paper-img" src="./assets/thumbs/Pipeline_uniworld_view-a79152ac6e.webp" width="880" height="326" alt="Project preview" loading="lazy">
         </div>
     </section>
 
@@ -1560,16 +1623,6 @@
         <h2 data-section-id="experience">💼 Experience</h2>
         <div class="experience-grid">
             <div class="experience-card">
-                <img class="experience-logo" src="./assets/logo/horizon_logo.jpg" alt="Horizon Robotics logo" loading="lazy">
-                <div>
-                    <p class="experience-title">
-                        <span class="experience-role">Research Intern</span><span class="experience-title-joiner">, </span><span class="experience-organization">Horizon Robotics</span>
-                    </p>
-                    <div class="experience-period">Jan. 2025 - Jul. 2025</div>
-                    <div class="experience-host">Hosted by Yanfeng Zhao</div>
-                </div>
-            </div>
-            <div class="experience-card">
                 <img class="experience-logo" src="./assets/logo/ant_logo.jpg" alt="Ant Research logo" loading="lazy">
                 <div>
                     <p class="experience-title">
@@ -1577,6 +1630,16 @@
                     </p>
                     <div class="experience-period">Mar. 2026 - Aug. 2026</div>
                     <div class="experience-host">Hosted by <a href="https://scholar.google.com/citations?user=eNtNT2gAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener noreferrer">Ka Leong Cheng</a></div>
+                </div>
+            </div>
+            <div class="experience-card">
+                <img class="experience-logo" src="./assets/logo/horizon_logo.jpg" alt="Horizon Robotics logo" loading="lazy">
+                <div>
+                    <p class="experience-title">
+                        <span class="experience-role">Research Intern</span><span class="experience-title-joiner">, </span><span class="experience-organization">Horizon Robotics</span>
+                    </p>
+                    <div class="experience-period">Jan. 2025 - Jul. 2025</div>
+                    <div class="experience-host">Hosted by Yanfeng Zhao</div>
                 </div>
             </div>
         </div>
@@ -1588,6 +1651,12 @@
     <section id="awards" class="awards-section">
         <h2 data-section-id="awards">🏆 Awards</h2>
         <ul class="awards-list">
+            <li class="award-item">
+                <span class="award-date">2026.09</span>
+                <span class="award-detail">
+                    National Scholarship, Peking University
+                </span>
+            </li>
             <li class="award-item">
                 <span class="award-date">2025.09</span>
                 <span class="award-detail">
@@ -1634,7 +1703,7 @@
         <div class="footer-copy">
             &copy; 2026 <strong>Chaoran Feng</strong>. All rights reserved.
             <div style="margin-top: 8px; font-size: 0.85rem;">
-                Last updated: September 2026
+                Last updated: October 2026
             </div>
         </div>
         <a class="visitor-map" href="https://clustrmaps.com/site/1c5bo" target="_blank" rel="noopener noreferrer" title="Visitor statistics">
@@ -1667,6 +1736,38 @@
             console.warn('Unable to display local time:', error);
         }
     }
+
+    // QR entries link to the image itself, so they still work without JavaScript.
+    document.querySelectorAll('[data-qr-toggle]').forEach((toggle) => {
+        const popover = document.getElementById(toggle.getAttribute('aria-controls'));
+        if (!popover) return;
+        const setOpen = (open) => {
+            popover.hidden = !open;
+            toggle.setAttribute('aria-expanded', String(open));
+            if (!open) return;
+            // Keep the popover on screen when the icon sits near a viewport edge.
+            popover.style.removeProperty('--qr-shift');
+            const bounds = popover.getBoundingClientRect();
+            const margin = 8;
+            const overflowRight = bounds.right - (document.documentElement.clientWidth - margin);
+            const overflowLeft = margin - bounds.left;
+            if (overflowRight > 0) popover.style.setProperty('--qr-shift', `${-overflowRight}px`);
+            else if (overflowLeft > 0) popover.style.setProperty('--qr-shift', `${overflowLeft}px`);
+        };
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            setOpen(popover.hidden);
+        });
+        document.addEventListener('click', (event) => {
+            if (!popover.hidden && !toggle.parentElement.contains(event.target)) setOpen(false);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !popover.hidden) {
+                setOpen(false);
+                toggle.focus();
+            }
+        });
+    });
 
     const filters = document.querySelector('.paper-filters');
     const results = document.getElementById('research-results');

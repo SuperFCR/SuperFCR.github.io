@@ -1,6 +1,9 @@
+const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 const fs = require('fs-extra');
 const Handlebars = require('handlebars');
 const path = require('path');
+const sharp = require('sharp');
 
 const ROOT = __dirname;
 const fromRoot = (...parts) => path.join(ROOT, ...parts);
@@ -9,6 +12,13 @@ const pages = [
     { localeFile: 'en.json', outputFile: 'index.html' },
     { localeFile: 'zh-CN.json', outputFile: path.join('zh', 'index.html') }
 ];
+
+// Project figures are shown at 220×135 (full width on phones) and the avatar at
+// 280px, so twice those widths keeps them sharp on high-density screens.
+const THUMB_DIR = 'assets/thumbs';
+const THUMB_QUALITY = 82;
+const PROJECT_THUMB_WIDTH = 880;
+const AVATAR_THUMB_WIDTH = 560;
 
 const isPlainObject = (value) => value !== null
     && typeof value === 'object'
@@ -65,6 +75,15 @@ for (const project of Object.values(baseData.projects).flat()) {
 }
 const templateSource = fs.readFileSync(fromRoot('templates/index.html'), 'utf8');
 
+// Brand icons come from Simple Icons (CC0) and the envelope from Material Icons
+// (Apache 2.0); the RedNote book and the CV mark are drawn for this site.
+const icons = Object.fromEntries(
+    fs.readdirSync(fromRoot('templates/icons')).map((file) => [
+        path.parse(file).name,
+        fs.readFileSync(fromRoot('templates/icons', file), 'utf8').trim()
+    ])
+);
+
 const scholarPath = fromRoot('config/scholar_data.json');
 if (fs.existsSync(scholarPath)) {
     try {
@@ -86,14 +105,113 @@ if (fs.existsSync(githubPath)) {
     }
 }
 
-const preparePageData = (localeConfig) => {
+// Thumbnail names carry a hash of the source and settings, so replacing a figure
+// produces a new file instead of reusing a stale one.
+const thumbnails = new Map();
+const makeThumbnail = async (source, width) => {
+    const input = fs.readFileSync(fromRoot(source));
+    const hash = crypto.createHash('sha1')
+        .update(input)
+        .update(`${width}:${THUMB_QUALITY}`)
+        .digest('hex')
+        .slice(0, 10);
+    const name = path.parse(source).name.replace(/[^A-Za-z0-9_-]/g, '_');
+    const output = path.posix.join(THUMB_DIR, `${name}-${hash}.webp`);
+    if (!fs.existsSync(fromRoot(output))) {
+        await sharp(input)
+            .resize({ width, withoutEnlargement: true })
+            .webp({ quality: THUMB_QUALITY, effort: 6 })
+            .toFile(fromRoot(output));
+    }
+    const { width: thumbWidth, height: thumbHeight } = await sharp(fromRoot(output)).metadata();
+    thumbnails.set(source, { src: `./${output}`, width: thumbWidth, height: thumbHeight });
+};
+
+const buildThumbnails = async () => {
+    fs.ensureDirSync(fromRoot(THUMB_DIR));
+    const projectImages = new Set(
+        Object.values(baseData.projects).flat().map((project) => project.image).filter(Boolean)
+    );
+    await Promise.all([
+        ...Array.from(projectImages, (image) => makeThumbnail(image, PROJECT_THUMB_WIDTH)),
+        makeThumbnail(baseData.personal.profileImage, AVATAR_THUMB_WIDTH)
+    ]);
+    const used = new Set(Array.from(thumbnails.values(), (thumb) => path.posix.basename(thumb.src)));
+    for (const file of fs.readdirSync(fromRoot(THUMB_DIR))) {
+        if (!used.has(file)) fs.removeSync(fromRoot(THUMB_DIR, file));
+    }
+};
+
+// "Last updated" follows the last commit that changed page content, not the
+// daily Scholar/GitHub refresh.
+const contentDate = (() => {
+    try {
+        const committed = execFileSync(
+            'git',
+            ['log', '-1', '--format=%cI', '--', 'config/data.json', 'config/locales', 'templates'],
+            { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+        ).trim();
+        if (committed) return new Date(committed);
+    } catch (error) {
+        // Fall through to the build date when git history is unavailable.
+    }
+    console.warn('⚠️ No git history for page content; using the build date for "Last updated".');
+    return new Date();
+})();
+
+const localeConfigs = pages.map((page) => readJson(path.join('config', 'locales', page.localeFile)));
+const pageUrl = (localeConfig) => new URL(localeConfig.locale.path, baseData.site.url).href;
+const englishUrl = pageUrl(localeConfigs.find((config) => !config.locale.isChinese));
+const chineseUrl = pageUrl(localeConfigs.find((config) => config.locale.isChinese));
+
+const preparePageData = (localeConfig, profileImageSize) => {
     const data = mergeLocale(baseData, localeConfig.content || {});
     data.locale = localeConfig.locale;
     data.meta = localeConfig.meta;
     data.ui = localeConfig.ui;
 
+    data.site = {
+        ...data.site,
+        pageUrl: pageUrl(localeConfig),
+        englishUrl,
+        chineseUrl,
+        image: { url: new URL(data.personal.profileImage, data.site.url).href, ...profileImageSize }
+    };
+    data.personal.avatar = thumbnails.get(data.personal.profileImage);
+    data.icons = icons;
+    data.personal.social = (data.personal.social || []).map((item) => {
+        if (!icons[item.type] || !(item.url || item.qr)) {
+            throw new Error(`Social entry needs a known type and a url or qr: ${JSON.stringify(item)}`);
+        }
+        return {
+            ...item,
+            icon: icons[item.type],
+            label: data.ui.socialLabels[item.type] || item.type,
+            caption: data.ui.socialQrCaptions[item.type],
+            accountLabel: data.ui.socialAccountLabels[item.type]
+        };
+    });
+    const timeZone = data.personal.timeZone;
+    data.footer.lastUpdated = new Intl.DateTimeFormat(data.locale.dateTimeLocale, {
+        year: 'numeric', month: 'long', timeZone
+    }).format(contentDate);
+    data.footer.copyrightYear = new Intl.DateTimeFormat('en', { year: 'numeric', timeZone }).format(contentDate);
+    data.jsonLd = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: data.personal.name,
+        alternateName: data.personal.nameChinese,
+        url: englishUrl,
+        image: data.site.image.url,
+        email: `mailto:${data.personal.email}`,
+        jobTitle: data.personal.title,
+        affiliation: { '@type': 'CollegeOrUniversity', name: data.personal.university },
+        sameAs: [data.personal.googleScholar, data.personal.github]
+    }).replace(/</g, '\\u003c');
+
     for (const projects of Object.values(data.projects)) {
         for (const project of projects) {
+            project.thumb = thumbnails.get(project.image);
             for (const link of project.links || []) {
                 if (Object.prototype.hasOwnProperty.call(starsMap, link.url)) {
                     link.stars = starsMap[link.url];
@@ -151,15 +269,25 @@ Handlebars.registerHelper('breaklines', function breaklines(text) {
     return new Handlebars.SafeString(escapedText.replace(/(\r\n|\n|\r)/gm, '<br>'));
 });
 
-console.log('🔨 Compiling localized pages...');
-const template = Handlebars.compile(templateSource);
-Handlebars.registerPartial('paper', fs.readFileSync(fromRoot('templates/partials/paper.html'), 'utf8'));
+const main = async () => {
+    console.log('🖼️ Preparing image thumbnails...');
+    await buildThumbnails();
+    const { width, height } = await sharp(fromRoot(baseData.personal.profileImage)).metadata();
 
-for (const page of pages) {
-    const localeConfig = readJson(path.join('config', 'locales', page.localeFile));
-    const pageData = preparePageData(localeConfig);
-    const outputPath = fromRoot(page.outputFile);
-    fs.ensureDirSync(path.dirname(outputPath));
-    fs.writeFileSync(outputPath, template(pageData));
-    console.log(`✅ ${pageData.locale.htmlLang}: ${path.relative(ROOT, outputPath)}`);
-}
+    console.log('🔨 Compiling localized pages...');
+    const template = Handlebars.compile(templateSource);
+    Handlebars.registerPartial('paper', fs.readFileSync(fromRoot('templates/partials/paper.html'), 'utf8'));
+
+    pages.forEach((page, index) => {
+        const pageData = preparePageData(localeConfigs[index], { width, height });
+        const outputPath = fromRoot(page.outputFile);
+        fs.ensureDirSync(path.dirname(outputPath));
+        fs.writeFileSync(outputPath, template(pageData));
+        console.log(`✅ ${pageData.locale.htmlLang}: ${path.relative(ROOT, outputPath)}`);
+    });
+};
+
+main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});

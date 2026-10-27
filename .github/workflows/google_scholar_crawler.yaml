@@ -22,6 +22,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # build.js reads the last content commit date; blobless keeps old videos out.
+          fetch-depth: 0
+          filter: blob:none
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -52,7 +56,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- config/github_data.json config/scholar_data.json index.html zh/index.html
+          git add -- config/github_data.json config/scholar_data.json index.html zh/index.html assets/thumbs
 
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
