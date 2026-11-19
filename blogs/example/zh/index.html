@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Blog 排版样例：目录、章节标题、引用、代码、表格、插图和引用格式。">
+    <title>示例文章：Blog 排版样例 | 冯超然</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/example/zh/">
+    <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/example/">
+    <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/blogs/example/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://www.falcary.com/blogs/example/">
+    <link rel="icon" type="image/png" href="../../../assets/imgs/favicon.png">
+    <script src="../../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <link rel="preload" href="../../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../../assets/css/blog.css">
+    <script src="../../../assets/js/blog-theme.js"></script>
+</head>
+<body>
+
+<header lang="en">
+    <nav class="nav">
+        <div class="logo">
+            <a href="../../">Chaoran Feng</a>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+        <ul class="menu">
+            <li><a href="../../"><span class="active">Posts</span></a></li>
+            <li><a href="../../../">Homepage</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs" lang="en"><a href="../../../">Home</a>&nbsp;»&nbsp;<a href="../../">Posts</a></div>
+            <nav class="lang-switch" aria-label="语言">
+                <a href="../" hreflang="en" lang="en">EN</a>
+                <a href="./" hreflang="zh-CN" aria-current="page">中文</a>
+            </nav>
+        </div>
+        <h1 class="post-title">示例文章：Blog 排版样例</h1>
+        <div class="post-meta">日期：2026 年 11 月 19 日&nbsp;&nbsp;|&nbsp;&nbsp;预计阅读时间：3 分钟&nbsp;&nbsp;|&nbsp;&nbsp;作者：冯超然</div>
+    </header>
+
+    <details class="toc">
+        <summary>目录</summary>
+        <div class="inner">
+            <ul>
+                <li><a href="#paragraphs">段落与强调</a>
+                    <ul><li><a href="#lists">列表</a></li></ul>
+                </li>
+                <li><a href="#quotes">引用块</a></li>
+                <li><a href="#code">代码</a></li>
+                <li><a href="#tables">表格</a></li>
+                <li><a href="#figures">插图</a></li>
+                <li><a href="#citation">引用本文</a></li>
+                <li><a href="#references">参考文献</a></li>
+            </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>这是一篇示例文章，用来检查 blog 的排版。整体结构参考 <a href="https://lilianweng.github.io/">Lil'Log</a>：顶部导航、单栏正文、可折叠目录，文末附引用格式和参考文献。配色、背景和站名字体沿用主页。每篇文章都有英文版和中文版，用标题上方的胶囊切换。</p>
+
+        <h2 id="paragraphs">段落与强调<a class="anchor" href="#paragraphs" aria-hidden="true">#</a></h2>
+        <p>正文宽度约 900px，与主页同宽，中文行高 1.85。英文单词如 <em>diffusion model</em> 和数字 2026 使用 Inter，汉字使用苹方或微软雅黑。<strong>加粗</strong>用于关键结论，<a href="../../">链接</a>带一条细下划线，行内代码写作 <code>flow_grpo.step()</code>。</p>
+        <p>一段话尽量只讲一件事。读论文的笔记通常按“这篇做了什么、为什么有效、哪里还不够”的顺序写，读者扫一眼章节标题就能抓住结构。</p>
+
+        <h3 id="lists">列表<a class="anchor" href="#lists" aria-hidden="true">#</a></h3>
+        <ul>
+            <li>每一项保持一到两行，太长就拆成段落。</li>
+            <li>有先后顺序的内容改用有序列表。</li>
+            <li>列表前用一句话交代它在说什么。</li>
+        </ul>
+
+        <h2 id="quotes">引用块<a class="anchor" href="#quotes" aria-hidden="true">#</a></h2>
+        <blockquote>
+            <p>引用块左侧有一条主色竖线，用来摘录原文或别人的观点。</p>
+        </blockquote>
+
+        <h2 id="code">代码<a class="anchor" href="#code" aria-hidden="true">#</a></h2>
+        <p>代码块和 Lil'Log 一样用深色底：</p>
+<pre><code>def reward(video, camera):
+    depth = estimate_depth(video)
+    return consistency(depth, camera)  # 越高越好</code></pre>
+
+        <h2 id="tables">表格<a class="anchor" href="#tables" aria-hidden="true">#</a></h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Method</th><th>FID ↓</th><th>CLIP ↑</th><th>3D Consistency ↑</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Baseline</td><td>18.4</td><td>0.301</td><td>0.62</td></tr>
+                    <tr><td>+ RL fine-tuning</td><td>17.9</td><td>0.305</td><td>0.71</td></tr>
+                    <tr><td>Ours</td><td class="best">16.2</td><td class="best">0.312</td><td class="best">0.78</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>表中数字仅为排版示例，不对应任何真实实验。</p>
+
+        <h2 id="figures">插图<a class="anchor" href="#figures" aria-hidden="true">#</a></h2>
+        <figure>
+            <img src="../fig-pipeline.webp" width="1800" height="641" alt="StyleGRPO pipeline" loading="lazy">
+            <figcaption>图 1：插图示例，StyleGRPO 的 pipeline 图。</figcaption>
+        </figure>
+
+        <h2 id="citation">引用本文<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>引用格式：</p>
+            <blockquote><p lang="en">Feng, Chaoran. (Nov 2026). Example Post: Blog Typography Sample. Chaoran Feng's Blog. https://www.falcary.com/blogs/example/.</p></blockquote>
+            <p>或</p>
+<pre lang="en"><code>@article{feng2026example,
+  title   = "Example Post: Blog Typography Sample",
+  author  = "Feng, Chaoran",
+  journal = "falcary.com",
+  year    = "2026",
+  month   = "Nov",
+  url     = "https://www.falcary.com/blogs/example/"
+}</code></pre>
+        </div>
+
+        <h2 id="references">参考文献<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references" lang="en">
+            <li>Weng, Lilian. <a href="https://lilianweng.github.io/">Lil'Log</a>. Layout reference for this blog.</li>
+            <li>Example reference. <em>Conference on Example Studies</em>, 2026.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer" lang="en">
+        <ul class="post-tags">
+            <li><a href="../../">Example</a></li>
+            <li><a href="../../">Typography</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../../../"><span class="title">Homepage »</span>Chaoran Feng</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer" lang="en">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../../">Homepage</a>
+</footer>
+
+</body>
+</html>

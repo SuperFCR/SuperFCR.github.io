@@ -33,6 +33,7 @@ homepage/
 ├── package.json            # Project configuration
 ├── README.md               # Documentation
 ├── index.html              # Generated English homepage
+├── blogs/                  # Blog: hand-written static pages, see blogs/README.md
 └── zh/index.html           # Generated Chinese homepage
 ```
 

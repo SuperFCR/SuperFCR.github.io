@@ -1,440 +1,91 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Chaoran Feng's research blog archive">
-<title>Blogs · Chaoran Feng</title>
-<style>
-  :root{
-    --paper:#fbfbfa;
-    --wash:#f2f4f7;
-    --panel:#ffffff;
-    --ink:#1f2933;
-    --ink-soft:#4b5563;
-    --muted:#7b8190;
-    --line:#d8dee8;
-    --rule:#b8c1cf;
-    --clay:#9a4a35;
-    --clay-d:#783523;
-    --olive:#516642;
-    --blue:#28536b;
-    --violet:#554c7f;
-    --shadow:0 12px 36px rgba(31,41,51,.08),0 1px 0 rgba(255,255,255,.8) inset;
-    --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
-    --serif:Georgia,"Times New Roman","Songti SC",serif;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{
-    margin:0;
-    color:var(--ink);
-    background:
-      linear-gradient(90deg,rgba(216,222,232,.55) 1px,transparent 1px),
-      linear-gradient(180deg,var(--paper) 0%,#f7f8fa 46%,#eef1f5 100%);
-    background-size:64px 64px,auto;
-    font-family:var(--sans);
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:inherit;text-decoration:none}
-  .site-nav{
-    position:sticky;
-    top:0;
-    z-index:10;
-    border-bottom:1px solid rgba(31,41,51,.12);
-    background:rgba(251,251,250,.86);
-    backdrop-filter:blur(18px) saturate(1.25);
-  }
-  .nav-inner{
-    max-width:1120px;
-    margin:0 auto;
-    min-height:66px;
-    padding:0 24px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:18px;
-  }
-  .brand{
-    display:inline-flex;
-    align-items:center;
-    gap:11px;
-    min-width:0;
-    font-weight:700;
-    color:var(--ink);
-  }
-  .brand-mark{
-    width:30px;
-    height:30px;
-    border-radius:8px;
-    display:grid;
-    place-items:center;
-    background:#2f2a24;
-    box-shadow:0 8px 20px rgba(47,42,36,.18);
-    overflow:hidden;
-    flex:0 0 auto;
-  }
-  .brand-mark img{width:22px;height:22px;display:block}
-  .brand-text{
-    display:flex;
-    align-items:baseline;
-    gap:8px;
-    white-space:nowrap;
-  }
-  .brand-text strong{font-size:15px;letter-spacing:.01em}
-  .brand-text span{font-size:13px;color:var(--muted);font-family:var(--serif);font-style:italic}
-  .nav-links{
-    display:flex;
-    align-items:center;
-    gap:4px;
-    padding:5px;
-    border:1px solid rgba(31,41,51,.12);
-    border-radius:6px;
-    background:rgba(255,255,255,.62);
-  }
-  .nav-links a{
-    display:inline-flex;
-    align-items:center;
-    height:34px;
-    padding:0 12px;
-    border-radius:7px;
-    color:var(--ink-soft);
-    font-size:13px;
-    font-weight:600;
-    transition:background .18s ease,color .18s ease,transform .18s ease;
-  }
-  .nav-links a:hover{
-    background:#fff;
-    color:var(--ink);
-    transform:translateY(-1px);
-  }
-  .nav-links a:focus-visible,
-  .post-card:focus-visible{
-    outline:2px solid rgba(198,95,63,.55);
-    outline-offset:3px;
-  }
-  .page{
-    max-width:1120px;
-    margin:0 auto;
-    padding:54px 24px 82px;
-  }
-  .intro{
-    display:grid;
-    grid-template-columns:minmax(0,1fr) 320px;
-    gap:34px;
-    align-items:start;
-    padding:22px 0 28px;
-  }
-  .eyebrow{
-    color:var(--blue);
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    margin:0 0 14px;
-  }
-  h1{
-    margin:0;
-    max-width:760px;
-    font-family:var(--serif);
-    font-size:clamp(38px,6.2vw,70px);
-    line-height:1.02;
-    font-weight:500;
-    letter-spacing:0;
-  }
-  .lead{
-    max-width:720px;
-    margin:22px 0 0;
-    color:var(--ink-soft);
-    font-family:var(--serif);
-    font-size:clamp(17px,2vw,21px);
-    line-height:1.65;
-  }
-  .subline{
-    max-width:720px;
-    margin:18px 0 0;
-    color:var(--muted);
-    font-size:14px;
-    line-height:1.75;
-    border-left:3px solid var(--rule);
-    padding-left:14px;
-  }
-  .note{
-    border:1px solid rgba(31,41,51,.14);
-    border-radius:6px;
-    padding:18px;
-    background:rgba(255,255,255,.76);
-    box-shadow:0 10px 30px rgba(31,41,51,.06);
-  }
-  .note .k{
-    margin:0 0 8px;
-    color:var(--muted);
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-  }
-  .note p{
-    margin:0;
-    color:var(--ink-soft);
-    font-size:14px;
-    line-height:1.65;
-  }
-  .archive-stats{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:10px;
-    margin-top:16px;
-    padding-top:16px;
-    border-top:1px solid rgba(31,41,51,.1);
-  }
-  .stat{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
-  .stat strong{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink)}
-  .stat span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-  .section-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:end;
-    gap:16px;
-    margin:20px 0 18px;
-    padding-top:20px;
-    border-top:1px solid rgba(31,41,51,.16);
-  }
-  .section-head h2{
-    margin:0;
-    font-size:16px;
-    letter-spacing:.01em;
-  }
-  .count{
-    color:var(--muted);
-    font-family:var(--serif);
-    font-size:14px;
-    font-style:italic;
-  }
-  .posts{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:16px;
-  }
-  .post-card{
-    min-height:286px;
-    display:flex;
-    flex-direction:column;
-    border:1px solid rgba(31,41,51,.13);
-    border-radius:6px;
-    background:rgba(255,255,255,.82);
-    box-shadow:var(--shadow);
-    overflow:hidden;
-    transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease,background .22s ease;
-  }
-  .post-card:hover{
-    transform:translateY(-4px);
-    border-color:rgba(40,83,107,.32);
-    background:#fff;
-    box-shadow:0 24px 64px rgba(66,53,39,.14);
-  }
-  .post-top{
-    height:5px;
-    background:var(--accent);
-  }
-  .post-body{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    padding:22px 22px 20px;
-  }
-  .post-meta{
-    display:flex;
-    flex-wrap:wrap;
-    gap:7px;
-    margin-bottom:18px;
-  }
-  .chip{
-    min-height:25px;
-    display:inline-flex;
-    align-items:center;
-    border:1px solid rgba(31,41,51,.13);
-    border-radius:5px;
-    padding:0 8px;
-    background:#f8fafc;
-    color:var(--muted);
-    font-size:12px;
-    font-weight:700;
-  }
-  .chip.kind{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 34%,var(--line))}
-  .post-title{
-    margin:0;
-    color:var(--ink);
-    font-family:var(--serif);
-    font-size:23px;
-    line-height:1.18;
-    font-weight:600;
-    letter-spacing:0;
-  }
-  .post-desc{
-    margin:16px 0 0;
-    color:var(--ink-soft);
-    font-size:14.5px;
-    line-height:1.7;
-  }
-  .post-action{
-    margin-top:auto;
-    padding-top:24px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px;
-    color:var(--ink);
-    font-size:13px;
-    font-weight:700;
-  }
-  .arrow{
-    width:34px;
-    height:34px;
-    border-radius:8px;
-    display:grid;
-    place-items:center;
-    border:1px solid rgba(31,41,51,.14);
-    background:#f8fafc;
-    transition:transform .2s ease,background .2s ease;
-  }
-  .post-card:hover .arrow{transform:translateX(3px);background:#eef3f8}
-  .world{--accent:var(--violet)}
-  .omni{--accent:var(--olive)}
-  .jepa{--accent:var(--blue)}
-  footer{
-    margin-top:44px;
-    padding-top:20px;
-    border-top:1px solid rgba(31,41,51,.16);
-    color:var(--muted);
-    font-size:13px;
-  }
-  @media(max-width:900px){
-    .intro{grid-template-columns:1fr;gap:22px}
-    .note{max-width:620px}
-    .archive-stats{max-width:420px}
-    .posts{grid-template-columns:1fr}
-    .post-card{min-height:0}
-  }
-  @media(max-width:640px){
-    .nav-inner{min-height:auto;padding:12px 16px;align-items:flex-start;flex-direction:column}
-    .brand-text{flex-direction:column;gap:0;align-items:flex-start}
-    .nav-links{width:100%;overflow-x:auto;justify-content:flex-start}
-    .nav-links a{white-space:nowrap}
-    .page{padding:34px 16px 58px}
-    .intro{padding-top:14px}
-    .lead{font-size:18px}
-    .section-head{align-items:flex-start;flex-direction:column}
-    .archive-stats{grid-template-columns:1fr}
-    .post-body{padding:20px 18px 18px}
-    .post-title{font-size:23px}
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Research notes and paper readings by Chaoran Feng.">
+    <title>Blog | Chaoran Feng</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/">
+    <link rel="icon" type="image/png" href="../assets/imgs/favicon.png">
+    <script src="../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <link rel="preload" href="../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/blog.css">
+    <script src="../assets/js/blog-theme.js"></script>
 </head>
 <body>
-  <nav class="site-nav" aria-label="Blog navigation">
-    <div class="nav-inner">
-      <a class="brand" href="./" aria-label="Blogs home">
-        <span class="brand-mark"><img src="../assets/imgs/favicon.png" alt=""></span>
-        <span class="brand-text">
-          <strong>Chaoran Feng</strong>
-          <span>paper reading archive</span>
-        </span>
-      </a>
-      <div class="nav-links">
-        <a href="#latest">Archive</a>
-        <a href="#world-models">World Models</a>
-        <a href="#representation">Representation</a>
-      </div>
-    </div>
-  </nav>
 
-  <main class="page">
-    <header class="intro">
-      <div>
-        <p class="eyebrow">Research Notes / Reading Archive</p>
-        <h1>Notes on generative models, world simulators, and representation learning.</h1>
-        <p class="lead">这里整理一些论文阅读、系统拆解和个人研究笔记，主要关注生成式世界模型、视频生成、3D/4D 表征与视觉基础模型。</p>
-        <p class="subline">The notes are written as long-form technical summaries: less news feed, more annotated bibliography, implementation context, and research questions worth revisiting.</p>
-      </div>
-      <aside class="note" aria-label="Archive note">
-        <p class="k">Archive Scope</p>
-        <p>独立入口：<strong>/blogs/</strong>。每篇文章保留独立页面、侧边目录和参考链接，适合直接分享给组会或 paper reading 讨论。</p>
-        <div class="archive-stats" aria-label="Archive statistics">
-          <span class="stat"><strong>3</strong><span>notes</span></span>
-          <span class="stat"><strong>3</strong><span>topics</span></span>
-          <span class="stat"><strong>CN</strong><span>long-form</span></span>
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="./">Chaoran Feng</a>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
         </div>
-      </aside>
-    </header>
+        <ul class="menu">
+            <li><a href="./"><span class="active">Posts</span></a></li>
+            <li><a href="../">Homepage</a></li>
+        </ul>
+    </nav>
+</header>
 
-    <section id="latest" aria-labelledby="latest-title">
-      <div class="section-head">
-        <h2 id="latest-title">Annotated Reading Notes</h2>
-        <div class="count">3 entries · updated occasionally</div>
-      </div>
-
-      <div class="posts">
-        <a class="post-card omni" href="./omnidreams/">
-          <span class="post-top" aria-hidden="true"></span>
-          <article class="post-body">
-            <div class="post-meta">
-              <span class="chip kind">World Models</span>
-              <span class="chip">中文讲解</span>
-              <span class="chip">2026</span>
+<main class="main">
+    <section class="profile">
+        <img class="profile-avatar" src="../assets/imgs/bio.jpg" alt="Chaoran Feng">
+        <div>
+            <h1>Research Notes</h1>
+            <p>Notes on papers I read and ideas I am working through: multimodal generation, 3D vision and world models.</p>
+            <div class="social-icons">
+                <a href="https://scholar.google.com/citations?user=Thyo5v4AAAAJ&amp;hl=en" title="Google Scholar" aria-label="Google Scholar" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg></a>
+                <a href="https://github.com/SuperFCR" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
+                <a href="https://x.com/StarFalcary" title="X (Twitter)" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
+                <a href="mailto:chaoran.feng@stu.pku.edu.cn" title="Email" aria-label="Email"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+                <a class="button" href="../">About me →</a>
             </div>
-            <h3 class="post-title">OmniDreams：用于自动驾驶闭环仿真的实时生成式世界模型</h3>
-            <p class="post-desc">拆解 NVIDIA OmniDreams 的闭环仿真范式、条件输入、实时推理优化，以及它在自动驾驶评测中的位置。</p>
-            <div class="post-action">
-              <span>Open note</span>
-              <span class="arrow" aria-hidden="true">→</span>
-            </div>
-          </article>
-        </a>
-
-        <a class="post-card world" id="world-models" href="./world-r1/">
-          <span class="post-top" aria-hidden="true"></span>
-          <article class="post-body">
-            <div class="post-meta">
-              <span class="chip kind">RL x Video</span>
-              <span class="chip">中文讲解</span>
-              <span class="chip">ICML</span>
-            </div>
-            <h3 class="post-title">World-R1：用强化学习把 3D 约束逼进文生视频模型</h3>
-            <p class="post-desc">围绕 3D consistency、相机控制和 Flow-GRPO，解释 World-R1 如何让视频生成模型更遵守空间约束。</p>
-            <div class="post-action">
-              <span>Open note</span>
-              <span class="arrow" aria-hidden="true">→</span>
-            </div>
-          </article>
-        </a>
-
-        <a class="post-card jepa" id="representation" href="./jepa/">
-          <span class="post-top" aria-hidden="true"></span>
-          <article class="post-body">
-            <div class="post-meta">
-              <span class="chip kind">Representation</span>
-              <span class="chip">教程</span>
-              <span class="chip">JEPA</span>
-            </div>
-            <h3 class="post-title">从 I-JEPA 到 V-JEPA 2.1：预测式视觉表征学习的四步演进</h3>
-            <p class="post-desc">把 I-JEPA、V-JEPA、V-JEPA 2 和 V-JEPA 2.1 放在一条线上，梳理隐空间预测、世界模型和稠密特征的演化。</p>
-            <div class="post-action">
-              <span>Open note</span>
-              <span class="arrow" aria-hidden="true">→</span>
-            </div>
-          </article>
-        </a>
-      </div>
+        </div>
     </section>
 
-    <footer>
-      <span>Chaoran Feng · Research Notes Archive</span>
-    </footer>
-  </main>
+    <div class="list-head"><span>Latest posts</span><span>3 posts</span></div>
+
+    <article class="post-entry">
+        <div class="entry-body">
+            <div class="entry-tags"><span>Example</span><span>Typography</span></div>
+            <header class="entry-header"><h2>Example Post: Blog Typography Sample</h2></header>
+            <p class="entry-content">A tour of the building blocks of this blog: table of contents, headings, quotes, code, tables, figures and the citation block. The layout follows Lil&#39;Log; colours and backdrop come from the homepage.</p>
+            <footer class="entry-footer">November 19, 2026&nbsp;&nbsp;|&nbsp;&nbsp;4 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
+        </div>
+        <img class="entry-cover" src="./example/cover.webp" alt="" loading="lazy">
+        <a class="entry-link" href="./example/" aria-label="Example Post: Blog Typography Sample"></a>
+    </article>
+
+    <!-- Placeholder entries to show how the list looks with several posts; they link to the example. -->
+    <article class="post-entry">
+        <div class="entry-body">
+            <div class="entry-tags"><span>World Models</span><span>RL</span></div>
+            <header class="entry-header"><h2>(Placeholder) World-R1: Pushing 3D Constraints into Text-to-Video Models with RL</h2></header>
+            <p class="entry-content">Placeholder entry to preview the list with several posts. How World-R1 uses 3D-consistency rewards, camera control and Flow-GRPO to make video generators respect spatial structure.</p>
+            <footer class="entry-footer">June 8, 2026&nbsp;&nbsp;|&nbsp;&nbsp;25 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
+        </div>
+        <img class="entry-cover" src="../assets/thumbs/Pipeline_worldcrafter-d9e07ebe0b.webp" alt="" loading="lazy">
+        <a class="entry-link" href="./example/" aria-label="Placeholder entry"></a>
+    </article>
+
+    <article class="post-entry">
+        <div class="entry-body">
+            <div class="entry-tags"><span>Representation</span></div>
+            <header class="entry-header"><h2>(Placeholder) From I-JEPA to V-JEPA 2.1: Four Steps of Predictive Visual Representation Learning</h2></header>
+            <p class="entry-content">Placeholder entry. I-JEPA, V-JEPA, V-JEPA 2 and V-JEPA 2.1 on one line: latent prediction, world models and dense features.</p>
+            <footer class="entry-footer">May 20, 2026&nbsp;&nbsp;|&nbsp;&nbsp;32 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
+        </div>
+        <img class="entry-cover" src="../assets/thumbs/Pipeline_uniworld_view-a79152ac6e.webp" alt="" loading="lazy">
+        <a class="entry-link" href="./example/" aria-label="Placeholder entry"></a>
+    </article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../">Homepage</a>
+</footer>
+
 </body>
 </html>
