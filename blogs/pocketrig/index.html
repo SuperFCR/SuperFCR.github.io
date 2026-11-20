@@ -40,7 +40,7 @@
         </div>
         <span class="post-type type-tech-report">Tech Report</span>
         <h1 class="post-title">PocketRig: A Phone-First Workflow for Coding Agents with Paseo</h1>
-        <div class="post-meta"><span>November 20, 2026</span><span>10 min read</span><span>Chaoran Feng</span></div>
+        <div class="post-meta"><span>November 20, 2026</span><span>11 min read</span><span>Chaoran Feng</span></div>
     </header>
 
     <details class="toc">
@@ -68,13 +68,14 @@
 
     <div class="post-content">
         <p>Coding agents such as Claude Code and Codex can now work on a task for a long stretch without supervision. What limits them is often where they run. Ideas arrive on a commute or in a queue, while the code, dependencies, keys and GPUs sit at a desk. Closing the laptop kills a half-finished run, every new device needs the environment set up again, and on a phone you can watch a session but not take it over.</p>
-        <p>PocketRig is the workflow I use every day to remove that coupling. One always-on computer at home runs my own <a href="https://paseo.sh">Paseo</a> instance, which hosts the Claude Code and Codex sessions. My phone and Mac reach it over a private <a href="https://tailscale.com">Tailscale</a> network. Training and inference go to GPU nodes over SSH, and only a few megabytes of results come back to the workstation, where I read them on the phone and send the next instruction. The whole setup is packaged as Agent Skills in <a href="https://github.com/SuperFCR/falcary-skills/tree/main/pocketrig">SuperFCR/falcary-skills</a>, so an agent can install it for you.</p>
+        <p>PocketRig is the workflow I use every day to remove that coupling. One always-on computer at home runs my own <a href="https://paseo.sh">Paseo</a> instance, which hosts the Claude Code and Codex sessions. My phone and Mac reach it over a private <a href="https://tailscale.com">Tailscale</a> network; on a company network, the company VPN does the same job. Training and inference go to GPU nodes over SSH, and only a few megabytes of results come back to the workstation, where I read them on the phone and send the next instruction. The whole setup is packaged as Agent Skills in <a href="https://github.com/SuperFCR/falcary-skills/tree/main/pocketrig">SuperFCR/falcary-skills</a>, so an agent can install it for you.</p>
         <p>The design rests on three rules:</p>
         <ul>
             <li>The workstation never sleeps, so a session outlives every client that connects to it.</li>
             <li>Nothing is exposed to the public internet; only my own devices can reach the Paseo port.</li>
             <li>Heavy compute and full artifacts stay on the compute nodes; the workstation keeps only code and small results.</li>
         </ul>
+        <p>None of this is tied to one operating system. Any always-on Unix-like machine can be the workstation: a Linux desktop or server, a Mac, or a Windows PC through WSL2. PocketRig relies only on ordinary Unix users and file permissions plus a service manager, which is systemd on Linux and WSL2 and launchd on macOS.</p>
 
         <h2 id="problem">Why the Work Should Not Live on One Device<a class="anchor" href="#problem" aria-hidden="true">#</a></h2>
         <p>The trouble is not any particular device; it is that the work is tied to one of them. An agent session carries state: the repository, the environment, the credentials and the conversation so far. If that state lives on a laptop, the laptop lid decides when the agent stops, and a second device starts from nothing.</p>
@@ -82,8 +83,8 @@
 
         <h2 id="architecture">Architecture<a class="anchor" href="#architecture" aria-hidden="true">#</a></h2>
         <figure>
-            <img src="./fig-architecture.svg" width="1600" height="780" alt="PocketRig architecture: phone and Mac on a Tailscale tailnet connect to a Paseo instance on an always-on workstation, which runs Claude Code or Codex, submits jobs to GPU nodes over SSH and receives small results." loading="lazy">
-            <figcaption>Fig. 1. PocketRig in three layers. Phone and Mac are thin clients on a Tailscale tailnet. The always-on workstation runs one Paseo instance per person, which starts Claude Code or Codex. Heavy jobs go to GPU nodes over SSH, and only small results come back. <a href="./fig-architecture.svg">Open full size</a></figcaption>
+            <img src="./fig-architecture.svg" width="1600" height="780" alt="PocketRig architecture: phone and Mac on a private network (Tailscale or a company VPN) connect to a Paseo instance on an always-on workstation, which runs Claude Code or Codex, submits jobs to GPU nodes over SSH and receives small results." loading="lazy">
+            <figcaption>Fig. 1. PocketRig in three layers. Phone and Mac are thin clients on a private network: a Tailscale tailnet or a company VPN. The always-on workstation runs one Paseo instance per person, which starts Claude Code or Codex. Heavy jobs go to GPU nodes over SSH, and only small results come back. <a href="./fig-architecture.svg">Open full size</a></figcaption>
         </figure>
         <p>Each device has one job, and the expensive state lives in exactly one place:</p>
         <div class="table-wrap">
@@ -92,7 +93,7 @@
                     <tr><th>Device</th><th>Role</th><th>What lives there</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Phone</td><td>Start tasks, check progress, send the next instruction</td><td>Only the Tailscale and Paseo apps</td></tr>
+                    <tr><td>Phone</td><td>Start tasks, check progress, send the next instruction</td><td>Only the Paseo app, plus Tailscale or the company VPN client</td></tr>
                     <tr><td>Mac</td><td>Continue the same session on a bigger screen</td><td>Nothing the session depends on</td></tr>
                     <tr><td>Always-on workstation</td><td>Run Paseo and the agents</td><td>Code, Git history, sessions, small results</td></tr>
                     <tr><td>GPU / compute nodes</td><td>Training, evaluation, inference</td><td>Data, model weights, checkpoints, full artifacts</td></tr>
@@ -101,11 +102,20 @@
         </div>
 
         <h3 id="network">Layer 1: A Private Network with No Public Ports<a class="anchor" href="#network" aria-hidden="true">#</a></h3>
-        <p>Every device joins the same Tailscale tailnet. Paseo listens only on the workstation's tailnet address, or on <code>127.0.0.1</code> with Tailscale forwarding in front of it, so no port is open to the public internet. PocketRig also turns Paseo's relay off, so clients always connect directly. Tailscale already encrypts the connection, which is why the Paseo client connects with <em>Use SSL</em> switched off.</p>
+        <p>Every device joins the same private network. For personal machines that is a Tailscale tailnet. Paseo listens only on the workstation's tailnet address, or on <code>127.0.0.1</code> with Tailscale forwarding in front of it, so no port is open to the public internet. PocketRig also turns Paseo's relay off, so clients always connect directly. Tailscale already encrypts the connection, which is why the Paseo client connects with <em>Use SSL</em> switched off.</p>
         <p>Joining the tailnet does not open every port. Tailscale grants let each person reach only their own Paseo port and the SSH port, which starts to matter once the workstation is shared.</p>
-        <p>Windows needs one extra hop. With Tailscale installed on Windows and Paseo running inside WSL2, WSL cannot bind the Windows tailnet address. Each instance therefore listens on <code>127.0.0.1</code> inside WSL; Windows forwards <code>&lt;tailnet IP&gt;:&lt;port&gt;</code> to its own <code>127.0.0.1:&lt;port&gt;</code> with <code>netsh portproxy</code>, and WSL's localhost forwarding carries the connection into Linux. A firewall rule per port admits traffic only on the tailnet address and only from <code>100.64.0.0/10</code>. A PowerShell loop reads <code>paseo-user list --json</code> every 30 seconds and adds or removes these rules, so a new tailnet address or a new user needs no manual step.</p>
         <p>On native Linux and macOS, Paseo listens on the tailnet address directly, or stays on <code>127.0.0.1</code> behind <code>tailscale serve</code>, which survives address changes:</p>
 <pre><code>sudo tailscale serve --bg --tcp=6767 tcp://127.0.0.1:6767</code></pre>
+        <p>A Windows PC needs one extra hop. With Tailscale installed on Windows and Paseo running inside WSL2, WSL cannot bind the Windows tailnet address. Each instance therefore listens on <code>127.0.0.1</code> inside WSL; Windows forwards <code>&lt;tailnet IP&gt;:&lt;port&gt;</code> to its own <code>127.0.0.1:&lt;port&gt;</code> with <code>netsh portproxy</code>, and WSL's localhost forwarding carries the connection into Linux. A firewall rule per port admits traffic only on the tailnet address and only from <code>100.64.0.0/10</code>. A PowerShell loop reads <code>paseo-user list --json</code> every 30 seconds and adds or removes these rules, so a new tailnet address or a new user needs no manual step.</p>
+        <p><strong>On a company network, the company VPN can replace Tailscale.</strong> If the workstation sits inside the corporate network and your phone and laptop already join that network through the company VPN, a second private network adds nothing. Set the workstation's internal address in <code>/etc/paseo-workstation/workstation.conf</code> before creating your instance, then add that address as the host in the Paseo app and connect with the VPN on:</p>
+<pre><code>PW_LISTEN_HOST=&lt;workstation intranet IP&gt;     # instead of 127.0.0.1 or the tailnet IP</code></pre>
+        <p>Three things change compared with Tailscale:</p>
+        <ul>
+            <li>The VPN admits every employee, not just your devices, so there are no per-person grants. The Paseo password becomes the main gate; add a host firewall rule that admits the Paseo ports only from the VPN address range.</li>
+            <li>The VPN encrypts the hop from your device into the company network, but inside that network the connection is only as private as the network itself.</li>
+            <li>A long-running service on a company machine may need IT approval, so check the policy first.</li>
+        </ul>
+        <p>On native Linux and macOS this is the single setting above. On WSL2 the Windows forwarding scripts look up the Tailscale address, so the company-VPN route needs a manual port forward.</p>
 
         <h3 id="paseo">Layer 2: One Paseo Instance per Person<a class="anchor" href="#paseo" aria-hidden="true">#</a></h3>
         <p>Paseo runs coding-agent sessions as a daemon on one machine and lets its apps and web client connect to them. PocketRig gives each person their own instance, created with one command:</p>
@@ -121,8 +131,8 @@
         <p>The payoff is the hand-off. I start a task from the phone and lock it; the agent keeps running on the workstation. Later I open the same host and workspace on the Mac and continue the same conversation. Several clients can watch one session, but it works best with one client in charge at a time.</p>
 
         <h3 id="always-on">Keeping the Workstation Online<a class="anchor" href="#always-on" aria-hidden="true">#</a></h3>
-        <p>None of this works if the workstation sleeps: a sleeping or powered-off machine is simply unreachable from the phone. Each Paseo instance starts at boot under systemd or launchd, but on Windows that is not enough, because systemd units inside WSL do not keep the WSL instance itself alive. A scheduled task registered by <code>Install-PaseoWorkstationTask.ps1</code> runs the forwarding loop and keeps WSL running whether or not anyone is logged in to Windows. On a Mac, <code>pmset</code> stops system sleep on power, although FileVault still needs an unlock after a cold boot and a closed lid may still put a laptop to sleep.</p>
-        <p>The acceptance tests for this layer are deliberately unforgiving: a cold boot with nobody logged in, closing the terminal, sleep and resume, and a WSL restart. A process that shows up in <code>ps</code> proves little; what counts is reconnecting from the phone afterwards.</p>
+        <p>None of this works if the workstation sleeps: a sleeping or powered-off machine is simply unreachable from the phone. Each Paseo instance starts at boot under the system's service manager. On a Linux server that is all it takes; on a Linux desktop, also turn off suspend. On a Mac, launchd starts the instances and <code>pmset</code> stops system sleep on power, although FileVault still needs an unlock after a cold boot and a closed lid may still put a laptop to sleep. On a Windows PC, systemd units inside WSL do not keep the WSL instance itself alive, so a scheduled task registered by <code>Install-PaseoWorkstationTask.ps1</code> runs the forwarding loop and keeps WSL running whether or not anyone is logged in to Windows.</p>
+        <p>The acceptance tests for this layer are deliberately unforgiving: a cold boot with nobody logged in, closing the terminal, sleep and resume, and on Windows a WSL restart. A process that shows up in <code>ps</code> proves little; what counts is reconnecting from the phone afterwards.</p>
 
         <h3 id="compute">Layer 3: Heavy Compute Stays on the Nodes<a class="anchor" href="#compute" aria-hidden="true">#</a></h3>
         <p>The workstation edits code, runs Git and SSH, does light checks and displays small files. Data, models, training, evaluation and inference stay on the GPU nodes. The <code>remote-compute</code> skill turns that rule into a fixed loop that the agent follows the same way every time:</p>
@@ -182,14 +192,14 @@ sudo paseo-user add bob 6768</code></pre>
         <p>The isolation comes from Unix user IDs and file permissions, and it is meant for people who trust each other. Root, sudo administrators, the Windows host administrator and the shared network are all inside the trust boundary; this is not container- or VM-level isolation against a hostile tenant. Each person also signs in to Claude Code and Codex with their own subscription, team seat or API key. That keeps usage and quotas separate, and it avoids several processes refreshing the same OAuth credentials at once.</p>
 
         <h2 id="status">Status and Limitations<a class="anchor" href="#status" aria-hidden="true">#</a></h2>
-        <p>PocketRig grew out of a reference deployment on Windows 11 with WSL2 and Tailscale for Windows, which is the setup I use daily. A working reference machine is not the same as a clean install from the repository, and the project keeps the two apart:</p>
+        <p>PocketRig targets any always-on Unix-like host, and the Linux, WSL2 and macOS paths share the same installer and scripts. The machine I use every day happens to be a Windows 11 PC running WSL2, so that is where the design was first proven. A working machine is not the same as a clean install from the repository, though, and the project keeps the two apart:</p>
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr><th>Check</th><th>Status</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Windows + WSL2 reference deployment</td><td>In daily use; the source of the design</td></tr>
+                    <tr><td>My daily workstation (WSL2 on Windows 11, Tailscale)</td><td>In daily use</td></tr>
                     <tr><td>22 regression checks with simulated users, downloads and services</td><td>Pass</td></tr>
                     <tr><td>Plugin and marketplace manifests</td><td>Pass <code>claude plugin validate</code></td></tr>
                     <tr><td>iPhone joining through Shadowrocket's built-in Tailscale</td><td>Verified on a real iPhone</td></tr>
@@ -197,6 +207,7 @@ sudo paseo-user add bob 6768</code></pre>
                     <tr><td>macOS install, launchd and background model sign-in</td><td>Not yet accepted</td></tr>
                     <tr><td>Windows cold boot without login, WSL recovery</td><td>Not yet accepted on the deployment machine</td></tr>
                     <tr><td>Tailnet grants and cross-user denial from member clients</td><td>Not yet accepted on a real tailnet</td></tr>
+                    <tr><td>Company VPN instead of Tailscale (<code>PW_LISTEN_HOST</code>)</td><td>Supported by configuration; not yet accepted</td></tr>
                 </tbody>
             </table>
         </div>
@@ -210,7 +221,7 @@ cd falcary-skills/pocketrig
 sudo ./linux/install.sh --install-node 24.22.1 --install-packages
 sudo paseo-user add "$USER" 6767
 claude auth login &amp;&amp; codex login</code></pre>
-        <p>Then sign in to Tailscale on the phone and the Mac, add a host in the Paseo app (<code>&lt;tailnet IP&gt;:6767</code>, Use SSL off, password from <code>~/.paseo/client.env</code>), and go through the acceptance checklist in the repository before relying on it. The repository also has a four-minute promo video and a 30-second phone-to-Mac clip; both are rebuilt from code with fictional data, and their on-screen text is in Chinese.</p>
+        <p>Then sign in to Tailscale (or connect the company VPN) on the phone and the Mac, add a host in the Paseo app (<code>&lt;tailnet or intranet IP&gt;:6767</code>, Use SSL off, password from <code>~/.paseo/client.env</code>), and go through the acceptance checklist in the repository before relying on it. The repository also has a four-minute promo video and a 30-second phone-to-Mac clip; both are rebuilt from code with fictional data, and their on-screen text is in Chinese.</p>
 
         <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
         <div class="citation">
