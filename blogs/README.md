@@ -70,6 +70,8 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 
 ## 双语规则
 
+英文版必有，中文版可选。只有英文版时（例如 `blogs/pocketrig/`）：不建 `zh/` 目录，删掉 `<head>` 里的三个 `hreflang` 链接和标题上方的语言胶囊，列表条目的语言只写 `EN`。
+
 | | 英文版 `/blogs/<slug>/` | 中文版 `/blogs/<slug>/zh/` |
 |---|---|---|
 | `<html lang>` | `en` | `zh-CN` |
@@ -94,7 +96,7 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 | 引用块 | `<blockquote><p>…</p></blockquote>` |
 | 行内代码 / 代码块 | `<code>…</code>`；`<pre><code>…</code></pre>`，代码块里的 `<`、`>`、`&` 要转义 |
 | 表格 | 外面套 `<div class="table-wrap">`，表头放在 `<thead>` 里，最优结果用 `<td class="best">` |
-| 插图 | `<figure><img src="./fig-x.webp" width="…" height="…" alt="…" loading="lazy"><figcaption>Fig. 1. …</figcaption></figure>`，中文版图注写成 `图 1：…` |
+| 插图 | `<figure><img src="./fig-x.webp" width="…" height="…" alt="…" loading="lazy"><figcaption>Fig. 1. …</figcaption></figure>`，中文版图注写成 `图 1：…`。字小、手机上看不清的图（架构图、流程图），在图注末尾加 `<a href="./fig-x.svg">Open full size</a>`，中文版写 `<a href="../fig-x.svg">查看原图</a>` |
 | 引用格式 | `<div class="citation">`，里面放 Cited as 引用块和 BibTeX 代码块 |
 | 参考文献 | `<ol class="references">` |
 | 类型徽章 | `<span class="post-type type-<key>">…</span>`，放在标题上方 |
@@ -106,6 +108,7 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 
 - 放在文章自己的目录里，不要直接引用 `assets/thumbs/`：那里的文件名带哈希，`npm run build` 会删掉主页不再用到的缩略图。
 - 统一用 WebP：插图宽 1800px，封面宽 880px，单张尽量小于 300KB，避免超过 1MB 的文件进入仓库。
+- 例外：自己画的架构图、流程图用 SVG（例如 `blogs/pocketrig/fig-architecture.svg`），放大不糊，配合图注里的 Open full size 链接给手机读者看原图。
 - 转换示例（在仓库根目录运行，用的是已安装的 sharp）：
 
 ```bash

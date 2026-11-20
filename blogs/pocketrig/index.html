@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PocketRig runs Claude Code and Codex on an always-on workstation through a personal Paseo instance, reached from a phone over Tailscale, with heavy jobs on GPU nodes and small results back on the phone.">
+    <title>PocketRig: A Phone-First Workflow for Coding Agents with Paseo | Chaoran Feng</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/pocketrig/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png">
+    <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261120">
+    <script src="../../assets/js/blog-theme.js?v=20261120"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../">Chaoran Feng</a>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+        <ul class="menu">
+            <li><a href="../"><span class="active">Posts</span></a></li>
+            <li><a href="../../">Homepage</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+        </div>
+        <span class="post-type type-tech-report">Tech Report</span>
+        <h1 class="post-title">PocketRig: A Phone-First Workflow for Coding Agents with Paseo</h1>
+        <div class="post-meta">Date: November 20, 2026&nbsp;&nbsp;|&nbsp;&nbsp;Estimated Reading Time: 10 min&nbsp;&nbsp;|&nbsp;&nbsp;Author: Chaoran Feng</div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+            <ul>
+                <li><a href="#problem">Why the Work Should Not Live on One Device</a></li>
+                <li><a href="#architecture">Architecture</a>
+                    <ul>
+                        <li><a href="#network">Layer 1: A Private Network with No Public Ports</a></li>
+                        <li><a href="#paseo">Layer 2: One Paseo Instance per Person</a></li>
+                        <li><a href="#always-on">Keeping the Workstation Online</a></li>
+                        <li><a href="#compute">Layer 3: Heavy Compute Stays on the Nodes</a></li>
+                    </ul>
+                </li>
+                <li><a href="#skills">Letting an Agent Set It Up</a></li>
+                <li><a href="#team">From One Person to a Small Team</a></li>
+                <li><a href="#status">Status and Limitations</a></li>
+                <li><a href="#try">Try It</a></li>
+                <li><a href="#citation">Citation</a></li>
+                <li><a href="#references">References</a></li>
+            </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>Coding agents such as Claude Code and Codex can now work on a task for a long stretch without supervision. What limits them is often where they run. Ideas arrive on a commute or in a queue, while the code, dependencies, keys and GPUs sit at a desk. Closing the laptop kills a half-finished run, every new device needs the environment set up again, and on a phone you can watch a session but not take it over.</p>
+        <p>PocketRig is the workflow I use every day to remove that coupling. One always-on computer at home runs my own <a href="https://paseo.sh">Paseo</a> instance, which hosts the Claude Code and Codex sessions. My phone and Mac reach it over a private <a href="https://tailscale.com">Tailscale</a> network. Training and inference go to GPU nodes over SSH, and only a few megabytes of results come back to the workstation, where I read them on the phone and send the next instruction. The whole setup is packaged as Agent Skills in <a href="https://github.com/SuperFCR/falcary-skills/tree/main/pocketrig">SuperFCR/falcary-skills</a>, so an agent can install it for you.</p>
+        <p>The design rests on three rules:</p>
+        <ul>
+            <li>The workstation never sleeps, so a session outlives every client that connects to it.</li>
+            <li>Nothing is exposed to the public internet; only my own devices can reach the Paseo port.</li>
+            <li>Heavy compute and full artifacts stay on the compute nodes; the workstation keeps only code and small results.</li>
+        </ul>
+
+        <h2 id="problem">Why the Work Should Not Live on One Device<a class="anchor" href="#problem" aria-hidden="true">#</a></h2>
+        <p>The trouble is not any particular device; it is that the work is tied to one of them. An agent session carries state: the repository, the environment, the credentials and the conversation so far. If that state lives on a laptop, the laptop lid decides when the agent stops, and a second device starts from nothing.</p>
+        <p>Moving the state to a machine that is always on, and making every other device a thin client of it, turns the phone and the laptop into interchangeable windows onto the same session. That needs exactly three things: one computer that stays on, one private network that only my devices can join, and one session that does not drop when a client disconnects.</p>
+
+        <h2 id="architecture">Architecture<a class="anchor" href="#architecture" aria-hidden="true">#</a></h2>
+        <figure>
+            <img src="./fig-architecture.svg" width="1600" height="780" alt="PocketRig architecture: phone and Mac on a Tailscale tailnet connect to a Paseo instance on an always-on workstation, which runs Claude Code or Codex, submits jobs to GPU nodes over SSH and receives small results." loading="lazy">
+            <figcaption>Fig. 1. PocketRig in three layers. Phone and Mac are thin clients on a Tailscale tailnet. The always-on workstation runs one Paseo instance per person, which starts Claude Code or Codex. Heavy jobs go to GPU nodes over SSH, and only small results come back. <a href="./fig-architecture.svg">Open full size</a></figcaption>
+        </figure>
+        <p>Each device has one job, and the expensive state lives in exactly one place:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Device</th><th>Role</th><th>What lives there</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Phone</td><td>Start tasks, check progress, send the next instruction</td><td>Only the Tailscale and Paseo apps</td></tr>
+                    <tr><td>Mac</td><td>Continue the same session on a bigger screen</td><td>Nothing the session depends on</td></tr>
+                    <tr><td>Always-on workstation</td><td>Run Paseo and the agents</td><td>Code, Git history, sessions, small results</td></tr>
+                    <tr><td>GPU / compute nodes</td><td>Training, evaluation, inference</td><td>Data, model weights, checkpoints, full artifacts</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 id="network">Layer 1: A Private Network with No Public Ports<a class="anchor" href="#network" aria-hidden="true">#</a></h3>
+        <p>Every device joins the same Tailscale tailnet. Paseo listens only on the workstation's tailnet address, or on <code>127.0.0.1</code> with Tailscale forwarding in front of it, so no port is open to the public internet. PocketRig also turns Paseo's relay off, so clients always connect directly. Tailscale already encrypts the connection, which is why the Paseo client connects with <em>Use SSL</em> switched off.</p>
+        <p>Joining the tailnet does not open every port. Tailscale grants let each person reach only their own Paseo port and the SSH port, which starts to matter once the workstation is shared.</p>
+        <p>Windows needs one extra hop. With Tailscale installed on Windows and Paseo running inside WSL2, WSL cannot bind the Windows tailnet address. Each instance therefore listens on <code>127.0.0.1</code> inside WSL; Windows forwards <code>&lt;tailnet IP&gt;:&lt;port&gt;</code> to its own <code>127.0.0.1:&lt;port&gt;</code> with <code>netsh portproxy</code>, and WSL's localhost forwarding carries the connection into Linux. A firewall rule per port admits traffic only on the tailnet address and only from <code>100.64.0.0/10</code>. A PowerShell loop reads <code>paseo-user list --json</code> every 30 seconds and adds or removes these rules, so a new tailnet address or a new user needs no manual step.</p>
+        <p>On native Linux and macOS, Paseo listens on the tailnet address directly, or stays on <code>127.0.0.1</code> behind <code>tailscale serve</code>, which survives address changes:</p>
+<pre><code>sudo tailscale serve --bg --tcp=6767 tcp://127.0.0.1:6767</code></pre>
+
+        <h3 id="paseo">Layer 2: One Paseo Instance per Person<a class="anchor" href="#paseo" aria-hidden="true">#</a></h3>
+        <p>Paseo runs coding-agent sessions as a daemon on one machine and lets its apps and web client connect to them. PocketRig gives each person their own instance, created with one command:</p>
+<pre><code>sudo paseo-user add "$USER" 6767</code></pre>
+        <p><code>paseo-user</code> creates the system user if needed, generates a random connection password, writes the Paseo configuration and enables the service. On Linux and WSL the instance is the systemd unit <code>paseo@&lt;user&gt;</code>; on macOS it is a per-user LaunchDaemon. Either way it runs as the real user ID with a <code>077</code> umask, so sessions, projects and credentials stay in a private home directory. The password lands in <code>~/.paseo/client.env</code>, readable only by its owner, and the <code>paseo</code> CLI loads it automatically.</p>
+        <p>Paseo does not call <code>claude</code> or <code>codex</code> directly. Its provider commands point at shared wrapper scripts, which do three things before handing over:</p>
+        <ol>
+            <li>Check that the caller belongs to the <code>ai-cli-users</code> group.</li>
+            <li>Run every check in <code>/etc/paseo-workstation/pre-launch.d/</code> and refuse to start if one fails. The checks write only to stderr, so the protocol output that Paseo reads stays clean.</li>
+            <li><code>exec</code> the real program with the arguments unchanged.</li>
+        </ol>
+        <p>This gives the workstation one place to enforce shared policy, such as the proxy settings in <code>/etc/paseo-workstation/proxy.env</code>, without touching anyone's personal configuration. Background services do not read shell aliases, so per-task preferences such as permission modes are set in Paseo itself.</p>
+        <p>The payoff is the hand-off. I start a task from the phone and lock it; the agent keeps running on the workstation. Later I open the same host and workspace on the Mac and continue the same conversation. Several clients can watch one session, but it works best with one client in charge at a time.</p>
+
+        <h3 id="always-on">Keeping the Workstation Online<a class="anchor" href="#always-on" aria-hidden="true">#</a></h3>
+        <p>None of this works if the workstation sleeps: a sleeping or powered-off machine is simply unreachable from the phone. Each Paseo instance starts at boot under systemd or launchd, but on Windows that is not enough, because systemd units inside WSL do not keep the WSL instance itself alive. A scheduled task registered by <code>Install-PaseoWorkstationTask.ps1</code> runs the forwarding loop and keeps WSL running whether or not anyone is logged in to Windows. On a Mac, <code>pmset</code> stops system sleep on power, although FileVault still needs an unlock after a cold boot and a closed lid may still put a laptop to sleep.</p>
+        <p>The acceptance tests for this layer are deliberately unforgiving: a cold boot with nobody logged in, closing the terminal, sleep and resume, and a WSL restart. A process that shows up in <code>ps</code> proves little; what counts is reconnecting from the phone afterwards.</p>
+
+        <h3 id="compute">Layer 3: Heavy Compute Stays on the Nodes<a class="anchor" href="#compute" aria-hidden="true">#</a></h3>
+        <p>The workstation edits code, runs Git and SSH, does light checks and displays small files. Data, models, training, evaluation and inference stay on the GPU nodes. The <code>remote-compute</code> skill turns that rule into a fixed loop that the agent follows the same way every time:</p>
+        <ol>
+            <li><strong>Pin the code version.</strong> Commit and push locally, then check out the same commit on the node. If the node has uncommitted changes, stop and ask instead of overwriting them.</li>
+            <li><strong>Submit in the background.</strong> Use the node's scheduler (Slurm, <code>systemd-run</code> or tmux) with explicit resources. The log goes to <code>logs/&lt;job-id&gt;.log</code>, and its first line records the commit. The job must not depend on the phone or on an open SSH session.</li>
+            <li><strong>Report what matters.</strong> The agent returns the job ID, commit, log path and artifact directory. A status query returns the scheduler state, the latest key metrics and the last 20 log lines: short enough to read on one phone screen.</li>
+            <li><strong>Pull back only small results.</strong> Aggregate or sample on the node, check the size with <code>du -sh</code>, and ask before pulling more than 50&nbsp;MB. Results land in <code>~/results/&lt;project&gt;/&lt;job-id&gt;/</code>. Datasets, weights and checkpoints never leave the node, and rsync runs without <code>--delete</code>.</li>
+            <li><strong>Summarize for the phone.</strong> The agent writes <code>summary.md</code> with the job ID, commit, status, runtime, a metrics table with differences from the previous run, and plots rendered on the node as PNGs at most 1200&nbsp;px wide. In the session it replies with three to five lines, the table and the path, and I can answer from the phone with "compare with the last run" or "rerun with a different learning rate".</li>
+        </ol>
+        <p>Each project keeps its node details in a <code>CLAUDE.local.md</code> that is never committed. If anything is missing, the agent asks rather than falling back to running the job on the workstation:</p>
+<pre><code>host: compute-node-1                          # alias in ~/.ssh/config
+dir: /data/&lt;user&gt;/&lt;project&gt;                   # remote working directory
+env: source ~/venvs/&lt;project&gt;/bin/activate
+scheduler: slurm | systemd-run | tmux</code></pre>
+        <p>One distinction is easy to miss on a phone: stopping the agent in Paseo does not stop the job on the node. Cancelling a job with <code>scancel</code> or <code>kill</code> is a separate step, and the agent takes it only after asking. For dashboards such as TensorBoard, two SSH tunnels (node to workstation, then workstation to laptop) bring the page to the laptop; on the phone, the summary and the images are the better view.</p>
+
+        <h2 id="skills">Letting an Agent Set It Up<a class="anchor" href="#skills" aria-hidden="true">#</a></h2>
+        <p>Every part of PocketRig is packaged as an Agent Skill. After installing the plugin, you can ask Claude Code or Codex in plain language, for example "set up this computer as a PocketRig workstation" or "my phone can't reach Paseo, please check". The agent follows the matching skill and stops for confirmation before sudo, network changes or reboots.</p>
+<pre><code>/plugin install pocketrig --marketplace SuperFCR/falcary-skills</code></pre>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Skill</th><th>What it does</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>pocketrig-setup</code></td><td>Install the shared parts and create your own Paseo instance</td></tr>
+                    <tr><td><code>pocketrig-always-on</code></td><td>No sleep, WSL never reclaimed, start at boot, cold-boot acceptance</td></tr>
+                    <tr><td><code>pocketrig-connect</code></td><td>Connect phone and Mac over Tailscale and verify the session hand-off</td></tr>
+                    <tr><td><code>remote-compute</code></td><td>Submit node jobs, check status, pull back small results as a phone-friendly summary</td></tr>
+                    <tr><td><code>pocketrig-doctor</code></td><td>Read-only diagnosis, layer by layer</td></tr>
+                    <tr><td><code>pocketrig-team</code></td><td>Add, reset or deactivate members for family or a small team</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The recommended order is setup, always-on, connect, then remote-compute. Doctor is for when a layer breaks, and team only comes in when other people join. For Codex or other tools, <code>./skills/install.sh --codex</code> (or <code>--target &lt;dir&gt;</code>) copies the skills instead.</p>
+
+        <h2 id="team">From One Person to a Small Team<a class="anchor" href="#team" aria-hidden="true">#</a></h2>
+        <p>The same workstation can host family members or a small team. Each person gets a system user, a Paseo instance on their own port and a private handover of the connection details:</p>
+<pre><code>sudo paseo-user add alice 6767
+sudo paseo-user add bob 6768</code></pre>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Item</th><th>Arrangement</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Node, Paseo, Claude Code, Codex programs</td><td>Shared install maintained by root; read-only for users</td></tr>
+                    <tr><td>Paseo and agent processes</td><td>Per person, run as the real user ID</td></tr>
+                    <tr><td>Projects, sessions, configuration, SSH keys</td><td>Per person, private home (700), credential files 600</td></tr>
+                    <tr><td>Paseo connection password</td><td>Per person, random, readable only in your own <code>client.env</code></td></tr>
+                    <tr><td>Model account sign-in</td><td>Per person; no copying of anyone else's credentials</td></tr>
+                    <tr><td>Network, proxy, CPU, memory, disk</td><td>Shared host; add per-user limits when needed</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The isolation comes from Unix user IDs and file permissions, and it is meant for people who trust each other. Root, sudo administrators, the Windows host administrator and the shared network are all inside the trust boundary; this is not container- or VM-level isolation against a hostile tenant. Each person also signs in to Claude Code and Codex with their own subscription, team seat or API key. That keeps usage and quotas separate, and it avoids several processes refreshing the same OAuth credentials at once.</p>
+
+        <h2 id="status">Status and Limitations<a class="anchor" href="#status" aria-hidden="true">#</a></h2>
+        <p>PocketRig grew out of a reference deployment on Windows 11 with WSL2 and Tailscale for Windows, which is the setup I use daily. A working reference machine is not the same as a clean install from the repository, and the project keeps the two apart:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Check</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Windows + WSL2 reference deployment</td><td>In daily use; the source of the design</td></tr>
+                    <tr><td>22 regression checks with simulated users, downloads and services</td><td>Pass</td></tr>
+                    <tr><td>Plugin and marketplace manifests</td><td>Pass <code>claude plugin validate</code></td></tr>
+                    <tr><td>iPhone joining through Shadowrocket's built-in Tailscale</td><td>Verified on a real iPhone</td></tr>
+                    <tr><td>Clean Linux / WSL install as root</td><td>Not yet accepted</td></tr>
+                    <tr><td>macOS install, launchd and background model sign-in</td><td>Not yet accepted</td></tr>
+                    <tr><td>Windows cold boot without login, WSL recovery</td><td>Not yet accepted on the deployment machine</td></tr>
+                    <tr><td>Tailnet grants and cross-user denial from member clients</td><td>Not yet accepted on a real tailnet</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The reference versions are Paseo 0.13.2, Node 24, Codex 0.164 and Claude Code 2.1.308. The installer pins Paseo 0.13.2 because <code>paseo-user</code> hashes passwords through an internal Paseo module path; after an upgrade, re-verify it, or have each member run <code>paseo daemon set-password</code> in their own terminal. The skills and detailed docs are written in Chinese, which agents follow without trouble in any language.</p>
+        <p>Two rules are worth repeating. Use model accounts you are entitled to and follow each provider's terms, including their supported regions. And Tailscale only connects your own devices: it is not a proxy and does not change where your traffic exits. PocketRig is not affiliated with Paseo, Tailscale, Anthropic or OpenAI.</p>
+
+        <h2 id="try">Try It<a class="anchor" href="#try" aria-hidden="true">#</a></h2>
+        <p>The quickest path is the plugin above: let the agent run <code>pocketrig-setup</code>, <code>pocketrig-always-on</code> and <code>pocketrig-connect</code> in turn. By hand on Linux or WSL, it starts like this (pick the Node version you need):</p>
+<pre><code>git clone https://github.com/SuperFCR/falcary-skills.git
+cd falcary-skills/pocketrig
+sudo ./linux/install.sh --install-node 24.22.1 --install-packages
+sudo paseo-user add "$USER" 6767
+claude auth login &amp;&amp; codex login</code></pre>
+        <p>Then sign in to Tailscale on the phone and the Mac, add a host in the Paseo app (<code>&lt;tailnet IP&gt;:6767</code>, Use SSL off, password from <code>~/.paseo/client.env</code>), and go through the acceptance checklist in the repository before relying on it. The repository also has a four-minute promo video and a 30-second phone-to-Mac clip; both are rebuilt from code with fictional data, and their on-screen text is in Chinese.</p>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>Cited as:</p>
+            <blockquote><p>Feng, Chaoran. (Nov 2026). PocketRig: A Phone-First Workflow for Coding Agents with Paseo. Chaoran Feng's Blog. https://www.falcary.com/blogs/pocketrig/.</p></blockquote>
+            <p>Or</p>
+<pre><code>@article{feng2026pocketrig,
+  title   = "PocketRig: A Phone-First Workflow for Coding Agents with Paseo",
+  author  = "Feng, Chaoran",
+  journal = "falcary.com",
+  year    = "2026",
+  month   = "Nov",
+  url     = "https://www.falcary.com/blogs/pocketrig/"
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li>PocketRig source, skills and documentation. <a href="https://github.com/SuperFCR/falcary-skills/tree/main/pocketrig">github.com/SuperFCR/falcary-skills</a>.</li>
+            <li>Paseo documentation: <a href="https://paseo.sh/docs/configuration">configuration</a>, <a href="https://paseo.sh/docs/connectivity">connectivity</a> and <a href="https://paseo.sh/docs/security">security model</a>.</li>
+            <li>Tailscale: <a href="https://tailscale.com/docs/reference/syntax/grants">grants syntax</a>, <a href="https://tailscale.com/docs/install/windows/wsl2">Windows and WSL2</a> and <a href="https://tailscale.com/docs/reference/tailscale-cli/serve"><code>tailscale serve</code></a>.</li>
+            <li>Microsoft. <a href="https://learn.microsoft.com/windows/wsl/systemd">Use systemd to manage Linux services with WSL</a>.</li>
+            <li>Anthropic. <a href="https://docs.claude.com/en/docs/claude-code/skills">Agent Skills in Claude Code</a>.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../">Coding Agents</a></li>
+            <li><a href="../">Workflow</a></li>
+            <li><a href="../">Paseo</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../../"><span class="title">Homepage »</span>Chaoran Feng</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+</body>
+</html>
