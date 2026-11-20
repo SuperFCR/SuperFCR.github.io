@@ -31,6 +31,7 @@
         const button = event.target.closest('.type-filter');
         if (button) show(button.dataset.filter);
     });
-    bar.hidden = false;
+    // Filtering only helps once there are at least two types to choose from.
+    bar.hidden = Object.keys(counts).length < 2;
     show('all');
 })();
