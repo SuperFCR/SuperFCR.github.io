@@ -6,7 +6,9 @@
     <meta name="description" content="Research notes and paper readings by Chaoran Feng.">
     <title>Blog | Chaoran Feng</title>
     <link rel="canonical" href="https://www.falcary.com/blogs/">
-    <link rel="icon" type="image/png" href="../assets/imgs/favicon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../assets/imgs/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="../assets/imgs/logo.svg">
+    <link rel="apple-touch-icon" href="../assets/imgs/favicon.png">
     <script src="../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
     <link rel="preload" href="../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/blog.css">
@@ -32,7 +34,7 @@
 
 <main class="main">
     <section class="profile">
-        <img class="profile-avatar" src="../assets/imgs/bio.jpg" alt="Chaoran Feng">
+        <img class="profile-logo" src="../assets/imgs/logo.svg" width="96" height="96" alt="">
         <div>
             <h1>Research Notes</h1>
             <p>Notes on papers I read and ideas I am working through: multimodal generation, 3D vision and world models.</p>
@@ -46,11 +48,20 @@
         </div>
     </section>
 
-    <div class="list-head"><span>Latest posts</span><span>3 posts</span></div>
+    <div class="list-head">
+        <div class="type-filters" role="group" aria-label="Filter posts by type" hidden>
+            <button class="type-filter" type="button" data-filter="all" aria-pressed="true">All <span class="count"></span></button>
+            <button class="type-filter type-deep-dive" type="button" data-filter="deep-dive" aria-pressed="false">Deep Dive <span class="count"></span></button>
+            <button class="type-filter type-tech-report" type="button" data-filter="tech-report" aria-pressed="false">Tech Report <span class="count"></span></button>
+            <button class="type-filter type-tutorial" type="button" data-filter="tutorial" aria-pressed="false">Tutorial <span class="count"></span></button>
+            <button class="type-filter type-paper-notes" type="button" data-filter="paper-notes" aria-pressed="false">Paper Notes <span class="count"></span></button>
+        </div>
+        <span class="list-count" aria-live="polite">3 posts</span>
+    </div>
 
-    <article class="post-entry">
+    <article class="post-entry" data-type="tutorial">
         <div class="entry-body">
-            <div class="entry-tags"><span>Example</span><span>Typography</span></div>
+            <div class="entry-top"><span class="post-type type-tutorial">Tutorial</span><span class="entry-topics"><span>Typography</span><span>Layout</span></span></div>
             <header class="entry-header"><h2>Example Post: Blog Typography Sample</h2></header>
             <p class="entry-content">A tour of the building blocks of this blog: table of contents, headings, quotes, code, tables, figures and the citation block. The layout follows Lil&#39;Log; colours and backdrop come from the homepage.</p>
             <footer class="entry-footer">November 19, 2026&nbsp;&nbsp;|&nbsp;&nbsp;4 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
@@ -60,9 +71,9 @@
     </article>
 
     <!-- Placeholder entries to show how the list looks with several posts; they link to the example. -->
-    <article class="post-entry">
+    <article class="post-entry" data-type="paper-notes">
         <div class="entry-body">
-            <div class="entry-tags"><span>World Models</span><span>RL</span></div>
+            <div class="entry-top"><span class="post-type type-paper-notes">Paper Notes</span><span class="entry-topics"><span>World Models</span><span>RL</span></span></div>
             <header class="entry-header"><h2>(Placeholder) World-R1: Pushing 3D Constraints into Text-to-Video Models with RL</h2></header>
             <p class="entry-content">Placeholder entry to preview the list with several posts. How World-R1 uses 3D-consistency rewards, camera control and Flow-GRPO to make video generators respect spatial structure.</p>
             <footer class="entry-footer">June 8, 2026&nbsp;&nbsp;|&nbsp;&nbsp;25 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
@@ -71,9 +82,9 @@
         <a class="entry-link" href="./example/" aria-label="Placeholder entry"></a>
     </article>
 
-    <article class="post-entry">
+    <article class="post-entry" data-type="deep-dive">
         <div class="entry-body">
-            <div class="entry-tags"><span>Representation</span></div>
+            <div class="entry-top"><span class="post-type type-deep-dive">Deep Dive</span><span class="entry-topics"><span>Representation</span><span>World Models</span></span></div>
             <header class="entry-header"><h2>(Placeholder) From I-JEPA to V-JEPA 2.1: Four Steps of Predictive Visual Representation Learning</h2></header>
             <p class="entry-content">Placeholder entry. I-JEPA, V-JEPA, V-JEPA 2 and V-JEPA 2.1 on one line: latent prediction, world models and dense features.</p>
             <footer class="entry-footer">May 20, 2026&nbsp;&nbsp;|&nbsp;&nbsp;32 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
@@ -87,5 +98,6 @@
     &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../">Homepage</a>
 </footer>
 
+<script src="../assets/js/blog-list.js"></script>
 </body>
 </html>

@@ -16,6 +16,9 @@ blogs/
 
 assets/css/blog.css           # 所有 blog 页面共用的样式（含深色模式）
 assets/js/blog-theme.js       # 亮暗切换
+assets/js/blog-list.js        # 列表页的类型筛选和计数
+assets/imgs/logo.svg          # 站点图标（羽毛），也是列表页顶部的大图标
+assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blog 共用
 ```
 
 `blogs/example/` 是一篇完整的示例文章，用到了下面所有组件。新文章从它复制。
@@ -27,15 +30,15 @@ assets/js/blog-theme.js       # 亮暗切换
 3. **改两个版本的 `<head>`**：标题、description，以及 4 个链接里的 `example`（canonical 和 3 个 hreflang）。
 4. **写正文**：英文版和中文版的章节结构保持一致，`id` 用同一套英文锚点。这样两版目录对得上，切换语言时也不会迷路。
 5. **放图片**：见下面「图片」一节。
-6. **加到列表页**：在 `blogs/index.html` 的「Latest posts」下面复制一个 `post-entry`，放在最上面（按日期从新到旧），再把右上角的文章数加 1。
+6. **加到列表页**：在 `blogs/index.html` 的筛选按钮下面复制一个 `post-entry`，放在最上面（按日期从新到旧）。筛选按钮的计数和右侧的文章数由 `blog-list.js` 自动统计，不用手改。
 7. **本地预览**，按「发布前检查」逐项过一遍，然后 commit 并 push 到 `main`。GitHub Pages 通常一两分钟内就会更新。
 
 列表条目的格式：
 
 ```html
-<article class="post-entry">
+<article class="post-entry" data-type="paper-notes">
     <div class="entry-body">
-        <div class="entry-tags"><span>World Models</span><span>RL</span></div>
+        <div class="entry-top"><span class="post-type type-paper-notes">Paper Notes</span><span class="entry-topics"><span>World Models</span><span>RL</span></span></div>
         <header class="entry-header"><h2>English Title</h2></header>
         <p class="entry-content">One or two sentences on what the post covers.</p>
         <footer class="entry-footer">June 8, 2026&nbsp;&nbsp;|&nbsp;&nbsp;25 min read&nbsp;&nbsp;|&nbsp;&nbsp;Chaoran Feng&nbsp;&nbsp;|&nbsp;&nbsp;<span class="entry-langs">EN · <span lang="zh-CN">中文</span></span></footer>
@@ -45,9 +48,25 @@ assets/js/blog-theme.js       # 亮暗切换
 </article>
 ```
 
-- 标签 1–2 个，用英文、首字母大写，尽量复用已有的（如 `World Models`、`Representation`、`RL`、`Video Generation`、`3D Vision`）。
+- `data-type` 和类型徽章的 class 必须是下面四种之一，两处保持一致。
+- 主题词 1–2 个，用英文、首字母大写，尽量复用已有的（如 `World Models`、`Representation`、`RL`、`Video Generation`、`3D Vision`）。
 - 摘要写 1–2 句，卡片上最多显示两行。
 - 阅读时间：英文按每分钟约 230 词估算，中文按每分钟约 400 字，四舍五入到整数分钟。
+
+## 文章类型
+
+每篇文章只选一种类型。类型决定徽章颜色，列表页可以按类型筛选。
+
+| 类型 | key（`data-type` / `type-*`） | 中文名 | 适用 |
+|---|---|---|---|
+| Deep Dive | `deep-dive` | 深入探索 | 把一个方向或一串论文串起来讲透的长文 |
+| Tech Report | `tech-report` | 技术报告 | 自己项目、实验或复现的记录与结果 |
+| Tutorial | `tutorial` | 教程 | 一步步教会读者做某件事 |
+| Paper Notes | `paper-notes` | 论文笔记 | 单篇论文的精读笔记 |
+
+文章页在标题上方放同一个徽章：英文版写英文名，中文版写中文名，例如 `<span class="post-type type-deep-dive">深入探索</span>`。
+
+要新增类型：在 `blog.css` 的「Post types」处给浅色和深色各加一行颜色，在列表页加一个筛选按钮，再补进上表。
 
 ## 双语规则
 
@@ -60,7 +79,7 @@ assets/js/blog-theme.js       # 亮暗切换
 | 目录标题 | `Table of Contents` | `目录` |
 | 文末章节 | `Citation`、`References` | `引用本文`、`参考文献` |
 
-- 顶部导航、面包屑、页脚和标签在两个版本里都保持英文。
+- 顶部导航、面包屑、页脚和文末的主题词标签在两个版本里都保持英文；只有标题上方的类型徽章随语言切换（如 `Deep Dive` / `深入探索`）。
 - 中文版中的英文片段（参考文献、BibTeX、英文引用格式）加 `lang="en"`。
 - 引用格式（Cited as 和 BibTeX）两个版本都用英文标题和英文版网址。
 
@@ -78,7 +97,8 @@ assets/js/blog-theme.js       # 亮暗切换
 | 插图 | `<figure><img src="./fig-x.webp" width="…" height="…" alt="…" loading="lazy"><figcaption>Fig. 1. …</figcaption></figure>`，中文版图注写成 `图 1：…` |
 | 引用格式 | `<div class="citation">`，里面放 Cited as 引用块和 BibTeX 代码块 |
 | 参考文献 | `<ol class="references">` |
-| 文末 | `post-tags`（和列表页的标签一致）和 `paginav`（上一篇/下一篇） |
+| 类型徽章 | `<span class="post-type type-<key>">…</span>`，放在标题上方 |
+| 文末 | `post-tags`（和列表页的主题词一致）和 `paginav`（上一篇/下一篇） |
 
 暂不支持数学公式。需要时再在 `blog.css` 和页面里统一接入 KaTeX，不要在单篇文章里临时引入。
 
@@ -118,5 +138,5 @@ python3 -I -m http.server 8000 --bind 127.0.0.1 --directory .
 - [ ] 图片、封面都能显示，没有 404。
 - [ ] 浅色和深色模式都看过一遍（点站名旁的月亮/太阳）。
 - [ ] 手机宽度下没有横向滚动条（表格和代码块只在自己的框内滚动）。
-- [ ] 列表页条目的日期、阅读时间、标签和文章页一致，文章数已更新。
+- [ ] 列表页条目的日期、阅读时间、类型和主题词与文章页一致；点一下对应的类型筛选按钮，确认这篇能被筛出来。
 - [ ] 删除列表页里不再需要的占位条目。

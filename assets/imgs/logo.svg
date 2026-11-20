@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Site mark: a quill feather (Falcary ~ falcon; writing) on the homepage navy. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b7cc2"/>
+      <stop offset="0.55" stop-color="#205488"/>
+      <stop offset="1" stop-color="#0a2544"/>
+    </linearGradient>
+    <linearGradient id="vane" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d6e4f3"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+  <g transform="translate(33.5 30.5) rotate(42)">
+    <path d="M0 -26 C12 -18.5 13.5 -3 8.5 9.5 C6.4 14.8 3 18.6 0.4 20.6 C-2.2 18.8 -5.4 14.4 -7 8.6 C-9.4 -3.6 -7.6 -17.4 0 -26 Z" fill="url(#vane)"/>
+    <path d="M12.3 -10.5 L3.6 -7.2 L12 -7.4 Z" fill="#205488"/>
+    <path d="M10.8 1.2 L3.4 4 L10.1 4.4 Z" fill="#205488"/>
+    <path d="M-8.3 -2.6 L-2.2 -0.6 L-8.2 0.4 Z" fill="#205488"/>
+    <path d="M0 -20 Q1.6 0 0.4 21" fill="none" stroke="#2b5f96" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M0.4 21 L0.2 25.5" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M0.2 25.5 L0 30" stroke="#f2b35c" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+</svg>
