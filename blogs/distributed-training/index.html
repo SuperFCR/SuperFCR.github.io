@@ -22,6 +22,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../assets/css/distributed-viz.css?v=20261121.5">
     <link rel="stylesheet" href="../../assets/css/blog.css?v=20261121.4">
     <script src="../../assets/js/blog-theme.js?v=20261121.4"></script>
 </head>
@@ -273,6 +274,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))
         </div>
         <p>Each card therefore holds $512 \times 8192 \times 2\text{ B} = 8,388,608\text{ B} = \mathbf{8\text{ MiB}}$. You can sanity-check your $64$-row hypothesis in reverse: an <code>AllGather_Y</code> communicates <em>only within a 4-GPU $Y$-group</em>. If each GPU held only $64$ rows, <code>AllGather_Y</code> could assemble at most $64 \times 4 = 256$ rows—missing the other $7/8$ of the matrix sitting across $X$. Had we truly wanted $64$ rows per card across all 32 cards, the notation must read $A[E_{XY}, F]$.</p>
 
+        <div class="viz-lab" data-viz="mesh-lab"></div>
+
         <h3 id="four-collectives">The Four Collectives: Definitions, Toy Vectors, and AllGather vs. All-to-All<a class="anchor" href="#four-collectives" aria-hidden="true">#</a></h3>
         <p>In distributed ML, four collective primitives operate inside a mesh axis group (here <em>All</em> denotes every rank participating in that group, e.g., the 4 ranks sharing a fixed $X$ along $Y$). Every distinction boils down to two questions: <strong>Does data get summed elementwise?</strong> And <strong>does each rank end with the full tensor or a shard?</strong></p>
         <div class="table-wrap">
@@ -449,6 +452,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))
         </ol>
         <p><strong>Collective Matmul Overlap:</strong> For Case 1+AllGather and Case 3+ReduceScatter, you do not wait idly for an entire collective before starting Tensor Core MMA instructions. Tiling the output or contracting axis into $K$ ring chunks turns the collective into a <em>Collective Matmul</em> pipeline: while chunk $k$ rides across the NVLink/ICI ring, the local systolic/Tensor Core unit simultaneously multiplies chunk $k-1$, hiding communication latency behind compute arithmetic.</p>
 
+        <div class="viz-lab" data-viz="ring-matmul-lab"></div>
+
         <h2 id="data-parallel">Part 3: Data Parallelism: From DP &amp; DDP Internals to ZeRO &amp; FSDP<a class="anchor" href="#data-parallel" aria-hidden="true">#</a></h2>
 
         <h3 id="dp-ddp-internals">DP Bottlenecks vs. DDP Reducer, Grad Hooks, and Bucketing<a class="anchor" href="#dp-ddp-internals" aria-hidden="true">#</a></h3>
@@ -512,6 +517,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))
         </div>
         <p>Why do ZeRO-1 and ZeRO-2 communicate the <strong>exact same $2\Psi$ bytes</strong> as DDP? Because DDP's <code>AllReduce</code> already equals $\text{ReduceScatter}(1\Psi) + \text{AllGather}(1\Psi)$! ZeRO-1 and ZeRO-2 simply replace the second $1\Psi$ <code>AllGather</code> of gradients with a $1\Psi$ <code>AllGather</code> of <em>updated parameters</em> after each rank updates its $1/N$ Adam slice. Only ZeRO-3 adds an extra $1\Psi$ <code>AllGather</code> because backward recomputes layer weights on the fly—an extra $1\Psi$ cost that PyTorch FSDP hides by asynchronously prefetching layer $l+1$'s weights concurrently while computing layer $l$.</p>
         <p><strong>ZeRO-R (Residual State Optimizations):</strong> Even after cutting static states to $\frac{16\Phi}{N}$, activations dominate deep networks. ZeRO-R completes the HBM budget via three mechanisms highlighted in 猛猿's analysis: (1) <strong>$P_a$ (Partitioned Activation Checkpointing)</strong> shards checkpointed activations across the TP group (precursor to Megatron-SP), dividing activation footprint by $\text{TP}$; (2) <strong>$C_B$ (Constant-Size Temporary Buffers)</strong> bounds communication staging buffers regardless of layer width so giant models do not trigger transient OOM spikes; and (3) <strong>$M_D$ (Memory Defragmentation)</strong> proactively reallocates long-lived activation checkpoints into contiguous regions at run time to defeat PyTorch caching fragmentation.</p>
+
+        <div class="viz-lab" data-viz="zero-lab"></div>
 
         <figure>
             <img src="./fig-dp-fsdp.svg" alt="Top: 2-GPU timeline comparing DDP AllReduce on gradients g0=[1,2] and g1=[3,4] vs. ZeRO-3/FSDP transient AllGather of weights and ReduceScatter keeping [4] on GPU 0 and [6] on GPU 1. Bottom: stacked per-GPU memory bars across DDP (16.0 Phi), ZeRO-1 (5.50 Phi), ZeRO-2 (3.75 Phi), and ZeRO-3 (2.00 Phi) at N=8." width="1600" height="780" loading="lazy">
@@ -579,6 +586,8 @@ class _ReduceFromModelParallelRegion(torch.autograd.Function):
         </ul>
         <p>Megatron wraps both states inside <code>get_cuda_rng_tracker().fork('model-parallel-rng')</code>, swapping GPU RNG generator pointers cleanly on entry/exit. Because TP's 4 synchronous per-layer <code>AllReduce</code>s block compute directly on the critical path (unlike DDP's overlapped buckets), latency explodes once cross-node NIC hops enter—which is why standard cluster topologies enforce $\text{TP} \le 8$ inside a single NVSwitch node.</p>
 
+        <div class="viz-lab" data-viz="tp-lab"></div>
+
         <h2 id="pipeline-parallel">Part 5: Pipeline Parallelism: GPipe Micro-Batching, Re-materialization &amp; 1F1B<a class="anchor" href="#pipeline-parallel" aria-hidden="true">#</a></h2>
 
         <h3 id="gpipe-schedule-memory">Bubble Derivation, Checkpointing Math, and Evolution to 1F1B<a class="anchor" href="#gpipe-schedule-memory" aria-hidden="true">#</a></h3>
@@ -596,6 +605,8 @@ class _ReduceFromModelParallelRegion(torch.autograd.Function):
             </li>
         </ul>
         <p><strong>Why GPipe Evolves into 1F1B and Interleaved 1F1B:</strong> Even with checkpointing, GPipe queues all $M$ forward passes before releasing memory in any backward pass, so peak boundary activations scale as $\mathcal{O}(M)$. <strong>PipeDream-Flush (1F1B)</strong> keeps the exact same bubble ratio $\frac{P-1}{M+P-1}$, but once steady state is reached it strictly alternates 1 Forward and 1 Backward step per stage, capping maximum in-flight micro-batches at only $\mathcal{O}(P)$ stages regardless of how huge $M$ grows! Taking one step further, Megatron-LM's <strong>Interleaved 1F1B</strong> assigns each GPU $v$ non-contiguous chunks of smaller virtual stages (e.g., GPU 0 holds layers $[0\text{–}3, 16\text{–}19]$), shrinking bubble latency by $v\times$ to $\frac{P - 1}{vM + P - 1}$ in exchange for $v\times$ tiny P2P boundary transfers.</p>
+
+        <div class="viz-lab" data-viz="pipeline-lab"></div>
 
         <figure>
             <img src="./fig-pp-gpipe.svg" alt="Top: 4-GPU naive sequential pipeline wasting 3/4 = 75% time in hatched idle bubbles. Bottom: GPipe splitting the batch into M=4 micro-batches F0..F3 and B3..B0, shrinking bubble fraction to 3/7 = 42.9% with P2P activation arrows and synchronous step bar." width="1600" height="700" loading="lazy">
@@ -656,6 +667,8 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
             <li><strong>Full <code>DP Group</code> (size $8$: <code>{0..7}</code>):</strong> Runs standard gradient <code>AllReduce</code> on all non-expert shared parameters (Attention, Router, Embeddings).</li>
         </ul>
         <p>Inside <code>deepspeed.moe.utils</code>, the helper <code>split_params_into_different_moe_groups_for_optimizer()</code> inspects each parameter tensor, skips default full-<code>DP</code> reduction for MoE expert parameters (<code>is_moe_param</code>), and routes them to separate optimizer parameter groups tagged with the <code>EDP</code> process group. Combined with intra-expert <code>TP</code> and vertical <code>PP</code>, a full 4D cluster obeys $\text{world\_size} = \text{PP} \times \text{DP} \times \text{TP}$ with $\text{DP} = \text{EP} \times \text{EDP}$.</p>
+
+        <div class="viz-lab" data-viz="moe-lab"></div>
 
         <figure>
             <img src="./fig-moe-alltoall.svg" alt="Left: 2-GPU MoE All-to-All dispatch routing tokens a,b and c,d to stationary experts E0 and E1, then All-to-All combine returning [a',b'] and [c',d']. Right: 8-GPU DeepSpeed-Megatron grid showing DP(8) = EP(4) x EDP(2) with non-expert Attention reduced over all 8 GPUs and expert gradients over matching EDP columns." width="1600" height="760" loading="lazy">
@@ -799,6 +812,7 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
 
 <script src="../../assets/vendor/katex/katex.min.js"></script>
 <script src="../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../assets/js/distributed-viz.js?v=20261121.5"></script>
 <script src="../../assets/js/blog-post.js?v=20261121.4"></script>
 </body>
 </html>

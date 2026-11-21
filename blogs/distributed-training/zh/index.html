@@ -22,6 +22,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <link rel="preload" href="../../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../../assets/css/distributed-viz.css?v=20261121.5">
     <link rel="stylesheet" href="../../../assets/css/blog.css?v=20261121.4">
     <script src="../../../assets/js/blog-theme.js?v=20261121.4"></script>
 </head>
@@ -273,6 +274,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))
         </div>
         <p>每张卡初始持有 $512 \times 8192 \times 2\text{ B} = 8,388,608\text{ B} = \mathbf{8\text{ MiB}}$。沿着各自 4 卡的 $Y$ 组做完 <code>AllGather_Y</code>，每卡得到完整 $[2048, 8192]$（$32\text{ MiB}$）。反过来用 $64$ 行一验就破绽百出：若每卡真只拿 $64$ 行，只在 4 卡组内做 <code>AllGather_Y</code> 最多只能拼出 $64 \times 4 = 256$ 行，根本凑不出 2048 行！要想分给全 32 张卡，记法必须写成 $A[E_{XY}, F]$。</p>
 
+        <div class="viz-lab" data-viz="mesh-lab"></div>
+
         <h3 id="four-collectives">四大集合通信原语与矩阵视角下 AllGather vs. All-to-All<a class="anchor" href="#four-collectives" aria-hidden="true">#</a></h3>
         <p>集合通信（Collectives）的 <em>All</em> 指参与某条通信轴的全部设备（如同一个 $X$ 坐标下的 4 张 $Y$ 轴卡）。快速辨别四兄弟，只需盯紧两句话：<strong>数据要不要按位置求和？做完每卡拿到完整还是切片？</strong></p>
         <div class="table-wrap">
@@ -446,6 +449,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))
         </ol>
         <p><strong>Collective Matmul 计算通信重叠：</strong>无论是情形 2 前置 <code>AllGather</code> 还是情形 3 后置 <code>ReduceScatter</code>，工业界都不会傻等整张权重传完才算——而是把环上通信与分块乘加交织成流水线（算第 $k-1$ 块分片的同时，底层环路已经在传第 $k$ 块），彻底榨干 Tensor Core 利用率。</p>
 
+        <div class="viz-lab" data-viz="ring-matmul-lab"></div>
+
         <h2 id="data-parallel">第三部分：数据并行——从 DP、DDP 源码引擎到 ZeRO / FSDP<a class="anchor" href="#data-parallel" aria-hidden="true">#</a></h2>
 
         <h3 id="dp-ddp-internals">DP 瓶颈与 DDP Reducer、反向 Hook 及分桶异步机制<a class="anchor" href="#dp-ddp-internals" aria-hidden="true">#</a></h3>
@@ -509,6 +514,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))
         </div>
         <p>留意为什么 ZeRO-1 和 ZeRO-2 的总通信量同样只是 $2\Psi$：一次 <code>AllReduce</code> 本就拆成 $\text{ReduceScatter}(1\Psi) + \text{AllGather}(1\Psi)$，ZeRO-1/2 只不过把本来用来广播完整梯度的后半段 $1\Psi$ <code>AllGather</code>，延迟到每卡先更新完各自那份 $1/N$ 参数后，再改发最新权重！只有 ZeRO-3 需要在反向再临时取回权重而多出一趟 $1\Psi$ 的 <code>AllGather</code>（PyTorch FSDP 通过在算第 $l$ 层的同时提前 Pre-fetch 异步拉取第 $l+1$ 层权重来完全掩盖这额外一半通信）。</p>
         <p><strong>ZeRO-R（剩余状态三件套优化）：</strong>把静态权重砍成 $1/N$ 后，残余显存会迅速成为主要矛盾。ZeRO-R 给出了三大补充手段：(1) <strong>$P_a$（分区激活检查点）</strong>将重计算检查点里的激活值切分到模型并行卡上，按 TP 维度等比压缩激活显存（Sequence Parallelism 的先驱）；(2) <strong>$C_B$（固定上限临时缓冲区）</strong>限制通信缓存上限不随层宽膨胀而突发 OOM；(3) <strong>$M_D$（动态显存碎片整理）</strong>在运行期主动整并长生命周期的激活检查点与短命临时张量，挽回 CachingAllocator 留下的碎裂空间。</p>
+
+        <div class="viz-lab" data-viz="zero-lab"></div>
 
         <figure>
             <img src="../fig-dp-fsdp.svg" alt="上栏对比两张 GPU 上用 g0=[1,2] 和 g1=[3,4] 运行 DDP AllReduce 与 ZeRO-3/FSDP 层级 AllGather + ReduceScatter 生命周期；下栏展示 N=8 时四阶段显存压缩比例。" width="1600" height="780" loading="lazy">
@@ -576,6 +583,8 @@ class _ReduceFromModelParallelRegion(torch.autograd.Function):
         </ul>
         <p>正因为 TP 的每层 4 次同步 <code>AllReduce</code> 死卡在激活计算的关键路径上，完全无法像 DDP 那样靠异步桶藏进反向里，跨节点走网卡延迟会立刻拖垮整机——因此工程最佳实践始终将 $\text{TP} \le 8$ 锁在机内 NVSwitch 内。</p>
 
+        <div class="viz-lab" data-viz="tp-lab"></div>
+
         <h2 id="pipeline-parallel">第五部分：流水线并行——GPipe 微批次、重计算与 1F1B<a class="anchor" href="#pipeline-parallel" aria-hidden="true">#</a></h2>
 
         <h3 id="gpipe-schedule-memory">气泡率公式推导、Re-materialization 显存公式与 1F1B 演进<a class="anchor" href="#gpipe-schedule-memory" aria-hidden="true">#</a></h3>
@@ -592,6 +601,8 @@ class _ReduceFromModelParallelRegion(torch.autograd.Function):
             </li>
         </ul>
         <p><strong>从 GPipe 演进到 1F1B 与 Interleaved 1F1B：</strong>即使开启重计算，GPipe 依然要先把所有 $M$ 个微批次的边界输入攒到显存里才开始反向，内存峰值仍跟微批数 $\mathcal{O}(M)$ 绑死。更晚近的 <strong>1F1B（PipeDream-Flush）</strong>在流水线打满之后严格按“算 1 步前向、立刻算 1 步反向、随手释放激活”交替推进——气泡率同为 $\frac{P-1}{M+P-1}$，但显存里同时滞留的微批次上限彻底降为阶段数 $\mathcal{O}(P)$，不再怕把 $M$ 调大！Megatron 的 <strong>Interleaved 1F1B</strong> 更进一步把同一阶段的连续层再拆成 $v$ 份跨卡交错排列，以 $v\times$ 极小的 P2P 通信交换，把气泡直接压缩至 $\frac{P-1}{vM + P - 1}$。实战中仍需注意 Embedding / 词表输出头容易造成首尾 Stage 负载略重，往往需要适当减配首尾分配的 Transformer 层数来对齐步调。</p>
+
+        <div class="viz-lab" data-viz="pipeline-lab"></div>
 
         <figure>
             <img src="../fig-pp-gpipe.svg" alt="P=4 时上方对比朴素串行 75% 气泡，下方展示 GPipe 切出 4 份微批次 F0..F3 与 B3..B0 使气泡降至 42.9%。" width="1600" height="700" loading="lazy">
@@ -651,6 +662,8 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
             <li><strong>全局 <code>DP 组</code>（规模 8：<code>{0..7}</code>）：</strong>其余一切非专家共享参数继续享受 8 卡全量 <code>DP</code> 同步梯度。</li>
         </ul>
         <p>在 <code>deepspeed.moe.utils</code> 源码里，<code>split_params_into_different_moe_groups_for_optimizer()</code> 负责扫描参数，把带 MoE 标志的权重剔出默认全局 DP 同步列表并单独挂进各自对应的 <code>EDP</code> 参数组中，最后还可以往每个专家 FFN 内部继续叠一层机内 <code>TP</code>，让全集群严格满足 $\text{world\_size} = \text{PP} \times \text{DP} \times \text{TP}$ 且 $\text{DP} = \text{EP} \times \text{EDP}$。</p>
+
+        <div class="viz-lab" data-viz="moe-lab"></div>
 
         <figure>
             <img src="../fig-moe-alltoall.svg" alt="左栏用 a, b, c, d 展示两卡 MoE 两次 All-to-All 路由全流程，右栏展示 8 卡上 DP(8) = EP(4) x EDP(2) 如何将共享 Attention 同步与独立专家副本同步干净拆开。" width="1600" height="760" loading="lazy">
@@ -794,6 +807,7 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
 
 <script src="../../../assets/vendor/katex/katex.min.js"></script>
 <script src="../../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../../assets/js/distributed-viz.js?v=20261121.5"></script>
 <script src="../../../assets/js/blog-post.js?v=20261121.4"></script>
 </body>
 </html>
