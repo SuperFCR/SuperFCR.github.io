@@ -1042,3 +1042,16 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
     .paginav .next { text-align: left; }
     .back-top { right: 16px; bottom: 16px; }
 }
+
+/* Self-hosted KaTeX formulas */
+.post-content .katex { font-size: 1.03em; }
+.post-content .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.35rem 0;
+    margin: 1.15em 0;
+    -webkit-overflow-scrolling: touch;
+}
+.post-content .katex-display > .katex { font-size: 1.05em; }
+.post-content td .katex,
+.post-content th .katex { font-size: 0.95em; }
