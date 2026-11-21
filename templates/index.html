@@ -977,8 +977,10 @@
                 line-height: 1.55;
                 text-align: left;
             }
-            /* Seven 38px icons stay on one row down to 360px screens. */
-            .social-links { gap: 7px; }
+            /* Eight 34px icons stay on one row down to 360px screens. */
+            .social-links { gap: 6px; }
+            .social-icon { width: 34px; height: 34px; }
+            .social-icon svg { width: 16px; height: 16px; }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
             .education-item {
@@ -1143,6 +1145,7 @@
                     <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.scholar}}" data-analytics-event="profile_link_click" data-analytics-channel="scholar">{{{icons.googlescholar}}}<span class="social-label">{{ui.scholar}}</span></a>
                     <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.github}}" data-analytics-event="profile_link_click" data-analytics-channel="github">{{{icons.github}}}<span class="social-label">{{ui.github}}</span></a>
                     <a href="{{personal.cv}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.cv}}" data-analytics-event="profile_link_click" data-analytics-channel="cv">{{{icons.cv}}}<span class="social-label">{{ui.cv}}</span></a>
+                    <a href="{{personal.blog}}" class="social-icon" title="{{ui.blog}}" data-analytics-event="profile_link_click" data-analytics-channel="blog">{{{icons.blog}}}<span class="social-label">{{ui.blog}}</span></a>
                     {{#each personal.social}}
                     {{#if qr}}
                     <span class="social-item">

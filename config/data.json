@@ -24,6 +24,7 @@
     "googleScholar": "https://scholar.google.com/citations?user=Thyo5v4AAAAJ&hl=en",
     "github": "https://github.com/SuperFCR",
     "cv": "./assets/files/ChaoranFeng_CV.pdf",
+    "blog": "./blogs/",
     "social": [
       {"type": "x", "url": "https://x.com/StarFalcary"},
       {"type": "xiaohongshu", "qr": "./assets/imgs/xiaohongshu-qr.png", "account": "6939187440"},
