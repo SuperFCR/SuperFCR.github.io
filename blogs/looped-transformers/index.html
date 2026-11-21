@@ -56,7 +56,7 @@
         <h1 class="post-title">Looped Transformers: Compute-Matched Scaling, Training Gradients, and Internal Circuits</h1>
         <div class="post-meta">
             <span>November 21, 2026</span>
-            <span>15 min read</span>
+            <span>17 min read</span>
             <span>Chaoran Feng</span>
         </div>
     </header>
@@ -149,8 +149,8 @@
         </ul>
 
         <figure>
-            <img src="./fig-smelt-arch.svg" width="1400" height="640" alt="SMELT compute-matched architecture diagram: side-by-side comparison of 12-layer Baseline vs 12-to-18-executed SMELT MoE stack (H 1280 to 1056, experts 192 to 288) and internal Pre-Norm layer with 1/r residual scaling." loading="lazy">
-            <figcaption>Fig. 2. SMELT's three-budget equalization across the layer stack (left, 200M $S \approx 95\%$) and sublayer $1/r$ residual scaling inside the shared middle block (right)<a class="cite" href="#ref-1">[1]</a>. <a href="./fig-smelt-arch.svg">Open full size</a></figcaption>
+            <img src="./fig-smelt-arch.webp" width="1440" height="1166" alt="Original SMELT architecture diagram showing 12 layers with the middle 50% repeated twice, dashed red outlines indicating narrowed hidden width to match FLOPs, added red experts inside the MoE FFN to restore parameter capacity, and 1/2 residual multipliers on both Attention and MoE updates." loading="lazy">
+            <figcaption>Fig. 2. Original SMELT architecture: middle 50% of layers loop twice while hidden width narrows (dashed red outlines) to match FLOPs, added MoE experts (red) restore total parameters, and looped sublayer residuals scale by $1/2$. Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
         </figure>
 
         <p>Three systematic ablations at 200M lock the recipe<a class="cite" href="#ref-1">[1]</a>: (1) looping the <strong>middle 50%</strong> ($L4\text{–}9$ of 12, yielding 18 executed layers) beats full-stack looping ($1.9257$ vs. $1.9322$ validation loss at $S\approx 85\%$, and $1.8517$ vs. $1.8601$ at $S\approx 95\%$); (2) the looped model sustains a larger effective depth-to-width ratio ($12/18$ beats $8/12$, $10/15$, and $14/21$ on every metric, aided by multi-depth gradient signals back to the same shared block); and (3) <strong>two passes win</strong> ($1.9257$, DCLM Core $27.57$) over three ($1.9385$) or four ($1.9360$), because more passes under a strict FLOP cap force the model too thin.</p>
@@ -162,14 +162,25 @@
         \mathcal{L}^*(C, S) &amp;= E + f(A,K,a,b,c,S)\,C^{-\gamma}, \qquad \gamma = \frac{ac}{a+c}.
         \end{aligned}$$
         <p>On the sparse grid ($S \approx 85\text{–}97\%$), SMELT achieves both a steeper capacity exponent ($a=0.3892$ vs. $0.3703$) and steeper data exponent ($c=0.7011$ vs. $0.6594$), lifting the frontier exponent by $+5.5\%$ ($\gamma_{\text{SMELT}} = 0.250$ vs. $\gamma_{\text{Base}} = 0.237$). Holding validation loss fixed on the frontier, SMELT saves <strong>6.8–10.0% training compute at $10^{20}$ FLOPs</strong> and <strong>14.7–18.0% at $10^{21}$ FLOPs</strong> (extrapolating to $19.6\text{–}23.5\%$ at $10^{22}$), while keeping virtually the same optimal tokens-per-dense-equivalent-parameter (~56–91 TPP).</p>
+
+        <figure>
+            <img src="./fig-smelt-scaling.webp" width="1480" height="787" alt="Two-panel SMELT scaling result: left shows compute-optimal validation loss vs training compute at S=97% with inset highlighting 14.7% CE gain at 10^21 FLOPs; right shows matched-budget benchmark radar where SMELT leads Baseline across Knowledge, MMLU, Language, Commonsense, Reading, and Symbolic categories." loading="lazy">
+            <figcaption>Fig. 3. SMELT compute-optimal scaling frontier at $S \approx 97\%$ (left, zooming into $14.7\%$ compute-efficiency gain at $10^{21}$ FLOPs) and matched-budget benchmark radar across five capability axes (right). Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
+        </figure>
+
         <p>Crucially, downstream gains exceed what lower validation loss alone predicts<a class="cite" href="#ref-1">[1]</a>. Across 96 matched pairs, SMELT wins <strong>96/96</strong> on DCLM Completion, <strong>83/96</strong> on DCLM Core, and <strong>29/30</strong> on above-chance MMLU. Fitting a Baseline loss-to-score sigmoid shows positive residuals that grow with scale (up to $+12.3\text{ millinats}$ on Completion and $+1.2\text{ pp}$ on Core at 1.6B, where Symbolic Problem Solving overtakes Reading Comprehension at $+1.9\text{ pp}$). Per-domain CE Gain at $10^{21}$ FLOPs peaks on structured domains—<strong>Code ($20.4\%$)</strong>, Finance ($16.8\%$), Math/STEM ($16.6\%$) vs. Web ($14.8\%$)—concentrates on long documents ($1.52\times$ stronger on $512\text{–}4096$ vs. $32\text{–}256$ tokens, whereas adding Baseline parameters or experts stays flat at $0.98\times$ and $0.88\times$), and doubles from $0.9\text{ pp}$ at $0$-shot to $1.9\text{ pp}$ with few-shot demonstrations (reaching $29.8\%$ vs. $26.4\%$ on 32-shot Dyck Languages).</p>
+
+        <figure>
+            <img src="./fig-smelt-length-icl.webp" width="1440" height="407" alt="Three-panel plot of SMELT beyond-loss gains: (a) normalized gain increasing with sample length up to 4096 tokens while More experts and More parameters remain near 1.0, (b) mean accuracy across 16 few-shot ICL tasks, and (c) Dyck Languages accuracy from 0-shot to 32-shot." loading="lazy">
+            <figcaption>Fig. 4. Beyond-loss gains of SMELT: (a) normalized gain rising with sample length ($1.52\times$ on long contexts vs. flat controls adding experts or parameters), (b) mean accuracy across 16 few-shot ICL tasks, and (c) Dyck Languages up to 32-shot. Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
+        </figure>
 
         <h3 id="smelt-mechanisms">Inside the Second Pass<a class="anchor" href="#smelt-mechanisms" aria-hidden="true">#</a></h3>
         <p>Probing 1M validation tokens across all 16 grid cells reveals a consistent internal mechanism—the second visit operates as an iterative refinement pass along coordinates discovered on visit 1 rather than overwriting or repeating the same function<a class="cite" href="#ref-1">[1]</a>:</p>
 
         <figure>
-            <img src="./fig-smelt-mechanisms.svg" width="1400" height="620" alt="Four mechanistic probes of SMELT Visit 2: 2 to 3 of 8 experts reused at high sparsity, residual updates 1.2 to 3.5x larger and aligned at 0.56 cosine, Q and K cosine 0.89 to 0.93 vs V 0.65 to 0.74 with 56 to 66% top-8 token overlap, and Dyck BOS sink dropping from 60% to 2%." loading="lazy">
-            <figcaption>Fig. 3. Four mechanistic signatures inside SMELT's second pass on 1M validation tokens and Dyck-language tasks<a class="cite" href="#ref-1">[1]</a>. <a href="./fig-smelt-mechanisms.svg">Open full size</a></figcaption>
+            <img src="./fig-smelt-qkv.webp" width="1440" height="819" alt="Six 4x4 heatmaps over model scales (100M to 1.6B) and sparsity S (0% to 97%) showing high cross-visit cosine similarity for Pre-Q/K/V X (0.84-0.93), Q (0.89-0.93), and K (0.90-0.93), versus lower similarity for V (0.65-0.74), Context PV (0.56-0.69), and Output O (0.49-0.64)." loading="lazy">
+            <figcaption>Fig. 5. Cross-visit cosine similarity across all 16 scale $\times$ sparsity cells: queries ($Q$) and keys ($K$) remain tightly aligned ($0.89\text{–}0.93$) while values ($V$), attended context ($PV$), and attention outputs ($O$) diverge substantially. Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
         </figure>
 
         <ul>
@@ -179,6 +190,11 @@
             <li><strong>Attention sinks collapse:</strong> in a 1.6B Dyck head ($k=4$), BOS sink mass falls from <strong>60% to 2%</strong> while attention on demonstration answers jumps from <strong>24% to 85%</strong>; on general text, Visit 2 broadly reduces sinks across heads, reversing the usual depth-increasing sink trend.</li>
         </ul>
 
+        <figure>
+            <img src="./fig-smelt-sink.webp" width="1440" height="750" alt="Side-by-side heatmap of general-text attention sink probability across looped physical layers 8-22 and attention heads 0-21: Visit 1 shows strong yellow 0.8-1.0 sink concentration in deeper layers 17-22, which Visit 2 suppresses broadly." loading="lazy">
+            <figcaption>Fig. 6. General-text attention sink probability per looped physical layer and head: Visit 2 broadly suppresses the high BOS sink concentration seen in Visit 1 (especially physical layers 17–22). Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
+        </figure>
+
         <h2 id="truncate-or-not">Truncate or Not? Training Loops Under Compute Budgets<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
 
         <h3 id="tbp-arch">Input Re-Injection and (T, B) FLOP Accounting<a class="anchor" href="#tbp-arch" aria-hidden="true">#</a></h3>
@@ -186,18 +202,13 @@
         $$s_0 = \mathcal{P}(x),\qquad s_t = \Phi_\theta(s_{t-1}; s_0) = \operatorname{RMSNorm}\!\Big(\mathcal{R}\!\big(W_{\text{inj}}[s_0;\,s_{t-1}]\big)\Big),\qquad p = \mathcal{C}(s_T).$$
 
         <figure>
-            <img src="./fig-tbp-arch.svg" width="1400" height="640" alt="Truncate or Not? Prelude-Recurrent-Coda architecture drawn for (T, B) = (4, 2): forward-only Loops 1-2 below the stop-gradient barrier on s_{T-B}, backprop-active Loops 3-4 plus s0 input injection feeding Prelude gradients, internal W_inj + QK-norm Attention + ReLU^2 FFN loop anatomy, and FLOP ledger 6 N_once + (2T + 4B) N_rec." loading="lazy">
-            <figcaption>Fig. 4. Architecture and FLOP accounting of <em>Truncate or Not?</em> for $(T, B) = (4, 2)$: gradient truncation after loop $T-B$, internal input-injection loop block $\Phi_\theta$, and per-component training FLOPs<a class="cite" href="#ref-2">[2]</a>. <a href="./fig-tbp-arch.svg">Open full size</a></figcaption>
+            <img src="./fig-tbp-arch.webp" width="1440" height="688" alt="Original architecture diagram of Truncate or Not? showing (a) training step for (T, B) = (4, 2) with stop gradient on s_{T-B} and input s0 injected into every loop, (b) shared loop block R with W_inj[s0; s_{t-1}], QK-norm Attention, ReLU^2 FFN, and trailing RMSNorm, and (c) forward/backward FLOPs totaling 6 N_once + (2T + 4B) N_rec." loading="lazy">
+            <figcaption>Fig. 7. Original architecture and training-compute accounting of <em>Truncate or Not?</em> for $(T, B) = (4, 2)$: (a) unrolled forward/backward pass with stop-gradient on $s_{T-B}$ and $s_0$ injection to every loop, (b) shared loop block $\mathcal{R}$ with $W_{\text{inj}}[s_0; s_{t-1}]$, and (c) per-component FLOPs $6N_{\text{once}} + (2T+4B)N_{\text{rec}}$. Source: Xiong, Chen et al., <em>Truncate or Not?</em><a class="cite" href="#ref-2">[2]</a>.</figcaption>
         </figure>
 
         <p>Three structural details govern how gradients flow. First, every loop re-injects $s_0$ via $W_{\text{inj}} \in \mathbb{R}^{d\times 2d}$ initialized to $[I,\,0]$ (starting purely from Prelude, then learning to blend recurrent state), while a post-block RMSNorm keeps state scale bounded across $T$ passes. Second, in a $(T, B)$ schedule ($1 \le B \le T$), the state $s_{T-B}$ is detached after $T-B$ forward-only passes, leaving only the final $B$ loops and the Coda in the backward graph—while <strong>Prelude still receives gradients directly through $s_0$ injection into the last $B$ loops</strong>. Third, at standard matrix accounting of $2$ FLOPs/param/token forward and $4$ backward, recurrent compute scales with $T + 2B$:</p>
         $$C \simeq 6 D \cdot N_{\text{comp}}, \qquad N_{\text{comp}} = N_{\text{once}} + \frac{T + 2B}{3} N_{\text{rec}}.$$
         <p>Dropping two backward passes saves $8 N_{\text{rec}}$ FLOPs, which buys exactly four forward passes: $(T, B) = (8, 2)$ and $(4, 4)$ both spend $24 N_{\text{rec}}$ loop FLOPs per token ($T + 2B = 12$), and $(4, 1)$ matches $(2, 2)$ with $T + 2B = 6$. From a fixed-point perspective<a class="cite" href="#ref-2">[2]</a>, truncating to $B$ loops sums only the first $B$ terms of the Neumann series $(I - \mathcal{J}^\star)^{-1}\partial_\theta\Phi^\star \approx \sum_{k=0}^{B-1}(\mathcal{J}^\star)^k \partial_\theta\Phi^\star$, injecting cumulative bias when $T$ is small (far from a contractive fixed point) or $B \lt T$.</p>
-
-        <figure>
-            <img src="./fig-bptt-tradeoff.svg" width="1400" height="640" alt="Two-panel plot showing stacked forward and backward FLOPs for (8,2) and (4,4) both equaling 24 N_rec with (4,4) winning by 0.0136 nats at 240M, and the bounded effective-parameter multiplier g(T,B) curve for full BPTT versus truncated BPTT and untied copies." loading="lazy">
-            <figcaption>Fig. 5. Left: equal-compute comparison showing $(4,4)$ beating $(8,2)$ at identical $24 N_{\text{rec}}$ loop cost. Right: fitted effective-size multiplier $g(T,B)$ saturating below untied copies while penalizing gradient truncation ($q \approx 1.02 \gg 2p \approx 0.47$)<a class="cite" href="#ref-2">[2]</a>. <a href="./fig-bptt-tradeoff.svg">Open full size</a></figcaption>
-        </figure>
 
         <h3 id="tbp-law">Effective Parameter Law and Three Regimes<a class="anchor" href="#tbp-law" aria-hidden="true">#</a></h3>
         <p>Extending a coupled size–data scaling law with a bounded multiplicative <strong>looping coefficient</strong> $g(T, B)$ fits 230 training configurations with $R^2 = 0.9992$ and in-sample RMSE $6.14 \times 10^{-3}$ nats (predicting held-out $(T,B)$ settings at $8.67\times 10^{-3}$ RMSE, nearly half the $1.65\times 10^{-2}$ error of an unbounded power-law gain)<a class="cite" href="#ref-2">[2]</a>:</p>
@@ -206,6 +217,11 @@
         N_{\text{eff}} &amp;= N_{\text{once}} + g(T,B) N_{\text{rec}}, \qquad g(T, B) = \exp\!\Big[c\,(1 - T^{-p}B^{-q})\Big].
         \end{aligned}$$
         <p>With fitted exponents $c \approx 1.112$, $p \approx 0.237$, and $q \approx 1.022$ (extrapolated ceiling $e^c \approx 3.04$), <strong>$q \gt 2p$ by more than a factor of two</strong>. Minimizing $T^{-p}B^{-q}$ along any equal-compute line $T + 2B = S$ proves (Lemma D.2) that whenever $q \ge 2p$, the unique optimum sits on the boundary $T^* = B^* = S/3$: <strong>backward loops buy more effective parameters per FLOP than forward-only loops</strong>, reversing the apparent paradox from earlier truncation studies.</p>
+
+        <figure>
+            <img src="./fig-tbp-law-parts.webp" width="1440" height="503" alt="Three-panel anatomy of the Truncate or Not? scaling law: (a) looping coefficient g(T, T) saturating toward fitted ceiling ~3.04, (b) truncation discounting g(T, B) as B/T decreases, and (c) effective parameter multiplier across (T, B) settings from 1.00 for (1,1) to 1.91 for (8,8)." loading="lazy">
+            <figcaption>Fig. 8. Anatomy of the bounded looping scaling law: (a) full-BPTT looping coefficient $g(T,T)$ saturating toward ceiling $e^c \approx 3.04$, (b) truncation discount as trained fraction $B/T$ drops, and (c) effective parameter multiplier across $(T, B)$ schedules. Source: Xiong, Chen et al., <em>Truncate or Not?</em><a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
 
         <div class="table-wrap">
             <table>
@@ -241,6 +257,11 @@
             </table>
         </div>
 
+        <figure>
+            <img src="./fig-tbp-frontier.webp" width="1440" height="624" alt="Parameter reduction rate versus relative training compute at equal validation loss: full BPTT schedules (1,1), (2,2), (4,4), (8,8), (16,16) form the upper Pareto frontier strictly above truncated settings such as (4,2), (8,2), and (16,4), with (2,2) highlighted." loading="lazy">
+            <figcaption>Fig. 9. Parameter reduction rate versus relative training compute at equal validation loss: full BPTT ($B=T$) forms the Pareto frontier dominating all truncated schedules, with $(2,2)$ capturing most of the weight savings at minimal extra compute. Source: Xiong, Chen et al., <em>Truncate or Not?</em><a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
+
         <div class="callout callout-tip">
             <p><strong>Connecting Dense (Truncate or Not?) vs. MoE (SMELT):</strong> Why does <em>Truncate or Not?</em> find unlooped $(1,1)$ ahead of looping on free-size dense models, while <em>SMELT</em> beats unlooped MoE by 6.8–18.0% FLOPs? They agree more than they disagree! Both conclude independently that <strong>$r = 2$ with full BPTT</strong> is the sweet spot. In dense models, weight tying forces $g(2,2) \approx 1.910 \lt 2$ without freeing capacity for extra weights, so 2 untied copies win purely on loss/FLOP. SMELT breaks that trade-off by spending the narrowed width's parameter budget on <strong>more sparse MoE experts</strong> while dynamic routing divergence across visits unlocks extra expressivity.</p>
         </div>
@@ -252,7 +273,7 @@
 
         <figure>
             <img src="./fig-inkling-arch.webp" width="1147" height="1371" alt="Original Goodfire overview of Inkling 2 Mini's three-loop 24-layer architecture: Block 1 (L1-6) runs once, core Blocks 2-3 (L7-18) loop three times with intra-loop depth-wise attention residuals (black arrows) and inter-loop cross-loop attention (orange/green into purple mixers), and Block 4 (L19-24) runs once to decode output." loading="lazy">
-            <figcaption>Fig. 6. Overview of Inkling 2 Mini's 24-layer / 4-block architecture unrolled across three loops, separating intra-loop depth-wise attention residuals from inter-loop cross-loop attention. Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
+            <figcaption>Fig. 10. Overview of Inkling 2 Mini's 24-layer / 4-block architecture unrolled across three loops, separating intra-loop depth-wise attention residuals from inter-loop cross-loop attention. Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
         </figure>
 
         <p>Architecturally, Inkling 2 Mini replaces the single cumulative residual stream with <strong>block-level Attention Residuals</strong><a class="cite" href="#ref-8">[8]</a> plus a cross-loop channel<a class="cite" href="#ref-4">[4]</a>. Each block $i$ maintains only a running sum $\mathbf{v}_i$ of its 6 constituent Attention and MoE writes ($\mathbf{v}_0$ is the normalized token embedding). Each sublayer computes a depth-wise softmax mixture $\mathbf{x} = \sum_j \alpha_j \hat{\mathbf{v}}_j$ over available current-loop blocks, and on loops $t \ge 2$ each core layer's four sublayer inputs ($s \in \{Q, K, V, \text{MoE}\}$) read a cross-loop message via learned query $\mathbf{u}_s$ over the <em>previous</em> loop's Blocks 2 and 3:</p>
@@ -264,7 +285,7 @@
 
         <figure>
             <img src="./fig-inkling-dataflow.svg" width="1400" height="620" alt="Inkling 2 Mini Loop 2 Layer 13 dataflow diagram showing depth-wise attention over v0, v1, and v2[2] combined via channel-gated fusion x'=kappa*x+gamma*m with cross-loop readers reading Loop 1 Block 3 tagged by Layer 18 on coordinate d2027." loading="lazy">
-            <figcaption>Fig. 7. Dual-path Attention Residuals inside Loop 2, Layer 13 of Inkling 2 Mini and the three-loop lifecycle of coordination dimension $d_{2027}$<a class="cite" href="#ref-4">[4]</a>. <a href="./fig-inkling-dataflow.svg">Open full size</a></figcaption>
+            <figcaption>Fig. 11. Dual-path Attention Residuals inside Loop 2, Layer 13 of Inkling 2 Mini and the three-loop lifecycle of coordination dimension $d_{2027}$<a class="cite" href="#ref-4">[4]</a>. <a href="./fig-inkling-dataflow.svg">Open full size</a></figcaption>
         </figure>
 
         <h3 id="inkling-coord">Weight Tagging and the d2027 Switch<a class="anchor" href="#inkling-coord" aria-hidden="true">#</a></h3>
@@ -277,7 +298,7 @@
 
         <figure>
             <img src="./fig-inkling-coord2027.webp" width="1600" height="663" alt="Original Goodfire chart of mean attention and MoE writes to coordinate 2027 across Block 1, Loop 1, Loop 2, Loop 3, and Block 4, showing strong positive spikes at Layer 18 in Loops 1 and 2 and a negative spike in Loop 3." loading="lazy">
-            <figcaption>Fig. 8. Mean Attention and MoE writes to outlier coordinate $d_{2027}$ across loops: the same physical Layer 18 writes strongly positive in Loops 1 and 2 before erasing the signal on Loop 3 prior to the Coda. Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
+            <figcaption>Fig. 12. Mean Attention and MoE writes to outlier coordinate $d_{2027}$ across loops: the same physical Layer 18 writes strongly positive in Loops 1 and 2 before erasing the signal on Loop 3 prior to the Coda. Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
         </figure>
 
         <h3 id="inkling-decode">Decoding Loops, Reasoning Bounds, and Monitorability<a class="anchor" href="#inkling-decode" aria-hidden="true">#</a></h3>
@@ -285,7 +306,7 @@
 
         <figure>
             <img src="./fig-inkling-lenses.webp" width="1600" height="1102" alt="Original Goodfire chart comparing Logit lens, Tuned lens, Jacobian lens, and Coda lens across all layers and three loops on final top-1 in lens top-50 accuracy and probability mass." loading="lazy">
-            <figcaption>Fig. 9. Intermediate decoding across Inkling 2 Mini's loops (Logit, Tuned, Jacobian, and Coda lenses on 1,250 held-out FineWeb documents). Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
+            <figcaption>Fig. 13. Intermediate decoding across Inkling 2 Mini's loops (Logit, Tuned, Jacobian, and Coda lenses on 1,250 held-out FineWeb documents). Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
         </figure>
 
         <p>Using both Inkling 2 Mini and its research sibling <code>TML-d24-varloop-research</code> (trained on 1–5 passes, RL at 3 passes), Thinking Machines also pinned down what extra loops do—and do not—buy at inference time<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>:</p>

@@ -161,6 +161,29 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 node -e "require('sharp')('in.png').resize({ width: 1800 }).webp({ quality: 85 }).toFile('blogs/<slug>/fig-method.webp')"
 ```
 
+### 拉取论文原图（优先 arXiv HTML）
+
+- **优先查 HTML 版而非截 PDF**：对于 arXiv 论文，优先访问 `https://arxiv.org/html/<id>`，直接从页面 `<object type="image/svg+xml" data="...">` 或 `<img>` 拉取作者原始矢量 SVG / 高清位图；官方研究博客（如 Goodfire、Thinking Machines）同样直接抓取原图，不依赖本地 PDF 渲染工具且清晰度高于 PDF 截图。
+- **一律自托管转本地 WebP，不要外链原站，也不要把 arXiv 原 SVG 直接当 `<img>`**：
+  - 禁止外链外部图片 URL（防盗链、链接失效、国内访问不稳定及深色模式不可控）。
+  - arXiv HTML 导出的 `.svg` 常带 `pt` 单位（如 `width="480pt"` 会导致 `check.py` 无法解析尺寸）、体积常超 300KB，且往往没有白底（深色模式下对比度变差），因此统一转成白底本地 `.webp` 放入 `blogs/<slug>/`。
+- **转换配方（高 DPI 栅格化 + 白底 + 20px 均匀留白）**：
+
+```bash
+FONTCONFIG_FILE=$HOME/.local/lib/chromium-deps/fonts.conf node -e "
+require('sharp')('paper-fig.svg', { density: 288 })
+  .flatten({ background: '#ffffff' })
+  .resize({ width: 1400, withoutEnlargement: true })
+  .extend({ top: 20, bottom: 20, left: 20, right: 20, background: '#ffffff' })
+  .webp({ quality: 86, effort: 5 })
+  .toFile('blogs/<slug>/fig-example.webp')
+"
+```
+
+- 若单张体积大于 250KB，可降到 `quality: 80`；需要把论文多张原图并排拼合时，可先分别 `flatten` + `resize` 成 PNG buffer，再用 `sharp({ create: ... }).composite([...])` 拼到同一张白底画布后再输出 `.webp`。
+- 转换后务必实际看图核对有无缺字、公式乱码或裁边；若复杂 SVG 被 `librsvg` 漏渲染元素，改用 `~/.local/lib/chromium-deps/shot.sh` 截图后再用 `sharp` 压成 `.webp`。
+- 论文原图转出的 `.webp` 必须在图注注明出处（`Source: ...` / `来源：...`），且不要加 `.svg` 专用的 `Open full size` / `查看原图` 链接。
+
 ## 封面
 
 - 固定 **880×495（16:9）** 的 WebP，放在 `blogs/<slug>/cover.webp`。列表页按 16:9 裁切显示，尺寸不对会被裁掉边缘，脚本也会报错。
