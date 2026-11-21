@@ -66,20 +66,20 @@
         <div class="inner">
         <ul>
             <li><a href="#overview">三种循环架构一览</a></li>
-            <li><a href="#smelt">等算力 MoE 循环：SMELT</a>
+            <li><a href="#smelt">SMELT：等算力 MoE 循环</a>
                 <ul>
                     <li><a href="#smelt-recipe">三项预算同时对齐的配方</a></li>
                     <li><a href="#smelt-scaling">缩放律与超越 Loss 的下游收益</a></li>
                     <li><a href="#smelt-mechanisms">第二遍循环到底在算什么</a></li>
                 </ul>
             </li>
-            <li><a href="#truncate-or-not">截断还是完整反传：循环模型的训练算力账</a>
+            <li><a href="#truncate-or-not">Truncate or Not?：梯度截断与训练算力账</a>
                 <ul>
                     <li><a href="#tbp-arch">输入重注入与 (T, B) 算力核算</a></li>
                     <li><a href="#tbp-law">有效参数缩放律与三类决策场景</a></li>
                 </ul>
             </li>
-            <li><a href="#inkling">工程落地与内部电路：Inkling 2 Mini</a>
+            <li><a href="#inkling">Inkling 2 Mini：生产级循环与内部电路</a>
                 <ul>
                     <li><a href="#inkling-arch">注意力残差与跨循环数据流</a></li>
                     <li><a href="#inkling-coord">权重打标与异常维度 d2027 开关</a></li>
@@ -138,15 +138,21 @@
             </table>
         </div>
 
-        <h2 id="smelt">等算力 MoE 循环：SMELT<a class="anchor" href="#smelt" aria-hidden="true">#</a></h2>
+        <h2 id="smelt">SMELT：等算力 MoE 循环<a class="anchor" href="#smelt" aria-hidden="true">#</a></h2>
 
         <h3 id="smelt-recipe">三项预算同时对齐的配方<a class="anchor" href="#smelt-recipe" aria-hidden="true">#</a></h3>
-        <p>在常规 12 层模型里把中间 6 层重复跑两遍（实算 18 层），静态参数没变，但单 token FLOPs 和 KV cache 会直接涨一半。此前在稠密模型上做等 FLOPs（Iso-Depth）对比时，为了扣回算力必须砍掉独立参数，导致 $r$ 次循环只相当于 $r^{0.46}$ 份独立层的容量，最终输给不循环基线。<strong>SMELT</strong>（Sparse MoE Transformer, middle layers Loop Twice）用稀疏 MoE 的参数–算力解耦把三项预算一次配平<a class="cite" href="#ref-1">[1]</a>：</p>
+        <p>论文 <em lang="en">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</em><a class="cite" href="#ref-1">[1]</a> 直面一个核心难题：在常规 12 层模型里把中间 6 层重复跑两遍（实算 18 层），静态参数没变，但单 token FLOPs 和 KV cache 会直接涨一半。此前在稠密模型上做等 FLOPs（Iso-Depth）对比时，为了扣回算力必须砍掉独立参数，导致 $r$ 次循环只相当于 $r^{0.46}$ 份独立层的容量，最终输给不循环基线。<strong>SMELT</strong>（Sparse MoE Transformer, middle layers Loop Twice）用稀疏 MoE 的参数–算力解耦把三项预算一次配平<a class="cite" href="#ref-1">[1]</a>：</p>
         <ul>
             <li><strong>对齐单 token FLOPs（误差 &lt; 4%）：</strong>主动收窄隐层宽度 $H$（例如 200M、等效稀疏度 $S\approx 95\%$ 档把 $H$ 从 $1280$ 压到 $1056$），抵消多跑一遍中间层增加的计算，单 token 训练算力落在 $1.37\times 10^9$ 对基线 $1.33\times 10^9$（$+2.9\%$）。</li>
             <li><strong>补回总非嵌入参数（误差 &lt; 1%）：</strong>变窄会缩水每个专家的参数，作者保持每层仍只激活 top-8，但把每层专家总数从 $192$ 提到 $288$，总参数精准回到 $3.89\text{B}$ 对 $3.87\text{B}$（$+0.4\%$）。</li>
             <li><strong>对齐 KV cache（误差 &lt; 4%）并做残差缩放：</strong>通过减小 attention head 维度并提高 GQA 分组倍率把 KV 显存拉平；循环区域内的 Attention 和 MoE 残差更新均乘以 $1/r$（$1/2$），防止共享权重连续写入把残差流放大失稳。</li>
         </ul>
+
+        <figure>
+            <img src="../fig-smelt-arch.svg" width="1400" height="640" alt="SMELT 等算力 MoE 架构图：左侧对比 12 层基线与 12 层物理/18 层执行的 SMELT 堆叠（宽度从 1280 缩至 1056、专家从 192 增至 288 以同时对齐 FLOPs、参数量与 KV cache），右侧展示共享层内部的 Pre-Norm 与 1/r 残差缩放结构。" loading="lazy">
+            <figcaption>图 2：SMELT 在模型堆叠（左，200M $S \approx 95\%$ 示例）上的三项预算对齐方式与共享层内部 $1/r$ 残差缩放结构（右）<a class="cite" href="#ref-1">[1]</a>。<a href="../fig-smelt-arch.svg">查看原图</a></figcaption>
+        </figure>
+
         <p>在此配平协议下，200M 上的三组消融锁死了配方<a class="cite" href="#ref-1">[1]</a>：（1）<strong>循环位置</strong>上，只重复中间 50%（第 4–9 层）在 $S\approx 85\%$（$1.9257$ vs. $1.9322$）和 $S\approx 95\%$（$1.8517$ vs. $1.8601$）下均优于全栈循环；（2）<strong>深宽比</strong>上，循环模型的最佳有效深宽比大于基线（物理 12 层 / 实算 18 层赢下全部指标），得益于共享块能从多深度反向路径收梯度；（3）<strong>循环次数</strong>上，算力受限下 <strong>$2\times$ 胜过 $3\times$ 和 $4\times$</strong>（验证 loss $1.9257$ vs. $1.9385 / 1.9360$），跑更多遍会把宽度压得太细。</p>
 
         <h3 id="smelt-scaling">缩放律与超越 Loss 的下游收益<a class="anchor" href="#smelt-scaling" aria-hidden="true">#</a></h3>
@@ -163,7 +169,7 @@
 
         <figure>
             <img src="../fig-smelt-mechanisms.svg" width="1400" height="620" alt="SMELT 第二遍机制四维探针：高稀疏度下 top-8 专家重合约 2-3 个并更换其余专家；残差更新幅度放大 1.2-3.5 倍且与第一遍同层余弦均值 0.56；Q/K 保持 0.89-0.93 高相似度而 V 降至 0.65-0.74 且关注位置重合 56-66%；Dyck 案例中 BOS sink 从 60% 骤降至 2%。" loading="lazy">
-            <figcaption>图 2：SMELT 第二遍循环在专家路由、残差更新、Q/K/V 检索与 Attention Sink 抑制上的四项实证探针<a class="cite" href="#ref-1">[1]</a>。<a href="../fig-smelt-mechanisms.svg">查看原图</a></figcaption>
+            <figcaption>图 3：SMELT 第二遍循环在专家路由、残差更新、Q/K/V 检索与 Attention Sink 抑制上的四项实证探针<a class="cite" href="#ref-1">[1]</a>。<a href="../fig-smelt-mechanisms.svg">查看原图</a></figcaption>
         </figure>
 
         <ul>
@@ -173,18 +179,24 @@
             <li><strong>§6.4 压低 Attention Sink、转向示例答案：</strong>1.6B Dyck 任务中，关键 head 在 BOS 的 sink 权重从 <strong>60% 骤降到 2%</strong>，示例答案上的权重从 <strong>24% 飙升到 85%</strong>；在 1M 通用验证语料上，第二遍同样普遍削弱了各 head 的初始 token 聚集，甚至逆转了常规架构越往深层 sink 越重的趋势。</li>
         </ul>
 
-        <h2 id="truncate-or-not">截断还是完整反传：循环模型的训练算力账<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
+        <h2 id="truncate-or-not">Truncate or Not?：梯度截断与训练算力账<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
 
         <h3 id="tbp-arch">输入重注入与 (T, B) 算力核算<a class="anchor" href="#tbp-arch" aria-hidden="true">#</a></h3>
-        <p>如果说 SMELT 固定在全反传下比较架构，港大 MMLab 与耶鲁的工作<a class="cite" href="#ref-2">[2]</a>则在 FineWeb-Edu 上一口气跑了 <strong>592 次训练</strong>（$58\text{M}\text{–}919\text{M}$ 非嵌入参数），专门回答训练循环模块时「该截断反传还是完整反传」。模型沿用 Huginn<a class="cite" href="#ref-7">[7]</a> 三段式结构（如 240M 为 $3/6/3$ 层，循环 4 遍共执行 $3+4\times 6+3=30$ 层）：</p>
+        <p>论文 <em lang="en">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</em><a class="cite" href="#ref-2">[2]</a>（港大 MMLab 与耶鲁）在 FineWeb-Edu 上一口气跑了 <strong>592 次训练</strong>（$58\text{M}\text{–}919\text{M}$ 非嵌入参数），专门回答训练循环模块时「该截断反传还是完整反传」。模型沿用 <em lang="en">Huginn</em><a class="cite" href="#ref-7">[7]</a> 风格的 <span lang="en">Prelude–Recurrent–Coda</span> 三段式结构（如 240M 为 $3/6/3$ 层，循环 4 遍共执行 $3+4\times 6+3=30$ 层）：</p>
         $$s_0 = \mathcal{P}(x),\qquad s_t = \Phi_\theta(s_{t-1}; s_0) = \operatorname{RMSNorm}\!\Big(\mathcal{R}\!\big(W_{\text{inj}}[s_0;\,s_{t-1}]\big)\Big),\qquad p = \mathcal{C}(s_T).$$
+
+        <figure>
+            <img src="../fig-tbp-arch.svg" width="1400" height="640" alt="Truncate or Not? 的 (T, B) = (4, 2) 完整架构图：左栏展示 Loop 1-2 纯前向与 stop gradient 墙、Loop 3-4 反向回传以及每轮重注入 s0 给 Prelude 回传梯度的旁路；中栏拆解共享循环层内部的 W_inj、[I, 0] 初始化与 QK-norm/ReLU^2 结构；右栏给出各模块前后向 FLOP 账本。" loading="lazy">
+            <figcaption>图 4：<em lang="en">Truncate or Not?</em> 在 $(T, B) = (4, 2)$ 下的计算图、共享循环层内部构造（$W_{\text{inj}}[s_0; s_{t-1}]$）及各模块 FLOP 账本<a class="cite" href="#ref-2">[2]</a>。<a href="../fig-tbp-arch.svg">查看原图</a></figcaption>
+        </figure>
+
         <p>这里有三处关键机制：（1）<strong>每轮重注入 $s_0$：</strong>拼接 $[s_0; s_{t-1}]$ 后用 $W_{\text{inj}}\in\mathbb{R}^{d\times 2d}$ 投回 $d$ 维（初始化为 $[I, 0]$，先吃初始输入再逐步学会融合上一轮状态），末尾 RMSNorm 稳住隐状态尺度；（2）<strong>梯度截断 $(T, B)$：</strong>前向完整跑完 $T$ 轮，但在第 $T-B$ 轮输出 $s_{T-B}$ 上做 <code>detach</code>，只有最后 $B$ 轮和 Coda 进计算图——<strong>但别漏掉旁路</strong>，Prelude 依然会通过最后 $B$ 轮对 $s_0$ 的重注入收到梯度；（3）<strong>算力对称性：</strong>按单轮前向约 $2N_{\text{rec}}$、反向约 $4N_{\text{rec}}$ FLOPs 估算，总计算等效参数为：</p>
         $$C \simeq 6 D \cdot N_{\text{comp}}, \qquad N_{\text{comp}} = N_{\text{once}} + \frac{T + 2B}{3} N_{\text{rec}}.$$
         <p>省 2 轮反向省出的 $8 N_{\text{rec}}$ 恰好够多跑 4 轮前向，因此 <strong>$(8, 2)$ 和 $(4, 4)$ 循环成本完全相等（同为 $24 N_{\text{rec}}$，$T+2B=12$）</strong>，$(4, 1)$ 与 $(2, 2)$ 也完全相等。从不动点理论看<a class="cite" href="#ref-2">[2]</a>，截断 $B$ 步相当于只保留 Neumann 级数 $\sum_{k=0}^{B-1}(\mathcal{J}^\star)^k \partial_\theta\Phi^\star$ 的前 $B$ 项；当总轮数只有 $T=2\text{–}8$、隐状态离收敛不动点尚远时，丢掉前段梯度会在每一步积累偏差。</p>
 
         <figure>
             <img src="../fig-bptt-tradeoff.svg" width="1400" height="640" alt="左右对比图：左图展示 (8,2) 与 (4,4) 循环部分同为 24 N_rec FLOPs 而 240M 下 (4,4) 验证 loss 低 0.0136 nats；右图绘制拟合曲线 g(T,B) 在全反传、B=2 截断与无共享副本 y=T 下的变化，突出 q=1.02 远大于 2p=0.47。" loading="lazy">
-            <figcaption>图 3：左图展示 $(8,2)$ 与 $(4,4)$ 的严格等算力账本；右图对比有界循环倍率 $g(T,B)$、不共享权重的 $T$ 份副本及截断折扣（$q \approx 1.02 \gg 2p \approx 0.47$）<a class="cite" href="#ref-2">[2]</a>。<a href="../fig-bptt-tradeoff.svg">查看原图</a></figcaption>
+            <figcaption>图 5：左图展示 $(8,2)$ 与 $(4,4)$ 的严格等算力账本；右图对比有界循环倍率 $g(T,B)$、不共享权重的 $T$ 份副本及截断折扣（$q \approx 1.02 \gg 2p \approx 0.47$）<a class="cite" href="#ref-2">[2]</a>。<a href="../fig-bptt-tradeoff.svg">查看原图</a></figcaption>
         </figure>
 
         <h3 id="tbp-law">有效参数缩放律与三类决策场景<a class="anchor" href="#tbp-law" aria-hidden="true">#</a></h3>
@@ -233,11 +245,17 @@
             <p><strong>把稠密（Truncate or Not?）和稀疏（SMELT）串起来看：</strong>表面上一个说「自由参数时别循环最好」，另一个说「MoE 循环能省 6.8–18.0% 算力」，其实两者根本不矛盾，甚至在核心结论上高度合拍——两项研究各自独立发现 <strong>「完整反传 + 循环 2 遍」是最优甜点</strong>。差别在于稠密模型绑定参数后，$g(2,2)\approx 1.910 \lt 2$ 无法释放多余算力去补参数；而 SMELT 靠稀疏 MoE 把变窄省出的权重空间变成更多专家，加上二次访问天然触发专家重路由，最终打破了稠密模型的收益上限。</p>
         </div>
 
-        <h2 id="inkling">工程落地与内部电路：Inkling 2 Mini<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
+        <h2 id="inkling">Inkling 2 Mini：生产级循环与内部电路<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
 
         <h3 id="inkling-arch">注意力残差与跨循环数据流<a class="anchor" href="#inkling-arch" aria-hidden="true">#</a></h3>
-        <p>Thinking Machines Lab 于 2026 年 11 月 20 日以 Apache 2.0 协议开源的 <strong>Inkling 2 Mini</strong><a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>，把循环 MoE 真正做成了本地笔记本（~20GB 原生 NVFP4/MXFP8 权重、1M 上下文）可跑的生产级多模态推理模型：26.4B 总参数、3.4B 静态激活、跨 3 轮等效 5.4B 激活；24 物理层（$d=2304$，训练中从 384 专家剪枝至 top-8 of 128 并经 1T token 蒸馏修复与 2.2T token RL）按每 6 层切分 4 个 Block——Block 1（$1\text{–}6$ 层）和 Block 4（$19\text{–}24$ 层）各跑一遍，中间 Block 2、3（$7\text{–}18$ 层）循环 3 遍共执行 48 层。中间 12 层循环相比尾部 12 层在 28 项评测中赢下 27 项（等效算力增益 $1.51\text{–}1.91\times$ vs. $1.24\text{–}1.36\times$）；512k 长轨迹测试里，不循环版本需多花 $140\%$ 推理算力才追上同等的验证 loss（训练算力仅省 $7.5\%$）<a class="cite" href="#ref-3">[3]</a>。</p>
-        <p>架构上最核心的创新，是用<strong>块级注意力残差（Attention Residuals）</strong><a class="cite" href="#ref-8">[8]</a> 加 <strong>跨循环注意力（Cross-Loop Attention）</strong>取代了单条累加残差流<a class="cite" href="#ref-4">[4]</a>。每个 Block 从零累加自己 6 层 Attention + MoE 的输出得到 $\mathbf{v}_i$（嵌入层视作 $\mathbf{v}_0$）；单 token 进子层前，先通过深度注意力读取当前循环前面各个块的和 $\mathbf{x}=\sum_j\alpha_j\hat{\mathbf{v}}_j$，从第 2 轮起还用 4 组独立查询向量 $\mathbf{u}_{Q,K,V,\text{MoE}}$ 去读<strong>上一轮</strong>的 Block 2 和 Block 3 总结，再用 64 维瓶颈门控混合：</p>
+        <p>由 Thinking Machines Lab 发布（<em lang="en">Introducing Inkling 2 Mini</em><a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>）并由 Goodfire 进行可解释性剖析（<em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>）的 <strong>Inkling 2 Mini</strong>（Apache 2.0），把循环 MoE 做成了本地笔记本（~20GB 原生 NVFP4/MXFP8 权重、1M 上下文）可跑的多模态推理模型：26.4B 总参数、3.4B 静态激活、跨 3 轮等效 5.4B 激活；24 物理层（$d=2304$，训练中从 384 专家剪枝至 top-8 of 128 并经 1T token 蒸馏修复与 2.2T token RL）按每 6 层切分 4 个 Block——Block 1（$1\text{–}6$ 层）和 Block 4（$19\text{–}24$ 层）各跑一遍，中间 Block 2、3（$7\text{–}18$ 层）循环 3 遍共执行 48 层。中间 12 层循环相比尾部 12 层在 28 项评测中赢下 27 项（等效算力增益 $1.51\text{–}1.91\times$ vs. $1.24\text{–}1.36\times$）；512k 长轨迹测试里，不循环版本需多花 $140\%$ 推理算力才追上同等的验证 loss（训练算力仅省 $7.5\%$）<a class="cite" href="#ref-3">[3]</a>。</p>
+
+        <figure>
+            <img src="../fig-inkling-arch.webp" width="1147" height="1371" alt="Goodfire 原图：Inkling 2 Mini 三轮循环整体架构图。Block 1（1–6 层）运行一次后，核心 Block 2（7–12 层）与 Block 3（13–18 层）循环运行三遍，通过黑色深度注意力残差路径和紫/橙/绿跨循环注意力模块连接，最后由 Block 4（19–24 层）解码输出。" loading="lazy">
+            <figcaption>图 6：Inkling 2 Mini 的 24 层四块（Blocks 2–3 循环三遍）完整展开架构，区分同轮深度注意力残差（黑线）与上一轮跨循环注意力融合模块（紫框）。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
+        </figure>
+
+        <p>架构上最核心的创新，是用块级 <em lang="en">Attention Residuals</em><a class="cite" href="#ref-8">[8]</a> 加 <strong>跨循环注意力（Cross-Loop Attention）</strong>取代了单条累加残差流<a class="cite" href="#ref-4">[4]</a>。每个 Block 从零累加自己 6 层 Attention + MoE 的输出得到 $\mathbf{v}_i$（嵌入层视作 $\mathbf{v}_0$）；单 token 进子层前，先通过深度注意力读取当前循环前面各个块的和 $\mathbf{x}=\sum_j\alpha_j\hat{\mathbf{v}}_j$，从第 2 轮起还用 4 组独立查询向量 $\mathbf{u}_{Q,K,V,\text{MoE}}$ 去读<strong>上一轮</strong>的 Block 2 和 Block 3 总结，再用 64 维瓶颈门控混合：</p>
         $$\begin{aligned}
         \mathbf{m}_s &amp;= \sum_{j\in\{2,3\}} \beta_j\,\hat{\mathbf{v}}_j^{[t-1]}, \qquad \mathbf{z} = \mathbf{P}\big[\text{RMSNorm}(\mathbf{x});\,\text{RMSNorm}(\mathbf{m}_s)\big], \\
         \mathbf{x}' &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}\mathbf{z})\big)}_{\boldsymbol{\kappa}}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}\mathbf{z})}_{\boldsymbol{\gamma}}\odot\mathbf{m}_s.
@@ -246,7 +264,7 @@
 
         <figure>
             <img src="../fig-inkling-dataflow.svg" width="1400" height="620" alt="Inkling 2 Mini 第 2 轮第 13 层的双路数据流拆解：深度注意力读当前轮 v0/v1/v2[2]，跨循环注意力通过 4 组独立读取头对比上一轮 v2[1] 与 v3[1] 并经 64 维门控融合，底部展示第 18 层如何用 d2027 正负翻转控制跨轮信号。" loading="lazy">
-            <figcaption>图 4：Inkling 2 Mini 第 2 轮第 13 层的双通道信息路由与物理第 18 层在三轮循环中的 $d_{2027}$ 极性翻转电路<a class="cite" href="#ref-4">[4]</a>。<a href="../fig-inkling-dataflow.svg">查看原图</a></figcaption>
+            <figcaption>图 7：Inkling 2 Mini 第 2 轮第 13 层的双通道信息路由与物理第 18 层在三轮循环中的 $d_{2027}$ 极性翻转电路<a class="cite" href="#ref-4">[4]</a>。<a href="../fig-inkling-dataflow.svg">查看原图</a></figcaption>
         </figure>
 
         <h3 id="inkling-coord">权重打标与异常维度 d2027 开关<a class="anchor" href="#inkling-coord" aria-hidden="true">#</a></h3>
@@ -259,7 +277,7 @@
 
         <figure>
             <img src="../fig-inkling-coord2027.webp" width="1600" height="663" alt="Goodfire 原图：各层 Attention 与 MoE 子层在三轮循环及首尾块中对异常坐标 d2027 的平均写入幅度，清晰显示第 18 层前两轮强烈正写入、第三轮强烈负写入清零。" loading="lazy">
-            <figcaption>图 5：Inkling 2 Mini 各层 Attention 与 MoE 对第 2027 维的平均写入强度：物理第 18 层在前两轮写出强正峰打标 Block 3，在最后一轮反手写负清空信号。来源：Goodfire <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
+            <figcaption>图 8：Inkling 2 Mini 各层 Attention 与 MoE 对第 2027 维的平均写入强度：物理第 18 层在前两轮写出强正峰打标 Block 3，在最后一轮反手写负清空信号。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
         </figure>
 
         <h3 id="inkling-decode">中间层解码、推理边界与可监控性<a class="anchor" href="#inkling-decode" aria-hidden="true">#</a></h3>
@@ -267,7 +285,7 @@
 
         <figure>
             <img src="../fig-inkling-lenses.webp" width="1600" height="1102" alt="Goodfire 原图：Logit lens、Tuned lens、Jacobian lens 与 Coda lens 在 Inkling 2 Mini 全部层及三轮循环中的 top-50 包含率与概率质量曲线。" loading="lazy">
-            <figcaption>图 6：1,250 篇 FineWeb 文档上四种中间层解码透镜跨三轮循环的表现对比。来源：Goodfire <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
+            <figcaption>图 9：1,250 篇 FineWeb 文档上四种中间层解码透镜跨三轮循环的表现对比。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
         </figure>
 
         <p>结合 Inkling 2 Mini（DeepSWE v1.1 达 $48.2\%$、Vals Index v2.2 达 $46.5\%$、DGX Spark 上能耗智力比 $0.703$ 显著领先 Qwen3.6-35B-A3B 的 $0.430$）和可调循环研究版 <code>TML-d24-varloop-research</code>，Thinking Machines 还把循环的推理收益与 CoT 安全监控边界拆得很清楚<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>：</p>
