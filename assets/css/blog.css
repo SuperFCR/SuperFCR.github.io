@@ -450,8 +450,10 @@ body > header {
 .entry-link { position: absolute; inset: 0; z-index: 1; }
 .entry-link:focus-visible { outline: 1.5px solid var(--primary); outline-offset: 4px; border-radius: var(--radius); }
 
-/* Featured latest post: full-width editorial horizontal spread */
+/* Featured showcase card (latest post in 3+ grid, or every card when <= 2 posts are stacked). */
+.post-list.is-stacked { row-gap: 0; }
 .post-list.has-featured > .post-entry.is-featured,
+.post-list.is-stacked > .post-entry,
 .post-list:not(.js-ready) > .post-entry:first-child {
     grid-column: 1 / -1;
     flex-direction: row;
@@ -459,18 +461,22 @@ body > header {
     gap: 44px;
     padding: 4px 0 34px;
 }
+.post-list.is-stacked > .post-entry + .post-entry { padding: 30px 0 32px; }
 .post-list.has-featured > .post-entry.is-featured .entry-cover,
+.post-list.is-stacked > .post-entry .entry-cover,
 .post-list:not(.js-ready) > .post-entry:first-child .entry-cover {
     flex: 0 0 420px;
     width: 420px;
 }
 .post-list.has-featured > .post-entry.is-featured .entry-header h2,
+.post-list.is-stacked > .post-entry .entry-header h2,
 .post-list:not(.js-ready) > .post-entry:first-child .entry-header h2 {
-    font-size: 1.85rem;
+    font-size: 1.78rem;
     line-height: 1.24;
     margin-bottom: 12px;
 }
 .post-list.has-featured > .post-entry.is-featured .entry-content,
+.post-list.is-stacked > .post-entry .entry-content,
 .post-list:not(.js-ready) > .post-entry:first-child .entry-content {
     -webkit-line-clamp: 3;
     font-size: 0.96rem;
@@ -959,10 +965,12 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
 /* ---------- responsive ---------- */
 @media (max-width: 959px) {
     .post-list.has-featured > .post-entry.is-featured,
+    .post-list.is-stacked > .post-entry,
     .post-list:not(.js-ready) > .post-entry:first-child {
         gap: 28px;
     }
     .post-list.has-featured > .post-entry.is-featured .entry-cover,
+    .post-list.is-stacked > .post-entry .entry-cover,
     .post-list:not(.js-ready) > .post-entry:first-child .entry-cover {
         flex: 0 0 320px;
         width: 320px;
@@ -1001,19 +1009,24 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
     .list-search { width: 100%; }
 
     .post-list { grid-template-columns: 1fr; gap: 24px; }
+    .post-list.is-stacked { row-gap: 0; }
     .post-list.has-featured > .post-entry.is-featured,
+    .post-list.is-stacked > .post-entry,
     .post-list:not(.js-ready) > .post-entry:first-child {
         flex-direction: column-reverse;
         align-items: stretch;
         gap: 16px;
         padding: 0 0 24px;
     }
+    .post-list.is-stacked > .post-entry + .post-entry { padding: 24px 0; }
     .post-list.has-featured > .post-entry.is-featured .entry-cover,
+    .post-list.is-stacked > .post-entry .entry-cover,
     .post-list:not(.js-ready) > .post-entry:first-child .entry-cover {
         flex: 0 0 auto;
         width: 100%;
     }
     .post-list.has-featured > .post-entry.is-featured .entry-header h2,
+    .post-list.is-stacked > .post-entry .entry-header h2,
     .post-list:not(.js-ready) > .post-entry:first-child .entry-header h2 {
         font-size: 1.42rem;
     }

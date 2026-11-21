@@ -149,7 +149,7 @@ FONTCONFIG_FILE=$HOME/.local/lib/chromium-deps/fonts.conf node -e "require('shar
 
 ## 改样式或脚本之后
 
-GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
+GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121.2`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
 
 版本号用当天日期 `YYYYMMDD`；同一天第二次改就加 `.2`，第三次加 `.3`，依此类推。在仓库根目录运行（把 `OLD`、`NEW` 换成实际的版本号）：
 

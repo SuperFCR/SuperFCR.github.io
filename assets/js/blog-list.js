@@ -98,13 +98,20 @@
             if (show) visible.push(item.entry);
         }
 
-        // Showcase the first card when unfiltered (default landing) or when only 1 card matches.
+        // Showcase cards as full-width horizontal spreads when <= 2 matches (avoids an empty half row);
+        // with 3+ matches in the default view, feature the newest post above a 2-column grid.
         const unfiltered = state.type === 'all' && !state.tag && !state.query;
         if (list) {
             list.classList.add('js-ready');
-            const useFeatured = visible.length > 0 && (unfiltered || visible.length === 1);
+            const stacked = visible.length > 0 && visible.length <= 2;
+            const useFeatured = visible.length > 0 && (stacked || unfiltered);
+            list.classList.toggle('is-stacked', stacked);
             list.classList.toggle('has-featured', useFeatured);
-            if (useFeatured) visible[0].classList.add('is-featured');
+            if (stacked) {
+                for (const entry of visible) entry.classList.add('is-featured');
+            } else if (useFeatured) {
+                visible[0].classList.add('is-featured');
+            }
         }
 
         for (const button of buttons) {

@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 780" width="1600" height="780" font-family="Inter, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <title>Duet-Translator architecture</title>
+  <desc>Active tab hosts shell.js with two same-origin iframes (pane.js and segment.js); background Service Worker sw.js manages DNR headers, two-tier cache.js, demand scheduler, and providers.js connecting to OpenAI-compatible LLMs or DeepL.</desc>
+  <defs>
+    <marker id="arr-navy" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#205488"/>
+    </marker>
+    <marker id="arr-navy-back" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M10 0 L0 5 L10 10 z" fill="#205488"/>
+    </marker>
+    <marker id="arr-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="780" fill="#ffffff"/>
+
+  <!-- Top box: Active Tab (Same-Origin Top Document) -->
+  <rect x="28" y="24" width="1544" height="392" rx="22" fill="#f8fafc" stroke="#205488" stroke-width="2.5" stroke-dasharray="10 8"/>
+  <text x="58" y="64" font-size="24" font-weight="700" fill="#205488">Active Tab<tspan dx="12" font-weight="400" fill="#475569" font-size="20">· Same-origin top document (first-party cookies &amp; URL preserved)</tspan></text>
+
+  <!-- shell.js coordinator header bar -->
+  <rect x="60" y="84" width="1480" height="84" rx="14" fill="#205488"/>
+  <text x="90" y="120" font-size="24" font-weight="700" fill="#ffffff" font-family="Consolas, 'SFMono-Regular', Menlo, monospace">shell.js<tspan dx="14" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="500" font-size="20" fill="#dbeafe">Shadow DOM Top Bar · Sync Coordinator (sync-core.js)</tspan></text>
+  <text x="90" y="150" font-size="18" fill="#dbe7f5">Overlap filter + LIS denoising + piecewise-linear LtoR / RtoL + sliding focus line · navigation follow</text>
+
+  <!-- Left iframe (Original) -->
+  <rect x="60" y="224" width="690" height="170" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5"/>
+  <path d="M60 278 V240 a16 16 0 0 1 16 -16 H734 a16 16 0 0 1 16 16 V278 Z" fill="#eef2f7"/>
+  <text x="86" y="259" font-size="22" font-weight="700" fill="#0f172a">Left iframe · Original</text>
+  <text x="724" y="259" font-size="17" font-weight="600" fill="#64748b" text-anchor="end" font-family="Consolas, 'SFMono-Regular', Menlo, monospace">pane.js + segment.js</text>
+  <text x="86" y="312" font-size="19" fill="#334155">DOM segmentation (element / run / mark) · WeakMap state</text>
+  <text x="86" y="342" font-size="19" fill="#334155">Deterministic keys: <tspan font-family="Consolas, 'SFMono-Regular', Menlo, monospace" font-size="18">hash(text) + "." + index</tspan></text>
+  <text x="86" y="372" font-size="19" fill="#64748b">Scroll-cause detection (prog / user / layout) · hover highlight</text>
+
+  <!-- Right iframe (Translated) -->
+  <rect x="850" y="224" width="690" height="170" rx="16" fill="#f3f8fe" stroke="#205488" stroke-width="2.5"/>
+  <path d="M850 278 V240 a16 16 0 0 1 16 -16 H1524 a16 16 0 0 1 16 16 V278 Z" fill="#dbeafe"/>
+  <text x="876" y="259" font-size="22" font-weight="700" fill="#0f2c4c">Right iframe · Translated</text>
+  <text x="1514" y="259" font-size="17" font-weight="600" fill="#205488" text-anchor="end" font-family="Consolas, 'SFMono-Regular', Menlo, monospace">pane.js + segment.js</text>
+  <text x="876" y="312" font-size="19" fill="#1e3a5f">Matching segment keys · viewport + 0.5 screen demand window</text>
+  <text x="876" y="342" font-size="19" fill="#1e3a5f">Inline placeholders <tspan font-family="Consolas, 'SFMono-Regular', Menlo, monospace" font-size="18">&lt;gN&gt;...&lt;/gN&gt;</tspan> &amp; <tspan font-family="Consolas, 'SFMono-Regular', Menlo, monospace" font-size="18">&lt;xN/&gt;</tspan> reuse DOM nodes</text>
+  <text x="876" y="372" font-size="19" fill="#475569">Streaming previews (150 ms) · clean source restore on abort</text>
+
+  <!-- Token-verified postMessage links -->
+  <line x1="405" y1="220" x2="405" y2="172" stroke="#205488" stroke-width="2.5" marker-start="url(#arr-navy-back)" marker-end="url(#arr-navy)"/>
+  <text x="422" y="202" font-size="17" font-weight="600" fill="#205488">postMessage (token)</text>
+  <line x1="1195" y1="220" x2="1195" y2="172" stroke="#205488" stroke-width="2.5" marker-start="url(#arr-navy-back)" marker-end="url(#arr-navy)"/>
+  <text x="1212" y="202" font-size="17" font-weight="600" fill="#205488">postMessage (token)</text>
+
+  <!-- Channel between Right iframe and Service Worker -->
+  <line x1="936" y1="398" x2="936" y2="480" stroke="#0f766e" stroke-width="3" marker-end="url(#arr-teal)"/>
+  <text x="918" y="454" font-size="18" font-weight="600" fill="#0f766e" text-anchor="end">chrome.runtime (cacheOnly / translate / cancel)</text>
+  <line x1="976" y1="484" x2="976" y2="402" stroke="#205488" stroke-width="3" marker-end="url(#arr-navy)"/>
+  <text x="994" y="454" font-size="18" font-weight="600" fill="#205488">chrome.tabs.sendMessage (SSE chunks / cache hits)</text>
+
+  <!-- Bottom Left/Center: Background Service Worker (sw.js) -->
+  <rect x="28" y="488" width="1084" height="268" rx="22" fill="#ffffff" stroke="#0f766e" stroke-width="2.5"/>
+  <path d="M28 550 V510 a22 22 0 0 1 22 -22 H1090 a22 22 0 0 1 22 22 V550 Z" fill="#0f766e"/>
+  <text x="58" y="528" font-size="24" font-weight="700" fill="#ffffff">Background Service Worker <tspan font-family="Consolas, 'SFMono-Regular', Menlo, monospace" font-size="21">(sw.js)</tspan></text>
+  <text x="1084" y="527" font-size="18" fill="#ccfbf1" text-anchor="end">API keys in chrome.storage.local only</text>
+
+  <!-- 3 sub-modules inside sw.js -->
+  <rect x="54" y="572" width="290" height="162" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="74" y="608" font-size="21" font-weight="700" fill="#0f172a">DNR &amp; Injection</text>
+  <text x="74" y="640" font-size="18" fill="#475569">Per-tab session rule</text>
+  <text x="74" y="668" font-size="18" fill="#475569">strips X-Frame-Options</text>
+  <text x="74" y="696" font-size="18" fill="#475569">&amp; CSP for split frames</text>
+  <text x="74" y="722" font-size="17" fill="#64748b">removed on close</text>
+
+  <rect x="364" y="572" width="352" height="162" rx="14" fill="#f2fbf9" stroke="#99d5c9" stroke-width="2"/>
+  <text x="384" y="608" font-size="21" font-weight="700" fill="#0f766e" font-family="Consolas, 'SFMono-Regular', Menlo, monospace">cache.js <tspan font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="18">· Two-tier LRU</tspan></text>
+  <text x="384" y="640" font-size="18" fill="#334155">4,000-entry memory LRU</text>
+  <text x="384" y="668" font-size="18" fill="#334155">+ IndexedDB (64 MB, 90d TTL)</text>
+  <text x="384" y="696" font-size="18" fill="#334155">Second-chance eviction</text>
+  <text x="384" y="722" font-size="17" fill="#0f766e">SHA-1 namespace key isolation</text>
+
+  <rect x="736" y="572" width="350" height="162" rx="14" fill="#eef4fb" stroke="#b9cde4" stroke-width="2"/>
+  <text x="756" y="608" font-size="21" font-weight="700" fill="#0f2c4c">Scheduler &amp; <tspan font-family="Consolas, 'SFMono-Regular', Menlo, monospace" font-size="19">providers.js</tspan></text>
+  <text x="756" y="640" font-size="18" fill="#334155">Dedup &amp; in-flight sharing</text>
+  <text x="756" y="668" font-size="18" fill="#334155">Pre-move abort / preemption</text>
+  <text x="756" y="696" font-size="18" fill="#334155">Context-window batch split</text>
+  <text x="756" y="722" font-size="17" fill="#205488">Incremental SSE array parser</text>
+
+  <!-- Arrow from sw.js to Engines -->
+  <line x1="1116" y1="624" x2="1194" y2="624" stroke="#b45309" stroke-width="3" marker-end="url(#arr-amber)"/>
+  <text x="1155" y="606" font-size="17" font-weight="600" fill="#b45309" text-anchor="middle">SSE</text>
+
+  <!-- Bottom Right: Bring Your Own Engine -->
+  <rect x="1202" y="488" width="370" height="268" rx="22" fill="#ffffff" stroke="#b45309" stroke-width="2.5"/>
+  <path d="M1202 550 V510 a22 22 0 0 1 22 -22 H1550 a22 22 0 0 1 22 22 V550 Z" fill="#b45309"/>
+  <text x="1228" y="528" font-size="24" font-weight="700" fill="#ffffff">Bring Your Own Engine</text>
+  <text x="1228" y="590" font-size="19" font-weight="700" fill="#0f172a">OpenAI-compatible LLMs</text>
+  <text x="1228" y="620" font-size="18" fill="#475569">DeepSeek · MiniMax · OpenRouter</text>
+  <text x="1228" y="648" font-size="18" fill="#475569">vLLM · SGLang · Ollama · llama.cpp</text>
+  <text x="1228" y="690" font-size="19" font-weight="700" fill="#0f172a">DeepL &amp; Offline Mock</text>
+  <text x="1228" y="720" font-size="18" fill="#475569">Fixed prefix prompt for 1/50</text>
+  <text x="1228" y="744" font-size="18" fill="#b45309">server-side prefix cache hits</text>
+</svg>

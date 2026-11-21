@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Duet-Translator is a Manifest V3 browser extension for Edge and Chrome that renders the original page and its translation side by side in same-origin iframes with paragraph-aligned scrolling, inline format preservation, and on-demand LLM caching.">
+    <title>Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling | Chaoran Feng</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/duet-translator/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png">
+    <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261121.2">
+    <script src="../../assets/js/blog-theme.js?v=20261121.2"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../"><img class="nav-mark" src="../../assets/imgs/logo.svg" width="26" height="26" alt="">Chaoran Feng</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../"><span class="active">Posts</span></a></li>
+                <li><a href="../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+        </div>
+        <span class="post-type type-tech-report">Tech Report</span>
+        <h1 class="post-title">Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling</h1>
+        <div class="post-meta"><span>November 21, 2026</span><span>11 min read</span><span>Chaoran Feng</span></div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+            <ul>
+                <li><a href="#split-view">Why Two Same-Origin Iframes</a></li>
+                <li><a href="#scroll-sync">Paragraph-Aligned Scroll Synchronization</a>
+                    <ul>
+                        <li><a href="#anchors">Segmentation and Deterministic Keys</a></li>
+                        <li><a href="#mapping">Overlap Filtering, LIS, and the Sliding Focus Line</a></li>
+                        <li><a href="#driver">Scroll-Cause Classification and Oscillation Control</a></li>
+                    </ul>
+                </li>
+                <li><a href="#pipeline">Preserving Formatting and Streaming Translations</a></li>
+                <li><a href="#cost-and-cache">On-Demand Scheduling, Caching, and Benchmarks</a></li>
+                <li><a href="#compatibility">Real-Site Compatibility and Limitations</a></li>
+                <li><a href="#try">Try It</a></li>
+                <li><a href="#citation">Citation</a></li>
+                <li><a href="#references">References</a></li>
+            </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>Browser translation tools generally fall into two camps: full-page replacement, which hides the original wording when a term looks off, and interleaved bilingual injection, which doubles paragraph height and pushes complex layouts out of alignment. When reading documentation, research blogs, or technical discussions, neither feels right. You want the original page untouched on one side, a clean translation on the other, and both scrolling together so your eye lands on the exact same paragraph when you glance across.</p>
+        <p><a href="https://github.com/SuperFCR/Duet-Translator">Duet-Translator</a> is a zero-build, plain JavaScript Manifest V3 extension for Edge and Chrome built around that layout. Both panes load the real web page side by side, scroll in paragraph-level sync, translate only what is near your viewport, cache aggressively in IndexedDB and against LLM prefix caches, and work with any engine you supply—from self-hosted vLLM, SGLang, and Ollama endpoints to DeepSeek, MiniMax, OpenRouter, or DeepL.</p>
+
+        <figure>
+            <img src="./fig-demo.webp" width="1400" height="900" alt="Duet-Translator side-by-side split view on English Wikipedia Typography article: original English on the left, Chinese translation by DeepSeek V4.1 Flash on the right, with the hovered paragraph highlighted in blue and amber across both panes." loading="lazy">
+            <figcaption>Fig. 1. Duet-Translator reading the English Wikipedia article "Typography" side by side. The top Shadow DOM bar shows translation progress, token/cost meter, sync toggle, hover highlight, and engine selector; hovering a paragraph highlights its counterpart on the opposite side.</figcaption>
+        </figure>
+
+        <h2 id="split-view">Why Two Same-Origin Iframes<a class="anchor" href="#split-view" aria-hidden="true">#</a></h2>
+        <p>The first architectural decision is how to put two copies of a live web page in one tab. Several tempting shortcuts break on modern sites:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Approach</th><th>Trade-off</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Clone DOM for the right pane</td><td>CSS-in-JS styles injected via <code>insertRule</code> live outside DOM attributes; lazy images and JS interactions break</td></tr>
+                    <tr><td>Reader mode extraction</td><td>Strips the site's typography, navigation, tables, and visual context</td></tr>
+                    <tr><td>Two browser windows</td><td>Separate tabs and histories; awkward to resize and keep synchronized</td></tr>
+                    <tr><td>Two iframes inside an extension page</td><td>Cross-origin: <code>X-Frame-Options: SAMEORIGIN</code> blocks loading, cookies become third-party, and the address bar shows <code>chrome-extension://</code></td></tr>
+                    <tr><td class="best">Top-level same-origin dual iframes (chosen)</td><td>First-party cookies and <code>SAMEORIGIN</code> work natively, the URL bar stays unchanged, and each pane renders at a true half-width viewport</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>When you toggle split view in Duet-Translator, <code>shell.js</code> covers the active tab with a full-screen overlay and mounts two iframes pointing to the current URL. Both iframes inherit the site's origin and login session, and responsive layouts naturally adapt to half the window width without horizontal overflow.</p>
+        <p>Two safeguards make this work on strict sites. For domains returning <code>X-Frame-Options: DENY</code> or CSP <code>frame-ancestors 'none'</code> (such as GitHub repositories), the background Service Worker installs a temporary per-tab <code>declarativeNetRequest</code> session rule that strips only those framing response headers for subframes of that single tab, and removes the rule as soon as split view or the tab closes. Both iframes also carry <code>sandbox</code> without <code>allow-top-navigation</code> so frame-busting scripts cannot redirect the outer tab. Users who prefer strict CSP preservation can disable the header rule in settings.</p>
+
+        <figure>
+            <img src="./fig-architecture.svg" width="1600" height="780" alt="Duet-Translator architecture diagram: top-level Active Tab runs shell.js coordinating left and right same-origin iframes via token-verified postMessage, while background Service Worker sw.js manages DNR rules, two-tier cache.js, demand scheduler, and providers.js." loading="lazy">
+            <figcaption>Fig. 2. Extension architecture. <code>shell.js</code> coordinates scroll synchronization and navigation inside the active tab; <code>pane.js</code> and <code>segment.js</code> run inside each iframe; <code>sw.js</code> handles DNR rules, two-tier caching, batch scheduling, streaming SSE parsing, and engine adapters. <a href="./fig-architecture.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h2 id="scroll-sync">Paragraph-Aligned Scroll Synchronization<a class="anchor" href="#scroll-sync" aria-hidden="true">#</a></h2>
+        <p>A naive <code>scrollTop</code> ratio fails almost immediately when translating between languages: Chinese prose is typically much more compact vertically than English, while technical explanations or expanded footnotes can run longer. Even if both panes start together, they drift apart by half a screen mid-article.</p>
+
+        <h3 id="anchors">Segmentation and Deterministic Keys<a class="anchor" href="#anchors" aria-hidden="true">#</a></h3>
+        <p>Both panes run identical segmentation code (<code>shared/segment.js</code>) that walks the DOM and classifies translation units into three kinds: block <code>element</code> nodes containing only inline content (<code>p</code>, <code>li</code>, <code>h1</code>–<code>h6</code>, <code>td</code>, or text-only <code>div</code>s), inline <code>run</code> slices sitting directly alongside sibling blocks inside mixed containers (such as Hacker News comments) measured with DOM <code>Range</code> without mutating nodes, and non-translated <code>mark</code> anchors (<code>pre</code>, <code>video</code>, <code>canvas</code>) that share identical height across panes.</p>
+        <p>Non-content nodes (<code>script</code>, <code>style</code>, <code>code</code>, <code>pre</code>, <code>textarea</code>, <code>svg</code>, <code>[translate=no]</code>, <code>.notranslate</code>, <code>contenteditable</code>) are skipped. Each unit receives a deterministic key computed from its normalized source text plus occurrence index on the page:</p>
+<pre><code>key = hash(normalizedSourceText) + "." + occurrenceIndex</code></pre>
+        <p>Because the right pane translates in place and stores unit state exclusively in a <code>WeakMap</code> rather than writing attributes onto page nodes, its unit keys stay identical to the original left pane after translation finishes.</p>
+
+        <h3 id="mapping">Overlap Filtering, LIS, and the Sliding Focus Line<a class="anchor" href="#mapping" aria-hidden="true">#</a></h3>
+        <p>Each pane converts its unit bounding boxes into scroll-content coordinates <code>{k, t, b, n}</code> (top, bottom, and character count) and reports them to <code>shell.js</code> via token-verified <code>postMessage</code>. The pure coordination module (<code>shared/sync-core.js</code>) turns those pairs into bidirectional scroll maps through four steps:</p>
+        <ol>
+            <li><strong>Pair top and bottom edges.</strong> Matching keys produce two anchor points, <code>(tL, tR)</code> and <code>(bL, bR)</code>, so interpolation scales proportionally inside tall paragraphs—when a translated paragraph is twice as tall, scrolling halfway through the source lands halfway through the translation.</li>
+            <li><strong>Filter side-by-side elements.</strong> Normal body paragraphs do not overlap vertically; floats, image captions, infobox rows, table cells in the same row, and multi-column cards do. Their anchors would cut across body paragraphs and distort intra-paragraph interpolation. Keeping only the segment with the largest character count in each vertically overlapping group drops maximum sync error on English Wikipedia from 292&nbsp;px to 0&nbsp;px and on Chinese Wikipedia from 185&nbsp;px to 0&nbsp;px.</li>
+            <li><strong>Denoise with LIS.</strong> After sorting anchors by left coordinate, taking the longest strictly increasing subsequence (LIS) of right coordinates strips out-of-order noise from sticky headers or A/B-tested sidebars that load differently between frames.</li>
+            <li><strong>Map along a sliding focus line.</strong> Rather than aligning only the top edge of the viewport (which prevents both panes from reaching the bottom together), the focus line moves smoothly from viewport top at scroll start to viewport bottom at scroll end:</li>
+        </ol>
+<pre><code>progress   r = t / (H - vh)
+focusLine  p = t + r * vh          // top of viewport at top; bottom at bottom
+mapped     q = map(p)              // piecewise-linear interpolation between anchors
+target     t' = q * (H' - vh') / H'</code></pre>
+        <p>Solving for <code>t'</code> guarantees that both panes hit top and bottom simultaneously while keeping the paragraph under your gaze aligned at every intermediate scroll position.</p>
+
+        <h3 id="driver">Scroll-Cause Classification and Oscillation Control<a class="anchor" href="#driver" aria-hidden="true">#</a></h3>
+        <p>Because programmatic scrolling fires <code>scroll</code> events too, naive two-way listeners quickly ping-pong. Each pane classifies every scroll event by priority before reporting: <code>prog</code> (matches the last target sent by <code>shell.js</code>, checked first so recently active panes cannot steal leadership back), <code>user</code> (wheel, keyboard, touch, or pointer input within 700&nbsp;ms; only takes control if its input timestamp is newer than the current driver), <code>layout</code> (DOM resize or translation insertion within 700&nbsp;ms; the follower snaps back to alignment while the driver stays put), and <code>other</code> (such as in-page anchor jumps). On documentation sites or SPAs where <code>window</code> does not scroll, <code>pane.js</code> selects the largest scrollable <code>overflow-y: auto|scroll</code> element as the primary scroll container.</p>
+
+        <h2 id="pipeline">Preserving Formatting and Streaming Translations<a class="anchor" href="#pipeline" aria-hidden="true">#</a></h2>
+        <p>Pages rely heavily on inline links, bold emphasis, inline code, and citation footnotes. Stripping them produces walls of plain text; asking an LLM to emit raw HTML invites broken tags and lost event handlers. Duet-Translator instead serializes inline DOM trees into compact numbered placeholders:</p>
+<pre><code>&lt;p&gt;See &lt;a href="..."&gt;this reference&lt;/a&gt; and the &lt;code&gt;&amp;lt;p&amp;gt;&lt;/code&gt; element.&lt;/p&gt;
+  -&gt; "See &lt;g1&gt;this reference&lt;/g1&gt; and the &lt;x2/&gt; element."</code></pre>
+        <p><code>&lt;gN&gt;...&lt;/gN&gt;</code> wraps translatable inline elements, and on write-back Duet-Translator reuses the <strong>original DOM node objects</strong> so SPA link handlers remain intact. Atomic nodes such as <code>&lt;code&gt;</code>, images, icons, and line breaks become <code>&lt;xN/&gt;</code> slots reinserted verbatim. Single-node wrappers like <code>&lt;li&gt;&lt;a&gt;Home&lt;/a&gt;&lt;/li&gt;</code> are peeled before sending to avoid unnecessary markup, and if a model scrambles placeholder nesting, the validator falls back cleanly to plain text plus trailing atomic nodes and refuses to persist the corrupted output in cache.</p>
+        <p>For OpenAI-compatible engines, requests stream a JSON string array over SSE. An incremental parser in <code>sw.js</code> strips reasoning <code>&lt;think&gt;...&lt;/think&gt;</code> blocks and markdown code fences, tracks top-level commas to dispatch completed segments immediately via <code>chrome.tabs.sendMessage</code>, and also extracts partial unclosed JSON strings every 150&nbsp;ms for intra-paragraph streaming previews. If a request is aborted or fails mid-stream, the pane reconstructs the original DOM from the serialized source so half-translated fragments are never left behind or re-sent as source text. If a batch still comes back with a mismatched length, the scheduler falls back to binary-splitting and eventually single-segment retries.</p>
+        <p>Disabling unnecessary chain-of-thought reasoning via <code>extraBody</code> makes a dramatic difference for interactive browsing. On the English Wikipedia Typography page (275 visible segments) with DeepSeek V4.1 Flash, disabling thinking (<code>{"thinking":{"type":"disabled"}}</code>) dropped single-paragraph latency from 5.1&nbsp;s to 1.9&nbsp;s and cut output tokens from 411 to 68 compared with <code>reasoning_effort: low</code>; on MiniMax M3.1 Flash, lowering reasoning effort cut latency from 9.1&nbsp;s to 4.5&nbsp;s and output tokens from 508 to 146.</p>
+
+        <h2 id="cost-and-cache">On-Demand Scheduling, Caching, and Benchmarks<a class="anchor" href="#cost-and-cache" aria-hidden="true">#</a></h2>
+        <p>Rather than translating an entire document when a split opens, Duet-Translator translates a sliding window covering 0.25 screens above, the current viewport, and 0.5 screens ahead by default (configurable down to 0). Scrolling pauses requests until 300&nbsp;ms after real user movement—ignoring layout-driven scroll adjustments caused by incoming translations—and in-flight requests for paragraphs that move more than 1.5 screens above or 2.5 screens below the viewport are aborted on the wire so the server stops generating.</p>
+        <p>Fast jump reading (skimming A &rarr; B &rarr; C in quick succession) introduces a subtler bottleneck: requests from B can still occupy every concurrency slot while technically staying inside the abort margin, starving C. Duet-Translator preempts older requests only if they were launched <em>before</em> the reader's most recent movement, never touching requests belonging to the current screen. Hidden elements, text already in the target language, and duplicate strings on the same page (such as repeated forum <code>reply</code> / <code>share</code> links) are deduplicated or skipped, and concurrent duplicate segments share the same in-flight promise. For small self-hosted models, setting <code>contextTokens</code> automatically splits batches before sending so prompt + input + estimated output fit safely inside the context window.</p>
+        <p>Two cache layers cut cost further:</p>
+        <ul>
+            <li><strong>Local two-tier LRU + second-chance cache (<code>cache.js</code>).</strong> Lookups hit a 4,000-entry in-memory LRU before querying IndexedDB (scoped by SHA-1 hash of engine, model, language pair, custom prompt hash, and source text, capped at 64&nbsp;MB and 90-day TTL). Cache-only queries even run during scrolling across 3 screens above and 4 below so revisited pages appear instantaneously. Because a one-off whole-page translation can easily flush short navigation strings out of a small cache, eviction grants a second chance to entries hit at least twice by halving their hit counter and advancing their access timestamp.</li>
+            <li><strong>Server-side prefix caching.</strong> Keeping the system prompt fixed at the front of every message list (with page title placed at the very end) lets providers with automatic prefix caching—such as DeepSeek at 64-token granularity—bill shared instructions at roughly 1/50 of normal input token pricing. Real cached/miss token counts from SSE <code>usage</code> fields appear live in the top bar's green meter.</li>
+        </ul>
+        <p>A synthetic 120-day browsing simulation (<code>node test/bench/cache-policy.mjs</code> across 25 sites with shared UI strings and periodic 6,000–15,000-segment whole-page flushes) verified the eviction design:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Capacity &amp; Workload</th><th>FIFO</th><th>LRU</th><th>LFU</th><th>LRU + 2nd Chance</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>10k entries, daily browsing</td><td>94.3%</td><td>98.5%</td><td>90.9%</td><td class="best">98.5%</td></tr>
+                    <tr><td>25k entries, daily browsing</td><td>98.2%</td><td>99.9%</td><td>96.5%</td><td class="best">99.9%</td></tr>
+                    <tr><td>10k entries, +6k whole-page flush / 10d</td><td>91.0%</td><td>94.8%</td><td>90.6%</td><td class="best">96.3%</td></tr>
+                    <tr><td>25k entries, +15k whole-page flush / 10d</td><td>93.8%</td><td>98.2%</td><td>95.4%</td><td class="best">98.3%</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>End-to-end latency and billing were measured in Playwright against a simulated OpenAI-compatible server (<code>test/bench/bench.mjs</code>, 600&nbsp;ms TTFT, 45&nbsp;tok/s streaming, DeepSeek V4 Flash pricing at $0.14 / $0.0028 / $0.28 per 1M miss / prefix-hit / output tokens):</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Scenario</th><th>Metric</th><th>Baseline</th><th>Optimized</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Open page</td><td>First segment / Full 1st screen</td><td>2.49&nbsp;s / 5.73&nbsp;s</td><td class="best">0.98&nbsp;s / 3.31&nbsp;s</td></tr>
+                    <tr><td>Revisit page</td><td>1st screen (all local cache)</td><td>1.56&nbsp;s</td><td class="best">0.15&nbsp;s (0 requests)</td></tr>
+                    <tr><td>Fast skim</td><td>Full screen after stop (segs / cost)</td><td>7.8&nbsp;s (30 / $0.000555)</td><td class="best">4.2&nbsp;s (20 / $0.000501)</td></tr>
+                    <tr><td>150-comment forum</td><td>Segments sent / 1st screen</td><td>110 / 8.04&nbsp;s</td><td class="best">95 / 4.29&nbsp;s</td></tr>
+                    <tr><td>4-scenario total</td><td>Simulated API cost</td><td>$0.003644</td><td class="best">$0.003544 (-2.7%)</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Adding pre-move jump preemption and 150&nbsp;ms intra-paragraph streaming previews in a follow-up iteration reduced time until all visible segments begin showing translated text on rapid A &rarr; B &rarr; C jumps from 4.0–5.6&nbsp;s down to 0.95–2.2&nbsp;s at concurrency 6.</p>
+
+        <h2 id="compatibility">Real-Site Compatibility and Limitations<a class="anchor" href="#compatibility" aria-hidden="true">#</a></h2>
+        <p><code>node test/e2e/compat.mjs</code> verifies real websites in headless Chromium (1400&times;900, offline Mock engine, 7 &times; 650&nbsp;px left-pane scrolls) and checks each pane's DOM independently at the focus line:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Site</th><th>Split &amp; Translate</th><th>Max Sync Error</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Wikipedia (EN &amp; ZH)</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Floats, infoboxes, and side captions filtered by overlap filter</td></tr>
+                    <tr><td>GitHub repo / README</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Sends <code>X-Frame-Options: DENY</code>; handled by per-tab DNR rule</td></tr>
+                    <tr><td>GitHub Docs &amp; Python docs</td><td>Pass</td><td class="best">1&nbsp;px</td><td>Code blocks remain untouched</td></tr>
+                    <tr><td>MDN &amp; React docs (Next.js)</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Client-side hydration preserved</td></tr>
+                    <tr><td>Hacker News</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Table layout and mixed inline/block comment runs</td></tr>
+                    <tr><td>arXiv HTML (ar5iv)</td><td>Pass</td><td class="best">0&nbsp;px</td><td>MathML formulas and section numbering intact</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Several practical boundaries remain by design:</p>
+        <ul>
+            <li><strong>Two independent page loads.</strong> Pages with randomized elements, A/B experiments, or stateful POST views may render slight differences between panes; LIS removes unmatched anchors, though differing blocks remain unaligned. Cookie consent banners also need to be dismissed in each pane.</li>
+            <li><strong>Strict bot protection and browser restrictions.</strong> Sites that trigger Cloudflare security challenges inside iframes (for example Medium when redirecting to subdomains) detect the challenge and report it in the top bar; <code>edge://</code>, extension stores, and built-in PDF viewers forbid script injection.</li>
+            <li><strong>Shadow DOM and script edge cases.</strong> Text inside closed or open Shadow DOM web components is not segmented. When targeting Simplified Chinese, pages written in Traditional Chinese are currently skipped by the CJK script detector.</li>
+            <li><strong>Verification scope.</strong> Automated suites run on headless Chromium; the Edge desktop build and live DeepL API adapter (requiring a paid/free DeepL key) have not yet been tested end-to-end manually.</li>
+        </ul>
+
+        <h2 id="try">Try It<a class="anchor" href="#try" aria-hidden="true">#</a></h2>
+        <p>There is no build step. Load the unpacked <code>extension/</code> directory directly in Edge or Chrome:</p>
+<pre><code>git clone https://github.com/SuperFCR/Duet-Translator.git</code></pre>
+        <ol>
+            <li>Open <code>edge://extensions</code> (or <code>chrome://extensions</code>) and enable <strong>Developer mode</strong>.</li>
+            <li>Click <strong>Load unpacked</strong> and select the <code>extension/</code> folder inside the cloned repository.</li>
+            <li>In the welcome page or toolbar popup, pick an engine (DeepSeek V4.1 Flash, MiniMax M3.1 Flash, DeepL, or a self-hosted OpenAI-compatible server—for remote GPU boxes, forward with <code>ssh -L 8000:localhost:8000 gpu-host</code> and set base URL <code>http://127.0.0.1:8000/v1</code>), test the connection, and press <code>Alt+Shift+Y</code> (<code>⌥⇧Y</code> on macOS) on any page.</li>
+        </ol>
+        <p>To run the unit, UI, e2e, and simulated-LLM benchmark suites locally:</p>
+<pre><code>cd Duet-Translator/test
+npm install
+npx playwright install chromium
+npm run test:unit
+npm run test:e2e
+node bench/bench.mjs</code></pre>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>Cited as:</p>
+            <blockquote><p>Feng, Chaoran. (Nov 2026). Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling. Chaoran Feng's Blog. https://www.falcary.com/blogs/duet-translator/.</p></blockquote>
+            <p>Or</p>
+<pre><code>@article{feng2026duettranslator,
+  title   = "Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling",
+  author  = "Feng, Chaoran",
+  journal = "falcary.com",
+  year    = "2026",
+  month   = "Nov",
+  url     = "https://www.falcary.com/blogs/duet-translator/"
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li>Duet-Translator source repository, <a href="https://github.com/SuperFCR/Duet-Translator">github.com/SuperFCR/Duet-Translator</a>.</li>
+            <li>Duet-Translator architecture and benchmark log, <a href="https://github.com/SuperFCR/Duet-Translator/blob/main/docs/DESIGN.md">docs/DESIGN.md</a> and <a href="https://github.com/SuperFCR/Duet-Translator/blob/main/docs/COMPAT.md">docs/COMPAT.md</a>.</li>
+            <li>Chrome Developers. <a href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest"><code>chrome.declarativeNetRequest</code> (Manifest V3)</a>.</li>
+            <li>DeepSeek API Docs. <a href="https://api-docs.deepseek.com/guides/kv_cache">Context Caching on Disk</a>.</li>
+            <li>DeepL API Docs. <a href="https://developers.deepl.com/docs/xml-and-html-handling/xml">XML Handling in Translation Requests</a>.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../?tag=Browser%20Extension">Browser Extension</a></li>
+            <li><a href="../?tag=LLM">LLM</a></li>
+            <li><a href="../?tag=Translation">Translation</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../pocketrig/"><span class="title">Next post »</span>PocketRig: A Phone-First Workflow for Coding Agents with Paseo</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+<script src="../../assets/js/blog-post.js?v=20261121.2"></script>
+</body>
+</html>
