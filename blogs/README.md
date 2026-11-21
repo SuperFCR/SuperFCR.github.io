@@ -99,6 +99,7 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 - 两个版本的日期、类型、章节 `id` 和 `post-tags` 必须一致。
 - 顶部导航、面包屑、页脚和文末的主题词标签在两个版本里都保持英文；只有标题上方的类型徽章随语言切换（如 `Deep Dive` / `深入探索`）。
 - 中文版中的英文片段（参考文献、BibTeX、英文引用格式）加 `lang="en"`。
+- 中文版中，论文原题、模型/方法名以及业内通用的核心英文术语（如 `Looped Transformer`、`Looped MoE`、`Flow Matching`、`GRPO`、`BPTT`、`Attention Sink` 等）直接保留英文，不要生硬直译（避免出现「循环 Transformer」这类违和译名）。
 - 引用格式（Cited as 和 BibTeX）两个版本都用英文标题和英文版网址。
 
 ## 可用组件

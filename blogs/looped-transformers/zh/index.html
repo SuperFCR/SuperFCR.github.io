@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="系统梳理 SMELT、Truncate or Not? 与 Inkling 2 Mini 三项工作：从等算力 MoE 循环缩放律、(T, B) 梯度截断与全反传博弈，到注意力残差与 d2027 跨循环路由机制。">
-    <title>循环 Transformer 深度解析：等算力缩放、梯度截断与内部信息流 | 冯超然</title>
+    <title>Looped Transformer 深度解析：等算力缩放、梯度截断与内部信息流 | 冯超然</title>
     <link rel="canonical" href="https://www.falcary.com/blogs/looped-transformers/zh/">
     <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/looped-transformers/">
     <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/blogs/looped-transformers/zh/">
@@ -15,7 +15,7 @@
     <script src="../../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="冯超然">
-    <meta property="og:title" content="循环 Transformer 深度解析：等算力缩放、梯度截断与内部信息流">
+    <meta property="og:title" content="Looped Transformer 深度解析：等算力缩放、梯度截断与内部信息流">
     <meta property="og:description" content="串联 SMELT、Truncate or Not? 与 Inkling 2 Mini：解析等算力 MoE 循环配方、梯度截断与完整反传的算力账，以及块间注意力残差和 d2027 循环开关电路。">
     <meta property="og:url" content="https://www.falcary.com/blogs/looped-transformers/zh/">
     <meta property="og:image" content="https://www.falcary.com/blogs/looped-transformers/cover.webp">
@@ -53,7 +53,7 @@
             <div class="lang-switch" role="navigation" aria-label="Language" lang="en"><a href="../">EN</a><a href="./" class="active" aria-current="page">中文</a></div>
         </div>
         <span class="post-type type-deep-dive">深入探索</span>
-        <h1 class="post-title">循环 Transformer 深度解析：等算力缩放、梯度截断与内部信息流</h1>
+        <h1 class="post-title">Looped Transformer 深度解析：等算力缩放、梯度截断与内部信息流</h1>
         <div class="post-meta">
             <span>2026 年 11 月 21 日</span>
             <span>10 分钟阅读</span>
@@ -65,7 +65,7 @@
         <summary>目录</summary>
         <div class="inner">
         <ul>
-            <li><a href="#overview">三种循环架构一览</a></li>
+            <li><a href="#overview">三种 Looped Transformer 架构一览</a></li>
             <li><a href="#smelt">SMELT：等算力 MoE 循环</a>
                 <ul>
                     <li><a href="#smelt-recipe">三项预算同时对齐的配方</a></li>
@@ -79,7 +79,7 @@
                     <li><a href="#tbp-law">有效参数缩放律与三类决策场景</a></li>
                 </ul>
             </li>
-            <li><a href="#inkling">Inkling 2 Mini：生产级循环与内部电路</a>
+            <li><a href="#inkling">Inkling 2 Mini：生产级 Looped MoE 与内部电路</a>
                 <ul>
                     <li><a href="#inkling-arch">注意力残差与跨循环数据流</a></li>
                     <li><a href="#inkling-coord">权重打标与异常维度 d2027 开关</a></li>
@@ -94,14 +94,14 @@
     </details>
 
     <div class="post-content">
-        <p>循环 Transformer（Looped Transformer）通过重复执行同一段共享层，把“执行深度”与“静态参数量”拆开<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>。过去很多评测只在相同静态参数量下做对比，无形中让循环模型多花了成倍的 FLOPs 和 KV cache，很难分辨收益究竟来自结构本身还是额外算力。</p>
+        <p>Looped Transformer 通过重复执行同一段共享层，把“执行深度”与“静态参数量”拆开<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>。过去很多评测只在相同静态参数量下做对比，无形中让循环模型多花了成倍的 FLOPs 和 KV cache，很难分辨收益究竟来自结构本身还是额外算力。</p>
         <p>2026 年的三组核心研究把这条技术链条拼完整了：<strong>SMELT</strong><a class="cite" href="#ref-1">[1]</a>在单 token FLOPs、总参数量和 KV cache 三项预算同时对齐时证明 MoE 循环依然净赚；<strong>Truncate or Not?</strong><a class="cite" href="#ref-2">[2]</a>系统算清了有限算力下前向与反向循环次数的账；Thinking Machines Lab 开源的 <strong>Inkling 2 Mini</strong><a class="cite" href="#ref-3">[3]</a>与 Goodfire 的可解释性追踪<a class="cite" href="#ref-4">[4]</a>，则把双路注意力残差与内部协作电路直接摆到了台面上。</p>
 
-        <h2 id="overview">三种循环架构一览<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
+        <h2 id="overview">三种 Looped Transformer 架构一览<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
         <p>三条路线都把靠近输入输出的首尾层留作非共享参数、只循环中间核心层，但分别切中了不同问题：MoE 严格等预算缩放、稠密模型 $(T, B)$ 梯度截断博弈，以及多块交叉循环的注意力残差路由。</p>
 
         <figure>
-            <img src="../fig-architectures.svg" width="1400" height="720" alt="三种循环 Transformer 架构对比：SMELT（MoE 中间 50% 层循环两遍且三项预算对齐）、Truncate or Not?（稠密 Prelude-Recurrent-Coda 配合每轮输入重注入 s0 与 detach 截断墙）、Inkling 2 Mini（4 个 6 层块将中间两块循环三遍，并通过深度注意力与跨循环注意力交互）。" loading="lazy">
+            <img src="../fig-architectures.svg" width="1400" height="720" alt="三种 Looped Transformer 架构对比：SMELT（MoE 中间 50% 层循环两遍且三项预算对齐）、Truncate or Not?（稠密 Prelude-Recurrent-Coda 配合每轮输入重注入 s0 与 detach 截断墙）、Inkling 2 Mini（4 个 6 层块将中间两块循环三遍，并通过深度注意力与跨循环注意力交互）。" loading="lazy">
             <figcaption>图 1：SMELT（MoE 中间半数层循环两遍）<a class="cite" href="#ref-1">[1]</a>、Truncate or Not?（含每轮重注入与 $(T, B)$ 截断）<a class="cite" href="#ref-2">[2]</a> 与 Inkling 2 Mini（块级深度注意力和跨循环注意力残差）<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-4">[4]</a> 的结构对比。<a href="../fig-architectures.svg">查看原图</a></figcaption>
         </figure>
 
@@ -266,10 +266,10 @@
             <p><strong>把稠密（Truncate or Not?）和稀疏（SMELT）串起来看：</strong>表面上一个说「自由参数时别循环最好」，另一个说「MoE 循环能省 6.8–18.0% 算力」，其实两者根本不矛盾，甚至在核心结论上高度合拍——两项研究各自独立发现 <strong>「完整反传 + 循环 2 遍」是最优甜点</strong>。差别在于稠密模型绑定参数后，$g(2,2)\approx 1.910 \lt 2$ 无法释放多余算力去补参数；而 SMELT 靠稀疏 MoE 把变窄省出的权重空间变成更多专家，加上二次访问天然触发专家重路由，最终打破了稠密模型的收益上限。</p>
         </div>
 
-        <h2 id="inkling">Inkling 2 Mini：生产级循环与内部电路<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
+        <h2 id="inkling">Inkling 2 Mini：生产级 Looped MoE 与内部电路<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
 
         <h3 id="inkling-arch">注意力残差与跨循环数据流<a class="anchor" href="#inkling-arch" aria-hidden="true">#</a></h3>
-        <p>由 Thinking Machines Lab 发布（<em lang="en">Introducing Inkling 2 Mini</em><a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>）并由 Goodfire 进行可解释性剖析（<em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>）的 <strong>Inkling 2 Mini</strong>（Apache 2.0），把循环 MoE 做成了本地笔记本（~20GB 原生 NVFP4/MXFP8 权重、1M 上下文）可跑的多模态推理模型：26.4B 总参数、3.4B 静态激活、跨 3 轮等效 5.4B 激活；24 物理层（$d=2304$，训练中从 384 专家剪枝至 top-8 of 128 并经 1T token 蒸馏修复与 2.2T token RL）按每 6 层切分 4 个 Block——Block 1（$1\text{–}6$ 层）和 Block 4（$19\text{–}24$ 层）各跑一遍，中间 Block 2、3（$7\text{–}18$ 层）循环 3 遍共执行 48 层。中间 12 层循环相比尾部 12 层在 28 项评测中赢下 27 项（等效算力增益 $1.51\text{–}1.91\times$ vs. $1.24\text{–}1.36\times$）；512k 长轨迹测试里，不循环版本需多花 $140\%$ 推理算力才追上同等的验证 loss（训练算力仅省 $7.5\%$）<a class="cite" href="#ref-3">[3]</a>。</p>
+        <p>由 Thinking Machines Lab 发布（<em lang="en">Introducing Inkling 2 Mini</em><a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>）并由 Goodfire 进行可解释性剖析（<em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>）的 <strong>Inkling 2 Mini</strong>（Apache 2.0），把Looped MoE 做成了本地笔记本（~20GB 原生 NVFP4/MXFP8 权重、1M 上下文）可跑的多模态推理模型：26.4B 总参数、3.4B 静态激活、跨 3 轮等效 5.4B 激活；24 物理层（$d=2304$，训练中从 384 专家剪枝至 top-8 of 128 并经 1T token 蒸馏修复与 2.2T token RL）按每 6 层切分 4 个 Block——Block 1（$1\text{–}6$ 层）和 Block 4（$19\text{–}24$ 层）各跑一遍，中间 Block 2、3（$7\text{–}18$ 层）循环 3 遍共执行 48 层。中间 12 层循环相比尾部 12 层在 28 项评测中赢下 27 项（等效算力增益 $1.51\text{–}1.91\times$ vs. $1.24\text{–}1.36\times$）；512k 长轨迹测试里，不循环版本需多花 $140\%$ 推理算力才追上同等的验证 loss（训练算力仅省 $7.5\%$）<a class="cite" href="#ref-3">[3]</a>。</p>
 
         <figure>
             <img src="../fig-inkling-arch.webp" width="1147" height="1371" alt="Goodfire 原图：Inkling 2 Mini 三轮循环整体架构图。Block 1（1–6 层）运行一次后，核心 Block 2（7–12 层）与 Block 3（13–18 层）循环运行三遍，通过黑色深度注意力残差路径和紫/橙/绿跨循环注意力模块连接，最后由 Block 4（19–24 层）解码输出。" loading="lazy">
@@ -380,7 +380,7 @@
         <ol class="references">
             <li id="ref-1" lang="en" data-brief="证明在单 token FLOPs、总参数量和 KV cache 三项同时对齐时，将 MoE 中间半数层循环两遍仍可节省 6.8–18.0% 前沿训练算力（最高扩展到 54B），且收益在代码、长文本与 ICL 上格外突出，并发现第二遍降低 BOS sink。"><a href="https://arxiv.org/abs/2609.01343" target="_blank" rel="noopener">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</a>. Wang, Zhang et al., Tsinghua University, ByteDance Seed, M-A-P, and TokenWave.AI, 2026 (arXiv:2609.01343).</li>
             <li id="ref-2" lang="en" data-brief="通过 592 次 FineWeb-Edu 训练提出带界循环系数有效参数缩放律（R²=0.9992），证明因 q ≈ 1.022 ≫ 2p ≈ 0.474，同算力下完整 BPTT 优于截断反传（如 (4,4) 赢 (8,2)），且 (2,2) 能以少 27% 参数近乎追平不循环模型。"><a href="https://arxiv.org/abs/2610.26030" target="_blank" rel="noopener">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</a>. Xiong, Chen et al., HKU MMLab and Yale University, 2026 (arXiv:2610.26030).</li>
-            <li id="ref-3" lang="en" data-brief="Thinking Machines Lab 开源 26.4B 总参数 / 5.4B 等效激活的循环 MoE 模型 Inkling 2 Mini（原生 NVFP4/MXFP8），系统汇报了编码智能体基准（DeepSWE 48.2%）、中间层循环消融以及 CoT 可监控性与可读性评估。"><a href="https://thinkingmachines.ai/news/inkling-2-mini/" target="_blank" rel="noopener">Introducing Inkling 2 Mini</a>. Thinking Machines Lab, November 20, 2026.</li>
+            <li id="ref-3" lang="en" data-brief="Thinking Machines Lab 开源 26.4B 总参数 / 5.4B 等效激活的Looped MoE 模型 Inkling 2 Mini（原生 NVFP4/MXFP8），系统汇报了编码智能体基准（DeepSWE 48.2%）、中间层循环消融以及 CoT 可监控性与可读性评估。"><a href="https://thinkingmachines.ai/news/inkling-2-mini/" target="_blank" rel="noopener">Introducing Inkling 2 Mini</a>. Thinking Machines Lab, November 20, 2026.</li>
             <li id="ref-4" lang="en" data-brief="Goodfire 剖析 Inkling 2 Mini 的块级深度注意力与跨循环注意力分解方程，揭示块末层在权重空间对读取器打标、单维异常特征 d2027 在三轮循环内正写负清的开关行为，以及 Tuned/Coda 透镜的中间层解码效果。"><a href="https://www.goodfire.com/research/interpreting-inkling-2-mini/" target="_blank" rel="noopener">Interpreting Inkling 2 Mini</a>. Lee, Krishnamurthy, Merullo, Balsam, and Lubana, Goodfire, November 20, 2026.</li>
             <li id="ref-5" lang="en" data-brief="Inkling 2 Mini 官方 Model Card，详述 24 层（8/128 专家）循环至 48 层的结构规格、1M 上下文、NVFP4/MXFP8 部署格式与同尺寸开源模型全面评测表。"><a href="https://thinkingmachines.ai/model-card/inkling-2-mini/" target="_blank" rel="noopener">Inkling 2 Mini Model Card</a>. Thinking Machines Lab, November 20, 2026.</li>
             <li id="ref-6" lang="en" data-brief="最早系统提出按深度共享权重的通用 Transformer 范式，将序列计算深度从静态参数量中解放出来。"><a href="https://arxiv.org/abs/1807.03819" target="_blank" rel="noopener">Universal Transformers</a>. Dehghani, Gouws, Vinyals, Uszkoreit, and Kaiser, ICLR 2019 (arXiv:1807.03819).</li>
