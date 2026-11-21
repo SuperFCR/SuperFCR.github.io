@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="系统梳理 Flow Matching 模型中的强化学习范式：从去噪 MDP、PPO/DPO/GRPO 与后 R1 演进出发，完整推导保边际分布的 ODE-to-SDE 转换并给出 PyTorch 核心实现，串联 Flow-GRPO、DanceGRPO、MixGRPO、TempFlow-GRPO、DiffusionNFT、随机最优控制及多轮 Agentic RL。">
-    <title>Flow Matching 模型中的强化学习 | 冯超然</title>
+    <meta name="description" content="系统梳理 Flow Matching 模型中的强化学习范式：从 Denoising MDP、PPO/DPO/GRPO 与 Post-R1 演进出发，完整推导 Marginal-Preserving ODE-to-SDE 转换并剖析 PyTorch 实现，串联 Flow-GRPO、DanceGRPO、MixGRPO、TempFlow-GRPO、DiffusionNFT、SOC 与多轮 Agentic RL。">
+    <title>Reinforcement Learning in Flow Matching Models | 冯超然</title>
     <link rel="canonical" href="https://www.falcary.com/blogs/flow-matching-rl/zh/">
     <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/flow-matching-rl/">
     <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/blogs/flow-matching-rl/zh/">
@@ -15,8 +15,8 @@
     <script src="../../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="冯超然">
-    <meta property="og:title" content="Flow Matching 模型中的强化学习">
-    <meta property="og:description" content="贯通 MDP 与 GRPO 原理、ODE-to-SDE 等价推导与 PyTorch 实现、Flow-GRPO 家族演进、前向过程 DiffusionNFT、随机最优控制与 Agentic RL。">
+    <meta property="og:title" content="Reinforcement Learning in Flow Matching Models">
+    <meta property="og:description" content="贯通 MDP 与 GRPO 原理、ODE-to-SDE 等价推导与 PyTorch 实现、Flow-GRPO 方法族、Forward-Process DiffusionNFT、SOC 与 Agentic RL。">
     <meta property="og:url" content="https://www.falcary.com/blogs/flow-matching-rl/zh/">
     <meta property="og:image" content="https://www.falcary.com/blogs/flow-matching-rl/cover.webp">
     <meta name="twitter:card" content="summary_large_image">
@@ -53,10 +53,10 @@
             <div class="lang-switch" role="navigation" aria-label="Language" lang="en"><a href="../">EN</a><a href="./" class="active" aria-current="page">中文</a></div>
         </div>
         <span class="post-type type-deep-dive">深入探索</span>
-        <h1 class="post-title">Flow Matching 模型中的强化学习</h1>
+        <h1 class="post-title">Reinforcement Learning in Flow Matching Models</h1>
         <div class="post-meta">
             <span>2026 年 9 月 2 日</span>
-            <span>18 分钟阅读</span>
+            <span>14 分钟阅读</span>
             <span>冯超然</span>
         </div>
     </header>
@@ -65,85 +65,85 @@
         <summary>目录</summary>
         <div class="inner">
         <ul>
-            <li><a href="#rl-foundations">强化学习基础：从 MDP 到 GRPO</a>
+            <li><a href="#rl-foundations">RL Foundations：从 MDP 到 GRPO</a>
                 <ul>
-                    <li><a href="#denoising-mdp">将迭代去噪建模为马尔可夫决策过程</a></li>
-                    <li><a href="#importance-sampling">策略梯度与重要性采样</a></li>
-                    <li><a href="#ppo-dpo">PPO、GAE 与直接偏好优化 DPO</a></li>
-                    <li><a href="#grpo-variants">GRPO 及其后 R1 演进</a></li>
+                    <li><a href="#denoising-mdp">Denoising as an MDP</a></li>
+                    <li><a href="#importance-sampling">Policy Gradient 与 Importance Sampling</a></li>
+                    <li><a href="#ppo-dpo">PPO、GAE 与 DPO</a></li>
+                    <li><a href="#grpo-variants">GRPO 及其 Post-R1 演进</a></li>
                 </ul>
             </li>
-            <li><a href="#ode-to-sde">连接流匹配与在线 RL：ODE 到 SDE 的等价转换</a>
+            <li><a href="#ode-to-sde">ODE-to-SDE：把 Online RL 引入 Flow Matching</a>
                 <ul>
-                    <li><a href="#sde-derivation">保边际分布的 SDE 推导</a></li>
-                    <li><a href="#ode2sde-code">ODE-to-SDE 工程实现解析</a></li>
+                    <li><a href="#sde-derivation">Marginal-Preserving SDE 推导</a></li>
+                    <li><a href="#ode2sde-code">PyTorch 实现：sde_step_with_logprob</a></li>
                 </ul>
             </li>
-            <li><a href="#flow-grpo-family">逆向采样链上的 Flow-GRPO 方法族</a>
+            <li><a href="#flow-grpo-family">Reverse-Process Flow-GRPO 方法族</a>
                 <ul>
-                    <li><a href="#flow-and-dance">Flow-GRPO 与 DanceGRPO：确立在线 RL 基线</a></li>
-                    <li><a href="#mix-and-tempflow">MixGRPO、TempFlow-GRPO 与 BranchGRPO：效率与时间信用分配</a></li>
-                    <li><a href="#stability-refinements">稳定化改进：Pref-GRPO、GRPO-Guard 与 Flow-CPS</a></li>
+                    <li><a href="#flow-and-dance">Flow-GRPO 与 DanceGRPO：Online RL 基线</a></li>
+                    <li><a href="#mix-and-tempflow">MixGRPO、TempFlow-GRPO 与 BranchGRPO：效率与 Temporal Credit Assignment</a></li>
+                    <li><a href="#stability-refinements">稳定性改进：Pref-GRPO、GRPO-Guard 与 Flow-CPS</a></li>
                 </ul>
             </li>
-            <li><a href="#beyond-sde">超越逆向 SDE：前向过程优化、随机最优控制与控制策略</a>
+            <li><a href="#beyond-sde">Beyond Reverse-SDE：Forward-Process、SOC 与 Control Policies</a>
                 <ul>
-                    <li><a href="#diffusion-nft">DiffusionNFT：基于前向过程的在线强化学习</a></li>
-                    <li><a href="#soc-and-control">随机最优控制与具身连续控制策略</a></li>
+                    <li><a href="#diffusion-nft">DiffusionNFT：基于 Forward Process 的 Online RL</a></li>
+                    <li><a href="#soc-and-control">Stochastic Optimal Control 与 Embodied Flow Policies</a></li>
                 </ul>
             </li>
-            <li><a href="#agentic-rl">从单轮去噪到推理与 Agentic 强化学习</a>
+            <li><a href="#agentic-rl">从 Single-Pass Denoising 到 Reasoning 与 Agentic RL</a>
                 <ul>
-                    <li><a href="#coupled-cot">耦合式推理生成：T2I-R1 与自回归 CoT</a></li>
-                    <li><a href="#agentic-flow-rl">面向流匹配模型的 Agentic RL</a></li>
+                    <li><a href="#coupled-cot">Coupled Reasoning &amp; Generation：T2I-R1 与 Autoregressive CoT</a></li>
+                    <li><a href="#agentic-flow-rl">面向 Flow Matching 的 Agentic RL</a></li>
                 </ul>
             </li>
-            <li><a href="#comparison">全景对比与实践选型建议</a></li>
-            <li><a href="#citation">引用</a></li>
-            <li><a href="#references">参考资料</a></li>
+            <li><a href="#comparison">方法全景对比与选型建议</a></li>
+            <li><a href="#citation">引用本文</a></li>
+            <li><a href="#references">参考文献</a></li>
         </ul>
         </div>
     </details>
 
     <div class="post-content">
-        <p>以 Stable Diffusion 3.5 和 FLUX 为代表的 Flow Matching（流匹配）与 Rectified Flow 模型，凭借沿直线常微分方程（ODE）传输的简单几何结构，实现了极高的采样速度与生成质量。然而，恰恰是这种在推理阶段极其高效的<strong>确定性</strong>，在引入在线强化学习（RL）对齐人类偏好与复杂指令时成了直接障碍——基于策略梯度的 RL 同时依赖两个条件：<em>随机探索</em>（对同一提示词采样多样轨迹以评估相对优劣）与<em>可微的转移概率</em> $\log \pi_\theta(a_t \mid s_t)$（用于计算重要性采样比率与 KL 正则），而确定性 ODE 两者都不具备。</p>
+        <p>以 Stable Diffusion 3.5 和 FLUX 为代表的 Flow Matching 与 Rectified Flow 模型，凭借沿直线常微分方程（ODE）传输的简单几何结构，在推理速度与生成质量上取得了极佳表现。但恰恰是推理阶段的高效<strong>确定性（Determinism）</strong>，在引入 Online RL 对齐人类偏好与复杂指令时成了直接障碍——基于 Policy Gradient 的方法同时依赖两个条件：<em>Stochastic Exploration</em>（对同一 prompt 采样多样化轨迹以比较相对优劣）与<em>可计算的转移概率</em> $\log \pi_\theta(a_t \mid s_t)$（用于计算 Importance Ratio 与 KL 正则），而确定性 ODE 两者都不具备。</p>
 
-        <p>围绕这一核心矛盾，2025 至 2026 年的 Flow Matching RL 研究形成了一条清晰的演进主线：从借助 <strong>ODE-to-SDE 等价转换</strong>将 LLM 领域的 GRPO（Group Relative Policy Optimization）引入连续流模型，到利用滑动窗口与轨迹分叉解决算力瓶颈和稀疏信用分配，再到通过<strong>前向过程优化（DiffusionNFT）</strong>与<strong>随机最优控制（Adjoint Matching / RAM）</strong>彻底摆脱逆向 SDE 似然计算，最终走向将流模型作为可调用工具的多轮 <strong>Agentic RL</strong> 闭环推理系统。本文由浅入深串联整条技术脉络：先夯实从 MDP 到 GRPO 家族的 RL 理论基石，再完整推导保边际分布的 ODE-to-SDE 方程并剖析 PyTorch 核心代码，随后系统梳理 Flow-GRPO 方法族、前向/控制范式以及 Agentic RL 的最新进展。</p>
+        <p>围绕这一核心矛盾，2025 至 2026 年的 Flow Matching RL 研究形成了一条清晰的演进主线：从借助 <strong>ODE-to-SDE 转换</strong>将 LLM 领域的 GRPO（Group Relative Policy Optimization）引入连续流模型，到利用 Sliding Window 与 Trajectory Branching 解决算力开销和 Temporal Credit Assignment 难题，再到通过 <strong>Forward-Process 优化（DiffusionNFT）</strong>与 <strong>Stochastic Optimal Control（Adjoint Matching / RAM）</strong>彻底摆脱逆向 SDE 似然追踪，最终走向把 Flow Matching 模型当作工具调用的多轮 <strong>Agentic RL</strong> 闭环推理系统。本文由浅入深串联整条技术脉络：先夯实从 MDP 到 GRPO 家族的 RL 理论基础，再完整推导 Marginal-Preserving SDE 并剖析 PyTorch 核心实现，随后系统梳理 Flow-GRPO 方法族、Forward-Process / SOC 范式以及 Agentic RL 的最新进展。</p>
 
         <div class="callout">
-            <p><strong>时间记号约定（Lipman FM 与 SD3.5 / Flow-GRPO 的对照）：</strong>在 Lipman 等人的原始 Flow Matching 文献中，通常设 $t=0$ 为噪声、$t=1$ 为真实数据（$X_t = t X_1 + (1-t) X_0$）；而在 Stable Diffusion 3.5、FLUX 及 Flow-GRPO 等面向 Rectified Flow 对齐的文献与代码库中，普遍沿用扩散模型方向约定——<strong>$t=1$ 为标准高斯噪声</strong> $x_1 \sim \mathcal{N}(0, I)$，<strong>$t=0$ 为干净图像</strong> $x_0 \sim q$：
+            <p><strong>Notation 约定（Lipman FM vs. SD3.5 / Flow-GRPO）：</strong>在 Lipman 等人的原始 Flow Matching 文献中，通常设 $t=0$ 为噪声、$t=1$ 为真实数据（$X_t = t X_1 + (1-t) X_0$）；而在 Stable Diffusion 3.5、FLUX 及 Flow-GRPO 等面向 Rectified Flow 对齐的论文与代码库中，普遍沿用 Diffusion 方向约定——<strong>$t=1$ 为标准高斯噪声</strong> $x_1 \sim \mathcal{N}(0, I)$，<strong>$t=0$ 为干净样本</strong> $x_0 \sim q$：
             $$x_t = (1-t)x_0 + t x_1, \qquad v_t = \frac{dx_t}{dt} = x_1 - x_0.$$
-            因此逆向生成过程从 $t=1$ 积分至 $t=0$，离散时间步长 $\Delta t = t_{\text{prev}} - t \lt 0$。下文第 2 至第 4 节将统一采用 SD3.5 / Flow-GRPO 的方向约定，确保公式符号与 PyTorch 实现完全一一对应。</p>
+            因此 Reverse-Time Generation 从 $t=1$ 积分至 $t=0$，离散时间步长 $\Delta t = t_{\text{prev}} - t \lt 0$。下文第 2 至第 4 节统一采用 SD3.5 / Flow-GRPO 约定，确保公式符号与 PyTorch 代码严格一一对应。</p>
         </div>
 
-        <h2 id="rl-foundations">强化学习基础：从 MDP 到 GRPO<a class="anchor" href="#rl-foundations" aria-hidden="true">#</a></h2>
+        <h2 id="rl-foundations">RL Foundations：从 MDP 到 GRPO<a class="anchor" href="#rl-foundations" aria-hidden="true">#</a></h2>
 
-        <p>理解现代视觉生成中的 RL 算法，首先要看清为什么策略优化会从早期需要 Critic 的 PPO 一路简化到无 Critic 的组相对优化（GRPO），以及离散文本上的经验在迁移到连续图像轨迹时哪些假设会失效。</p>
+        <p>理解视觉生成中的 RL 算法，首先要看清为什么 Policy Optimization 会从早期需要 Critic 的 PPO 一路简化到 Critic-Free 的 GRPO，以及文本推理上的经验迁移到连续视觉轨迹时哪些假设会失效。</p>
 
-        <h3 id="denoising-mdp">将迭代去噪建模为马尔可夫决策过程<a class="anchor" href="#denoising-mdp" aria-hidden="true">#</a></h3>
-        <p>根据 DDPO<a class="cite" href="#ref-1">[1]</a> 确立的经典形式化框架，多步迭代去噪生成过程可以被严格建模为一个有限视界马尔可夫决策过程（MDP）$(\mathcal{S}, \mathcal{A}, \rho_0, P, R)$：</p>
+        <h3 id="denoising-mdp">Denoising as an MDP<a class="anchor" href="#denoising-mdp" aria-hidden="true">#</a></h3>
+        <p>按照 DDPO<a class="cite" href="#ref-1">[1]</a> 确立的经典形式化框架，多步迭代去噪过程可以严格建模为有限视界 Markov Decision Process（MDP）$(\mathcal{S}, \mathcal{A}, \rho_0, P, R)$：</p>
         <ul>
-            <li><strong>状态空间 $s_t \triangleq (c, t, x_t)$：</strong>包含条件文本提示 $c$、当前时间步 $t$ 以及带噪隐变量 $x_t$。</li>
-            <li><strong>动作空间 $a_t \triangleq x_{t-1}$</strong>（在连续时间调度器下记为 $x_{t+\Delta t}$）：去噪网络在状态 $s_t$ 下采样出的下一步隐状态。</li>
-            <li><strong>策略 $\pi_\theta(a_t \mid s_t) \triangleq p_\theta(x_{t-1} \mid x_t, c)$：</strong>由神经网络参数化的单步条件转移分布。</li>
-            <li><strong>转移核 $P(s_{t+1} \mid s_t, a_t) \triangleq (\delta_c, \delta_{t-1}, \delta_{x_{t-1}})$：</strong>一旦动作 $a_t$ 采样完成，下一状态就是完全确定的 Dirac $\delta$ 分布。</li>
-            <li><strong>初始状态分布 $\rho_0(s_0) \triangleq (p(c), \delta_T, \mathcal{N}(0, I))$：</strong>提示词从训练分布抽取，初始隐变量从各向同性标准正态分布采样。</li>
-            <li><strong>稀疏终端奖励 $R(s_t, a_t)$：</strong>仅在最终生成干净图像 $x_0$ 时给出奖励 $r(x_0, c)$，其余所有中间去噪步即时奖励均为 $0$。</li>
+            <li><strong>State $s_t \triangleq (c, t, x_t)$：</strong>包含条件 prompt $c$、当前 timestep $t$ 以及带噪隐变量 $x_t$。</li>
+            <li><strong>Action $a_t \triangleq x_{t-1}$</strong>（连续调度器下记为 $x_{t+\Delta t}$）：去噪网络在状态 $s_t$ 下采样出的下一步隐状态。</li>
+            <li><strong>Policy $\pi_\theta(a_t \mid s_t) \triangleq p_\theta(x_{t-1} \mid x_t, c)$：</strong>神经网络参数化的单步条件转移分布。</li>
+            <li><strong>Transition Kernel $P(s_{t+1} \mid s_t, a_t) \triangleq (\delta_c, \delta_{t-1}, \delta_{x_{t-1}})$：</strong>一旦动作 $a_t$ 采样完成，下一状态就是完全确定的 Dirac $\delta$ 分布。</li>
+            <li><strong>Initial Distribution $\rho_0(s_0) \triangleq (p(c), \delta_T, \mathcal{N}(0, I))$：</strong>prompt 抽自数据集分布，初始 latent 采自各向同性标准正态分布。</li>
+            <li><strong>Sparse Terminal Reward $R(s_t, a_t)$：</strong>仅在终点生成干净图像 $x_0$ 时给出奖励 $r(x_0, c)$，所有中间去噪步的即时奖励均为 $0$。</li>
         </ul>
-        <p>这一 MDP 建模直接点明了视觉生成 RL 的核心难度：所有中间步均无直接反馈，奖励信号（如人类偏好打分、OCR 文本准确率或 VLM 评判）只能在轨迹终点观测，使长序列上的时间信用分配（credit assignment）极具挑战。</p>
+        <p>这一 MDP 建模直接点明了视觉生成 RL 的核心难度：所有中间步均无直接反馈，奖励信号（如人类偏好打分、OCR 准确率或 VLM Judge）只能在轨迹终点观测，使得长序列上的 Temporal Credit Assignment 极具挑战。</p>
 
-        <h3 id="importance-sampling">策略梯度与重要性采样<a class="anchor" href="#importance-sampling" aria-hidden="true">#</a></h3>
-        <p>强化学习的目标是最大化策略期望回报 $J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)]$。借助对数导数技巧 $\nabla_\theta P(\tau \mid \pi_\theta) = P(\tau \mid \pi_\theta)\nabla_\theta \log P(\tau \mid \pi_\theta)$ 并展开轨迹概率 $P(\tau \mid \pi_\theta) = \rho_0(s_0)\prod_t P(s_{t+1}\mid s_t,a_t)\pi_\theta(a_t \mid s_t)$，与 $\theta$ 无关的初始分布和转移核在求导后自然消去，得到策略梯度基本形式：</p>
+        <h3 id="importance-sampling">Policy Gradient 与 Importance Sampling<a class="anchor" href="#importance-sampling" aria-hidden="true">#</a></h3>
+        <p>RL 的目标是最大化期望回报 $J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)]$。利用 Log-Derivative Trick $\nabla_\theta P(\tau \mid \pi_\theta) = P(\tau \mid \pi_\theta)\nabla_\theta \log P(\tau \mid \pi_\theta)$ 展开轨迹概率 $P(\tau \mid \pi_\theta) = \rho_0(s_0)\prod_t P(s_{t+1}\mid s_t,a_t)\pi_\theta(a_t \mid s_t)$，与 $\theta$ 无关的初始分布和转移核在求导后消去，得到 Policy Gradient 基本形式：</p>
         $$\nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\!\left[\sum_{t} \big(R(\tau) - b(s_t)\big)\,\nabla_\theta \log \pi_\theta(a_t \mid s_t)\right]$$
-        <p>其中减去仅依赖状态的基线函数 $b(s_t)$ 不会引入梯度偏差（因为 $\mathbb{E}_{a_t \sim \pi_\theta}[b(s_t)\nabla_\theta \log\pi_\theta(a_t \mid s_t)] = 0$），却能显著压缩蒙特卡洛估计的方差。</p>
-        <p>然而在多步生成任务中，采样一批轨迹 $\tau$ 需要几十次十亿参数级 DiT 前向推理与昂贵的视觉奖励评估。如果每批样本只做一次梯度更新就丢弃，样本利用率极低。<strong>重要性采样（Importance Sampling）</strong>通过测度变换恒等式解决了这一瓶颈：</p>
+        <p>减去仅依赖状态的 Baseline $b(s_t)$ 保持梯度无偏（因为 $\mathbb{E}_{a_t \sim \pi_\theta}[b(s_t)\nabla_\theta \log\pi_\theta(a_t \mid s_t)] = 0$），同时显著压缩蒙特卡洛估计的方差。</p>
+        <p>然而在视觉生成中，采集一批 rollout 轨迹 $\tau$ 需要数十次十亿参数级 DiT 前向推理与昂贵的视觉 Reward 评估。如果每批样本只做一次梯度更新就丢弃，样本利用率极低。<strong>Importance Sampling</strong> 通过测度变换恒等式解决了这一瓶颈：</p>
         $$\mathbb{E}_{x \sim p}[f(x)] = \int f(x)\,\frac{p(x)}{q(x)}\,q(x)\,dx = \mathbb{E}_{x \sim q}\!\left[\frac{p(x)}{q(x)}\,f(x)\right]$$
-        <p>令旧策略 $\pi_{\theta_{\text{old}}}$ 充当采样分布 $q$，即可用缓存的离线批次连续执行多轮 mini-batch 更新，只需为每步梯度乘上概率比值 $\rho_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{old}}(a_t \mid s_t)}$。但一旦 $\pi_\theta$ 偏离 $\pi_{\text{old}}$ 过多，重要性比值方差会急剧膨胀并冲垮训练。如何以低方差估计优势并控制步长，正是 PPO 与 GRPO 的核心所在。</p>
+        <p>让旧策略 $\pi_{\theta_{\text{old}}}$ 充当采样分布 $q$，即可在缓存的 rollout batch 上连续执行多轮 mini-batch 更新，只需为每步梯度乘上 Importance Ratio $\rho_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{old}}(a_t \mid s_t)}$。但一旦 $\pi_\theta$ 偏离 $\pi_{\text{old}}$ 过多，Importance Ratio 的方差会急剧膨胀并冲垮训练。如何以低方差估计 Advantage 并约束步长，正是 PPO 与 GRPO 的核心所在。</p>
 
-        <h3 id="ppo-dpo">PPO、GAE 与直接偏好优化 DPO<a class="anchor" href="#ppo-dpo" aria-hidden="true">#</a></h3>
-        <p><strong>PPO</strong><a class="cite" href="#ref-2">[2]</a> 从“降方差”和“控步长”双管齐下。一方面引入价值网络（Critic）$V_\psi(s_t)$ 估计状态的平均未来回报，并基于单步 TD 误差 $\delta_t = r_t + \gamma V_\psi(s_{t+1}) - V_\psi(s_t)$ 构造<strong>广义优势估计（GAE）</strong>：</p>
+        <h3 id="ppo-dpo">PPO、GAE 与 DPO<a class="anchor" href="#ppo-dpo" aria-hidden="true">#</a></h3>
+        <p><strong>PPO</strong><a class="cite" href="#ref-2">[2]</a> 从“降方差”和“控步长”双管齐下。一方面引入 Critic 网络 $V_\psi(s_t)$ 估计状态的平均未来回报，并基于单步 TD Error $\delta_t = r_t + \gamma V_\psi(s_{t+1}) - V_\psi(s_t)$ 构造 <strong>GAE（Generalized Advantage Estimation）</strong>：</p>
         $$\widehat A_t^{\text{GAE}(\gamma, \lambda)} = \sum_{k=0}^{T-1-t} (\gamma\lambda)^k \delta_{t+k}, \qquad \widehat A_t = \delta_t + \gamma\lambda\,\widehat A_{t+1}$$
-        <p>衰减系数 $\lambda \in [0, 1]$ 优雅地调节了偏差与方差的权衡：$\lambda = 0$ 时退化为低方差但高偏差的单步 TD(0)；$\lambda = 1$ 时退化为无偏但高方差的蒙特卡洛回报（工程中通常取 $\lambda = 0.95$）。在 PyTorch 中，GAE 可通过一次逆向遍历高效算出：</p>
+        <p>衰减系数 $\lambda \in [0, 1]$ 平滑调节 Bias–Variance Tradeoff：$\lambda = 0$ 时退化为低方差但高偏差的单步 TD(0)；$\lambda = 1$ 时退化为无偏但高方差的 Monte Carlo 回报（工程中通常取 $\lambda = 0.95$）。在 PyTorch 中，GAE 可通过一次逆向遍历算出：</p>
         <pre><code class="language-python">with torch.no_grad():
     nextvalues = 0.0
     lastgaelam = 0.0
@@ -159,18 +159,18 @@
 
     advantages = torch.stack(advantages_reversed[::-1], dim=1)
     returns = advantages + values</code></pre>
-        <p>另一方面，PPO 用近端截断（Clip）将策略比率 $\rho_t(\theta)$ 限制在 $[1-\epsilon, 1+\epsilon]$ 内，将 Actor 损失、Critic 价值损失、熵奖励与参考策略 KL 惩罚合为一体：</p>
+        <p>另一方面，PPO 用 Clipping 将策略比率 $\rho_t(\theta)$ 限制在 $[1-\epsilon, 1+\epsilon]$ 内，将 Clipped Actor Loss、Clipped Value Loss、Entropy Bonus 与参考策略 KL Penalty 合为一体：</p>
         $$\mathcal{L}_{\text{PPO}}(\theta,\psi) = \mathbb{E}_{\tau \sim \pi_{\text{old}}}\!\left[\frac{1}{T}\sum_{t=0}^{T-1}\Big(-\min\big(\rho_t(\theta)\widehat A_t,\, \operatorname{clip}(\rho_t(\theta),1-\epsilon,1+\epsilon)\widehat A_t\big) + c_V \ell_t^{\text{value}}(\psi) - c_H \mathcal{H}(\pi_\theta) + \beta\,D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}})\Big)\right]$$
-        <p>PPO 的痛点在于系统代价过高——需同时维护 Actor、Critic、Reward 与 Reference 四个大模型；而在视觉生成中，让 Critic $V_\psi(x_t, t, c)$ 从高维带噪隐图像 $x_t$ 准确预测终局审美分数更是难上加难。</p>
+        <p>PPO 的痛点在于系统代价过高——需同时维护 Actor、Critic、Reward Model 与 Reference Model 四个大模型；而在视觉生成中，让 Critic $V_\psi(x_t, t, c)$ 从高维带噪 latent $x_t$ 准确预测终局审美分数更是极其脆弱。</p>
 
-        <p><strong>DPO</strong><a class="cite" href="#ref-3">[3]</a> 另辟蹊径，直接绕开奖励模型与 Critic：KL 正则化 RL 目标 $\max_\pi \mathbb{E}[r(x,y)] - \beta D_{\text{KL}}(\pi \,\|\, \pi_{\text{ref}})$ 具有闭式最优解 $\pi^*(y \mid x) = \frac{1}{Z(x)}\pi_{\text{ref}}(y \mid x)\exp(r(x,y)/\beta)$。反解出奖励函数 $r(x,y) = \beta\log\frac{\pi^*(y\mid x)}{\pi_{\text{ref}}(y\mid x)} + \beta\log Z(x)$ 并代入 Bradley–Terry 偏好模型，配分函数 $Z(x)$ 恰好消去，得到纯监督形式的偏好对比损失：</p>
+        <p><strong>DPO</strong><a class="cite" href="#ref-3">[3]</a> 另辟蹊径，绕开显式 Reward Model 与 Critic：KL-Regularized RL 目标 $\max_\pi \mathbb{E}[r(x,y)] - \beta D_{\text{KL}}(\pi \,\|\, \pi_{\text{ref}})$ 具有闭式最优解 $\pi^*(y \mid x) = \frac{1}{Z(x)}\pi_{\text{ref}}(y \mid x)\exp(r(x,y)/\beta)$。反解出奖励函数 $r(x,y) = \beta\log\frac{\pi^*(y\mid x)}{\pi_{\text{ref}}(y\mid x)} + \beta\log Z(x)$ 并代入 Bradley–Terry 偏好模型，配分函数 $Z(x)$ 恰好消去，得到纯监督形式的偏好对比损失：</p>
         $$\mathcal{L}_{\text{DPO}}(\theta) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}\!\left[\log \sigma\!\left(\beta\log\frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta\log\frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)}\right)\right]$$
-        <p>从数学本质看，DPO 求解的正是与 PPO RLHF 相同的优化目标，只是把“在线采样 + 梯度上升”换成了“闭式解 + 离线监督学习”（也正因仅约束相对差值，实操中需警惕正负样本概率同时下降的风险）。将这一思想迁移到扩散模型，<strong>Diffusion-DPO</strong><a class="cite" href="#ref-4">[4]</a> 利用前向加噪的 ELBO 噪声预测误差替代不可算的 $\log \pi_\theta(x_0 \mid c)$，在 Pick-a-Pic 等静态偏好对上实现了稳定对齐——但它依然受限于离线数据分布，无法像在线 RL 那样在策略演化中主动探索高奖励区域。</p>
+        <p>从数学本质看，DPO 求解的正是与 PPO RLHF 相同的优化目标，只是把“Online Rollout + 梯度上升”换成了“闭式解 + Offline Supervised Learning”（也正因仅约束相对差值，实操中需警惕正负样本概率同时下降的风险）。将这一思想迁移到扩散模型，<strong>Diffusion-DPO</strong><a class="cite" href="#ref-4">[4]</a> 利用 Forward Process 的 ELBO 噪声预测 MSE 替代不可算的 $\log \pi_\theta(x_0 \mid c)$，在 Pick-a-Pic 等静态偏好对上实现了稳定对齐——但它依然受限于离线数据分布，无法像 Online RL 那样在策略演化中主动探索高奖励区域。</p>
 
-        <h3 id="grpo-variants">GRPO 及其后 R1 演进<a class="anchor" href="#grpo-variants" aria-hidden="true">#</a></h3>
-        <p><strong>GRPO（Group Relative Policy Optimization，组相对策略优化）</strong><a class="cite" href="#ref-5">[5]</a> 保留了在线探索能力，同时彻底砍掉了 Value Critic。对同一提示词 $q$ 采样一组共 $G$ 条轨迹 $\{o_i\}_{i=1}^G$，获得结果奖励 $\mathbf{R} = (R_1, \dots, R_G)$ 后，直接以组内均值与标准差构造归一化相对优势，并广播给整条轨迹的每一步：</p>
+        <h3 id="grpo-variants">GRPO 及其 Post-R1 演进<a class="anchor" href="#grpo-variants" aria-hidden="true">#</a></h3>
+        <p><strong>GRPO（Group Relative Policy Optimization）</strong><a class="cite" href="#ref-5">[5]</a> 保留了 Online Exploration 能力，同时彻底砍掉了 Value Critic。对同一 prompt $q$ 采样一组共 $G$ 条轨迹 $\{o_i\}_{i=1}^G$，获得结果奖励 $\mathbf{R} = (R_1, \dots, R_G)$ 后，直接以组内均值与标准差构造归一化相对优势，并广播给整条轨迹的每一步：</p>
         $$\widehat A_{i,t} = \widehat A_i = \frac{R_i - \operatorname{mean}(\mathbf{R})}{\operatorname{std}(\mathbf{R}) + \delta}$$
-        <p>结合步级重要性比率 $r_{i,t}(\theta) = \frac{\pi_\theta(a_{i,t} \mid s_{i,t})}{\pi_{\text{old}}(a_{i,t} \mid s_{i,t})}$ 与无偏低方差的参考 KL 惩罚（工程上常采用 Schulman $k_3$ 估计 $\frac{\pi_{\text{ref}}}{\pi_\theta} - \log\frac{\pi_{\text{ref}}}{\pi_\theta} - 1$），完整 GRPO 损失为：</p>
+        <p>结合步级重要性比率 $r_{i,t}(\theta) = \frac{\pi_\theta(a_{i,t} \mid s_{i,t})}{\pi_{\text{old}}(a_{i,t} \mid s_{i,t})}$ 与无偏低方差的参考 KL Penalty（工程上常采用 Schulman $k_3$ 估计 $\frac{\pi_{\text{ref}}}{\pi_\theta} - \log\frac{\pi_{\text{ref}}}{\pi_\theta} - 1$），完整 GRPO Loss 为：</p>
         $$\mathcal{L}_{\text{GRPO}}(\theta) = -\mathbb{E}_{q, \{o_i\}}\!\left[\frac{1}{G}\sum_{i=1}^G \frac{1}{|o_i|}\sum_{t=1}^{|o_i|} \min\!\Big(r_{i,t}(\theta)\widehat A_{i,t},\, \operatorname{clip}(r_{i,t}(\theta), 1-\epsilon, 1+\epsilon)\widehat A_{i,t}\Big)\right] + \beta\,\mathbb{E}_{i,t}\!\left[D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}})\right]$$
         <pre><code class="language-python"># GRPO 组内相对优势计算（标准 GRPO 与去标准差版 Dr. GRPO）
 scores = token_level_rewards.sum(dim=-1)
@@ -188,86 +188,86 @@ with torch.no_grad():
             scores[i] = scores[i] - id2mean[index[i]]  # Dr. GRPO 省略标准差归一化
     advantages = scores.unsqueeze(-1) * response_mask</code></pre>
 
-        <p>DeepSeek-R1 之后，围绕长推理链的一系列后续工作迅速揭示了基础 GRPO 的几个结构性缺陷，而这些洞见几乎全部在后续 Flow Matching RL 中一一重现：</p>
+        <p>DeepSeek-R1 之后，围绕 Long-CoT 的一系列后续工作迅速揭示了基础 GRPO 的几个结构性缺陷，而这些洞见几乎全部在后续 Flow Matching RL 中一一重现：</p>
         <ul>
-            <li><strong>MDPO（Kimi k1.5）</strong><a class="cite" href="#ref-6">[6]</a> 从在线镜像下降（Mirror Descent）导出更紧凑的代理目标：从当前策略 $\pi_{\theta_i}$ 采样轨迹 $(y, z)$，用组均值近似配分对数 $\tau\log Z(x) \approx \bar r$，直接让 $\tau\log\frac{\pi_\theta(y\mid x)}{\pi_{\theta_i}(y\mid x)}$ 回归到相对奖励 $r(x,y,y^*) - \bar r$。Kimi k1.5 同时指出，基于规则的 ORM 结果奖励往往比 PRM 过程价值函数更容易催生“aha moment”，因为过激的 Value 惩罚会过早抹杀“差一点就成功”的探索路径。</li>
-            <li><strong>DAPO</strong><a class="cite" href="#ref-7">[7]</a> 在 32B 模型上针对 GRPO 痛点提出四项修复：（1）<em>Clip-Higher</em> 非对称截断区间 $[1-\epsilon_{\text{low}}, 1+\epsilon_{\text{high}}]$，为低概率探索动作留出上浮空间，防止熵塌缩；（2）<em>Dynamic Sampling</em> 动态过滤全对或全错、组内方差为零的无效样本组；（3）Token 级平均损失以消除长短回复的梯度不公；（4）超长截断软惩罚。</li>
-            <li><strong>VAPO</strong><a class="cite" href="#ref-8">[8]</a> 则像精密的算法工程师，证明只要修复 Critic 训练瓶颈，基于价值的 RL 依然能打平甚至超越无 Critic 路线——关键在于 <em>Value-Pretraining</em>、<em>Decoupled-GAE</em>（Critic 用 $\lambda=1.0$ 保持无偏回归，Actor 用 $\lambda=0.95$ 控制方差）、<em>Length-Adaptive GAE</em>、Clip-Higher 以及正样本辅助 NLL 损失。</li>
-            <li><strong>GSPO</strong><a class="cite" href="#ref-9">[9]</a> 指出逐 token 裁剪 $\rho_{i,t}$ 在长序列下存在严重失真，改用长度归一化的序列级几何平均重要性比 $s_i(\theta) = \exp\!\big(\frac{1}{|y_i|}\sum_t \log r_{i,t}(\theta)\big)$，借助 stop-gradient 技巧即可将序列级比值无痛回传给每个 token。</li>
-            <li><strong>On-Policy Distillation（OPD）</strong><a class="cite" href="#ref-10">[10]</a> 将 RL 的在策略状态分布与 SFT 的稠密逐点监督焊在一起：由学生模型 $\pi_\theta$ 自行采样轨迹，并在每一步向教师 $\nu$ 询问局部概率分布，按 Forward KL $D_{\text{KL}}(\nu \,\|\, \pi_\theta)$（偏重覆盖多模态，如 GKD）或 Reverse KL $D_{\text{KL}}(\pi_\theta \,\|\, \nu)$（偏重锁定主峰，如 PG-OPD）进行在线蒸馏。</li>
+            <li><strong>MDPO（Kimi k1.5）</strong><a class="cite" href="#ref-6">[6]</a> 从 Online Mirror Descent 导出更紧凑的代理目标：从当前策略 $\pi_{\theta_i}$ 采样轨迹 $(y, z)$，用组均值近似配分对数 $\tau\log Z(x) \approx \bar r$，直接让 $\tau\log\frac{\pi_\theta(y\mid x)}{\pi_{\theta_i}(y\mid x)}$ 回归到相对奖励 $r(x,y,y^*) - \bar r$。Kimi k1.5 同时指出，基于规则的 ORM（Outcome Reward）往往比 PRM（Process Reward）更容易催生“aha moment”，因为激进的 Value 惩罚会过早抹杀“差一点就对”的探索路径。</li>
+            <li><strong>DAPO</strong><a class="cite" href="#ref-7">[7]</a> 在 32B 模型上针对 GRPO 痛点提出四项修复：（1）<em>Clip-Higher</em> 非对称截断区间 $[1-\epsilon_{\text{low}}, 1+\epsilon_{\text{high}}]$，为低概率探索动作留出上浮空间，防止 Entropy Collapse；（2）<em>Dynamic Sampling</em> 动态过滤全对或全错、组内方差为零的无效样本组；（3）Token-Level Mean Loss 消除长度梯度不公；（4）Soft Overlong Reward Shaping。</li>
+            <li><strong>VAPO</strong><a class="cite" href="#ref-8">[8]</a> 证明只要修复 Critic 训练瓶颈，Value-Based RL 依然能打平甚至超越 Critic-Free 路线——关键在于 <em>Value-Pretraining</em>、<em>Decoupled-GAE</em>（Critic 用 $\lambda=1.0$ 保持无偏回归，Actor 用 $\lambda=0.95$ 控制方差）、<em>Length-Adaptive GAE</em>、Clip-Higher 以及 Positive-Example LM Loss。</li>
+            <li><strong>GSPO</strong><a class="cite" href="#ref-9">[9]</a> 指出逐 token 裁剪 $\rho_{i,t}$ 在长序列下存在长度敏感性与高方差噪声，改用长度归一化的 Sequence-Level 几何平均重要性比 $s_i(\theta) = \exp\!\big(\frac{1}{|y_i|}\sum_t \log r_{i,t}(\theta)\big)$，借助 Stop-Gradient 技巧即可将序列级比值无痛回传给每个 token。</li>
+            <li><strong>On-Policy Distillation（OPD）</strong><a class="cite" href="#ref-10">[10]</a> 将 RL 的 On-Policy 状态分布与 SFT 的逐点密集监督结合起来：由学生模型 $\pi_\theta$ 自行采样轨迹，并在每一步向教师 $\nu$ 查询局部概率分布，按 Forward KL $D_{\text{KL}}(\nu \,\|\, \pi_\theta)$（偏 Mode-Covering，如 GKD）或 Reverse KL $D_{\text{KL}}(\pi_\theta \,\|\, \nu)$（偏 Mode-Seeking，如 PG-OPD）进行在线蒸馏。</li>
         </ul>
 
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th class="nw">训练路径</th>
-                        <th>数据来源</th>
-                        <th>观测状态分布</th>
-                        <th>反馈信号密度</th>
-                        <th>核心痛点</th>
+                        <th class="nw">范式</th>
+                        <th>Rollout 来源</th>
+                        <th>State Distribution</th>
+                        <th>Feedback Density</th>
+                        <th>核心瓶颈</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="nw">SFT / 离线蒸馏</td>
-                        <td>教师或静态数据集</td>
-                        <td>教师分布</td>
-                        <td>稠密（每步/每 token）</td>
-                        <td>暴露偏差：推理进入未见状态后误差累积</td>
+                        <td class="nw">SFT / Offline Distill</td>
+                        <td>Teacher / 静态数据集</td>
+                        <td>Teacher trajectory</td>
+                        <td>Dense（每步/每 token）</td>
+                        <td>Exposure Bias：推理进入未见 state 后误差累积</td>
                     </tr>
                     <tr>
                         <td class="nw">RL（PPO / GRPO）</td>
-                        <td>学生自采样轨迹</td>
-                        <td>在策略学生分布</td>
-                        <td>稀疏（通常仅终端标量）</td>
-                        <td>信用分配困难、高方差、样本利用率较低</td>
+                        <td>Student self-rollout</td>
+                        <td>On-policy student</td>
+                        <td>Sparse（通常仅终端标量）</td>
+                        <td>Credit Assignment 困难、高方差、样本利用率较低</td>
                     </tr>
                     <tr>
                         <td class="nw">On-Policy Distillation</td>
-                        <td>学生自采样轨迹</td>
-                        <td>在策略学生分布</td>
-                        <td>稠密（教师全分布或 logp）</td>
-                        <td>需在线查询教师模型，系统开销偏高</td>
+                        <td>Student self-rollout</td>
+                        <td>On-policy student</td>
+                        <td>Dense（Teacher log-probs）</td>
+                        <td>需在线查询 Teacher 模型，系统开销偏高</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <p>上述 LLM-RL 中的每一条经验都能在后文找到精准镜像：DAPO 的 <em>Clip-Higher</em> 对应 <strong>GRPO-Guard</strong> 对连续比率漂移的抑制；<em>零方差样本组</em>催生了 <strong>Pref-GRPO</strong> 的成对偏好建模；<em>过程信用分配</em>直接驱动了 <strong>TempFlow-GRPO</strong> 与 <strong>BranchGRPO</strong>；而<em>无需反向概率比的在线密集监督</em>则正是 <strong>DiffusionNFT</strong> 的核心精神。</p>
+        <p>上述 LLM-RL 中的每一条经验都能在后文找到精准镜像：DAPO 的 <em>Clip-Higher</em> 对应 <strong>GRPO-Guard</strong> 对连续比率漂移的抑制；<em>零方差样本组</em>催生了 <strong>Pref-GRPO</strong> 的成对偏好建模；<em>Credit Assignment</em> 直接驱动了 <strong>TempFlow-GRPO</strong> 与 <strong>BranchGRPO</strong>；而<em>无需反向概率比的在线密集监督</em>则正是 <strong>DiffusionNFT</strong> 的核心思想。</p>
 
-        <h2 id="ode-to-sde">连接流匹配与在线 RL：ODE 到 SDE 的等价转换<a class="anchor" href="#ode-to-sde" aria-hidden="true">#</a></h2>
+        <h2 id="ode-to-sde">ODE-to-SDE：把 Online RL 引入 Flow Matching<a class="anchor" href="#ode-to-sde" aria-hidden="true">#</a></h2>
 
-        <p>回到 Flow Matching：为什么不能直接拿预训练好的 Rectified Flow 跑 GRPO？因为其采样过程遵循确定性概率流常微分方程 $dx_t = v_\theta(x_t, t, c)\,dt$（从 $t=1$ 到 $t=0$）。一旦给定初始高斯噪声 $x_1$，无论是 Euler 还是高阶求解器，都会生成唯一一条固定轨迹 $\{x_1, \dots, x_0\}$，单步转移分布退化为 Dirac $\delta$ 分布 $p_\theta(x_{t+\Delta t} \mid x_t, c) = \delta(x_{t+\Delta t} - \Phi(x_t))$。这导致两个致命缺口：一是同一提示下缺乏多样化探索轨迹，二是 $\log \pi_\theta$ 根本无法求值。</p>
+        <p>回到 Flow Matching：为什么不能直接拿预训练好的 Rectified Flow 跑 GRPO？因为其采样过程遵循确定性 Probability Flow ODE $dx_t = v_\theta(x_t, t, c)\,dt$（从 $t=1$ 到 $t=0$）。一旦给定初始高斯噪声 $x_1$，无论是 Euler 还是高阶 Solver，都会生成唯一一条固定轨迹 $\{x_1, \dots, x_0\}$，单步转移分布退化为 Dirac $\delta$ 分布 $p_\theta(x_{t+\Delta t} \mid x_t, c) = \delta(x_{t+\Delta t} - \Phi(x_t))$。这导致两个致命缺口：一是同一 prompt 下缺乏多样化探索轨迹，二是 $\log \pi_\theta$ 根本无法求值。</p>
 
-        <h3 id="sde-derivation">保边际分布的 SDE 推导<a class="anchor" href="#sde-derivation" aria-hidden="true">#</a></h3>
-        <p><strong>Flow-GRPO</strong><a class="cite" href="#ref-12">[12]</a> 给出的破局方案十分优雅：将确定性 ODE 转换为在所有时刻 $t \in [0, 1]$ 上<strong>严格保持相同边际概率密度 $p_t(x)$</strong> 的随机微分方程（SDE）<a class="cite" href="#ref-11">[11]</a>。推导过程可分为四步：</p>
+        <h3 id="sde-derivation">Marginal-Preserving SDE 推导<a class="anchor" href="#sde-derivation" aria-hidden="true">#</a></h3>
+        <p><strong>Flow-GRPO</strong><a class="cite" href="#ref-12">[12]</a> 给出的破局方案十分优雅：将确定性 ODE 转换为在所有时刻 $t \in [0, 1]$ 上<strong>严格保持相同边际密度 $p_t(x)$</strong> 的随机微分方程（SDE）<a class="cite" href="#ref-11">[11]</a>。推导过程可分为四步：</p>
 
-        <p><strong>第一步：正向 Fokker–Planck 等价条件。</strong> 在正向加噪方向（$t: 0 \to 1$），Flow ODE 满足连续性方程 $\partial_t p_t + \nabla\cdot(p_t v_t) = 0$。考察标准正向 Itô SDE：$dx_t = f_t^{\text{fwd}}(x_t)\,dt + \sigma_t\,dw_t$，其边际密度演化由 Fokker–Planck 方程支配：</p>
+        <p><strong>第一步：Forward Fokker–Planck 等价条件。</strong> 在正向加噪方向（$t: 0 \to 1$），Flow ODE 满足 Continuity Equation $\partial_t p_t + \nabla\cdot(p_t v_t) = 0$。考察标准正向 Itô SDE：$dx_t = f_t^{\text{fwd}}(x_t)\,dt + \sigma_t\,dw_t$，其边际密度演化由 Fokker–Planck Equation 支配：</p>
         $$\frac{\partial p_t}{\partial t} + \nabla\cdot(p_t f_t^{\text{fwd}}) = \frac{1}{2}\sigma_t^2 \Delta p_t = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}\nabla p_t\right) = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}p_t\nabla\log p_t\right)$$
-        <p>令两式对 $\partial_t p_t$ 的演化完全一致，即 $\nabla\cdot(p_t v_t) = \nabla\cdot(p_t f_t^{\text{fwd}} - \frac{\sigma_t^2}{2}p_t\nabla\log p_t)$，解得正向保边际漂移项：$f_t^{\text{fwd}}(x_t) = v_t(x_t) + \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)$。</p>
+        <p>令两式对 $\partial_t p_t$ 的演化完全一致，即 $\nabla\cdot(p_t v_t) = \nabla\cdot(p_t f_t^{\text{fwd}} - \frac{\sigma_t^2}{2}p_t\nabla\log p_t)$，解得正向 Marginal-Preserving Drift：$f_t^{\text{fwd}}(x_t) = v_t(x_t) + \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)$。</p>
 
-        <p><strong>第二步：Anderson 时间反转（$t: 1 \to 0$）。</strong> 根据 Anderson 逆时 SDE 定理<a class="cite" href="#ref-11">[11]</a>，将正向 SDE 反转用于生成采样时，漂移项需减去 $\sigma_t^2\nabla\log p_t(x_t)$，于是得到逆向生成 SDE：</p>
+        <p><strong>第二步：Anderson Time-Reversal（$t: 1 \to 0$）。</strong> 根据 Anderson 逆时 SDE 定理<a class="cite" href="#ref-11">[11]</a>，将正向 SDE 反转用于生成采样时，Drift 需减去 $\sigma_t^2\nabla\log p_t(x_t)$，于是得到 Reverse-Time SDE：</p>
         $$dx_t = \Big(f_t^{\text{fwd}}(x_t) - \sigma_t^2 \nabla\log p_t(x_t)\Big)dt + \sigma_t\,d\bar w_t = \left[v_t(x_t) - \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\right]dt + \sigma_t\,d\bar w_t$$
-        <p>从物理直觉上看，逆向采样中 $dt \lt 0$，因此 $-\frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\,dt$ 恰好沿对数概率密度上升最快的方向拉回样本，抵消随机布朗运动 $\sigma_t\,d\bar w_t$ 带来的扩散发散。</p>
+        <p>从物理直觉上看，逆向采样中 $dt \lt 0$，因此 $-\frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\,dt$ 恰好沿 Score Function（对数概率密度梯度）方向拉回样本，抵消随机布朗运动 $\sigma_t\,d\bar w_t$ 带来的扩散发散。</p>
 
-        <p><strong>第三步：用流速度场表示边际 Score。</strong> 在 Rectified Flow 线性插值 $x_t = (1-t)x_0 + t x_1$（其中 $x_1 \sim \mathcal{N}(0, I)$）下，条件分布 $p(x_t \mid x_0) = \mathcal{N}((1-t)x_0, t^2 I)$ 满足 Tweedie 恒等式 $\nabla_{x_t}\log p(x_t \mid x_0) = -\frac{x_t - (1-t)x_0}{t^2} = -\frac{x_1}{t}$，取条件期望即得 $\nabla\log p_t(x_t) = -\frac{\mathbb{E}[x_1 \mid x_t]}{t}$。结合 $v_t(x_t) = \mathbb{E}[x_1 - x_0 \mid x_t]$ 与 $x_t = (1-t)\mathbb{E}[x_0 \mid x_t] + t\,\mathbb{E}[x_1 \mid x_t]$ 消去 $\mathbb{E}[x_0 \mid x_t]$，可得 $\mathbb{E}[x_1 \mid x_t] = x_t + (1-t)v_t(x_t)$，从而把抽象的 Score 直接转化为模型已预测的速度：</p>
+        <p><strong>第三步：用 Velocity Field 表示 Score Function。</strong> 在 Rectified Flow 线性插值 $x_t = (1-t)x_0 + t x_1$（其中 $x_1 \sim \mathcal{N}(0, I)$）下，条件分布 $p(x_t \mid x_0) = \mathcal{N}((1-t)x_0, t^2 I)$ 满足 Tweedie's Formula：$\nabla_{x_t}\log p(x_t \mid x_0) = -\frac{x_t - (1-t)x_0}{t^2} = -\frac{x_1}{t}$，取条件期望即得 $\nabla\log p_t(x_t) = -\frac{\mathbb{E}[x_1 \mid x_t]}{t}$。结合 $v_t(x_t) = \mathbb{E}[x_1 - x_0 \mid x_t]$ 与 $x_t = (1-t)\mathbb{E}[x_0 \mid x_t] + t\,\mathbb{E}[x_1 \mid x_t]$ 消去 $\mathbb{E}[x_0 \mid x_t]$，可得 $\mathbb{E}[x_1 \mid x_t] = x_t + (1-t)v_t(x_t)$，从而把抽象的 Score 直接转化为模型已预测的速度场：</p>
         $$\nabla \log p_t(x_t) = -\frac{1}{t}\Big(x_t + (1-t)v_t(x_t)\Big)$$
 
-        <p><strong>第四步：Euler–Maruyama 离散化与闭式 KL 散度。</strong> 将 Score 关系代入逆向 SDE，并以负步长 $\Delta t = t_{\text{prev}} - t \lt 0$ 离散化，即得高斯策略转移 $\pi_\theta(x_{t+\Delta t} \mid x_t, c) = \mathcal{N}(\mu_\theta(x_t, t),\, \sigma_t^2 |\Delta t|\,I)$：</p>
+        <p><strong>第四步：Euler–Maruyama 离散化与 Closed-Form KL。</strong> 将 Score 关系代入 Reverse-Time SDE，并以负步长 $\Delta t = t_{\text{prev}} - t \lt 0$ 离散化，即得高斯策略转移 $\pi_\theta(x_{t+\Delta t} \mid x_t, c) = \mathcal{N}(\mu_\theta(x_t, t),\, \sigma_t^2 |\Delta t|\,I)$：</p>
         $$x_{t+\Delta t} = \underbrace{x_t + \left[v_\theta(x_t, t) + \frac{\sigma_t^2}{2t}\big(x_t + (1-t)v_\theta(x_t, t)\big)\right]\Delta t}_{\mu_\theta(x_t, t)} + \sigma_t\sqrt{|\Delta t|}\,\epsilon, \qquad \epsilon \sim \mathcal{N}(0, I)$$
         <p>对均值项按 $x_t$ 与 $v_\theta(x_t, t)$ 合并整理，得到与代码完全吻合的形式：</p>
         $$\mu_\theta(x_t, t) = x_t\left(1 + \frac{\sigma_t^2}{2t}\Delta t\right) + v_\theta(x_t, t)\left(1 + \frac{\sigma_t^2(1-t)}{2t}\right)\Delta t$$
-        <p>取噪声调度 $\sigma_t = a\sqrt{\frac{t}{1-t}}$（$a$ 为控制随机探索强度的标量超参数），由于策略 $\pi_\theta$ 与参考策略 $\pi_{\text{ref}}$ 共享完全相同的各向同性方差 $\sigma_t^2 |\Delta t| I$，两者单步 KL 散度退化为两个速度场预测差的加权 $L_2$ 范数，完全免去蒙特卡洛估计：</p>
+        <p>取噪声调度 $\sigma_t = a\sqrt{\frac{t}{1-t}}$（$a$ 为控制随机探索强度的标量超参数），由于 $\pi_\theta$ 与参考策略 $\pi_{\text{ref}}$ 共享完全相同的各向同性方差 $\sigma_t^2 |\Delta t| I$，两者单步 KL Divergence 退化为两个速度场预测差的加权 $L_2$ 范数，完全免去 Monte Carlo 估计：</p>
         $$D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}}) = \frac{\|\mu_\theta - \mu_{\text{ref}}\|^2}{2\sigma_t^2 |\Delta t|} = \frac{|\Delta t|}{2}\left(\frac{1}{\sigma_t} + \frac{\sigma_t(1-t)}{2t}\right)^2 \|v_\theta(x_t, t) - v_{\text{ref}}(x_t, t)\|^2$$
 
-        <h3 id="ode2sde-code">ODE-to-SDE 工程实现解析<a class="anchor" href="#ode2sde-code" aria-hidden="true">#</a></h3>
-        <p>在官方 <code>yifan123/flow_grpo</code> 代码库<a class="cite" href="#ref-12">[12]</a>中，整个 ODE-to-SDE 转换被封装在一个兼顾“采样 rollout”与“反向更新重算 logp”的函数 <code>sde_step_with_logprob</code> 中：</p>
+        <h3 id="ode2sde-code">PyTorch 实现：sde_step_with_logprob<a class="anchor" href="#ode2sde-code" aria-hidden="true">#</a></h3>
+        <p>在官方 <code>yifan123/flow_grpo</code> 代码库<a class="cite" href="#ref-12">[12]</a>中，整个 ODE-to-SDE 转换被封装在一个兼顾“Rollout 采样”与“Policy Update 重算 log-prob”的函数 <code>sde_step_with_logprob</code> 中：</p>
         <pre><code class="language-python">def sde_step_with_logprob(
     self,
-    model_output: torch.FloatTensor,   # 神经网络预测速度 v_theta(x_t, t, c)
+    model_output: torch.FloatTensor,   # 网络预测速度场 v_theta(x_t, t, c)
     timestep: Union[float, torch.Tensor],
-    sample: torch.FloatTensor,         # 当前时刻隐变量 x_t
+    sample: torch.FloatTensor,         # 当前时刻 latent x_t
     noise_level: float = 0.7,
     prev_sample: Optional[torch.FloatTensor] = None,
     generator: Optional[torch.Generator] = None,
@@ -277,30 +277,30 @@ with torch.no_grad():
     if prev_sample is not None:
         prev_sample = prev_sample.float()
 
-    # 将离散调度器时间步映射到连续噪声比例 sigma in [0, 1]
+    # 将离散 scheduler timestep 映射到连续 sigma 区间 [0, 1]
     step_index = [self.index_for_timestep(t) for t in timestep]
     prev_step_index = [step + 1 for step in step_index]
     sigma = self.sigmas[step_index].view(-1, *([1] * (sample.ndim - 1)))
     sigma_prev = self.sigmas[prev_step_index].view(-1, *([1] * (sample.ndim - 1)))
-    sigma_max = self.sigmas[1].item()  # 防止起点 sigma == 1 时出现 1 / (1 - sigma) 奇异值
+    sigma_max = self.sigmas[1].item()  # 防止起点 sigma == 1 时 1 / (1 - sigma) 奇异
 
     dt = sigma_prev - sigma  # 逆向去噪过程中严格为负 (1 -&gt; 0)
     std_dev_t = torch.sqrt(sigma / (1 - torch.where(sigma == 1, sigma_max, sigma))) * noise_level
 
-    # 保边际 SDE 的条件高斯均值: mu_theta(x_t, t)
+    # Marginal-Preserving SDE 的条件高斯均值: mu_theta(x_t, t)
     prev_sample_mean = (
         sample * (1 + std_dev_t**2 / (2 * sigma) * dt)
         + model_output * (1 + std_dev_t**2 * (1 - sigma) / (2 * sigma)) * dt
     )
 
-    # 分支 1（Rollout 采样阶段）: 采样下一步隐状态; 分支 2（策略更新阶段）: 复用缓冲区动作
+    # 分支 1（Rollout 阶段）: 采样下一步 latent; 分支 2（Update 阶段）: 评估缓存动作的 log_prob
     if prev_sample is None:
         variance_noise = randn_tensor(
             model_output.shape, generator=generator, device=model_output.device, dtype=model_output.dtype
         )
         prev_sample = prev_sample_mean + std_dev_t * torch.sqrt(-1 * dt) * variance_noise
 
-    # 各向同性高斯转移对数概率（在空间与通道维度取均值以稳定策略比率）
+    # 各向同性高斯转移 log-prob（在空间与通道维度取 mean 以稳定 importance ratio）
     step_std = std_dev_t * torch.sqrt(-1 * dt)
     log_prob = (
         -((prev_sample.detach() - prev_sample_mean) ** 2) / (2 * (step_std**2))
@@ -309,217 +309,217 @@ with torch.no_grad():
     )
     log_prob = log_prob.mean(dim=tuple(range(1, log_prob.ndim)))
     return prev_sample, log_prob, prev_sample_mean, std_dev_t</code></pre>
-        <p>这段短短三十余行的核心实现里，有四个直接关系到训练能否收敛的工程细节：</p>
+        <p>这段核心实现里有四个直接决定训练稳定性的工程细节：</p>
         <ul>
-            <li><strong><code>dt</code> 的正负号处理：</strong>逆向调度时 <code>sigma_prev &lt; sigma</code>，<code>dt</code> 本身是负数，因此在漂移均值中直接乘以有符号 <code>dt</code> 推动样本去噪，而在计算扩散标准差时必须取 <code>torch.sqrt(-1 * dt)</code>（即 $\sqrt{|\Delta t|}$）。</li>
+            <li><strong><code>dt</code> 的正负号处理：</strong>逆向调度时 <code>sigma_prev &lt; sigma</code>，<code>dt</code> 本身是负数，因此在 Drift 均值中直接乘以有符号 <code>dt</code> 推动样本去噪，而在计算扩散标准差时必须取 <code>torch.sqrt(-1 * dt)</code>（即 $\sqrt{|\Delta t|}$）。</li>
             <li><strong>终点奇异性保护：</strong>第一步时 $t = \sigma = 1$，$\sqrt{\sigma/(1-\sigma)}$ 分母为零；通过 <code>torch.where(sigma == 1, sigma_max, sigma)</code> 将首步分母安全钳位到次大网格点 <code>sigmas[1]</code>。</li>
-            <li><strong>动作截断梯度（<code>prev_sample.detach()</code>）：</strong>在策略更新阶段，已经执行过的动作 <code>prev_sample</code> 从缓冲区取出，梯度仅通过 <code>prev_sample_mean</code>（即 $v_\theta$）反向传播。</li>
-            <li><strong>隐空间维度取均值（<code>mean</code> 而非 <code>sum</code>）：</strong>若直接对 $(C, H, W)$ 数万维坐标求和，微小的均值漂移都会被放大成极端的 $\exp(\log\pi_\theta - \log\pi_{\text{old}})$，导致全步瞬间触发 PPO 裁剪；按维度取均值是高分辨率 DiT 上比率稳定的关键保障。</li>
+            <li><strong>Action 截断梯度（<code>prev_sample.detach()</code>）：</strong>在策略更新阶段，已经执行过的动作 <code>prev_sample</code> 从 buffer 取出，梯度仅通过 <code>prev_sample_mean</code>（即 $v_\theta$）反向传播。</li>
+            <li><strong>隐空间维度取 <code>mean</code> 而非 <code>sum</code>：</strong>若直接对 $(C, H, W)$ 数万维坐标求和，微小的均值漂移都会被放大成极端的 $\exp(\log\pi_\theta - \log\pi_{\text{old}})$，导致全步瞬间触发 PPO Clip；按维度取均值是高分辨率 DiT 上 Ratio 稳定的关键保障。</li>
         </ul>
 
-        <h2 id="flow-grpo-family">逆向采样链上的 Flow-GRPO 方法族<a class="anchor" href="#flow-grpo-family" aria-hidden="true">#</a></h2>
+        <h2 id="flow-grpo-family">Reverse-Process Flow-GRPO 方法族<a class="anchor" href="#flow-grpo-family" aria-hidden="true">#</a></h2>
 
-        <p>有了 <code>sde_step_with_logprob</code> 作为基本原语，围绕“如何加速采样、如何精准分配时间信用、如何防止视觉奖励黑客”这一系列核心问题，逆向采样链上的 Flow-GRPO 方法族迅速演化出多个关键分支。</p>
+        <p>有了 <code>sde_step_with_logprob</code> 作为基本原语，围绕“如何加速采样、如何精准分配 Temporal Credit、如何防止 Reward Hacking”这一系列核心问题，Reverse-Process Flow-GRPO 方法族迅速演化出多个关键分支。</p>
 
         <figure>
-            <img src="../fig-ode-to-sde.svg" width="1600" height="760" alt="逆向去噪采样与时间信用分配策略四象限对比图：确定性 ODE、全步 SDE（Flow-GRPO / DanceGRPO）、混合 ODE-SDE 滑动窗口（MixGRPO）以及轨迹分叉与噪声感知加权（TempFlow-GRPO / BranchGRPO）。" loading="lazy">
-            <figcaption>图 1：逆向采样链（$t=1 \to 0$）上的四种采样与时间信用分配机制演进——确定性 ODE 基线、全步长 SDE（Flow-GRPO / DanceGRPO）、混合 ODE–SDE 滑动窗口（MixGRPO）以及轨迹分叉与噪声感知加权（TempFlow-GRPO / BranchGRPO）。<a href="../fig-ode-to-sde.svg">查看原图</a></figcaption>
+            <img src="../fig-ode-to-sde.svg" width="1600" height="760" alt="Reverse-time sampling 与 Temporal Credit Assignment 四象限对比图：Deterministic Flow ODE、Full-Step SDE（Flow-GRPO / DanceGRPO）、Mixed ODE-SDE Sliding Window（MixGRPO）以及 Trajectory Branching & Noise-Aware Weighting（TempFlow-GRPO / BranchGRPO）。" loading="lazy">
+            <figcaption>图 1：Reverse-Time Sampling（$t=1 \to 0$）上的四种采样与 Temporal Credit 机制演进——Deterministic ODE 基线、Full-Step SDE（Flow-GRPO / DanceGRPO）、Mixed ODE–SDE Sliding Window（MixGRPO）以及 Trajectory Branching + Noise-Aware Weighting（TempFlow-GRPO / BranchGRPO）。<a href="../fig-ode-to-sde.svg">查看原图</a></figcaption>
         </figure>
 
-        <h3 id="flow-and-dance">Flow-GRPO 与 DanceGRPO：确立在线 RL 基线<a class="anchor" href="#flow-and-dance" aria-hidden="true">#</a></h3>
-        <p><strong>Flow-GRPO</strong><a class="cite" href="#ref-12">[12]</a> 在提出 ODE-to-SDE 转换的同时，引入了一项极为实用的加速策略——<strong>去噪步数缩减（Denoising Reduction）</strong>：训练采样阶段仅跑 $T=10$ 步粗糙 SDE 收集轨迹，虽单图画质略低于推理配置，却已足以准确排序各轨迹的奖励相对高低；等到测试推理时再恢复为 $T=40$ 步确定性 ODE 采样，兼顾了训练吞吐与最终生成精度。配合上述闭式 KL 正则防止过拟合，Flow-GRPO 在 SD3.5 上的组合构图（GenEval）、图像文字渲染（OCR）与人类偏好指标均取得了大幅跃升。</p>
-        <p><strong>DanceGRPO</strong><a class="cite" href="#ref-13">[13]</a> 则将同一套 SDE-MDP 范式统一推广至扩散模型与 Rectified Flow 两大流派，覆盖 Stable Diffusion 1.4、FLUX、HunyuanVideo 与 SkyReels-I2V 等图文/视频生成底座（T2I、T2V、I2V）。其标准裁剪目标对组内 $G$ 条轨迹与 $T$ 个时间步联合求平均：</p>
+        <h3 id="flow-and-dance">Flow-GRPO 与 DanceGRPO：Online RL 基线<a class="anchor" href="#flow-and-dance" aria-hidden="true">#</a></h3>
+        <p><strong>Flow-GRPO</strong><a class="cite" href="#ref-12">[12]</a> 在提出 ODE-to-SDE 转换的同时，引入了一项极为实用的加速策略——<strong>Denoising Reduction</strong>：训练 rollout 阶段仅跑 $T=10$ 步粗糙 SDE 收集轨迹，虽单图画质略低于推理配置，却已足以准确排序各轨迹的奖励相对高低；等到测试推理时再恢复为 $T=40$ 步 Deterministic ODE 采样，兼顾了训练吞吐与最终生成精度。配合上述 Closed-Form KL 正则防止过拟合，Flow-GRPO 在 SD3.5 上的组合构图（GenEval）、视觉文字渲染（OCR）与人类偏好指标均取得了大幅跃升。</p>
+        <p><strong>DanceGRPO</strong><a class="cite" href="#ref-13">[13]</a> 则将同一套 SDE-MDP 范式统一推广至 Diffusion 与 Rectified Flow 两大流派，覆盖 Stable Diffusion 1.4、FLUX、HunyuanVideo 与 SkyReels-I2V 等图文/视频生成底座（T2I、T2V、I2V）。其标准 Clipped Objective 对组内 $G$ 条轨迹与 $T$ 个 timestep 联合求平均：</p>
         $$J_{\text{DanceGRPO}}(\theta) = \mathbb{E}_{\{o_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}}\!\left[\frac{1}{G}\sum_{i=1}^G \frac{1}{T}\sum_{t=1}^T \min\!\Big(\rho_{i,t}(\theta)\widehat A_i,\, \operatorname{clip}(\rho_{i,t}(\theta), 1-\epsilon, 1+\epsilon)\widehat A_i\Big)\right]$$
         <p>在工程实践层面，DanceGRPO 总结了四条直接决定视觉 RL 稳定性的经验法则：</p>
         <ul>
-            <li><strong>组内共享初始噪声：</strong>早期的扩散 RL（如 DDPO）为每条样本独立采样初始噪声 $x_1$；DanceGRPO 发现将同一提示组内的 $G$ 条轨迹全部绑定到<em>同一个</em>初始噪声 $x_1$，可以让奖励差异完全来自中间 SDE 探索而非“随机初始种子运气”，显著降低梯度方差。</li>
-            <li><strong>时间步子采样：</strong>去噪轨迹中不必对所有时间步都做反向更新，随机或间隔抽取部分时间步即可在不掉点的情况下大幅降低显存与计算开销。</li>
-            <li><strong>多奖励模型协同防 Hacking：</strong>单独优化美学分数（如 HPS-v2.1）极易导致画面过度饱和、呈现不自然的“油腻感”；将 HPS-v2.1 与 CLIP 图文对齐分数联合加权，能有效守住真实纹理与语义约束。</li>
-            <li><strong>省略 KL 与 Best-of-$N$ 对齐：</strong>在共享噪声与多奖励约束下，DanceGRPO 验证即使移除显式 KL 正则项也未出现崩溃，反而加快了优化；配合 Best-of-$N$ 候选筛选可进一步放大高奖励路径的收益。</li>
+            <li><strong>Shared Initial Noise：</strong>早期的 Diffusion RL（如 DDPO）为每条样本独立采样初始噪声 $x_1$；DanceGRPO 发现将同一 prompt 组内的 $G$ 条轨迹全部绑定到<em>同一个</em>初始噪声 $x_1$，可以让奖励差异完全来自中间 SDE 探索而非“初始种子运气”，显著降低梯度方差。</li>
+            <li><strong>Timestep Subsampling：</strong>去噪轨迹中不必对所有步数都做反向更新，随机或间隔抽取部分 timestep 即可在不掉点的情况下大幅降低显存与计算开销。</li>
+            <li><strong>Multi-Reward Ensemble 防 Hacking：</strong>单独优化美学分数（如 HPS-v2.1）极易导致画面过度饱和、呈现不自然的“油腻感”；将 HPS-v2.1 与 CLIP 图文对齐分数联合加权，能有效守住真实纹理与语义约束。</li>
+            <li><strong>省略 KL 与 Best-of-$N$ 对齐：</strong>在共享噪声与多奖励约束下，DanceGRPO 验证即使移除显式 KL Penalty 也未出现崩溃，反而提升了最终对齐上限；配合 Best-of-$N$ 候选筛选可进一步放大高奖励路径的收益。</li>
         </ul>
 
-        <h3 id="mix-and-tempflow">MixGRPO、TempFlow-GRPO 与 BranchGRPO：效率与时间信用分配<a class="anchor" href="#mix-and-tempflow" aria-hidden="true">#</a></h3>
-        <p>尽管 Flow-GRPO 与 DanceGRPO 跑通了在线 RL 闭环，全轨迹 SDE 优化仍存在两大固有短板：其一是<strong>全链条高昂算力开销</strong>（新旧策略必须对全部 $T$ 步重算后验概率）；其二是<strong>时间均匀性假设（Temporal Uniformity Assumption）</strong>——算法把唯一的终端奖励均等地摊给所有时间步，忽视了早期高噪阶段决定宏观构图与物体布局、后期低噪阶段只负责细节润色的物理事实。</p>
-        <p><strong>MixGRPO</strong><a class="cite" href="#ref-14">[14]</a> 直击算力瓶颈，提出<strong>混合 ODE–SDE 滑动窗口策略</strong>：只在沿去噪时间移动的局部窗口 $S = [t_1, t_2]$ 内使用随机 SDE 采样并计算 GRPO 梯度，窗口之外全部切换为确定性 ODE 采样：</p>
+        <h3 id="mix-and-tempflow">MixGRPO、TempFlow-GRPO 与 BranchGRPO：效率与 Temporal Credit Assignment<a class="anchor" href="#mix-and-tempflow" aria-hidden="true">#</a></h3>
+        <p>尽管 Flow-GRPO 与 DanceGRPO 跑通了 Online RL 闭环，Full-Trajectory SDE 优化仍存在两大固有短板：其一是<strong>全链条算力开销大</strong>（新旧策略必须对全部 $T$ 步重算后验概率）；其二是<strong>Temporal Uniformity Assumption</strong>——算法把唯一的终端奖励均等地摊给所有时间步，忽视了早期高噪阶段决定宏观构图与物体布局、后期低噪阶段只负责细节润色的物理事实。</p>
+        <p><strong>MixGRPO</strong><a class="cite" href="#ref-14">[14]</a> 直击算力瓶颈，提出 <strong>Mixed ODE–SDE Sliding Window</strong>：只在沿去噪时间移动的局部窗口 $S = [t_1, t_2]$ 内使用随机 SDE 采样并计算 GRPO 梯度，窗口之外全部切换为确定性 ODE 采样：</p>
         $$dx_t = \begin{cases} \left[v_\theta(x_t, t) - \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\right]dt + \sigma_t\,d\bar w_t, & t \in S \\ v_\theta(x_t, t)\,dt, & t \notin S \end{cases}$$
-        <p>窗口外的 ODE 步骤彻底免除了后验对数概率的计算；<strong>MixGRPO-Flash</strong> 进一步在窗口外启用高阶求解器（如 DPM-Solver++），在不损伤 HPS-v2.1、PickScore、ImageReward 与 UnifiedReward 指标的前提下，将整体训练时间压缩约 71%。</p>
-        <p><strong>TempFlow-GRPO</strong><a class="cite" href="#ref-15">[15]</a> 则正面对抗时间均匀性假设，引入两项精细的时间感知机制：</p>
+        <p>窗口外的 ODE 步骤彻底免除了后验 log-prob 计算；<strong>MixGRPO-Flash</strong> 进一步在窗口外启用高阶 Solver（如 DPM-Solver++），在不损伤 HPS-v2.1、PickScore、ImageReward 与 UnifiedReward 指标的前提下，将整体训练时间压缩约 71%。</p>
+        <p><strong>TempFlow-GRPO</strong><a class="cite" href="#ref-15">[15]</a> 则正面对抗 Temporal Uniformity Assumption，引入两项精细的时间感知机制：</p>
         <ul>
-            <li><strong>轨迹分叉机制（Trajectory Branching）：</strong>由于半去噪中间态 $x_t$ 充满噪声、语义模糊，专门训练视觉过程奖励模型（PRM）极其困难。TempFlow-GRPO 巧妙地利用确定性–随机性切换来取代 PRM：从起点到选定分叉步 $k$ 全程走确定性 ODE，仅在时刻 $k$ 注入随机 SDE 噪声分化出多个分支 $x_{k+\Delta t} = \text{SDE}(x_k, \epsilon)$，随后各分支再走回确定性 ODE 抵达终点 $x_0$。根据<em>信用局部化定理（Credit Localization）</em>，各分支最终奖励的方差严格且唯一地归因于步 $k$ 的探索动作，无需修改任何奖励模型即实现了精确的过程信用分配。</li>
-            <li><strong>噪声感知策略权重（Noise-Aware Policy Weighting）：</strong>实证显示终端奖励方差在早期高噪步达到峰值并随后单调递减，而这恰与 SDE 扩散步长 $\sigma_t\sqrt{|\Delta t|}$ 的变化曲线高度同频。因此 TempFlow-GRPO 直接用当前步的归一化噪声强度对策略损失加权：</li>
+            <li><strong>Trajectory Branching：</strong>由于半去噪中间态 $x_t$ 充满噪声、语义模糊，专门训练视觉 PRM 极其困难。TempFlow-GRPO 巧妙利用 ODE–SDE 切换取代 PRM：从起点到选定分支步 $k$ 全程走确定性 ODE，仅在时刻 $k$ 注入随机 SDE 噪声分化出多个分支 $x_{k+\Delta t} = \text{SDE}(x_k, \epsilon)$，随后各分支再走回确定性 ODE 抵达终点 $x_0$。根据 <em>Credit Localization</em> 定理，各分支最终奖励的方差严格且唯一地归因于步 $k$ 的探索动作，无需修改任何奖励模型即实现了精确的 Process Credit 归因。</li>
+            <li><strong>Noise-Aware Policy Weighting：</strong>实证显示终端奖励方差在早期高噪步达到峰值并随后单调递减，而这恰与 SDE 扩散步长 $\sigma_t\sqrt{|\Delta t|}$ 的变化曲线高度同频。因此 TempFlow-GRPO 直接用当前步的归一化噪声强度对策略损失加权：</li>
         </ul>
         $$\mathcal{J}_{\text{TempFlow}}(\theta) = \frac{1}{G}\sum_{i=1}^G \frac{1}{T}\sum_{t=0}^{T-1} \operatorname{Norm}(\sigma_t\sqrt{|\Delta t|}) \cdot \min\!\Big(r_{i,t}(\theta)\widehat A_{i,t},\, \operatorname{clip}(r_{i,t}(\theta), 1-\epsilon, 1+\epsilon)\widehat A_{i,t}\Big)$$
         <p>高噪声早期获得更大梯度权重以鼓励宏观结构探索，低噪声后期维持温和微调以保护精细纹理。</p>
-        <p>沿同一思路继续扩展，<strong>BranchGRPO</strong><a class="cite" href="#ref-16">[16]</a> 将单点分叉推广为共享确定性前缀的<strong>结构化分叉树（Branching Tree）</strong>：不仅在关键深度按父节点相对优势精细分配信用，还能在生成中途提前剪枝低收益分支，将整体 RL 训练耗时进一步降低约 55%。</p>
+        <p>沿同一思路继续扩展，<strong>BranchGRPO</strong><a class="cite" href="#ref-16">[16]</a> 将单点分叉推广为共享确定性前缀的<strong>结构化 Branching Tree</strong>：不仅在关键深度按父节点相对优势精细分配信用，还能在生成中途提前剪枝低收益分支，将整体训练耗时进一步降低约 55%。</p>
 
-        <h3 id="stability-refinements">稳定化改进：Pref-GRPO、GRPO-Guard 与 Flow-CPS<a class="anchor" href="#stability-refinements" aria-hidden="true">#</a></h3>
-        <p>在实用化落地过程中，近期几项聚焦稳定性与数值精度的改进同样值得关注：</p>
+        <h3 id="stability-refinements">稳定性改进：Pref-GRPO、GRPO-Guard 与 Flow-CPS<a class="anchor" href="#stability-refinements" aria-hidden="true">#</a></h3>
+        <p>在工程落地中，围绕统计稳定性与采样器离散误差的几项后续改进同样非常关键：</p>
         <ul>
-            <li><strong>Pref-GRPO</strong><a class="cite" href="#ref-17">[17]</a> 指出标量奖励模型往往把视觉品质相近的样本打出极其接近的分数，经组内标准差归一化后，微小的打分噪声会被急剧放大并诱发虚假的“刷分式”Reward Hacking；改用<strong>成对偏好奖励模型（PPRM）</strong>并以组内胜率计算相对优势，能够显著抑制过优化崩坏。</li>
-            <li><strong>GRPO-Guard</strong><a class="cite" href="#ref-18">[18]</a> 深入剖析了 FLUX.1-dev 与 SD3.5-M 上步级重要性比 $\rho_{i,t}$ 随时间步发生的隐式分布偏移，提出受控调节裁剪策略，从机制上呼应了 LLM 中 DAPO 的 Clip-Higher 思想。</li>
-            <li><strong>Flow-CPS</strong><a class="cite" href="#ref-19">[19]</a> 则改进了采样器离散误差本身，以<strong>保系数采样（Coefficients-Preserving Sampling）</strong>取代粗糙的 Euler–Maruyama 近似，在低步数下更稳定地保持 SDE 边际统计特性。</li>
+            <li><strong>Pref-GRPO</strong><a class="cite" href="#ref-17">[17]</a> 指出 Pointwise Reward Model 往往对品质接近的组内样本给出极其相近的标量分，经 $\operatorname{std}(\mathbf{R})$ 归一化后微小的打分噪声会被急剧放大并诱发 Reward Hacking；改用 <strong>Pairwise Preference Reward Model（PPRM）</strong>并以组内胜率计算优势，可大幅稳定文生图 RL。</li>
+            <li><strong>GRPO-Guard</strong><a class="cite" href="#ref-18">[18]</a> 深入剖析了 FLUX.1-dev 与 SD3.5-M 上 Importance Ratio 随 timestep 发生的隐式分布偏移，提出受控调节裁剪（Regulated Clipping），从机制上呼应了 LLM 中 DAPO 的 Clip-Higher 思想。</li>
+            <li><strong>Flow-CPS</strong><a class="cite" href="#ref-19">[19]</a> 则针对采样器离散误差本身，以 <strong>Coefficients-Preserving Sampling</strong> 取代粗糙的 Euler–Maruyama 近似，在低步数下更稳定地保持 SDE 边际统计特性。</li>
         </ul>
 
-        <h2 id="beyond-sde">超越逆向 SDE：前向过程优化、随机最优控制与控制策略<a class="anchor" href="#beyond-sde" aria-hidden="true">#</a></h2>
+        <h2 id="beyond-sde">Beyond Reverse-SDE：Forward-Process、SOC 与 Control Policies<a class="anchor" href="#beyond-sde" aria-hidden="true">#</a></h2>
 
-        <p>无论引入滑动窗口还是分支树，逆向 SDE 路线始终离不开离散高斯转移假设、特定采样器绑定以及沿采样链保存隐状态的历史负担。2025 年底至 2026 年的另一股强力范式革新直指核心问题：<em>RL 微调一定要在逆向采样链上计算转移概率吗？</em></p>
+        <p>无论引入 Sliding Window 还是 Branching Tree，Reverse-SDE 路线始终离不开离散高斯转移假设、特定采样器绑定以及沿采样链保存隐状态的开销。2025 年底至 2026 年的另一股强力范式革新直指核心问题：<em>RL 微调一定要在 Reverse-SDE 上计算转移概率吗？</em></p>
 
         <figure>
-            <img src="../fig-paradigms.svg" width="1600" height="780" alt="Flow Matching 强化学习三大范式架构对比图：内循环逆向 SDE 策略梯度、前向过程与随机最优控制优化（DiffusionNFT / RAM / FPO），以及外循环多轮推理与 Agentic RL。" loading="lazy">
-            <figcaption>图 2：Flow Matching 强化学习的三大核心范式对比：（1）内循环逆向 SDE 策略梯度；（2）摆脱采样似然的前向过程对比与随机最优控制（DiffusionNFT / RAM / FPO）；（3）外循环多轮推理与 Agentic RL。<a href="../fig-paradigms.svg">查看原图</a></figcaption>
+            <img src="../fig-paradigms.svg" width="1600" height="780" alt="Flow Matching RL 三大范式架构对比图：Inner-Loop Reverse-SDE RL、Forward-Process & SOC RL（DiffusionNFT / RAM / FPO），以及 Outer-Loop Agentic & CoT RL。" loading="lazy">
+            <figcaption>图 2：Flow Matching 强化学习的三大核心范式对比：（1）Inner-Loop Reverse-SDE Policy Gradient；（2）摆脱采样似然的 Forward-Process 对比与 SOC（DiffusionNFT / RAM / FPO）；（3）Outer-Loop Reasoning 与 Agentic RL。<a href="../fig-paradigms.svg">查看原图</a></figcaption>
         </figure>
 
-        <h3 id="diffusion-nft">DiffusionNFT：基于前向过程的在线强化学习<a class="anchor" href="#diffusion-nft" aria-hidden="true">#</a></h3>
-        <p><strong>DiffusionNFT</strong><a class="cite" href="#ref-20">[20]</a> 彻底跳出了逆向采样链。传统基于拒绝采样的微调（RFT）只保留高分图像、丢弃低分图像，不仅浪费一半 rollout 算力，还容易因为“只知道往哪走、不知道避开哪”而陷入分布坍缩（Reward Collapse）。DiffusionNFT 允许使用<strong>任意黑盒采样器</strong>（高阶 ODE、少步蒸馏器乃至无 CFG 采样）生成干净图像 $x_0$ 并评估归一化最优性奖励 $r(x_0, c) \in [0, 1]$，随后直接把训练拉回标准 Flow Matching 的<strong>前向加噪插值过程</strong> $x_t = (1-t)x_0 + t\epsilon$（目标速度为 $\epsilon - x_0$）。</p>
-        <p>其点睛之笔在于围绕旧策略 $v^{\text{old}}$ 构造了一对隐式正负速度场参数化（$\beta \gt 0$ 为更新幅度系数）：</p>
+        <h3 id="diffusion-nft">DiffusionNFT：基于 Forward Process 的 Online RL<a class="anchor" href="#diffusion-nft" aria-hidden="true">#</a></h3>
+        <p><strong>DiffusionNFT</strong><a class="cite" href="#ref-20">[20]</a> 彻底跳出了逆向采样链。传统 Rejection Sampling Fine-Tuning（RFT）只保留高分图像、丢弃负样本，不仅浪费一半 rollout 算力，还容易因为缺乏负向推力而陷入 Reward Collapse。DiffusionNFT 允许使用<strong>任意 Black-Box Solver</strong>（高阶 ODE、少步蒸馏器乃至无 CFG 采样）生成干净图像 $x_0$ 并评估归一化最优性奖励 $r(x_0, c) \in [0, 1]$，随后直接把训练拉回标准 Flow Matching 的 <strong>Forward Process</strong> 插值 $x_t = (1-t)x_0 + t\epsilon$（目标速度为 $\epsilon - x_0$）。</p>
+        <p>其核心是围绕旧策略 $v^{\text{old}}$ 构造一对 <strong>Implicit Parameterization</strong> 正负速度场（$\beta \gt 0$ 为更新强度）：</p>
         $$v_\theta^+(x_t, t, c) = (1 - \beta)\,v^{\text{old}}(x_t, t, c) + \beta\,v_\theta(x_t, t, c), \qquad v_\theta^-(x_t, t, c) = (1 + \beta)\,v^{\text{old}}(x_t, t, c) - \beta\,v_\theta(x_t, t, c)$$
-        <p>并最小化如下负样本感知（Negative-Aware）的前向流匹配回归目标：</p>
+        <p>并最小化如下 Negative-Aware Forward Regression 损失：</p>
         $$\mathcal{L}_{\text{NFT}}(\theta) = \mathbb{E}_{(x_0, c) \sim \pi_{\text{old}},\, t,\, \epsilon}\!\left[r(x_0, c)\,\big\|v_\theta^+(x_t, t, c) - (\epsilon - x_0)\big\|^2 + \big(1 - r(x_0, c)\big)\,\big\|v_\theta^-(x_t, t, c) - (\epsilon - x_0)\big\|^2\right]$$
-        <p>展开差值即可看到一个深刻的数学同构：$v_\theta^+ - v_\theta^- = 2\beta(v_\theta - v^{\text{old}})$。这在代数结构上与<strong>无分类器引导（Classifier-Free Guidance, CFG）完全同构</strong>——传统 CFG 在推理时以双倍前向开销放大“有条件与无条件”之差，而 DiffusionNFT 在 RL 训练中放大“高奖励与低奖励”之差，<strong>将引导能力直接内化进单一的 CFG-Free 网络权重中</strong>。由于免除了逆向对数似然追踪与前反向离散化失配，DiffusionNFT 在 SD3.5-Medium 上实现了高达 Flow-GRPO $25\times$ 的收敛提速，约 1k 步即把 GenEval 分数从 $0.24$ 推升至 $0.98$。其两阶段五重奖励课程设计也颇具参考价值：</p>
+        <p>展开差值即可看到一个深刻的数学同构：$v_\theta^+ - v_\theta^- = 2\beta(v_\theta - v^{\text{old}})$。这在代数形式上与 <strong>Classifier-Free Guidance（CFG）完全同构</strong>——传统 CFG 在推理时以双倍前向开销放大“有条件与无条件”之差，而 DiffusionNFT 在 RL 训练中放大“高奖励与低奖励”之差，<strong>将引导能力直接内化进单一的 CFG-Free 网络权重中</strong>。由于免除了逆向 log-prob 追踪与前反向离散化失配，DiffusionNFT 在 SD3.5-Medium 上实现了高达 Flow-GRPO $25\times$ 的收敛提速，约 1k 步即把 GenEval 从 $0.24$ 推升至 $0.98$。其两阶段五重奖励课程设计也十分清晰：</p>
         <ol>
-            <li><strong>第一阶段（模型偏好对齐）：</strong>在 Pick-a-Pic 上联合优化 PickScore、CLIPScore 与 HPSv2.1，先稳固画面审美与基本图文匹配。</li>
-            <li><strong>第二阶段（可验证规则强化）：</strong>叠加入 GenEval 与 OCR 硬规则奖励，在保住美学质感的同时大幅拉升复杂指令遵循与文字书写精度。</li>
+            <li><strong>Stage 1（Model-Based Preference）：</strong>在 Pick-a-Pic 上联合优化 PickScore、CLIPScore 与 HPSv2.1，先稳固画面审美与基本图文匹配。</li>
+            <li><strong>Stage 2（Rule-Based Verifiers）：</strong>叠加入 GenEval 与 OCR 硬规则奖励，在保住美学质感的同时大幅拉升复杂指令遵循与文字书写精度。</li>
         </ol>
 
-        <h3 id="soc-and-control">随机最优控制与具身连续控制策略<a class="anchor" href="#soc-and-control" aria-hidden="true">#</a></h3>
-        <p>与 DiffusionNFT 几乎平行，随机最优控制（SOC）以及机器人具身策略（Embodied Policies）两条路线也各自收敛到了“随机注入”与“前向回归代理”的同一组数学原语上：</p>
+        <h3 id="soc-and-control">Stochastic Optimal Control 与 Embodied Flow Policies<a class="anchor" href="#soc-and-control" aria-hidden="true">#</a></h3>
+        <p>与 DiffusionNFT 几乎平行，Stochastic Optimal Control（SOC）以及机器人 Embodied Flow Policies 两条路线也各自收敛到了“噪声注入”与“Forward-Loss Surrogate”的同一组数学原语上：</p>
         <ul>
-            <li><strong>Adjoint Matching 与 RAM：</strong><strong>Adjoint Matching</strong><a class="cite" href="#ref-21">[21]</a> 将 KL 正则化的流模型奖励微调刻画为无记忆随机最优控制问题，只需拟合伴随 ODE 的最优条件而无需贯穿整条采样链求梯度，但原版仍依赖奖励函数梯度 $\nabla_{x_0} r(x_0)$。最新提出的 <strong>Reinforce Adjoint Matching（RAM）</strong><a class="cite" href="#ref-22">[22]</a> 将伴随匹配的最优性条件与 REINFORCE 恒等式结合，导出了纯回归一致性损失——既无需伴随反向扫描，也无需一步步计算 SDE 重要性比率，直接把 SOC RL 扩展到了不可微的 VLM 与 OCR 奖励上。</li>
-            <li><strong>具身机器人中的 Flow RL（ReinFlow 与 FPO）：</strong>在视觉生成之外，Flow Matching 正广泛用于机器人高频连续动作生成，其在线 RL 方案恰好构成了镜像对照。<strong>ReinFlow</strong><a class="cite" href="#ref-23">[23]</a> 通过向确定性 Rectified Flow / Shortcut 动作策略注入可学习噪声网络，将其化为可计算精确转移似然的离散时间马尔可夫链（对应视觉中的 Flow-GRPO 思路）；而 <strong>FPO（Flow Policy Optimization）</strong><a class="cite" href="#ref-24">[24]</a> 则完全跳过精确似然，直接利用条件流匹配损失（CFM ELBO）构造类似 PPO-clip 的代理比率，以纯前向方式让机械臂策略从零学会多模态分布（对应视觉中的 DiffusionNFT 思路）。</li>
+            <li><strong>Adjoint Matching 与 RAM：</strong><strong>Adjoint Matching</strong><a class="cite" href="#ref-21">[21]</a> 将 KL-Regularized Flow Fine-Tuning 刻画为 Memoryless SOC 问题，只需拟合 Adjoint ODE 的最优性条件而无需贯穿整条采样链反传，但原版仍依赖可微奖励梯度 $\nabla_{x_0} r(x_0)$。后续提出的 <strong>Reinforce Adjoint Matching（RAM）</strong><a class="cite" href="#ref-22">[22]</a> 把伴随匹配的最优性条件与 REINFORCE 恒等式结合，导出了纯回归 Consistency Loss——既无需伴随反向扫描，也无需一步步计算 SDE Importance Ratio，直接把 SOC RL 扩展到了不可微的 VLM 与 OCR 奖励上。</li>
+            <li><strong>Embodied Flow RL（ReinFlow 与 FPO）：</strong>在视觉生成之外，Flow Matching 正广泛用于机器人高频连续动作生成，其 Online RL 方案恰好与图像领域构成镜像对照。<strong>ReinFlow</strong><a class="cite" href="#ref-23">[23]</a> 通过向确定性 Rectified Flow / Shortcut 动作策略注入可学习噪声网络，将其化为可计算精确转移似然的离散马尔可夫链（对应视觉中的 Flow-GRPO 思路）；而 <strong>FPO（Flow Policy Optimization）</strong><a class="cite" href="#ref-24">[24]</a> 则完全跳过精确似然，直接利用 Conditional Flow Matching（CFM）ELBO 损失构造类似 PPO-clip 的代理比率，以纯前向方式让机械臂策略从零学会多模态分布（对应视觉中的 DiffusionNFT 思路）。</li>
         </ul>
 
-        <h2 id="agentic-rl">从单轮去噪到推理与 Agentic 强化学习<a class="anchor" href="#agentic-rl" aria-hidden="true">#</a></h2>
+        <h2 id="agentic-rl">从 Single-Pass Denoising 到 Reasoning 与 Agentic RL<a class="anchor" href="#agentic-rl" aria-hidden="true">#</a></h2>
 
-        <p>前两节讨论的所有算法均作用于单次前向去噪的<strong>内循环（Inner Loop）</strong>。然而，面对包含复杂空间约束、多物体计数与属性绑定的生成指令，或者需要反复局部修改的多步骤图像编辑任务，单靠一轮 28 步速度场积分很难不经反思与检验就一步到位。于是，结合显式思维链（CoT）与多轮智能体闭环的 <strong>Agentic RL</strong> 成了补齐流模型推理上限的新方向。</p>
+        <p>前两节讨论的所有算法均作用于单次前向去噪的 <strong>Inner-Loop RL</strong>。然而，面对包含复杂空间约束、多物体计数与属性绑定的生成指令，或者需要反复局部修改的多步 Image Editing 任务，单靠一轮 28 步速度场积分很难不经规划与自检就一步到位。于是，结合显式 CoT 与多轮智能体闭环的 <strong>Agentic RL</strong> 成了补齐 Flow Matching 推理上限的新方向。</p>
 
-        <h3 id="coupled-cot">耦合式推理生成：T2I-R1 与自回归 CoT<a class="anchor" href="#coupled-cot" aria-hidden="true">#</a></h3>
+        <h3 id="coupled-cot">Coupled Reasoning &amp; Generation：T2I-R1 与 Autoregressive CoT<a class="anchor" href="#coupled-cot" aria-hidden="true">#</a></h3>
         <p><strong>T2I-R1</strong><a class="cite" href="#ref-25">[25]</a> 最早把 R1 式的强化推理引入统一多模态自回归模型（基于 Janus-Pro），借助 <strong>BiCoT-GRPO</strong> 联合优化双层思维链：</p>
         <ol>
-            <li><strong>语义级 CoT（Semantic-level CoT）：</strong>先用 GPT-4o 构造推理轨迹冷启动，使模型在生图前先用文本规划画面构图、空间关系与细节属性。</li>
-            <li><strong>Token 级 CoT（Token-level CoT）：</strong>随后沿用自回归模型逐 token 预测图像 patch 的生成方式，在一次生成通行中完成渲染。</li>
+            <li><strong>Semantic-level CoT：</strong>先用 GPT-4o 构造推理轨迹冷启动，使模型在生图前先用文本规划画面构图、空间关系与细节属性。</li>
+            <li><strong>Token-level CoT：</strong>随后沿用 Autoregressive Model 逐 token 预测图像 patch 的生成方式，在一次前向通行中完成渲染。</li>
         </ol>
-        <p>整个 rollout 过程同时接受四类异构奖励模型（HPM 美学模型 HPS/ImageReward、目标检测器 GroundingDINO/YOLO-World、视觉问答模型 LLaVA 以及微调后的 LLaVA-OneVision ORM）的联合打分，并以此驱动 GRPO 更新。同期的 <strong>ReasonGen-R1</strong><a class="cite" href="#ref-26">[26]</a> 与 <strong>GoT-R1</strong><a class="cite" href="#ref-27">[27]</a> 也遵循这种在同一自回归策略内耦合 SFT 规划与 GRPO 对齐的路线。</p>
-        <p>但从架构本质来看，把自回归图像逐 token 解码包装成“Token 级 CoT”虽然能顺滑复用文本 RL 基础设施，离散自回归生成器的画质、精细排版与局部物理一致性依然普遍逊于 FLUX、SD3.5 这类连续 Flow Matching DiT。自然而然地，研究者开始思考：<em>如何在保留连续流模型高质量渲染底座的同时，为其赋予多轮推理、视觉自检与纠错能力？</em></p>
+        <p>整个 rollout 过程同时接受四类异构 Reward Model（HPM 美学模型 HPS/ImageReward、Object Detector GroundingDINO/YOLO-World、VQA 模型 LLaVA 以及微调后的 LLaVA-OneVision ORM）的联合打分，并以此驱动 GRPO 更新。同期的 <strong>ReasonGen-R1</strong><a class="cite" href="#ref-26">[26]</a> 与 <strong>GoT-R1</strong><a class="cite" href="#ref-27">[27]</a> 也遵循这种在同一自回归策略内耦合 SFT 规划与 GRPO 对齐的路线。</p>
+        <p>但从架构本质来看，把自回归图像逐 token 解码包装成“Token-level CoT”虽然能顺滑复用文本 RL 基础设施，离散自回归生成器的画质、排版精度与局部物理一致性依然普遍逊于 FLUX、SD3.5 这类连续 Flow Matching DiT。自然而然地，研究者开始思考：<em>如何在保留连续 Flow Matching 高质量渲染底座的同时，为其赋予多轮推理、视觉自检与纠错能力？</em></p>
 
-        <h3 id="agentic-flow-rl">面向流匹配模型的 Agentic RL<a class="anchor" href="#agentic-flow-rl" aria-hidden="true">#</a></h3>
-        <p>不同于把理解与像素强行塞进同一个离散词表，面向流匹配模型的 <strong>Agentic RL</strong> 选择了“认知与渲染解耦”——将连续 Flow Matching 生成与编辑模型作为智能体在多轮闭环 MDP 中按需调用的<strong>工具</strong>：</p>
+        <h3 id="agentic-flow-rl">面向 Flow Matching 的 Agentic RL<a class="anchor" href="#agentic-flow-rl" aria-hidden="true">#</a></h3>
+        <p>不同于把理解与像素强行塞进同一个离散词表，面向 Flow Matching 的 <strong>Agentic RL</strong> 选择了“认知与渲染解耦”——将连续 Flow Matching 生成与编辑模型作为智能体在多轮闭环 MDP 中按需调用的<strong>工具</strong>：</p>
         <ul>
-            <li><strong>多轮工具调用智能体（GenAgent 与 Generation Navigator）：</strong><strong>GenAgent</strong><a class="cite" href="#ref-28">[28]</a> 将复杂文生图构建为“<em>规划 → 调用生成 → 视觉审视 → 反思改写 → 局部精修</em>”的多轮智能体轨迹：由多模态大语言模型（MLLM）担任中枢决策器，反复调用现成的 FLUX.1-dev 生成或编辑工具，并在看到中间成图后自主排查漏画物体或错误关系；训练上采用冷启动轨迹 SFT 接轨轨迹级 Agentic RL。更进一步，<strong>Generation Navigator</strong><a class="cite" href="#ref-29">[29]</a> 将多轮迭代生成形式化为状态条件 MDP，提出轨迹级 <strong>PRE-GRPO</strong>，在最终图像峰值质量、跨轮次语义保持度与交互步数预算三者之间做端到端权衡。</li>
-            <li><strong>推理奖励与多智能体编辑 RL（Edit-R1 与 ImageEdit-R1）：</strong>在基于流模型的指令编辑任务（如 FLUX.1-Kontext）中，粗糙的标量打分极易放过“改漏局部”或“误改背景”的幻觉。<strong>UniWorld-V2 / Edit-R1</strong><a class="cite" href="#ref-30">[30]</a> 引入带 CoT 推理链的奖励机制，将编辑指令拆解为可逐条核验的视觉检查项，并直接以 DiffusionNFT 驱动流编辑模型微调；<strong>ImageEdit-R1</strong><a class="cite" href="#ref-31">[31]</a> 则用 GRPO 训练多智能体编排器，把复合编辑指令拆解为有序原子编辑步骤后交由底层流模型执行。</li>
-            <li><strong>DiT 上下文自我反思（Reflect-DiT）：</strong>处于内外循环交界处的 <strong>Reflect-DiT</strong><a class="cite" href="#ref-32">[32]</a> 为扩散 Transformer 直接引入历史生成样本与 VLM 文本反馈作为上下文条件，在推理阶段即可执行系统性的迭代修复，显著超越朴素的 Best-of-$N$ 盲搜。</li>
+            <li><strong>多轮 Tool-Use 智能体（GenAgent 与 Generation Navigator）：</strong><strong>GenAgent</strong><a class="cite" href="#ref-28">[28]</a> 将复杂文生图构建为“<em>Plan → Generate → Inspect → Reflect → Refine</em>”的多轮智能体轨迹：由 MLLM 担任核心决策器，反复调用现成的 FLUX.1-dev 生成或编辑工具，并在看到中间成图后自主排查漏画物体或错误属性绑定；训练上采用冷启动轨迹 SFT 接轨轨迹级 Agentic RL。更进一步，<strong>Generation Navigator</strong><a class="cite" href="#ref-29">[29]</a> 将多轮迭代生成形式化为 State-Conditioned MDP，提出轨迹级 <strong>PRE-GRPO</strong>，在最终图像峰值质量、跨轮次语义保持度与交互步数预算三者之间做端到端权衡。</li>
+            <li><strong>Reasoning Reward 与 Multi-Agent Editing RL（Edit-R1 与 ImageEdit-R1）：</strong>在基于 Flow Matching 的指令编辑任务（如 FLUX.1-Kontext）中，粗糙的标量打分极易放过“改漏局部”或“误改背景”的幻觉。<strong>UniWorld-V2 / Edit-R1</strong><a class="cite" href="#ref-30">[30]</a> 引入带 CoT 的 Reasoning Reward Model（RRM），将编辑指令拆解为可逐条核验的视觉检查项，并直接以 DiffusionNFT 驱动流编辑底座微调；<strong>ImageEdit-R1</strong><a class="cite" href="#ref-31">[31]</a> 则用 GRPO 训练多智能体编排器，把复合编辑指令拆解为有序原子编辑步骤后交由底层流模型执行。</li>
+            <li><strong>DiT 上下文自我反思（Reflect-DiT）：</strong>处于内外循环交界处的 <strong>Reflect-DiT</strong><a class="cite" href="#ref-32">[32]</a> 为 Diffusion Transformer 直接引入历史生成样本与 VLM 文本反馈作为 In-Context 条件，在推理期即可执行系统性的迭代修复，显著超越朴素的 Best-of-$N$ 盲搜。</li>
         </ul>
-        <p>由此可以看到内循环与外循环的清晰分工：<strong>内循环 RL</strong>（<code>Flow-GRPO</code>、<code>DiffusionNFT</code>、<code>RAM</code>）负责拔高流模型单次前向去噪的物理执行上限；<strong>外循环 Agentic RL</strong>（<code>GenAgent</code>、<code>Generation Navigator</code>、<code>ImageEdit-R1</code>）则负责复杂任务的拆解规划、工具调度、视觉核验与多轮纠错，两者叠加正成为高性能多模态生成的标准范式。</p>
+        <p>由此可以看到 Inner-Loop 与 Outer-Loop 的清晰分工：<strong>Inner-Loop RL</strong>（<code>Flow-GRPO</code>、<code>DiffusionNFT</code>、<code>RAM</code>）负责拔高 Flow Matching 单次前向去噪的物理执行上限；<strong>Outer-Loop Agentic RL</strong>（<code>GenAgent</code>、<code>Generation Navigator</code>、<code>ImageEdit-R1</code>）则负责复杂任务的拆解规划、工具调度、视觉核验与多轮纠错，两者叠加正成为高性能多模态生成的标准范式。</p>
 
-        <h2 id="comparison">全景对比与实践选型建议<a class="anchor" href="#comparison" aria-hidden="true">#</a></h2>
+        <h2 id="comparison">方法全景对比与选型建议<a class="anchor" href="#comparison" aria-hidden="true">#</a></h2>
 
-        <p>下表从优化范式、采样器自由度、时间信用粒度、KL/CFG 机制与典型适用场景五个维度，对本文梳理的代表性方案做一横向汇总：</p>
+        <p>下表从 Paradigm、Solver Freedom、Credit Granularity、KL / CFG 机制与 Best Fit 五个维度，对代表性方案做一横向汇总：</p>
 
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th class="nw">方法</th>
-                        <th>优化范式</th>
-                        <th>采样器自由度</th>
-                        <th>信用分配粒度</th>
-                        <th>KL / CFG 机制</th>
-                        <th>典型适用场景</th>
+                        <th class="nw">Method</th>
+                        <th>Paradigm</th>
+                        <th>Solver Freedom</th>
+                        <th>Credit Granularity</th>
+                        <th>KL / CFG 处理</th>
+                        <th>Best Fit</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td class="nw"><code>Flow-GRPO</code><a class="cite" href="#ref-12">[12]</a></td>
-                        <td>逆向 SDE GRPO</td>
+                        <td>Reverse-SDE GRPO</td>
                         <td>Euler SDE（训练 $T=10$）</td>
                         <td>全部 $T$ 步均匀分摊</td>
-                        <td>闭式速度场 KL</td>
-                        <td>SD3.5 通用在线 RL 对齐基线</td>
+                        <td>Closed-form velocity KL</td>
+                        <td>SD3.5 通用 Online RL 对齐基线</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>DanceGRPO</code><a class="cite" href="#ref-13">[13]</a></td>
-                        <td>统一视觉 SDE GRPO</td>
+                        <td>Unified SDE GRPO</td>
                         <td>Euler SDE + 共享 $x_1$</td>
-                        <td>步数子采样、均匀 $A_i$</td>
-                        <td>省略 KL；多奖励集成</td>
+                        <td>Subsampled steps、均匀 $A_i$</td>
+                        <td>省略 KL；Multi-Reward</td>
                         <td>大规模 T2I / T2V / I2V（FLUX、HunyuanVideo）</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>MixGRPO / Flash</code><a class="cite" href="#ref-14">[14]</a></td>
-                        <td>混合 ODE–SDE 滑窗</td>
+                        <td>Mixed ODE–SDE Window</td>
                         <td>窗内 SDE + 窗外 DPM++</td>
-                        <td>局限在滑动窗口 $S$ 内</td>
-                        <td>窗口内裁剪 GRPO</td>
-                        <td>大幅削减逆向 SDE 训练时间（约省 71%）</td>
+                        <td>局限在 Sliding Window $S$ 内</td>
+                        <td>窗口内 Clipped GRPO</td>
+                        <td>大幅削减 Reverse-SDE 训练耗时（约省 71%）</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>TempFlow-GRPO</code><a class="cite" href="#ref-15">[15]</a></td>
-                        <td>轨迹分叉 + 噪声加权</td>
-                        <td>ODE + 单步 SDE 分叉</td>
-                        <td>精确分叉点 + $\sigma_t\sqrt{|\Delta t|}$</td>
-                        <td>噪声感知加权裁剪</td>
+                        <td>Branching + Noise Weight</td>
+                        <td>ODE + 单步 SDE Branch</td>
+                        <td>精确分支点 + $\sigma_t\sqrt{|\Delta t|}$</td>
+                        <td>Noise-aware clipped GRPO</td>
                         <td>区分早期构图探索与后期细节微调</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>BranchGRPO</code><a class="cite" href="#ref-16">[16]</a></td>
-                        <td>共享前缀分叉树</td>
-                        <td>树状共享前缀 SDE</td>
-                        <td>父子节点边相对优势</td>
-                        <td>低分枝剪枝 + GRPO</td>
+                        <td>Prefix-Tree Branching</td>
+                        <td>Shared-prefix tree SDE</td>
+                        <td>Parent-relative tree edges</td>
+                        <td>低收益分枝剪枝 + GRPO</td>
                         <td>高吞吐路径探索（约省 55% 算力）</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>Pref-GRPO / Guard</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-18">[18]</a></td>
-                        <td>稳定化 SDE GRPO</td>
-                        <td>逆向 SDE</td>
-                        <td>成对胜率 / 步长受控裁剪</td>
-                        <td>防比例漂移调节裁剪</td>
-                        <td>抑制 FLUX / SD3.5 上的奖励刷分与崩溃</td>
+                        <td>Stabilized SDE GRPO</td>
+                        <td>Reverse SDE</td>
+                        <td>Pairwise 胜率 / 受控裁剪</td>
+                        <td>Regulated ratio clipping</td>
+                        <td>抑制 FLUX / SD3.5 上的 Reward Hacking 与崩溃</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>DiffusionNFT</code><a class="cite" href="#ref-20">[20]</a></td>
-                        <td>前向过程正负对比</td>
-                        <td><strong>任意黑盒采样器</strong></td>
-                        <td>前向流回归直接优化</td>
+                        <td>Forward-Process Contrast</td>
+                        <td><strong>任意 Black-Box Solver</strong></td>
+                        <td>Forward FM 直接回归</td>
                         <td><strong>CFG-Free</strong>（$v^+, v^-$ 内化）</td>
                         <td>最高性价比单轮对齐（比 Flow-GRPO 快 ~25×）</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>RAM</code><a class="cite" href="#ref-22">[22]</a></td>
-                        <td>SOC 一致性回归</td>
-                        <td><strong>任意采样器</strong></td>
-                        <td>伴随–REINFORCE 一致性</td>
+                        <td>SOC Consistency</td>
+                        <td><strong>任意 Sampler</strong></td>
+                        <td>Adjoint–REINFORCE 一致性</td>
                         <td>目标内置 KL 约束</td>
-                        <td>不可微 VLM 奖励且免伴随反向扫描</td>
+                        <td>不可微 VLM Reward 且免伴随反向扫描</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>T2I-R1</code><a class="cite" href="#ref-25">[25]</a></td>
-                        <td>耦合式自回归 CoT</td>
-                        <td>离散自回归解码</td>
-                        <td>语义 + Token 双层 BiCoT</td>
+                        <td>Coupled AR CoT GRPO</td>
+                        <td>Autoregressive tokens</td>
+                        <td>Semantic + Token BiCoT</td>
                         <td>四类专家奖励联合打分</td>
                         <td>需要图文一体 CoT 的统一离散多模态模型</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>GenAgent / Edit-R1</code><a class="cite" href="#ref-28">[28]</a><a class="cite" href="#ref-30">[30]</a></td>
-                        <td>外循环 Agentic RL</td>
-                        <td>外包调用 FLUX / 流 DiT</td>
-                        <td>多轮轨迹 + CoT RRM</td>
-                        <td>轨迹级策略与工具核验</td>
-                        <td>复杂多物体布局规划与多步指令图像编辑</td>
+                        <td>Outer-Loop Agentic RL</td>
+                        <td>调用 FLUX / Flow DiT</td>
+                        <td>Multi-turn trajectory + CoT RRM</td>
+                        <td>Trajectory RL / Tool Verify</td>
+                        <td>复杂空间布局规划与多步指令 Image Editing</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <p>在具体工程选型上，可遵循以下四条实战准则：</p>
+        <p>在工程选型上，可遵循以下四条实战准则：</p>
         <ol>
-            <li><strong>算力预算敏感的单轮对齐优先选前向或混合滑窗：</strong>若核心诉求是快速把现有文生图底座对齐到偏好或可验证规则奖励，<strong>DiffusionNFT</strong>（兼得推理免 CFG 红利）与 <strong>MixGRPO-Flash</strong> 的投入产出比最高。</li>
-            <li><strong>区分宏观构图与微观细节的学习节奏：</strong>遇到全步 SDE 破坏高频细节或收敛缓慢时，优先采用 <strong>TempFlow-GRPO</strong> 的噪声强度加权或 <strong>BranchGRPO</strong> 的前缀分叉树，把主要梯度预算倾斜给早期高噪声探索步。</li>
-            <li><strong>防患于未然地治理 Reward Hacking：</strong>组内尽量共享初始噪声 $x_1$（DanceGRPO），并将审美模型与 OCR / GenEval 等硬规则检出器组合使用；一旦发现分数虚高而画质下滑，立刻引入 <strong>Pref-GRPO</strong> 的成对胜率比较或 <strong>GRPO-Guard</strong> 的比率调节裁剪。</li>
-            <li><strong>复杂组合推理交给外循环 Agentic RL：</strong>当瓶颈出在多物体空间规划、遗漏属性或复合编辑顺序时，不要强求单轮速度场独自消化所有逻辑——用 <strong>GenAgent</strong>、<strong>Generation Navigator</strong> 或 <strong>ImageEdit-R1</strong> 在流模型外围套一层“规划—渲染—审视—纠错”的智能体闭环往往立竿见影。</li>
+            <li><strong>算力预算敏感的单轮对齐优先选 Forward-Process 或 Hybrid Window：</strong>若核心诉求是快速把现有 T2I 底座对齐到偏好或 Rule-Based Verifiers，<strong>DiffusionNFT</strong>（兼得推理 CFG-Free 红利）与 <strong>MixGRPO-Flash</strong> 的性价比最高。</li>
+            <li><strong>区分宏观构图与微观细节的学习节奏：</strong>遇到 Full-Step SDE 破坏高频细节或收敛缓慢时，优先采用 <strong>TempFlow-GRPO</strong> 的 Noise-Aware Weighting 或 <strong>BranchGRPO</strong> 的共享前缀分叉树，把主要梯度预算倾斜给早期高噪探索步。</li>
+            <li><strong>尽早布防 Reward Hacking：</strong>组内尽量共享初始噪声 $x_1$（DanceGRPO），并将美学模型与 OCR / GenEval 等硬规则检出器组合使用；一旦发现分数虚高而画质下滑，立刻引入 <strong>Pref-GRPO</strong> 的成对胜率或 <strong>GRPO-Guard</strong> 的比率调节裁剪。</li>
+            <li><strong>复杂组合推理交给 Outer-Loop Agentic RL：</strong>当瓶颈出在多物体空间规划、遗漏属性或复合编辑顺序时，不要强求单轮速度场独自消化所有逻辑——用 <strong>GenAgent</strong>、<strong>Generation Navigator</strong> 或 <strong>ImageEdit-R1</strong> 在 Flow Matching 外围套一层“Plan–Generate–Inspect–Refine”的智能体闭环往往立竿见影。</li>
         </ol>
 
-        <h2 id="citation">引用<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <h2 id="citation">引用本文<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
         <div class="citation">
             <p lang="en">If you reference these notes or diagrams, please cite:</p>
             <blockquote cite="https://www.falcary.com/blogs/flow-matching-rl/">
@@ -534,40 +534,40 @@ with torch.no_grad():
 }</code></pre>
         </div>
 
-        <h2 id="references">参考资料<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <h2 id="references">参考文献<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
         <ol class="references" lang="en">
-            <li id="ref-1" data-brief="将迭代扩散去噪形式化为有限视界马尔可夫决策过程（MDP），并提出用于视觉生成模型的策略梯度微调算法 DDPO。"><a href="https://arxiv.org/abs/2305.13301" target="_blank" rel="noopener">Training Diffusion Models with Reinforcement Learning</a>. Black, Janner, Du, Kostrikov, Levine, ICLR 2024 (arXiv:2305.13301).</li>
-            <li id="ref-2" data-brief="提出近端策略优化（PPO），通过裁剪重要性采样比率与广义优势估计（GAE）实现稳定高效的策略梯度更新。"><a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noopener">Proximal Policy Optimization Algorithms</a>. Schulman, Wolski, Dhariwal, Radford, Klimov, 2017 (arXiv:1707.06347).</li>
-            <li id="ref-3" data-brief="推导 KL 正则化 RLHF 的闭式最优解，将其转化为无需显式奖励模型的有监督 Bradley–Terry 偏好分类目标（DPO）。"><a href="https://arxiv.org/abs/2305.18290" target="_blank" rel="noopener">Direct Preference Optimization: Your Language Model is Secretly a Reward Model</a>. Rafailov, Sharma, Mitchell, Ermon, Manning, Finn, NeurIPS 2023 (arXiv:2305.18290).</li>
-            <li id="ref-4" data-brief="将 DPO 推广至扩散模型，利用前向加噪 ELBO 损失替代不可计算的对数似然，基于成对偏好数据微调文生图模型。"><a href="https://arxiv.org/abs/2311.12908" target="_blank" rel="noopener">Diffusion Model Alignment Using Direct Preference Optimization</a>. Wallace, Dang, Rafailov, Zhou, Lou, Purushwalkam, Ermon, Xiong, Joty, Naik, CVPR 2024 (arXiv:2311.12908).</li>
-            <li id="ref-5" data-brief="提出组相对策略优化（GRPO），用同一提示词多条采样轨迹的组内归一化奖励替代独立训练的 Critic 价值网络。"><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noopener">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a>. Shao, Wang, Zhu, Xu, Song, Bi, Zhang, Zhang, Li, Wu, Guo, 2024 (arXiv:2402.03300).</li>
-            <li id="ref-6" data-brief="基于在线镜像下降策略优化（MDPO）扩展长思维链强化学习，并分析结果奖励（ORM）相较于过程价值估计更利探索的原因。"><a href="https://arxiv.org/abs/2501.12599" target="_blank" rel="noopener">Kimi k1.5: Scaling Reinforcement Learning with LLMs</a>. Kimi Team, 2025 (arXiv:2501.12599).</li>
-            <li id="ref-7" data-brief="系统定位 GRPO 在规模化训练中的熵塌缩与零方差组问题，提出 Clip-Higher、动态采样过滤、Token 级均值损失与超长软惩罚。"><a href="https://arxiv.org/abs/2503.14476" target="_blank" rel="noopener">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a>. Yu, Zhang, Zhu, Yuan, Zuo, Yue, et al., 2025 (arXiv:2503.14476).</li>
-            <li id="ref-8" data-brief="通过价值预训练、解耦 GAE（Critic 与 Actor 分离 λ）、长度自适应 GAE 与正样本辅助损失，稳定释放 Value-based 长链 RL 潜力。"><a href="https://arxiv.org/abs/2504.05118" target="_blank" rel="noopener">VAPO: Efficient and Reliable Reinforcement Learning for Advanced Reasoning Tasks</a>. Yue, Yuan, Yu, Zuo, Zhu, Xu, et al., 2025 (arXiv:2504.05118).</li>
-            <li id="ref-9" data-brief="提出组序列策略优化（GSPO），用长度归一化的序列级几何平均重要性比替代逐 Token 裁剪，消除长度敏感性。"><a href="https://arxiv.org/abs/2507.18071" target="_blank" rel="noopener">Group Sequence Policy Optimization</a>. Zheng, Liu, Li, Chen, Yu, Gao, et al. (Qwen Team), 2025 (arXiv:2507.18071).</li>
-            <li id="ref-10" data-brief="提出广义知识蒸馏（GKD），在学生模型自采样的在策略轨迹上利用 Forward / Reverse / JSD 散度接收教师的逐点分布监督。"><a href="https://arxiv.org/abs/2306.13649" target="_blank" rel="noopener">On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes</a>. Agarwal, Vieillard, Stańczyk, Ramos, Geist, Bachem, ICLR 2024 (arXiv:2306.13649).</li>
-            <li id="ref-11" data-brief="建立统一的 SDE、Fokker–Planck 方程与概率流 ODE 理论体系及 Anderson 逆时定理，奠定流模型与扩散等价转换的数学基础。"><a href="https://arxiv.org/abs/2011.13456" target="_blank" rel="noopener">Score-Based Generative Modeling through Stochastic Differential Equations</a>. Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole, ICLR 2021 (arXiv:2011.13456).</li>
-            <li id="ref-12" data-brief="开创 Flow Matching 在线 RL 范式，提出保边际分布的 ODE-to-SDE 转换（sde_step_with_logprob）、闭式速度 KL 正则及去噪步数缩减（yifan123/flow_grpo）。"><a href="https://arxiv.org/abs/2505.05470" target="_blank" rel="noopener">Flow-GRPO: Training Flow Matching Models via Online RL</a>. Liu, Liu, Liang, Li, Liu, Wang, Wan, Zhang, Ouyang, NeurIPS 2025 (arXiv:2505.05470).</li>
-            <li id="ref-13" data-brief="构建涵盖扩散模型与修正流的统一视觉 RL 框架（T2I / T2V / I2V），提出组内共享初始噪声、时间步子采样与多奖励集成等关键实践。"><a href="https://arxiv.org/abs/2505.07818" target="_blank" rel="noopener">DanceGRPO: Unleashing GRPO on Visual Generation</a>. Xue, Wu, Gao, Kong, Zhu, Chen, Liu, Liu, Guo, Huang, Luo, 2025 (arXiv:2505.07818).</li>
-            <li id="ref-14" data-brief="仅在移动滑动窗口内采用 SDE 探索与 GRPO 更新，窗外切换高速高阶 ODE 求解器（MixGRPO-Flash），训练耗时最高降低约 71%。"><a href="https://arxiv.org/abs/2507.21802" target="_blank" rel="noopener">MixGRPO: Unlocking Flow-based GRPO Efficiency with Mixed ODE-SDE</a>. Li, Cui, Huang, Ma, Fan, Yang, Zhong, ECCV 2026 (arXiv:2507.21802).</li>
-            <li id="ref-15" data-brief="打破流模型 RL 中的时间均匀性假设，提出免 PRM 的轨迹分叉局部信用归因机制与基于噪声强度的步级加权策略损失。"><a href="https://arxiv.org/abs/2508.04324" target="_blank" rel="noopener">TempFlow-GRPO: When Timing Matters for GRPO in Flow Models</a>. He, Fu, Zhao, Li, Yang, Yin, Rao, Zhang, 2025 (arXiv:2508.04324).</li>
-            <li id="ref-16" data-brief="将采样轨迹组织为共享前缀的分叉树结构，结合父节点相对优势与低收益路径剪枝，在稳定信用分配的同时节省约 55% 训练算力。"><a href="https://arxiv.org/abs/2509.06040" target="_blank" rel="noopener">BranchGRPO: Stable and Efficient GRPO with Structured Branching in Diffusion Models</a>. Li, Wang, Zhu, Zhao, Lu, She, Zhang, ICLR 2026 (arXiv:2509.06040).</li>
-            <li id="ref-17" data-brief="用成对偏好奖励模型（PPRM）的组内胜率优势替代标量打分标准差归一化，防止微小评分噪声引发的奖励刷分问题。"><a href="https://arxiv.org/abs/2508.20751" target="_blank" rel="noopener">Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning</a>. Wang, Li, Zang, Zhou, Bu, Wang, Lu, Jin, Wang, 2025 (arXiv:2508.20751).</li>
-            <li id="ref-18" data-brief="剖析连续流 SDE 策略中重要性比率随时间步发生的隐式分布偏移，在 FLUX.1-dev 与 SD3.5-M 上通过受控裁剪消除隐式过优化。"><a href="https://arxiv.org/abs/2510.22319" target="_blank" rel="noopener">GRPO-Guard: Mitigating Implicit Over-Optimization in Flow Matching via Regulated Clipping</a>. Wang, Liang, Liu, Liu, Liu, Zheng, Pang, Ma, Xie, Wang, Wang, Wan, Liang, 2025 (arXiv:2510.22319).</li>
-            <li id="ref-19" data-brief="提出保系数采样（Flow-CPS），在低去噪步数下的流匹配强化学习循环中消减粗糙 Euler–Maruyama 离散误差。"><a href="https://arxiv.org/abs/2509.05952" target="_blank" rel="noopener">Coefficients-Preserving Sampling for Reinforcement Learning with Flow Matching</a>. Wang, Yu, 2025 (arXiv:2509.05952).</li>
-            <li id="ref-20" data-brief="直接在流匹配前向加噪过程开展负样本感知在线 RL，通过隐式正负速度场对比内化 CFG 引导并兼容任意黑盒求解器（较 Flow-GRPO 提速约 25×）。"><a href="https://arxiv.org/abs/2509.16117" target="_blank" rel="noopener">DiffusionNFT: Online Diffusion Reinforcement with Forward Process</a>. Zheng, Chen, Ye, Wang, Zhang, Jiang, Su, Ermon, Zhu, Liu, ICLR 2026 Oral (arXiv:2509.16117).</li>
-            <li id="ref-21" data-brief="将流与扩散模型的奖励微调建模为无记忆随机最优控制（SOC），通过拟合伴随 ODE 的最优性条件避免整条采样链反向传播。"><a href="https://arxiv.org/abs/2409.08861" target="_blank" rel="noopener">Adjoint Matching: Fine-tuning Flow and Diffusion Generative Models with Memoryless Stochastic Optimal Control</a>. Domingo-Enrich, Drozdzal, Karrer, Chen, ICLR 2025 (arXiv:2409.08861).</li>
-            <li id="ref-22" data-brief="把伴随匹配最优性条件与 REINFORCE 恒等式结合，形成无需伴随反向扫描的纯回归一致性损失，将 SOC RL 扩展到 SD3.5 不可微奖励。"><a href="https://arxiv.org/abs/2605.10759" target="_blank" rel="noopener">Reinforce Adjoint Matching: Scaling RL Post-Training of Diffusion and Flow-Matching Models</a>. Bergmeister, Jegelka, Nüsken, Domingo-Enrich, Pidstrigach, 2026 (arXiv:2605.10759).</li>
-            <li id="ref-23" data-brief="在机器人连续流策略（Rectified Flow 与 Shortcut 模型）中注入可学习噪声网络，构建精确可求似然的离散马尔可夫链以支持在线 RL 微调。"><a href="https://arxiv.org/abs/2505.22094" target="_blank" rel="noopener">ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning</a>. Zhang, Yu, Su, Wang, NeurIPS 2025 (arXiv:2505.22094).</li>
-            <li id="ref-24" data-brief="提出流策略优化（FPO），直接利用条件流匹配（CFM）ELBO 回归损失构造 PPO 裁剪代理比率，绕过精确似然求解完成连续动作 RL。"><a href="https://arxiv.org/abs/2507.21053" target="_blank" rel="noopener">Flow Matching Policy Gradients</a>. McAllister, Ge, Yi, Kim, Weber, Choi, Feng, Kanazawa, 2025 (arXiv:2507.21053).</li>
-            <li id="ref-25" data-brief="在 Janus-Pro 上通过 BiCoT-GRPO 联合强化语义规划 CoT 与自回归图像 Token 生成，并融合美学、目标检测、VQA 与 ORM 四类异构奖励。"><a href="https://arxiv.org/abs/2505.00703" target="_blank" rel="noopener">T2I-R1: Reinforcing Image Generation with Collaborative Semantic-level and Token-level CoT</a>. Jiang, Guo, Zhang, Zong, Li, Zhuo, Yan, Heng, Li, 2025 (arXiv:2505.00703).</li>
-            <li id="ref-26" data-brief="通过冷启动 SFT 与 GRPO 联合训练统一自回归图像生成模型，在发射视觉 Token 前显式生成用于布局规划的文本思维链。"><a href="https://arxiv.org/abs/2505.24875" target="_blank" rel="noopener">ReasonGen-R1: CoT for Autoregressive Image Generation Models through SFT and RL</a>. Zhang, Li, Yang, Wang, Yang, Qi, Bao, Chen, Luo, Qiu, 2025 (arXiv:2505.24875).</li>
-            <li id="ref-27" data-brief="结合生成思维链与强化学习，提升自回归视觉生成模型在多物体计数、空间布局与复杂组合提示上的推理精度。"><a href="https://arxiv.org/abs/2505.17022" target="_blank" rel="noopener">GoT-R1: Unleashing Reasoning Capability of Autoregressive Visual Generation with Reinforcement Learning</a>. Duan, Fang, Wang, Wang, Huang, Zeng, Li, Liu, 2025 (arXiv:2505.17022).</li>
-            <li id="ref-28" data-brief="将多模态推理与流模型渲染解耦：MLLM 智能体把 FLUX.1-dev 及编辑模型作为工具，在多轮反思修正轨迹上通过 Agentic RL 优化复杂文生图。"><a href="https://arxiv.org/abs/2601.18543" target="_blank" rel="noopener">GenAgent: Scaling Text-to-Image Generation via Agentic Multimodal Reasoning</a>. Jiang, Wang, Zhou, Li, Liu, Xie, Chen, Zheng, Zhang, ECCV 2026 (arXiv:2601.18543).</li>
-            <li id="ref-29" data-brief="把多轮文生图建模为状态条件马尔可夫决策过程，提出轨迹级 PRE-GRPO 协同优化峰值画质、跨轮属性保持度与交互轮次效率。"><a href="https://arxiv.org/abs/2605.17969" target="_blank" rel="noopener">Generation Navigator: A State-Aware Agentic Framework for Image Generation</a>. Liu, Feng, Wang, Zeng, Jin, 2026 (arXiv:2605.17969).</li>
+            <li id="ref-1" data-brief="将迭代扩散去噪形式化为有限视界 MDP，并提出用于视觉生成模型的 Policy Gradient 微调算法 DDPO。"><a href="https://arxiv.org/abs/2305.13301" target="_blank" rel="noopener">Training Diffusion Models with Reinforcement Learning</a>. Black, Janner, Du, Kostrikov, Levine, ICLR 2024 (arXiv:2305.13301).</li>
+            <li id="ref-2" data-brief="提出 PPO（Proximal Policy Optimization），结合 Clipped Importance Ratio 与 GAE 实现稳定高效的 Policy Gradient 更新。"><a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noopener">Proximal Policy Optimization Algorithms</a>. Schulman, Wolski, Dhariwal, Radford, Klimov, 2017 (arXiv:1707.06347).</li>
+            <li id="ref-3" data-brief="推导 KL-Regularized RLHF 的闭式最优解，将其转化为无需显式 Reward Model 的有监督 Bradley–Terry 偏好分类目标（DPO）。"><a href="https://arxiv.org/abs/2305.18290" target="_blank" rel="noopener">Direct Preference Optimization: Your Language Model is Secretly a Reward Model</a>. Rafailov, Sharma, Mitchell, Ermon, Manning, Finn, NeurIPS 2023 (arXiv:2305.18290).</li>
+            <li id="ref-4" data-brief="将 DPO 推广至扩散模型，利用 Forward Process ELBO 替代不可算的 log-likelihood，基于成对偏好数据微调文生图模型。"><a href="https://arxiv.org/abs/2311.12908" target="_blank" rel="noopener">Diffusion Model Alignment Using Direct Preference Optimization</a>. Wallace, Dang, Rafailov, Zhou, Lou, Purushwalkam, Ermon, Xiong, Joty, Naik, CVPR 2024 (arXiv:2311.12908).</li>
+            <li id="ref-5" data-brief="提出 GRPO（Group Relative Policy Optimization），用同一 prompt 多条采样轨迹的组内归一化奖励替代独立训练的 Critic 网络。"><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noopener">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a>. Shao, Wang, Zhu, Xu, Song, Bi, Zhang, Zhang, Li, Wu, Guo, 2024 (arXiv:2402.03300).</li>
+            <li id="ref-6" data-brief="基于 Online Mirror Descent（MDPO）扩展 Long-CoT RL，并分析 ORM 相比过程价值函数更利探索的原因。"><a href="https://arxiv.org/abs/2501.12599" target="_blank" rel="noopener">Kimi k1.5: Scaling Reinforcement Learning with LLMs</a>. Kimi Team, 2025 (arXiv:2501.12599).</li>
+            <li id="ref-7" data-brief="系统定位 GRPO 在规模化训练中的 Entropy Collapse 与零方差组问题，提出 Clip-Higher、Dynamic Sampling、Token-Mean Loss 与超长软惩罚。"><a href="https://arxiv.org/abs/2503.14476" target="_blank" rel="noopener">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a>. Yu, Zhang, Zhu, Yuan, Zuo, Yue, et al., 2025 (arXiv:2503.14476).</li>
+            <li id="ref-8" data-brief="通过 Value-Pretraining、Decoupled-GAE（Critic 与 Actor 分离 λ）、Length-Adaptive GAE 与正样本辅助损失，稳定释放 Value-Based 长链 RL 潜力。"><a href="https://arxiv.org/abs/2504.05118" target="_blank" rel="noopener">VAPO: Efficient and Reliable Reinforcement Learning for Advanced Reasoning Tasks</a>. Yue, Yuan, Yu, Zuo, Zhu, Xu, et al., 2025 (arXiv:2504.05118).</li>
+            <li id="ref-9" data-brief="提出 GSPO，用长度归一化的 Sequence-Level 几何平均重要性比替代逐 Token 裁剪，消除长度敏感性。"><a href="https://arxiv.org/abs/2507.18071" target="_blank" rel="noopener">Group Sequence Policy Optimization</a>. Zheng, Liu, Li, Chen, Yu, Gao, et al. (Qwen Team), 2025 (arXiv:2507.18071).</li>
+            <li id="ref-10" data-brief="提出 GKD（Generalized Knowledge Distillation），在学生模型自采样的 On-Policy 轨迹上利用 Forward / Reverse / JSD 接收教师分布监督。"><a href="https://arxiv.org/abs/2306.13649" target="_blank" rel="noopener">On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes</a>. Agarwal, Vieillard, Stańczyk, Ramos, Geist, Bachem, ICLR 2024 (arXiv:2306.13649).</li>
+            <li id="ref-11" data-brief="建立统一的 SDE、Fokker–Planck Equation 与 Probability Flow ODE 理论体系及 Anderson Time-Reversal，奠定流模型与扩散等价转换的数学基础。"><a href="https://arxiv.org/abs/2011.13456" target="_blank" rel="noopener">Score-Based Generative Modeling through Stochastic Differential Equations</a>. Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole, ICLR 2021 (arXiv:2011.13456).</li>
+            <li id="ref-12" data-brief="开创 Flow Matching Online RL 范式，提出 Marginal-Preserving ODE-to-SDE 转换（sde_step_with_logprob）、Closed-Form Velocity KL 及 Denoising Reduction（yifan123/flow_grpo）。"><a href="https://arxiv.org/abs/2505.05470" target="_blank" rel="noopener">Flow-GRPO: Training Flow Matching Models via Online RL</a>. Liu, Liu, Liang, Li, Liu, Wang, Wan, Zhang, Ouyang, NeurIPS 2025 (arXiv:2505.05470).</li>
+            <li id="ref-13" data-brief="构建涵盖 Diffusion 与 Rectified Flow 的统一视觉 RL 框架（T2I / T2V / I2V），提出 Shared Initial Noise、Timestep Subsampling 与 Multi-Reward Ensemble 等关键实践。"><a href="https://arxiv.org/abs/2505.07818" target="_blank" rel="noopener">DanceGRPO: Unleashing GRPO on Visual Generation</a>. Xue, Wu, Gao, Kong, Zhu, Chen, Liu, Liu, Guo, Huang, Luo, 2025 (arXiv:2505.07818).</li>
+            <li id="ref-14" data-brief="仅在 Sliding Window 内采用 SDE 探索与 GRPO 更新，窗外切换高阶 ODE Solver（MixGRPO-Flash），训练耗时最高降低约 71%。"><a href="https://arxiv.org/abs/2507.21802" target="_blank" rel="noopener">MixGRPO: Unlocking Flow-based GRPO Efficiency with Mixed ODE-SDE</a>. Li, Cui, Huang, Ma, Fan, Yang, Zhong, ECCV 2026 (arXiv:2507.21802).</li>
+            <li id="ref-15" data-brief="打破 Flow-GRPO 中的 Temporal Uniformity Assumption，提出免 PRM 的 Trajectory Branching 局部信用归因与 Noise-Aware Policy Weighting。"><a href="https://arxiv.org/abs/2508.04324" target="_blank" rel="noopener">TempFlow-GRPO: When Timing Matters for GRPO in Flow Models</a>. He, Fu, Zhao, Li, Yang, Yin, Rao, Zhang, 2025 (arXiv:2508.04324).</li>
+            <li id="ref-16" data-brief="将采样轨迹组织为共享确定性前缀的 Branching Tree，结合父节点相对优势与低收益路径剪枝，在稳定 Credit Assignment 的同时节省约 55% 训练算力。"><a href="https://arxiv.org/abs/2509.06040" target="_blank" rel="noopener">BranchGRPO: Stable and Efficient GRPO with Structured Branching in Diffusion Models</a>. Li, Wang, Zhu, Zhao, Lu, She, Zhang, ICLR 2026 (arXiv:2509.06040).</li>
+            <li id="ref-17" data-brief="用 Pairwise Preference Reward Model（PPRM）的组内胜率优势替代标量打分标准差归一化，防止微小评分噪声引发的 Reward Hacking。"><a href="https://arxiv.org/abs/2508.20751" target="_blank" rel="noopener">Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning</a>. Wang, Li, Zang, Zhou, Bu, Wang, Lu, Jin, Wang, 2025 (arXiv:2508.20751).</li>
+            <li id="ref-18" data-brief="剖析连续流 SDE 策略中 Importance Ratio 随 timestep 发生的隐式分布偏移，在 FLUX.1-dev 与 SD3.5-M 上通过 Regulated Clipping 消除隐式过优化。"><a href="https://arxiv.org/abs/2510.22319" target="_blank" rel="noopener">GRPO-Guard: Mitigating Implicit Over-Optimization in Flow Matching via Regulated Clipping</a>. Wang, Liang, Liu, Liu, Liu, Zheng, Pang, Ma, Xie, Wang, Wang, Wan, Liang, 2025 (arXiv:2510.22319).</li>
+            <li id="ref-19" data-brief="提出 Coefficients-Preserving Sampling（Flow-CPS），在低去噪步数下的 Flow Matching RL 循环中消减粗糙 Euler–Maruyama 离散误差。"><a href="https://arxiv.org/abs/2509.05952" target="_blank" rel="noopener">Coefficients-Preserving Sampling for Reinforcement Learning with Flow Matching</a>. Wang, Yu, 2025 (arXiv:2509.05952).</li>
+            <li id="ref-20" data-brief="直接在 Forward Process 上开展 Negative-Aware Online RL，通过隐式正负速度场对比内化 CFG 引导并兼容任意 Black-Box Solver（较 Flow-GRPO 提速约 25×）。"><a href="https://arxiv.org/abs/2509.16117" target="_blank" rel="noopener">DiffusionNFT: Online Diffusion Reinforcement with Forward Process</a>. Zheng, Chen, Ye, Wang, Zhang, Jiang, Su, Ermon, Zhu, Liu, ICLR 2026 Oral (arXiv:2509.16117).</li>
+            <li id="ref-21" data-brief="将流与扩散模型的奖励微调建模为 Memoryless SOC，通过拟合 Adjoint ODE 的最优性条件避免整条采样链反传。"><a href="https://arxiv.org/abs/2409.08861" target="_blank" rel="noopener">Adjoint Matching: Fine-tuning Flow and Diffusion Generative Models with Memoryless Stochastic Optimal Control</a>. Domingo-Enrich, Drozdzal, Karrer, Chen, ICLR 2025 (arXiv:2409.08861).</li>
+            <li id="ref-22" data-brief="把伴随匹配最优性条件与 REINFORCE 恒等式结合，形成无需伴随反向扫描的纯回归 Consistency Loss，将 SOC RL 扩展到 SD3.5 不可微奖励。"><a href="https://arxiv.org/abs/2605.10759" target="_blank" rel="noopener">Reinforce Adjoint Matching: Scaling RL Post-Training of Diffusion and Flow-Matching Models</a>. Bergmeister, Jegelka, Nüsken, Domingo-Enrich, Pidstrigach, 2026 (arXiv:2605.10759).</li>
+            <li id="ref-23" data-brief="在机器人连续流策略（Rectified Flow 与 Shortcut 模型）中注入可学习噪声网络，构建精确可求似然的离散马尔可夫链以支持 Online RL 微调。"><a href="https://arxiv.org/abs/2505.22094" target="_blank" rel="noopener">ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning</a>. Zhang, Yu, Su, Wang, NeurIPS 2025 (arXiv:2505.22094).</li>
+            <li id="ref-24" data-brief="提出 FPO（Flow Policy Optimization），直接利用 CFM ELBO 回归损失构造 PPO-Clip 代理比率，绕过精确似然求解完成连续动作 RL。"><a href="https://arxiv.org/abs/2507.21053" target="_blank" rel="noopener">Flow Matching Policy Gradients</a>. McAllister, Ge, Yi, Kim, Weber, Choi, Feng, Kanazawa, 2025 (arXiv:2507.21053).</li>
+            <li id="ref-25" data-brief="在 Janus-Pro 上通过 BiCoT-GRPO 联合强化 Semantic-level CoT 与 Autoregressive Token-level CoT，并融合美学、检测、VQA 与 ORM 四类异构奖励。"><a href="https://arxiv.org/abs/2505.00703" target="_blank" rel="noopener">T2I-R1: Reinforcing Image Generation with Collaborative Semantic-level and Token-level CoT</a>. Jiang, Guo, Zhang, Zong, Li, Zhuo, Yan, Heng, Li, 2025 (arXiv:2505.00703).</li>
+            <li id="ref-26" data-brief="通过冷启动 SFT 与 GRPO 联合训练统一自回归图像生成模型，在发射视觉 token 前显式生成用于布局规划的文本 CoT。"><a href="https://arxiv.org/abs/2505.24875" target="_blank" rel="noopener">ReasonGen-R1: CoT for Autoregressive Image Generation Models through SFT and RL</a>. Zhang, Li, Yang, Wang, Yang, Qi, Bao, Chen, Luo, Qiu, 2025 (arXiv:2505.24875).</li>
+            <li id="ref-27" data-brief="结合生成思维链与 RL，提升自回归视觉生成模型在多物体计数、空间布局与复杂组合提示上的推理精度。"><a href="https://arxiv.org/abs/2505.17022" target="_blank" rel="noopener">GoT-R1: Unleashing Reasoning Capability of Autoregressive Visual Generation with Reinforcement Learning</a>. Duan, Fang, Wang, Wang, Huang, Zeng, Li, Liu, 2025 (arXiv:2505.17022).</li>
+            <li id="ref-28" data-brief="将多模态推理与 Flow Matching 渲染解耦：MLLM 智能体把 FLUX.1-dev 及编辑模型作为工具，在多轮反思修正轨迹上通过 Agentic RL 优化复杂文生图。"><a href="https://arxiv.org/abs/2601.18543" target="_blank" rel="noopener">GenAgent: Scaling Text-to-Image Generation via Agentic Multimodal Reasoning</a>. Jiang, Wang, Zhou, Li, Liu, Xie, Chen, Zheng, Zhang, ECCV 2026 (arXiv:2601.18543).</li>
+            <li id="ref-29" data-brief="把多轮文生图建模为 State-Conditioned MDP，提出轨迹级 PRE-GRPO 协同优化峰值画质、跨轮属性保持度与交互步数效率。"><a href="https://arxiv.org/abs/2605.17969" target="_blank" rel="noopener">Generation Navigator: A State-Aware Agentic Framework for Image Generation</a>. Liu, Feng, Wang, Zeng, Jin, 2026 (arXiv:2605.17969).</li>
             <li id="ref-30" data-brief="将 MLLM 隐式反馈及推理验证机制与 DiffusionNFT 前向微调结合，大幅增强连续流编辑底座对复杂编辑指令的遵从度与抗幻觉能力。"><a href="https://arxiv.org/abs/2510.16888" target="_blank" rel="noopener">UniWorld-V2: Reinforce Image Editing with Diffusion Negative-aware Finetuning and MLLM Implicit Feedback</a>. Li, Liu, Zhang, Lin, Wu, Yuan, Yan, Ye, Yu, Niu, Wang, Cheng, Yuan, 2025 (arXiv:2510.16888).</li>
-            <li id="ref-31" data-brief="通过 GRPO 训练多智能体图像编辑规划器，将复杂复合编辑需求分解为可验证的有序原子编辑指令并调用底层流编辑器执行。"><a href="https://arxiv.org/abs/2603.08059" target="_blank" rel="noopener">ImageEdit-R1: Boosting Multi-Agent Image Editing via Reinforcement Learning</a>. Zhao, Ye, Liu, Shieh, Bui, 2026 (arXiv:2603.08059).</li>
-            <li id="ref-32" data-brief="为扩散 Transformer 赋予基于历史候选图像与 VLM 评判反馈的上下文自我反思能力，实现比盲目 Best-of-N 更系统的推理期精修。"><a href="https://arxiv.org/abs/2503.12271" target="_blank" rel="noopener">Reflect-DiT: Inference-Time Scaling for Text-to-Image Diffusion Transformers via In-Context Reflection</a>. Li, Kallidromitis, Gokul, Koneru, Kato, Kozuka, Grover, 2025 (arXiv:2503.12271).</li>
+            <li id="ref-31" data-brief="通过 GRPO 训练 Multi-Agent Image Editing Planner，将复杂复合编辑需求分解为可验证的有序原子编辑指令并调用底层流编辑器执行。"><a href="https://arxiv.org/abs/2603.08059" target="_blank" rel="noopener">ImageEdit-R1: Boosting Multi-Agent Image Editing via Reinforcement Learning</a>. Zhao, Ye, Liu, Shieh, Bui, 2026 (arXiv:2603.08059).</li>
+            <li id="ref-32" data-brief="为 Diffusion Transformer 赋予基于历史候选图像与 VLM 评判反馈的 In-Context Reflection 能力，实现比盲目 Best-of-N 更系统的推理期精修。"><a href="https://arxiv.org/abs/2503.12271" target="_blank" rel="noopener">Reflect-DiT: Inference-Time Scaling for Text-to-Image Diffusion Transformers via In-Context Reflection</a>. Li, Kallidromitis, Gokul, Koneru, Kato, Kozuka, Grover, 2025 (arXiv:2503.12271).</li>
         </ol>
     </div>
 
