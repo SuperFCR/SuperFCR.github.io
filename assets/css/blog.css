@@ -854,7 +854,176 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
 .citation { font-size: 0.93rem; }
 .citation blockquote { font-style: normal; }
 .references { padding-left: 1.5em; font-size: 0.9rem; line-height: 1.72; }
-.references li { color: var(--secondary); }
+.references li {
+    color: var(--secondary);
+    padding: 3px 6px;
+    margin-left: -6px;
+    border-radius: 4px;
+    scroll-margin-top: 76px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+}
+.references li.is-highlighted {
+    background: rgba(31, 78, 121, 0.10);
+    color: var(--content);
+}
+:root[data-theme="dark"] .references li.is-highlighted {
+    background: rgba(130, 173, 217, 0.14);
+}
+
+/* ---------- inline citations & hover preview card ---------- */
+.post-content a.cite {
+    position: relative;
+    top: -0.36em;
+    vertical-align: baseline;
+    line-height: 1.25;
+    display: inline-block;
+    margin: 0 0 0 0.08em;
+    padding: 0 0.14em;
+    font-family: var(--mono);
+    font-size: 0.72em;
+    font-weight: 500;
+    color: var(--primary);
+    text-decoration: none;
+    border-radius: 3px;
+    transition: background-color 0.14s ease, color 0.14s ease;
+}
+.post-content a.cite:hover,
+.post-content a.cite:focus-visible,
+.post-content a.cite.is-active {
+    background: var(--surface-hover);
+    color: var(--heading);
+    text-decoration: none;
+    outline: none;
+}
+.post-content a.cite:focus-visible {
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.cite-card {
+    position: fixed;
+    z-index: 80;
+    display: none;
+    width: min(380px, calc(100vw - 24px));
+    padding: 13px 15px 11px;
+    background: var(--bg);
+    color: var(--content);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(20, 25, 35, 0.12), 0 2px 6px rgba(20, 25, 35, 0.05);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    text-align: left;
+}
+:root[data-theme="dark"] .cite-card {
+    background: var(--surface);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.50), 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+.cite-card.is-open { display: block; }
+.cite-card-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 6px;
+}
+.cite-card-num {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--primary);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+:root[data-theme="dark"] .cite-card-num { background: var(--bg); }
+.cite-card-source {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cite-card-close {
+    margin-left: auto;
+    width: 22px;
+    height: 22px;
+    display: inline-grid;
+    place-items: center;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.cite-card-close:hover {
+    background: var(--surface-hover);
+    color: var(--heading);
+}
+.cite-card-title {
+    display: block;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--heading);
+    text-decoration: none;
+}
+a.cite-card-title:hover {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--primary-soft);
+}
+.cite-card-meta {
+    margin: 4px 0 0;
+    font-size: 0.77rem;
+    line-height: 1.48;
+    color: var(--secondary);
+}
+.cite-card-brief {
+    margin: 9px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 0.83rem;
+    line-height: 1.56;
+    color: var(--content);
+}
+.cite-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+}
+.cite-card-open {
+    color: var(--primary);
+    font-weight: 550;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    text-decoration: none;
+}
+.cite-card-open:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.cite-card-jump {
+    margin-left: auto;
+    color: var(--secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    text-decoration: none;
+}
+.cite-card-jump:hover { color: var(--heading); }
 
 /* ---------- post footer ---------- */
 .post-footer { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--border); }
@@ -1041,6 +1210,15 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
     .paginav { grid-template-columns: 1fr; gap: 14px; }
     .paginav .next { text-align: left; }
     .back-top { right: 16px; bottom: 16px; }
+    .cite-card {
+        left: 12px !important;
+        right: 12px !important;
+        bottom: 14px !important;
+        top: auto !important;
+        width: auto;
+        max-width: none;
+        padding: 14px 16px 12px;
+    }
 }
 
 /* Self-hosted KaTeX formulas */

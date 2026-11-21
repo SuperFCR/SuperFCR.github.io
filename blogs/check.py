@@ -338,6 +338,40 @@ def check_article(page, slug, lang, has_zh):
         if not table.find('thead'):
             err(page, 'put the table header in <thead>')
 
+    # inline citations and references
+    refs_ol = content.find('ol', cls='references')
+    ref_items = [c for c in refs_ol.children if isinstance(c, Node) and c.tag == 'li'] if refs_ol else []
+    cites = content.find_all('a', cls='cite')
+    has_ref_ids = any(li.attrs.get('id') for li in ref_items)
+    ref_map = {}
+    if cites or has_ref_ids:
+        if not refs_ol:
+            err(page, 'inline citations require <ol class="references">')
+        for idx, li in enumerate(ref_items, 1):
+            want_id = f'ref-{idx}'
+            if li.attrs.get('id') != want_id:
+                err(page, f'references item #{idx} must have id="{want_id}"')
+            else:
+                ref_map[want_id] = li
+            if not clean(li.attrs.get('data-brief', '')):
+                err(page, f'<li id="{want_id}"> needs a non-empty data-brief="..." for the citation hover card')
+        for a in cites:
+            if refs_ol and refs_ol in list(a.ancestors()):
+                err(page, 'do not place a.cite inside <ol class="references">')
+            href = a.attrs.get('href', '')
+            m = re.fullmatch(r'#ref-([1-9]\d*)', href)
+            if not m:
+                err(page, f'citation link "{href}" must have href="#ref-N"')
+                continue
+            target_id = f'ref-{m.group(1)}'
+            if target_id not in ref_map:
+                err(page, f'citation {href} does not match any <li id="{target_id}"> in <ol class="references">')
+            label = clean(a.text())
+            if label != f'[{m.group(1)}]':
+                err(page, f'citation {href} text "{label}" must be "[{m.group(1)}]"')
+    info['has_cites'] = bool(cites)
+    info['ref_count'] = len(ref_items)
+
     tags = dom.find('ul', cls='post-tags')
     info['tags'] = [clean(li.text()) for li in tags.find_all('li')] if tags else []
     if not info['tags']:
@@ -461,6 +495,11 @@ def main():
                 err(zh, 'date and type must match the English version')
             if a.get('tags') != b.get('tags'):
                 err(zh, 'post-tags must match the English version')
+            if a.get('has_cites') or b.get('has_cites'):
+                if a.get('has_cites') != b.get('has_cites'):
+                    err(zh, 'inline citation usage must match the English version')
+                if a.get('ref_count') != b.get('ref_count'):
+                    err(zh, 'reference list count must match the English version')
         if not (d / 'cover.webp').exists() and d.name not in NOT_LISTED:
             err(d, 'missing cover.webp')
 

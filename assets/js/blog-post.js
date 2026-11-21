@@ -1,10 +1,31 @@
 // Article reading enhancements: desktop sticky TOC + ScrollSpy, code copy buttons,
-// reading progress bar, image lightbox, anchor copy, back-to-top, and hash-preserving lang switch.
+// reading progress bar, image lightbox, anchor copy, back-to-top, hash-preserving lang switch,
+// self-hosted KaTeX math rendering, and inline citation hover cards.
 (() => {
     const isZh = document.documentElement.lang === 'zh-CN';
     const L = isZh
-        ? { copy: '复制', copied: '已复制', top: '返回顶部', linkCopied: '已复制链接' }
-        : { copy: 'Copy', copied: 'Copied', top: 'Back to top', linkCopied: 'Copied' };
+        ? {
+            copy: '复制',
+            copied: '已复制',
+            top: '返回顶部',
+            linkCopied: '已复制链接',
+            openSource: '访问原文 ↗',
+            jumpRef: '定位引用 ↓',
+            close: '关闭',
+            refLabel: '参考资料',
+            citeCard: '参考文献预览',
+        }
+        : {
+            copy: 'Copy',
+            copied: 'Copied',
+            top: 'Back to top',
+            linkCopied: 'Copied',
+            openSource: 'Open source ↗',
+            jumpRef: 'References ↓',
+            close: 'Close',
+            refLabel: 'Reference',
+            citeCard: 'Reference preview',
+        };
 
     const copyText = async (text) => {
         if (navigator.clipboard?.writeText) {
@@ -195,5 +216,320 @@
             ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
             throwOnError: false,
         });
+    }
+
+    // 9. Inline citation hover cards & direct source access
+    const citeLinks = content
+        ? Array.from(content.querySelectorAll('a.cite[href^="#ref-"]'))
+        : [];
+    if (citeLinks.length) {
+        const cleanText = (s) => (s || '').replace(/\s+/g, ' ').trim();
+        const refMap = new Map();
+
+        for (const li of content.querySelectorAll('ol.references > li[id^="ref-"]')) {
+            const id = li.id;
+            const num = id.replace(/^ref-/, '');
+            const brief = cleanText(li.getAttribute('data-brief') || '');
+            const anchors = Array.from(li.querySelectorAll('a[href]'));
+            const anchor = anchors.find((a) => /^https?:\/\//i.test(a.getAttribute('href') || '')) || anchors[0] || null;
+            const url = anchor ? anchor.getAttribute('href') : '';
+
+            let source = cleanText(li.getAttribute('data-source') || '');
+            if (!source && url) {
+                const arxivMatch = url.match(/arxiv\.org\/abs\/([^/?#]+)/i);
+                if (arxivMatch) {
+                    source = `arXiv:${arxivMatch[1]}`;
+                } else {
+                    try {
+                        source = new URL(url, window.location.href).hostname.replace(/^www\./, '');
+                    } catch (_) {
+                        source = L.refLabel;
+                    }
+                }
+            }
+            if (!source) source = L.refLabel;
+
+            let title = cleanText(li.getAttribute('data-title') || '');
+            let meta = '';
+            if (title) {
+                meta = cleanText(li.textContent);
+            } else if (anchor) {
+                title = cleanText(anchor.textContent);
+                const clone = li.cloneNode(true);
+                const idx = anchors.indexOf(anchor);
+                const cloneAnchor = idx >= 0 ? clone.querySelectorAll('a[href]')[idx] : null;
+                if (cloneAnchor) cloneAnchor.remove();
+                meta = cleanText(clone.textContent)
+                    .replace(/\.\s*\./g, '.')
+                    .replace(/\s+([.,;:，。；：])/g, '$1')
+                    .replace(/^[.,;:，。：\s]+/, '')
+                    .trim();
+            } else {
+                const full = cleanText(li.textContent);
+                const split = full.match(/^(.{4,90}?)(?:：\s*|\.\s+)(.+)$/);
+                if (split) {
+                    title = cleanText(split[1]);
+                    meta = cleanText(split[2]);
+                } else {
+                    title = full;
+                }
+            }
+
+            refMap.set(id, { id, num, url, source, title, meta, brief });
+        }
+
+        const card = document.createElement('aside');
+        card.className = 'cite-card';
+        card.setAttribute('role', 'dialog');
+        card.setAttribute('aria-label', L.citeCard);
+        document.body.appendChild(card);
+
+        let activeTrigger = null;
+        let hideTimer = null;
+        let highlightTimer = null;
+        let lastPointerType = '';
+        let isDemoPinned = false;
+        let openScrollY = 0;
+
+        const clearTimers = () => {
+            if (hideTimer) {
+                window.clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+        };
+
+        const closeCard = () => {
+            clearTimers();
+            isDemoPinned = false;
+            if (activeTrigger) {
+                activeTrigger.classList.remove('is-active');
+                activeTrigger = null;
+            }
+            card.classList.remove('is-open');
+        };
+
+        const jumpToRef = (refId) => {
+            closeCard();
+            const target = document.getElementById(refId);
+            if (!target) return;
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            for (const item of content.querySelectorAll('ol.references > li.is-highlighted')) {
+                item.classList.remove('is-highlighted');
+            }
+            void target.offsetWidth;
+            target.classList.add('is-highlighted');
+            if (highlightTimer) window.clearTimeout(highlightTimer);
+            highlightTimer = window.setTimeout(() => {
+                target.classList.remove('is-highlighted');
+            }, 2400);
+        };
+
+        const renderCard = (ref) => {
+            card.textContent = '';
+
+            const head = document.createElement('div');
+            head.className = 'cite-card-head';
+
+            const num = document.createElement('span');
+            num.className = 'cite-card-num';
+            num.textContent = `[${ref.num}]`;
+            head.appendChild(num);
+
+            const src = document.createElement('span');
+            src.className = 'cite-card-source';
+            src.textContent = ref.source;
+            head.appendChild(src);
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'cite-card-close';
+            closeBtn.setAttribute('aria-label', L.close);
+            closeBtn.textContent = '×';
+            closeBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                closeCard();
+            });
+            head.appendChild(closeBtn);
+            card.appendChild(head);
+
+            if (ref.url) {
+                const titleLink = document.createElement('a');
+                titleLink.className = 'cite-card-title';
+                titleLink.href = ref.url;
+                titleLink.target = '_blank';
+                titleLink.rel = 'noopener';
+                titleLink.textContent = ref.title;
+                card.appendChild(titleLink);
+            } else {
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'cite-card-title';
+                titleDiv.textContent = ref.title;
+                card.appendChild(titleDiv);
+            }
+
+            if (ref.meta) {
+                const metaEl = document.createElement('p');
+                metaEl.className = 'cite-card-meta';
+                metaEl.textContent = ref.meta;
+                card.appendChild(metaEl);
+            }
+
+            if (ref.brief) {
+                const briefEl = document.createElement('p');
+                briefEl.className = 'cite-card-brief';
+                briefEl.textContent = ref.brief;
+                card.appendChild(briefEl);
+            }
+
+            const foot = document.createElement('div');
+            foot.className = 'cite-card-foot';
+
+            if (ref.url) {
+                const openLink = document.createElement('a');
+                openLink.className = 'cite-card-open';
+                openLink.href = ref.url;
+                openLink.target = '_blank';
+                openLink.rel = 'noopener';
+                openLink.textContent = L.openSource;
+                foot.appendChild(openLink);
+            }
+
+            const jumpLink = document.createElement('a');
+            jumpLink.className = 'cite-card-jump';
+            jumpLink.href = `#${ref.id}`;
+            jumpLink.textContent = L.jumpRef;
+            jumpLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                jumpToRef(ref.id);
+            });
+            foot.appendChild(jumpLink);
+            card.appendChild(foot);
+        };
+
+        const positionCard = (trigger) => {
+            if (window.innerWidth <= 768) {
+                card.style.left = '';
+                card.style.top = '';
+                return;
+            }
+            const rect = trigger.getBoundingClientRect();
+            const cw = card.offsetWidth;
+            const ch = card.offsetHeight;
+            const gap = 8;
+            const pad = 12;
+
+            let top = rect.bottom + gap;
+            if (top + ch > window.innerHeight - pad && rect.top - gap - ch >= pad) {
+                top = rect.top - gap - ch;
+            } else {
+                top = Math.min(Math.max(pad, top), Math.max(pad, window.innerHeight - ch - pad));
+            }
+            const left = Math.min(
+                Math.max(pad, window.innerWidth - cw - pad),
+                Math.max(pad, rect.left - cw * 0.18),
+            );
+            card.style.left = `${Math.round(left)}px`;
+            card.style.top = `${Math.round(top)}px`;
+        };
+
+        const openCard = (trigger, pinDemo = false) => {
+            const ref = refMap.get(trigger.dataset.ref || '');
+            if (!ref) return;
+            clearTimers();
+            if (activeTrigger && activeTrigger !== trigger) {
+                activeTrigger.classList.remove('is-active');
+            }
+            activeTrigger = trigger;
+            activeTrigger.classList.add('is-active');
+            isDemoPinned = pinDemo;
+            openScrollY = window.scrollY;
+            renderCard(ref);
+            card.classList.add('is-open');
+            positionCard(trigger);
+        };
+
+        const scheduleClose = () => {
+            if (isDemoPinned) return;
+            clearTimers();
+            hideTimer = window.setTimeout(closeCard, 160);
+        };
+
+        const isCoarsePointer = () => window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+        for (const a of citeLinks) {
+            const refId = (a.getAttribute('href') || '').slice(1);
+            const ref = refMap.get(refId);
+            if (!ref) continue;
+            a.dataset.ref = refId;
+            a.setAttribute('aria-haspopup', 'dialog');
+            if (ref.url) {
+                a.setAttribute('href', ref.url);
+                a.setAttribute('target', '_blank');
+                a.setAttribute('rel', 'noopener');
+            }
+
+            a.addEventListener('pointerdown', (event) => {
+                lastPointerType = event.pointerType || '';
+            });
+            a.addEventListener('mouseenter', () => openCard(a));
+            a.addEventListener('focus', () => openCard(a));
+            a.addEventListener('mouseleave', scheduleClose);
+            a.addEventListener('blur', () => {
+                window.setTimeout(() => {
+                    if (!card.contains(document.activeElement) && document.activeElement !== a && !isDemoPinned) {
+                        closeCard();
+                    }
+                }, 100);
+            });
+            a.addEventListener('click', (event) => {
+                if (lastPointerType === 'touch' || isCoarsePointer()) {
+                    event.preventDefault();
+                    if (activeTrigger === a && card.classList.contains('is-open')) closeCard();
+                    else openCard(a);
+                } else if (!ref.url) {
+                    event.preventDefault();
+                    jumpToRef(ref.id);
+                }
+            });
+        }
+
+        card.addEventListener('mouseenter', clearTimers);
+        card.addEventListener('mouseleave', scheduleClose);
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && card.classList.contains('is-open')) closeCard();
+        });
+        document.addEventListener('click', (event) => {
+            if (!card.classList.contains('is-open')) return;
+            if (card.contains(event.target)) return;
+            if (event.target instanceof Element && event.target.closest('a.cite')) return;
+            closeCard();
+        });
+        window.addEventListener('resize', () => {
+            if (activeTrigger && card.classList.contains('is-open')) positionCard(activeTrigger);
+        }, { passive: true });
+        window.addEventListener('scroll', () => {
+            if (!activeTrigger || !card.classList.contains('is-open') || isDemoPinned) return;
+            if (Math.abs(window.scrollY - openScrollY) > 40) closeCard();
+            else positionCard(activeTrigger);
+        }, { passive: true });
+
+        const demoParam = new URLSearchParams(window.location.search).get('cite_demo');
+        if (demoParam && /^[1-9]\d*$/.test(demoParam)) {
+            const target = citeLinks.find((el) => el.dataset.ref === `ref-${demoParam}`) || citeLinks[0];
+            if (target) {
+                const showDemo = () => {
+                    const r = target.getBoundingClientRect();
+                    if (r.top < 72 || r.bottom > window.innerHeight - 180) {
+                        const targetTop = window.scrollY + r.top - Math.max(96, window.innerHeight * 0.28);
+                        window.scrollTo({ top: Math.max(0, targetTop), behavior: 'instant' });
+                    }
+                    openCard(target, true);
+                };
+                if (document.readyState === 'complete') window.requestAnimationFrame(showDemo);
+                else window.addEventListener('load', () => window.requestAnimationFrame(showDemo), { once: true });
+            }
+        }
     }
 })();

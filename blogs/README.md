@@ -21,7 +21,7 @@ blogs/
 assets/css/blog.css           # 所有 blog 页面共用的样式（含深色模式）
 assets/js/blog-theme.js       # 亮暗切换
 assets/js/blog-list.js        # 列表页的类型/主题筛选、搜索和计数
-assets/js/blog-post.js        # 文章页增强（桌面端右侧目录、代码复制、阅读进度、图片放大）
+assets/js/blog-post.js        # 文章页增强（桌面端右侧目录、代码复制、阅读进度、图片放大、行内引用悬浮卡片）
 assets/imgs/logo.svg          # 站点图标（星芒轨道），用于顶部导航品牌位
 assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blog 共用
 ```
@@ -116,11 +116,36 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 | 插图 | `<figure><img src="./fig-x.webp" width="…" height="…" alt="…" loading="lazy"><figcaption>Fig. 1. …</figcaption></figure>`，编号从 1 连续递增 |
 | SVG 插图 | 同上，并在图注**最后**加 `<a href="./fig-x.svg">Open full size</a>`（中文版是 `<a href="../fig-x.svg">查看原图</a>`），让手机读者打开矢量原图放大看 |
 | 引用格式 | `<div class="citation">`，里面放 Cited as 引用块和 BibTeX 代码块 |
-| 参考文献 | `<ol class="references">` |
+| 行内引用 | 正文中需要引用处写 `<a class="cite" href="#ref-1">[1]</a>`，鼠标悬浮或聚焦弹出参考文献预览卡 |
+| 参考文献 | `<ol class="references">`，启用行内引用时每项带 `id="ref-1"` 和 `data-brief="…"` |
 | 类型徽章 | `<span class="post-type type-<key>">…</span>`，放在标题上方 |
 | 文末 | 最后两节固定是 `h2#citation` 和 `h2#references`；之后是 `post-tags` 和 `paginav` |
 
 暂不支持数学公式。需要时再在 `blog.css` 和页面里统一接入 KaTeX，不要在单篇文章里临时引入。
+
+### 行内引用与悬浮预览卡片
+
+正文与文末参考文献采用**单一数据源**关联，不在正文里重复粘贴论文链接或摘要：
+
+```html
+<!-- 正文行内标注 -->
+<p>This structure pairs Column- and Row-Parallel layers<a class="cite" href="#ref-2">[2]</a>.</p>
+
+<!-- 文末参考文献列表（<ol class="references">）：英文版写英文 data-brief，中文版写中文 data-brief -->
+<ol class="references">
+    <li id="ref-2" data-brief="Proposes intra-layer Column/Row-Parallel MLP and MHA...">
+        <a href="https://arxiv.org/abs/1909.08053" target="_blank" rel="noopener">Megatron-LM: ...</a>.
+        Shoeybi et al., NVIDIA, 2019 (arXiv:1909.08053).
+    </li>
+</ol>
+```
+
+- **交互行为（由 `blog-post.js` 自动增强）**：
+  - 当 `<li id="ref-N">` 含外部 `<a>` 链接时，桌面端直接点击正文的 `[N]` 可直接跳转访问原文（新标签页打开）；若该条参考无外链，则平滑滚动并高亮定位到 `#ref-N`。
+  - 鼠标悬浮或键盘聚焦到 `[N]` 时，在旁边弹出参考文献预览卡片（`.cite-card`），显示编号、来源域 / `arXiv` 徽章、可点击跳转的标题、作者出处、`data-brief` 简介，以及「Open source / 访问原文」和「References / 定位引用」快捷操作。
+  - 移动端点击 `[N]` 时先在底部弹出预览卡供查看简介或选择打开原文 / 定位文末，不直接跳走打断阅读。
+  - 可选属性：`data-source` 可覆盖来源标签，`data-title` 可覆盖卡片标题；支持URL 参数 `?cite_demo=1` 固定展开第 1 条预览卡用于截图检查。
+- **脚本校验**：一旦页面使用 `a.cite` 或 `ref-*` id，`check.py` 会核对 `<ol class="references">` 中 `id="ref-1"` 到 `ref-N` 顺序完整、每项都有非空 `data-brief`，每处 `<a class="cite" href="#ref-N">[N]</a>` 编号与目标匹配，且中英文版引用用法和条目数一致。
 
 ## 图片
 
@@ -150,7 +175,7 @@ FONTCONFIG_FILE=$HOME/.local/lib/chromium-deps/fonts.conf node -e "require('shar
 
 ## 改样式或脚本之后
 
-GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121.4`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
+GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121.5`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
 
 版本号用当天日期 `YYYYMMDD`；同一天第二次改就加 `.2`，第三次加 `.3`，依此类推。在仓库根目录运行（把 `OLD`、`NEW` 换成实际的版本号）：
 
@@ -184,7 +209,7 @@ python3 -I -m http.server 8000 --bind 127.0.0.1 --directory .
 python3 blogs/check.py
 ```
 
-它检查：`<head>`（标题后缀、description、canonical、hreflang、示例页的 noindex）、类型徽章、元信息格式和阅读时间、目录与章节 `id`、最后两节、引用网址、插图（`figure`/`figcaption`、编号、`width`/`height` 与文件比例、格式与大小、SVG 的看原图链接）、表格包裹、内联样式、外部资源、本地链接、占位文字、中英文版一致性、列表条目与文章页一致、封面尺寸、排序、篇数、`?v=` 版本号统一，以及 Markdown 里的 Liquid 语法。
+它检查：`<head>`（标题后缀、description、canonical、hreflang、示例页的 noindex）、类型徽章、元信息格式和阅读时间、目录与章节 `id`、最后两节、引用网址、行内引用与参考简介、插图（`figure`/`figcaption`、编号、`width`/`height` 与文件比例、格式与大小、SVG 的看原图链接）、表格包裹、内联样式、外部资源、本地链接、占位文字、中英文版一致性、列表条目与文章页一致、封面尺寸、排序、篇数、`?v=` 版本号统一，以及 Markdown 里的 Liquid 语法。
 
 脚本看不到的，要人工过一遍：
 
