@@ -1,4 +1,4 @@
-/* Interactive distributed-training laboratories: archival paper palette, light/dark native, responsive SVG stages */
+/* Quiet archival paper inline animations & crisp academic tables */
 
 :root {
     --vz-navy: #23476a;
@@ -13,7 +13,7 @@
     --vz-red-bg: #fbeaea;
     --vz-stage-bg: #fcfaf6;
     --vz-card-bg: #ffffff;
-    --vz-tile-bg: #f7f4ec;
+    --vz-tile-bg: #f5f1e8;
     --vz-ink: #1b2230;
     --vz-muted: #5b6472;
     --vz-line: #d5cfc2;
@@ -38,274 +38,172 @@
     --vz-line: #343741;
 }
 
-.viz-lab {
-    margin: 1.85rem 0;
-    border: 1px solid var(--border-strong);
-    border-radius: 10px;
-    background: var(--surface);
+.anim-fig {
+    margin: 1.55em 0;
+    text-align: left;
+}
+
+.anim-box {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--vz-stage-bg);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(20, 25, 35, 0.04);
 }
 
-.viz-head {
+.anim-bar {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px 16px;
-    padding: 13px 18px 11px;
-    border-bottom: 1px solid var(--border);
-    background: var(--vz-card-bg);
-}
-
-.viz-head-left {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.viz-eyebrow {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--primary);
-}
-
-.viz-title {
-    margin: 0;
-    font-family: var(--serif);
-    font-size: 1.06rem;
-    font-weight: 700;
-    color: var(--heading);
-    line-height: 1.3;
-}
-
-.viz-hint {
-    font-size: 0.78rem;
-    color: var(--secondary);
-}
-
-.viz-controls {
-    display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 8px 12px;
-    padding: 10px 18px;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 6px 10px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
 }
 
-.viz-btn-group {
+.anim-pills {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
-.viz-sep {
-    width: 1px;
-    height: 20px;
-    background: var(--border-strong);
-    margin: 0 2px;
-}
-
-.viz-btn {
+.anim-pill {
     appearance: none;
-    border: 1px solid var(--border-strong);
-    background: var(--vz-card-bg);
-    color: var(--content);
-    padding: 4px 10px;
-    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
     font-family: var(--sans);
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.74rem;
+    font-weight: 550;
     line-height: 1.35;
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
     white-space: nowrap;
 }
 
-.viz-btn:hover:not(:disabled) {
+.anim-pill:hover {
+    color: var(--heading);
     background: var(--surface-hover);
-    border-color: var(--primary);
 }
 
-.viz-btn:active:not(:disabled) {
-    transform: translateY(1px);
+.anim-pill.is-active {
+    background: var(--vz-card-bg);
+    border-color: var(--border-strong);
+    color: var(--heading);
 }
 
-.viz-btn:disabled {
-    opacity: 0.42;
-    cursor: not-allowed;
+.anim-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
 }
 
-.viz-btn.is-active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
+.anim-status {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-.viz-btn.is-play {
-    background: var(--vz-teal);
-    border-color: var(--vz-teal);
-    color: #ffffff;
-}
-
-:root[data-theme="dark"] .viz-btn.is-play {
-    color: #101417;
-}
-
-.viz-btn.is-amber.is-active,
-.viz-btn.is-amber:hover:not(:disabled) {
-    border-color: var(--vz-amber);
-}
-
-.viz-btn.is-amber.is-active {
-    background: var(--vz-amber);
-    color: #ffffff;
-}
-
-:root[data-theme="dark"] .viz-btn.is-amber.is-active {
-    color: #141110;
-}
-
-.viz-btn.is-danger {
-    border-color: var(--vz-red);
-    color: var(--vz-red);
-}
-
-.viz-btn.is-danger.is-active {
-    background: var(--vz-red);
-    color: #ffffff;
-}
-
-.viz-slider-wrap {
+.anim-toggle {
+    appearance: none;
+    width: 24px;
+    height: 22px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--heading);
-    background: var(--vz-card-bg);
+    justify-content: center;
+    padding: 0;
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 3px 9px;
-}
-
-.viz-slider {
-    width: 78px;
-    accent-color: var(--primary);
+    border-radius: 4px;
+    background: var(--vz-card-bg);
+    color: var(--secondary);
+    font-size: 0.68rem;
+    line-height: 1;
     cursor: pointer;
+    transition: border-color 0.14s ease, color 0.14s ease;
 }
 
-.viz-stage {
-    padding: 12px 14px;
-    background: var(--vz-stage-bg);
+.anim-toggle:hover {
+    border-color: var(--primary);
+    color: var(--heading);
+}
+
+.anim-stage {
+    padding: 10px 12px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
-.viz-stage svg {
+.anim-stage svg {
     display: block;
     width: 100%;
     height: auto;
     user-select: none;
 }
 
-/* Smooth animated SVG transitions */
-.viz-stage svg .vz-anim,
-.viz-stage svg rect,
-.viz-stage svg circle,
-.viz-stage svg path {
-    transition: fill 0.25s ease, stroke 0.25s ease, opacity 0.25s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), width 0.32s ease, x 0.32s ease;
+.anim-stage svg rect,
+.anim-stage svg circle,
+.anim-stage svg path {
+    transition: fill 0.22s ease, stroke 0.22s ease, opacity 0.22s ease, width 0.3s ease, x 0.3s ease;
 }
 
-@keyframes vzPulse {
-    0%, 100% { stroke-opacity: 0.45; }
-    50% { stroke-opacity: 1; }
+@keyframes vzFlow {
+    to { stroke-dashoffset: -24; }
 }
 
-.vz-pulse {
-    animation: vzPulse 1.3s ease-in-out infinite;
+.vz-flow {
+    stroke-dasharray: 5 4;
+    animation: vzFlow 0.9s linear infinite;
 }
 
-.viz-metrics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 18px;
-    border-top: 1px solid var(--border);
-    background: var(--surface);
+.anim-box.is-paused .vz-flow {
+    animation-play-state: paused;
 }
 
-.viz-metric {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    padding: 3px 9px;
-    border-radius: 5px;
-    background: var(--vz-card-bg);
-    border: 1px solid var(--border);
-    font-size: 0.78rem;
-}
-
-.viz-metric-label {
+.anim-fig figcaption {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    line-height: 1.58;
     color: var(--secondary);
-    font-weight: 500;
+    text-align: center;
 }
 
-.viz-metric-val {
-    font-family: var(--mono);
-    font-weight: 700;
-    color: var(--heading);
-    font-variant-numeric: tabular-nums;
+/* Table formatting polish for technical comparison tables */
+.post-content table {
+    font-size: 0.87rem;
+    line-height: 1.52;
 }
 
-.viz-metric-val.is-good { color: var(--vz-teal); }
-.viz-metric-val.is-warn { color: var(--vz-amber); }
-.viz-metric-val.is-bad  { color: var(--vz-red); }
-
-.viz-caption {
-    padding: 9px 18px 12px;
-    border-top: 1px solid var(--border);
-    background: var(--vz-card-bg);
-    font-size: 0.84rem;
-    line-height: 1.5;
-    color: var(--content);
+.post-content th,
+.post-content td {
+    padding: 8px 10px;
+    vertical-align: top;
 }
 
-.viz-caption strong {
-    color: var(--heading);
-}
-
-.viz-caption code {
-    font-family: var(--mono);
-    font-size: 0.85em;
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: var(--code-bg);
+.post-content td.nw,
+.post-content th.nw,
+.post-content td .katex {
+    white-space: nowrap;
 }
 
 @media (max-width: 640px) {
-    .viz-head { padding: 11px 13px 9px; }
-    .viz-controls { padding: 9px 13px; }
-    .viz-stage { padding: 8px 10px; }
-    .viz-stage svg { min-width: 580px; }
-    .viz-metrics { padding: 8px 13px; }
-    .viz-caption { padding: 8px 13px 10px; font-size: 0.8rem; }
-    .viz-sep { display: none; }
-    .viz-btn { font-size: 0.75rem; padding: 4px 8px; }
+    .anim-bar { padding: 6px 8px; }
+    .anim-stage { padding: 8px; }
+    .anim-stage svg { min-width: 520px; }
+    .anim-status { white-space: normal; font-size: 0.7rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .viz-stage svg .vz-anim,
-    .viz-stage svg rect,
-    .viz-stage svg circle,
-    .viz-stage svg path {
+    .anim-stage svg rect,
+    .anim-stage svg circle,
+    .anim-stage svg path {
         transition: none !important;
+    }
+    .vz-flow {
         animation: none !important;
     }
 }
