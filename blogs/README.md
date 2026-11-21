@@ -20,8 +20,9 @@ blogs/
 
 assets/css/blog.css           # 所有 blog 页面共用的样式（含深色模式）
 assets/js/blog-theme.js       # 亮暗切换
-assets/js/blog-list.js        # 列表页的类型筛选和计数
-assets/imgs/logo.svg          # 站点图标（羽毛），也是列表页顶部的大图标
+assets/js/blog-list.js        # 列表页的类型/主题筛选、搜索和计数
+assets/js/blog-post.js        # 文章页增强（桌面端右侧目录、代码复制、阅读进度、图片放大）
+assets/imgs/logo.svg          # 站点图标（羽毛），用于顶部导航品牌位
 assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blog 共用
 ```
 
@@ -108,6 +109,7 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 | 二级/三级标题 | `<h2 id="method">Method<a class="anchor" href="#method" aria-hidden="true">#</a></h2>`，`h3` 同理；`id` 用小写英文和连字符 |
 | 目录 | `<details class="toc">`，按顺序列出正文所有 `h2`/`h3`，默认折叠 |
 | 引用块 | `<blockquote><p>…</p></blockquote>` |
+| 提示框 | `<div class="callout"><p>…</p></div>`（可选 `callout-tip` / `callout-warn`） |
 | 行内代码 / 代码块 | `<code>…</code>`；`<pre><code>…</code></pre>`，代码块里的 `<`、`>`、`&` 要转义 |
 | 表格 | 外面套 `<div class="table-wrap">`，表头放在 `<thead>` 里，最优结果用 `<td class="best">`。单元格会自动换行，表头和行内代码不换行；每格尽量写短，宽屏上不应出现横向滚动 |
 | 插图 | `<figure><img src="./fig-x.webp" width="…" height="…" alt="…" loading="lazy"><figcaption>Fig. 1. …</figcaption></figure>`，编号从 1 连续递增 |
@@ -147,7 +149,7 @@ FONTCONFIG_FILE=$HOME/.local/lib/chromium-deps/fonts.conf node -e "require('shar
 
 ## 改样式或脚本之后
 
-GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js` 时都带着版本号，例如 `blog.css?v=20261120.2`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
+GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
 
 版本号用当天日期 `YYYYMMDD`；同一天第二次改就加 `.2`，第三次加 `.3`，依此类推。在仓库根目录运行（把 `OLD`、`NEW` 换成实际的版本号）：
 

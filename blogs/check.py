@@ -33,7 +33,7 @@ LANG = {
                read=r'(\d+) 分钟阅读', fig=r'图 (\d+)：', full='查看原图', rate=400),
 }
 MONTHS = 'January February March April May June July August September October November December'.split()
-VERSIONED = ('blog.css', 'blog-theme.js', 'blog-list.js')
+VERSIONED = ('blog.css', 'blog-theme.js', 'blog-list.js', 'blog-post.js')
 COVER_SIZE = (880, 495)
 KB = 1024
 
