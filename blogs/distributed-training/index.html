@@ -57,7 +57,7 @@
         <h1 class="post-title">Distributed LLM Training: Sharding, Collectives, and Parallelism</h1>
         <div class="post-meta">
             <span>November 21, 2026</span>
-            <span>17 min read</span>
+            <span>22 min read</span>
             <span>Chaoran Feng</span>
         </div>
     </header>
@@ -111,13 +111,13 @@
     </details>
 
     <div class="post-content">
-        <p>I recently reviewed and reorganized my notes on distributed LLM training, drawing mainly from Part 3 of Google's <a href="https://jax-ml.github.io/scaling-book/sharding/" target="_blank" rel="noopener">JAX Scaling Book</a><a class="cite" href="#ref-1">[1]</a> and 猛猿's DeepSpeed/Megatron walkthrough series<a class="cite" href="#ref-8">[8]</a>. This post connects those pieces in one straightforward order: starting from HBM memory budgets and mixed precision, introducing named device meshes and the four collectives as a common language, then stepping through DDP/ZeRO, Tensor Parallelism, Pipeline Parallelism, and MoE before sizing a 64-GPU hybrid cluster.</p>
+        <p>I recently reviewed and reorganized my notes on distributed LLM training, drawing from Part 3 of Google's <a href="https://jax-ml.github.io/scaling-book/sharding/" target="_blank" rel="noopener">JAX Scaling Book</a><a class="cite" href="#ref-1">[1]</a>, 猛猿's four illustrated walkthroughs on DP/DDP<a class="cite" href="#ref-8">[8]</a>, DeepSpeed ZeRO<a class="cite" href="#ref-9">[9]</a>, Megatron-LM tensor parallelism<a class="cite" href="#ref-10">[10]</a>, and Megatron mixed-precision internals<a class="cite" href="#ref-11">[11]</a>, alongside the foundational papers<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-5">[5]</a><a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>. The sections walk straight through HBM memory and mixed precision, device meshes and the four collectives, DDP/ZeRO, TP, PP, and MoE before sizing a 64-GPU cluster.</p>
 
         <h2 id="memory">Memory &amp; Mixed Precision<a class="anchor" href="#memory" aria-hidden="true">#</a></h2>
 
         <h3 id="memory-budget">Where Memory Goes<a class="anchor" href="#memory-budget" aria-hidden="true">#</a></h3>
-        <p>Training HBM breaks cleanly into two buckets: <strong>Model States</strong>, which scale strictly with parameter count $\Phi$, and <strong>Residual States</strong>, which fluctuate with sequence length, batch size, and allocator order<a class="cite" href="#ref-4">[4]</a>.</p>
-        <p>Modern pretraining pairs <strong>mixed precision</strong> (<code>FP16</code> or <code>BF16</code> compute to saturate Tensor Cores) with an <code>FP32</code> <strong>Adam optimizer</strong>. Keeping optimizer states in full precision is mandatory so small steps $\Delta W = -\eta \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$ do not underflow to zero against weight magnitude $|W| \approx 1$:</p>
+        <p>Following ZeRO's breakdown<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a><a class="cite" href="#ref-11">[11]</a>, training HBM falls into two buckets: <strong>Model States</strong>, which scale strictly with parameter count $\Phi$ (weights, gradients, and Adam optimizer states), and <strong>Residual States</strong>, which vary with sequence length, batch size, and allocator order (activations, temporary communication buffers, and unusable fragmented memory).</p>
+        <p>Modern pretraining pairs <strong>mixed precision</strong> (16-bit <code>FP16</code>/<code>BF16</code> weights and gradients, $2\Phi + 2\Phi$) with an <code>FP32</code> optimizer holding master weights plus Adam states ($K\Phi = 12\Phi$)<a class="cite" href="#ref-9">[9]</a><a class="cite" href="#ref-11">[11]</a>, giving a baseline of $\mathbf{16\Phi}$. During <code>optimizer.step()</code>, gradients are cast to <code>FP32</code> ($4\Phi$): freeing or overwriting the 16-bit gradient buffer caps peak static HBM at $\mathbf{18\Phi}$, whereas holding both 16-bit and 32-bit gradient buffers simultaneously (e.g., under gradient accumulation or during Megatron's copy step) brings peak static state to $\mathbf{20\Phi}$<a class="cite" href="#ref-11">[11]</a>:</p>
         <div class="table-wrap">
             <table>
                 <thead>
@@ -131,7 +131,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="nw">Compute Weights</td>
+                        <td class="nw">Weights (<code>model_param</code>)</td>
                         <td class="nw">BF16 / FP16</td>
                         <td class="nw">$2\Phi$</td>
                         <td class="nw">14 GB</td>
@@ -145,7 +145,7 @@
                         <td class="nw">140 / 280 GB</td>
                     </tr>
                     <tr>
-                        <td class="nw">FP32 Master Weights</td>
+                        <td class="nw">Master (<code>main_param</code>)</td>
                         <td class="nw">FP32</td>
                         <td class="nw">$4\Phi$</td>
                         <td class="nw">28 GB</td>
@@ -166,30 +166,93 @@
                         <td class="nw">280 GB</td>
                     </tr>
                     <tr>
-                        <td class="nw"><strong>Static Total</strong></td>
-                        <td class="nw"><strong>Mixed Precision</strong></td>
-                        <td class="nw"><strong>$16\Phi$ (or $18\Phi$)</strong></td>
-                        <td class="nw"><strong>112 GB</strong></td>
-                        <td class="nw"><strong>1.12 TB</strong></td>
+                        <td class="nw"><strong>Total (base / peak)</strong></td>
+                        <td class="nw"><strong>Mixed Prec.</strong></td>
+                        <td class="nw"><strong>$16\Phi$ ($18\Phi / 20\Phi$)</strong></td>
+                        <td class="nw"><strong>112–140 GB</strong></td>
+                        <td class="nw"><strong>1.12–1.40 TB</strong></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <p>Even a 7B dense model consumes $112\text{ GB}$ of static state alone ($126\text{ GB}$ with FP32 gradient buffers)—already beyond a single 80 GB H100 before a single token is processed.</p>
-        <p>The rest of HBM goes to <strong>Residual States</strong>: intermediate <strong>activations</strong> saved for backprop, collective <strong>temporary buffers</strong>, and <strong>allocator fragmentation</strong> between long-lived checkpoints and short-lived temporaries. Without activation checkpointing, a single Transformer layer (sequence length $s$, micro-batch $b$, hidden size $h$, attention heads $a$) holds<a class="cite" href="#ref-3">[3]</a>:</p>
+        <p>Even a 7B dense model consumes $112\text{–}140\text{ GB}$ of static state alone—already beyond a single 80 GB H100 before storing any activations.</p>
+        <p>The dominant <strong>Residual State</strong> is intermediate <strong>activations</strong> saved for backprop. Without activation checkpointing, a single Transformer layer (sequence length $s$, micro-batch $b$, hidden size $h$, attention heads $a$) holds<a class="cite" href="#ref-3">[3]</a>:</p>
         $$\text{Mem}_{\text{act/layer}} = s b h \left(34 + \frac{5 a s}{h}\right) \text{ bytes}$$
         <p>Plug in 70B dimensions ($h = 8192, a = 64, L = 80$) at just $b = 1, s = 4096$: activations swell to roughly $\mathbf{521\text{ GB}}$, more than $3.7\times$ the compute weights themselves.</p>
 
         <h3 id="mixed-precision">Distributed Mixed Precision<a class="anchor" href="#mixed-precision" aria-hidden="true">#</a></h3>
-        <p>Between the two 16-bit formats, <code>FP16</code> (<code>1-5-10</code>) has a narrow dynamic range and needs loss scaling; <code>BF16</code> (<code>1-8-7</code>) matches <code>FP32</code>'s exponent range so it skips loss scaling, yet its 7-bit mantissa still drops small updates unless the optimizer steps an <code>FP32</code> master copy.</p>
-        <p>Across TP/PP/DP ranks, Megatron's <code>Float16OptimizerWithFloat16Params</code><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-8">[8]</a> coordinates six steps per iteration:</p>
+        <p>Comparing the three floating-point formats across dynamic range (exponent bits) and near-1 resolution ($\varepsilon$ such that $1 + \varepsilon \gt 1$)<a class="cite" href="#ref-11">[11]</a>:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="nw">Format</th>
+                        <th class="nw">Bits (S-E-M)</th>
+                        <th class="nw">Bytes</th>
+                        <th class="nw">Magnitude Range</th>
+                        <th class="nw">Near-1 $\varepsilon$</th>
+                        <th class="nw">Loss Scale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="nw"><code>FP32</code></td>
+                        <td class="nw"><code>1-8-23</code></td>
+                        <td class="nw">4 B</td>
+                        <td class="nw">$10^{-38} \sim 3\times 10^{38}$</td>
+                        <td class="nw">$0.00000012$</td>
+                        <td class="nw">None</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>FP16</code></td>
+                        <td class="nw"><code>1-5-10</code></td>
+                        <td class="nw">2 B</td>
+                        <td class="nw">$5.95\times 10^{-8} \sim 65504$</td>
+                        <td class="nw">$0.00097656$</td>
+                        <td class="nw">Dynamic / Const</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>BF16</code></td>
+                        <td class="nw"><code>1-8-7</code></td>
+                        <td class="nw">2 B</td>
+                        <td class="nw">$10^{-38} \sim 3\times 10^{38}$</td>
+                        <td class="nw">$0.00781250$</td>
+                        <td class="nw">None / Const</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Pure 16-bit training fails for two concrete reasons<a class="cite" href="#ref-11">[11]</a>. First, <strong>rounding error</strong>: in $[2^{-3}, 2^{-2}]$, <code>FP16</code>'s fixed step spacing is $2^{-13}$, so adding gradient $2^{-14}$ to weight $2^{-3}$ rounds straight back to $2^{-3}$, silently dropping the update (and <code>BF16</code>'s coarser 7-bit mantissa needs <code>FP32</code> master copies even more). Second, <strong>gradient underflow</strong>: in late training, roughly <strong>67% of activation gradients</strong> fall below $2^{-24}$ (the <code>FP16</code> positive limit) and vanish to zero—fixed by scaling loss by $S$ before backprop. Since <code>BF16</code> keeps <code>FP32</code>'s 8-bit exponent ("get into the right range first, then worry about precision"), it skips dynamic loss scaling<a class="cite" href="#ref-11">[11]</a>. Meanwhile, small sensitivity-critical tensors such as LayerNorm/BatchNorm parameters and the scalar loss remain in <code>FP32</code> throughout.</p>
+        <p>Three low-level mechanics in Megatron's <code>Float16OptimizerWithFloat16Params</code> explain how distributed mixed precision works in code<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-11">[11]</a>:</p>
+        <ul>
+            <li><strong><code>main_grad</code> does NOT mean "FP32 gradients":</strong> Under Megatron's local DDP (<code>DDP_impl == "local"</code>, <code>params_have_main_grad=True</code>), parameters of the same <code>dtype</code> share a contiguous <code>MemoryBuffer</code> (accessed via <code>tensor.main_grad</code> instead of fragmented <code>tensor.grad</code>) so <code>all_reduce</code> runs in contiguous blocks. In <code>FP16</code> runs, <code>main_grad</code> is still <code>FP16</code> and is only cast via <code>.float()</code> inside <code>_copy_model_grads_to_main_grads()</code>.</li>
+            <li><strong><code>main_param = param.detach().clone().float()</code>:</strong> Calling <code>clone()</code> alone leaves the master copy attached to autograd (<code>requires_grad=True</code>); calling <code>detach()</code> alone shares storage with <code>FP16</code> weights. Chaining both isolates the <code>FP32</code> copy before copying TP attributes, preserving PP-shared Embedding flags (<code>param.shared</code>), and repointing <code>optimizer.param_groups</code>.</li>
+            <li><strong><code>DynamicGradScaler</code> uses cumulative <code>hysteresis</code>:</strong> On <code>inf/NaN</code>, Megatron skips the optimizer update immediately, yet does <strong>not</strong> shrink $S$ on the first overflow. Instead it decrements cumulative <code>_hysteresis_tracker</code> and shrinks <code>max(_scale * backoff_factor, min_scale)</code> only once it reaches <code>&lt;= 0</code>, while scaling up by <code>growth_factor</code> after <code>growth_interval</code> consecutive clean steps.</li>
+        </ul>
+        <pre><code class="language-python"># Isolated FP32 master weight + cumulative hysteresis dynamic loss scaling [11]
+main_param = param.detach().clone().float()
+mpu.copy_tensor_model_parallel_attributes(main_param, param)
+
+# DynamicGradScaler.update(found_inf): cumulative hysteresis backoff, consecutive growth
+if found_inf:
+    self._growth_tracker = 0
+    self._hysteresis_tracker -= 1
+    if self._hysteresis_tracker &lt;= 0:
+        self._scale = torch.max(self._scale * self.backoff_factor, self.min_scale)
+else:
+    self._growth_tracker += 1
+    if self._growth_tracker == self.growth_interval:
+        self._growth_tracker = 0
+        self._hysteresis_tracker = self.hysteresis
+        self._scale = self._scale * self.growth_factor</code></pre>
+        <p>Inside <code>Float16OptimizerWithFloat16Params.step()</code>, each iteration executes six steps in order<a class="cite" href="#ref-11">[11]</a>:</p>
         <ol>
-            <li><strong>Dynamic loss scaling (FP16):</strong> Multiply the forward loss by $S = 2^k$ so tiny backward gradients stay representable.</li>
-            <li><strong>Contiguous <code>main_grad</code> buffer:</strong> Pre-allocate one flat gradient buffer per parameter bucket during setup and point each <code>param.main_grad</code> to a slice inside it, avoiding allocator fragmentation and letting NCCL fire large contiguous transfers.</li>
-            <li><strong>Sync &amp; unscale:</strong> After DP gradient reduction, divide by $S \cdot \text{world\_dp}$.</li>
-            <li><strong>Global <code>found_inf</code> consensus:</strong> In model-parallel runs, Rank 0 cannot skip an overflowing step while Rank 1 updates. Every GPU checks local <code>inf/NaN</code>, then runs a scalar <code>AllReduce(MAX)</code> across $\text{TP} \times \text{PP}$: if any rank overflows, the entire cluster zeroes gradients, halves $S$, and skips the Adam step together.</li>
-            <li><strong>Deduplicated global L2 clipping:</strong> Computing $\|g\|_2 = \sqrt{\sum_{r \in \text{TP}} \sum_{s \in \text{PP}} \|g_{r,s}\|_2^2}$ excludes replicated weights across TP ranks (like LayerNorm) before running <code>AllReduce(SUM)</code> so they are not counted TP times.</li>
-            <li><strong>Step &amp; cast back:</strong> Update the <code>FP32</code> master weights and copy-cast them back into <code>FP16/BF16</code> compute weights.</li>
+            <li><strong>Copy &amp; cast gradients (<code>_copy_model_grads_to_main_grads</code>):</strong> Cast <code>model_param.main_grad</code> (or <code>.grad</code>) into <code>FP32</code> <code>main_param.grad</code>.</li>
+            <li><strong>Unscale &amp; global <code>found_inf</code> check (<code>_unscale_main_grads_and_check_for_nan</code>):</strong> Run <code>torch._amp_foreach_non_finite_check_and_unscale_</code>, synchronize <code>self.found_inf</code> via <code>dist.all_reduce(MAX)</code> across <code>mpu.get_model_parallel_group()</code> ($\text{TP} \times \text{PP}$), update <code>grad_scaler</code>, and skip the step cluster-wide if any rank overflowed.</li>
+            <li><strong>Global L2 clipping (<code>clip_grad_norm</code>):</strong> Compute $\|g\|_2 = \sqrt{\sum_{r \in \text{TP}} \sum_{s \in \text{PP}} \|g_{r,s}\|_2^2}$ (excluding TP-replicated params such as LayerNorm so they are not counted TP times) and scale $g \leftarrow \frac{c}{\|g\|_2}g$ when $\|g\|_2 \gt c$.</li>
+            <li><strong>Optional zero count:</strong> Log zero gradient counts via <code>count_zeros()</code> if enabled.</li>
+            <li><strong>Step optimizer (<code>self.optimizer.step()</code>):</strong> Update <code>FP32</code> <code>main_param</code> (plus native <code>FP32</code> parameters).</li>
+            <li><strong>Cast back (<code>_copy_main_params_to_model_params</code>):</strong> Copy updated <code>FP32</code> master weights back into <code>FP16/BF16</code> <code>model_param</code> via Apex's single-kernel <code>_multi_tensor_copy_this_to_that</code>.</li>
         </ol>
 
         <h2 id="sharding">Sharding &amp; Collectives<a class="anchor" href="#sharding" aria-hidden="true">#</a></h2>
@@ -381,10 +444,11 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
 
         <h3 id="dp-ddp">DP and DDP<a class="anchor" href="#dp-ddp" aria-hidden="true">#</a></h3>
         <p>Pure Data Parallelism runs Case 1 forward (sharded batch $B_{\text{DP}}$) and Case 3 backward on weight gradients $dW = X[B_{\text{DP}}, D]^\top \cdot dY[B_{\text{DP}}, F]$, contracting along $B_{\text{DP}}$ to produce $\{U_{\text{DP}}\}$.</p>
-        <p>Legacy single-process PyTorch <code>DataParallel</code> (DP) hits the GIL bottleneck and routes parameter broadcasts, batch splits, logits gathering for loss, and gradients back through <code>GPU 0</code>. Production <strong>DDP</strong> spawns one process per GPU and attaches a C++ <code>Reducer</code> that packs parameters in <strong>reverse topological order into ~25 MB gradient buckets</strong><a class="cite" href="#ref-8">[8]</a>. The instant backprop finishes filling the tail bucket, NCCL launches an asynchronous Ring <code>AllReduce</code> while earlier layers are still differentiating. Per-rank traffic on a ring is roughly $2\frac{N-1}{N}\Psi \approx \mathbf{2\Psi}$ bytes per step.</p>
+        <p>Under the classic Parameter Server <strong>DP</strong> model<a class="cite" href="#ref-8">[8]</a>, $N$ compute <code>Workers</code> push local gradients to a single <code>Server</code> (often <code>GPU 0</code> on a single node) and pull back averaged updates. Total cluster traffic is $N\Phi\text{ (Server)} + N\Phi\text{ (Workers)} = 2N\Phi$, so the Server scales linearly in $N$ and saturates its NIC across nodes (while multi-Server setups shard gradients across servers). To keep Workers busy during sync, PS frameworks also use <strong>asynchronous bounded-delay updates</strong> (letting a Worker advance iter 11 on stale weights while iter 10 syncs, enforcing e.g. iter 10–11 applied before iter 12 under 1-bounded delay), trading slower SGD convergence for utilization.</p>
+        <p><strong>DDP</strong> eliminates the central Server using <strong>Ring-AllReduce</strong><a class="cite" href="#ref-8">[8]</a>: each GPU slices its <strong>gradients</strong> (not input batch) into $N$ chunks of $\Phi/N$ and runs $N-1$ hops of <code>ReduceScatter</code> ($(N-1)\frac{\Phi}{N}$ send/GPU) followed by $N-1$ hops of <code>AllGather</code> ($(N-1)\frac{\Phi}{N}$ send/GPU). Total cluster bytes remain $2N\Phi$, yet per-GPU send volume drops to a constant $2\frac{N-1}{N}\Phi \approx \mathbf{2\Phi}$ spread evenly across ranks. In PyTorch DDP, a C++ <code>Reducer</code> packs parameters in reverse topological order into ~25 MB buckets so NCCL fires asynchronous ring reductions behind ongoing backward passes.</p>
 
         <h3 id="zero-fsdp">ZeRO and FSDP<a class="anchor" href="#zero-fsdp" aria-hidden="true">#</a></h3>
-        <p>DDP scales throughput cleanly yet keeps $N$ identical $16\Phi$ copies of model states and repeats identical Adam updates on every card. ZeRO<a class="cite" href="#ref-4">[4]</a> and PyTorch FSDP shard optimizer states, gradients, and weights evenly across DP ranks.</p>
+        <p>DDP balances bandwidth yet keeps $N$ redundant $16\Phi$ copies of model states and repeats identical Adam updates on every card. DeepSpeed ZeRO<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a> (and PyTorch FSDP) shards optimizer states ($P_{os}$), gradients ($P_g$), and parameters ($P_p$) across $N_d$ DP ranks ("consume and discard, re-gather when needed"):</p>
         <p>Tracking our 2-GPU gradients $g_0=[1,2]$ and $g_1=[3,4]$: DDP runs <code>AllReduce(g)</code> so both GPUs hold $[4,6]$ and update all weights; ZeRO-3 / FSDP permanently stores only $W_0, \text{OS}_0$ on GPU 0, runs <code>AllGather(W)</code> right before computing each layer (and frees peer shards immediately after), then executes <code>ReduceScatter(g)</code> so GPU 0 receives only $[4]$ to update $W_0$ while GPU 1 gets $[6]$ for $W_1$:</p>
         <div class="table-wrap">
             <table>
@@ -393,8 +457,8 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                         <th class="nw">Strategy</th>
                         <th>Sharded</th>
                         <th class="nw">Static HBM</th>
-                        <th class="nw">N = 8</th>
-                        <th class="nw">Comm</th>
+                        <th class="nw">7.5B (N=64)</th>
+                        <th class="nw">Comm / Rank</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -402,34 +466,35 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                         <td class="nw"><code>DDP</code></td>
                         <td>None</td>
                         <td class="nw">$16\Phi$</td>
-                        <td class="nw">$16.0\Phi$</td>
-                        <td class="nw">$2\Psi$ ($1\times$)</td>
+                        <td class="nw">120 GB</td>
+                        <td class="nw">$2\Phi$ ($1\times$)</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>ZeRO-1</code></td>
-                        <td>Optimizer States</td>
-                        <td class="nw">$4\Phi + \frac{12\Phi}{N}$</td>
-                        <td class="nw">$5.50\Phi$</td>
-                        <td class="nw">$2\Psi$ ($1\times$)</td>
+                        <td>Optimizer States $P_{os}$</td>
+                        <td class="nw">$4\Phi + \frac{12\Phi}{N_d}$</td>
+                        <td class="nw">31.4 GB</td>
+                        <td class="nw">$2\Phi$ (paper $3\Phi$)</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>ZeRO-2</code></td>
-                        <td>OS + Gradients</td>
-                        <td class="nw">$2\Phi + \frac{14\Phi}{N}$</td>
-                        <td class="nw">$3.75\Phi$</td>
-                        <td class="nw">$2\Psi$ ($1\times$)</td>
+                        <td>$P_{os}$ + Gradients $P_g$</td>
+                        <td class="nw">$2\Phi + \frac{14\Phi}{N_d}$</td>
+                        <td class="nw">16.6 GB</td>
+                        <td class="nw">$2\Phi$ ($1\times$)</td>
                     </tr>
                     <tr>
                         <td class="nw"><code>ZeRO-3 / FSDP</code></td>
-                        <td>OS + Grads + Params</td>
-                        <td class="nw">$\frac{16\Phi}{N}$</td>
-                        <td class="nw">$2.00\Phi$</td>
-                        <td class="nw">$3\Psi$ ($1.5\times$)</td>
+                        <td>$P_{os}$ + $P_g$ + Params $P_p$</td>
+                        <td class="nw">$\frac{16\Phi}{N_d}$</td>
+                        <td class="nw">1.9 GB</td>
+                        <td class="nw">$3\Phi$ ($1.5\times$)</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <p>ZeRO-1 and ZeRO-2 stay at $2\Psi$ traffic because <code>AllReduce</code> is already <code>ReduceScatter</code> ($1\Psi$) + <code>AllGather</code> ($1\Psi$)—they simply swap the trailing gradient <code>AllGather</code> for an updated-weight <code>AllGather</code> after local Adam updates. ZeRO-3 adds one extra <code>AllGather</code> during backprop ($3\Psi$), overlapped by prefetching the next layer's parameters. Complementing this, ZeRO-R partitions checkpointed activations ($P_a$), caps temporary buffers ($C_B$), and defragments memory ($M_D$)<a class="cite" href="#ref-4">[4]</a>.</p>
+        <p><strong>ZeRO-1 $3\Phi$ vs. $2\Phi$ traffic &amp; memory snapshot insights</strong><a class="cite" href="#ref-9">[9]</a>: conceptually the ZeRO paper computes Stage-1 traffic as full-grad <code>AllReduce</code> ($2\Phi$) + <code>AllGather(W)</code> ($\Phi$) = $3\Phi$, whereas modern DeepSpeed/FSDP swaps <code>AllReduce(G)</code> for <code>ReduceScatter(G)</code> ($\Phi$) to stay at $2\Phi$—though keeping full gradients in Stage 1 still saves $m-1$ sync steps under $m$-step gradient accumulation. PyTorch Memory Snapshots of ZeRO-1 also show two practical traits<a class="cite" href="#ref-9">[9]</a>: <code>FP16</code> weights update in-place via <code>fp16._copy_(fp32)</code>, and Adam $m,v$ tensors are lazily allocated only on the first non-overflow step.</p>
+        <p>ZeRO is best summarized as <strong>"model-parallel in form, data-parallel in substance"</strong><a class="cite" href="#ref-9">[9]</a>: even Stage 3 processes disjoint micro-batches with reconstructed full layer weights (dropping peer shards right after each layer). Complementing this, ZeRO-R<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a> targets residual memory—$P_a$ partitions activations replicated across <strong>TP</strong> ranks (pure DP activations are already batch-split), $C_B$ batches small cross-GPU slices to keep bandwidth saturated at bounded buffer cost, and $M_D$ defragments HBM—while <strong>ZeRO-Offload / ZeRO-Infinity</strong> keeps compute-heavy FWD/BWD on GPUs and offloads low-FLOP <code>FP32</code> updates to CPU RAM<a class="cite" href="#ref-9">[9]</a>.</p>
 
         <figure class="anim-fig" data-anim="ddp-vs-fsdp">
             <figcaption>Fig. 6. Side-by-side step lifecycle of DDP vs. ZeRO-3 / FSDP alongside the $16\Phi \to 2\Phi$ per-GPU HBM reduction at $N=8$.</figcaption>
@@ -438,11 +503,12 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         <h2 id="tensor-parallel">Tensor Parallelism<a class="anchor" href="#tensor-parallel" aria-hidden="true">#</a></h2>
 
         <h3 id="tp-design">MLP, Attention &amp; Vocab<a class="anchor" href="#tp-design" aria-hidden="true">#</a></h3>
-        <p>ZeRO reduces static state, not intra-layer activations, and single batches can still overflow HBM. <strong>Tensor Parallelism (TP)</strong><a class="cite" href="#ref-2">[2]</a> cuts the weights inside each layer, pairing <strong>Column-Parallel</strong> then <strong>Row-Parallel</strong> linears so nonlinearities and softmax run with zero communication:</p>
+        <p>ZeRO reduces static state, not intra-layer activations. <strong>Tensor Parallelism (TP)</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a> splits each linear matmul $Y = XW$ ($X:[b,s,h], W:[h,h']$): a <strong>row-split</strong> on $W$ forces a matching column-split on $X$, sums partial outputs via $g$ in forward, and copies/concats gradients via $f$ in backward; a <strong>column-split</strong> replicates $X$, concats $[Y_1,Y_2]$, and relies on $f$ in backward to <code>AllReduce</code> $\partial\mathcal{L}/\partial X|_1 + \partial\mathcal{L}/\partial X|_2$.</p>
+        <p>Megatron-LM pairs <strong>Column-Parallel</strong> then <strong>Row-Parallel</strong> linears so nonlinearities and softmax run with zero communication<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>:</p>
         <ul>
-            <li><strong>MLP:</strong> Column-split the first weight $A = [A_0, A_1]$ and row-split the second $B = \begin{bmatrix} B_0 \\ B_1 \end{bmatrix}$. Elementwise GeLU stays strictly local before one <code>AllReduce</code> merges partial outputs: $$Z = \text{AllReduce}\!\left(\sum_i \text{GeLU}(X A_i)\, B_i\right)$$</li>
-            <li><strong>Multi-Head Attention:</strong> Split $W^Q, W^K, W^V$ by attention heads (each rank runs $h/\text{TP}$ complete heads independently) and row-split output projection $W^O$, requiring one forward <code>AllReduce</code>.</li>
-            <li><strong>Vocab Embedding &amp; <code>VocabParallelCrossEntropy</code>:</strong> Partition huge vocab tables $[V, D]$ across ranks. On output logits $[B, S, V/\text{TP}]$, exact Log-Sum-Exp normalization avoids gathering the full vocabulary by syncing only three lightweight $[B, S]$ scalars:
+            <li><strong>MLP:</strong> Column-split $A = [A_0, A_1]$ and row-split $B = \begin{bmatrix} B_0 \\ B_1 \end{bmatrix}$. Because $\text{GeLU}(Y_1+Y_2) \neq \text{GeLU}(Y_1)+\text{GeLU}(Y_2)$ whereas $\text{GeLU}([Y_1,Y_2]) = [\text{GeLU}(Y_1),\text{GeLU}(Y_2)]$, column-splitting $A$ avoids syncing before GeLU and uses only 1 forward + 1 backward <code>AllReduce</code> ($4bsh$ total): $$Z = \text{AllReduce}\!\left(\sum_i \text{GeLU}(X A_i)\, B_i\right)$$</li>
+            <li><strong>Multi-Head Attention:</strong> Split $W^Q, W^K, W^V$ along <code>k_dim</code> by heads ($\text{num\_heads} \bmod \text{TP} = 0$) and row-split $W^O$, also costing $4bsh$—giving <strong>4 <code>AllReduce</code>s ($8bsh$) per Transformer layer</strong>. Adding <strong>Sequence Parallelism (SP)</strong><a class="cite" href="#ref-3">[3]</a> splits these into <code>AllGather</code> and <code>ReduceScatter</code> at identical traffic while eliminating TP-replicated LayerNorm/Dropout activations.</li>
+            <li><strong>Vocab Embedding &amp; <code>VocabParallelCrossEntropy</code>:</strong> Position embeddings $[s_{\max}, h]$ stay replicated while word embeddings $[V, h]$ split along $V$. For token IDs <code>[0,212,7,9]</code> across $[0,150)$ and $[150,299)$, each GPU masks out-of-range IDs to zero (<code>[ok,0,ok,ok]</code> + <code>[0,ok,0,0]</code>) and runs one <code>AllReduce</code>. When $\text{PP} \gt 1$, input and output tie the same word embedding, so Megatron must run an extra <code>AllReduce</code> across the first and last stages before stepping<a class="cite" href="#ref-10">[10]</a>. On output logits $[b,s,V/\text{TP}]$, exact Log-Sum-Exp normalization avoids gathering $[b,s,V]$ by syncing only three lightweight $[b,s]$ scalars<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>:
                 $$\begin{aligned}
                 m_{\text{global}} &amp;= \text{AllReduce}_{\max}\!\left(\max_{j \in V_i} z_{i,j}\right), \qquad z'_{i,j} = z_{i,j} - m_{\text{global}} \\
                 S_{\text{global}} &amp;= \text{AllReduce}_{\text{sum}}\!\left(\sum_{j \in V_i} e^{z'_{i,j}}\right), \qquad z'_{\text{target}} = \text{AllReduce}_{\text{sum}}\!\left(\mathbb{I}[y \in V_i]\, z'_{i,y}\right) \\
@@ -450,10 +516,10 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                 \end{aligned}$$
             </li>
         </ul>
-        <p>Altogether, standard Megatron TP adds <strong>2 forward and 2 backward <code>AllReduce</code>s per layer</strong>. Adding <strong>Sequence Parallelism (SP)</strong><a class="cite" href="#ref-3">[3]</a> replaces the outer <code>AllReduce</code> with <code>ReduceScatter</code> and <code>AllGather</code> across the sequence axis at identical byte volume, cutting replicated LayerNorm and Dropout activations by $\text{TP}\times$.</p>
+        <p><strong>Why intra-node TP + inter-node DP &amp; 512-GPU scaling</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>: Per-layer traffic compares TP's $8bsh$ vs. DP's $2h^2$ (effectively $[b\cdot s]$ vs. $[h]$, both $\sim 10^5$, TP slightly higher). The <strong>decisive reason</strong> is backward blocking: DP fires gradient <code>AllReduce</code> asynchronously while earlier layers keep differentiating, whereas TP stalls every layer until <code>AllReduce</code> returns $\partial\mathcal{L}/\partial X$. Across 32× DGX-2H nodes (512× V100-32GB) training GPT-2 (1.2B→8.3B), pure TP scales at 100%→95%→82%→77% (1→8 GPUs, stopping at 8/16 GPUs per node due to activation HBM); pairing $\text{TP}=8 \times \text{DP}=64$ reaches 15,100 TFLOPs vs. $39 \times 512 = 19{,}968\text{ TFLOPs}$ ideal—<strong>76% weak scaling efficiency</strong>.</p>
 
         <h3 id="tp-internals">Megatron Internals<a class="anchor" href="#tp-internals" aria-hidden="true">#</a></h3>
-        <p>Three low-level mechanics inside Megatron's <code>mpu</code> (<code>parallel_state</code>) module keep 3D parallelism fast and numerically identical to single-GPU training<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-8">[8]</a>:</p>
+        <p>Three low-level mechanics inside Megatron's <code>mpu</code> (<code>parallel_state</code>) module keep 3D parallelism fast and numerically identical to single-GPU training<a class="cite" href="#ref-2">[2]</a>:</p>
 
         <p><strong>1. 3D process group layout (<code>initialize_model_parallel</code>):</strong> Megatron orders global ranks from <strong>innermost <code>TP</code> &rarr; middle <code>DP</code> &rarr; outermost <code>PP</code></strong>. With 16 GPUs across two 8-GPU nodes ($\text{TP}=2, \text{PP}=2, \text{DP}=4$), it constructs four orthogonal process groups:</p>
         <ul>
@@ -589,7 +655,7 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
             <figcaption>Fig. 10. Two-pass <code>All-to-All</code> token routing cycle and a skewed 4-GPU <code>CF=1.0</code> example showing capacity drops.</figcaption>
         </figure>
 
-        <p>In DeepSpeed-Megatron<a class="cite" href="#ref-7">[7]</a><a class="cite" href="#ref-8">[8]</a>, shared parameters (Attention, Embeddings, LayerNorm, Router) replicate across all DP ranks while experts shard along $\text{EP}$. With 8 DP GPUs, 4 experts, and $\text{EP}=4$, the cluster forms $2$ full expert replicas—splitting DP cleanly as <strong>$\text{DP}(8) = \text{EP}(4) \times \text{EDP}(2)$</strong>:</p>
+        <p>In DeepSpeed-Megatron<a class="cite" href="#ref-7">[7]</a>, shared parameters (Attention, Embeddings, LayerNorm, Router) replicate across all DP ranks while experts shard along $\text{EP}$. With 8 DP GPUs, 4 experts, and $\text{EP}=4$, the cluster forms $2$ full expert replicas—splitting DP cleanly as <strong>$\text{DP}(8) = \text{EP}(4) \times \text{EDP}(2)$</strong>:</p>
         <ul>
             <li><strong><code>EP groups</code> (<code>{0,1,2,3}</code>, <code>{4,5,6,7}</code>):</strong> Route tokens via two <code>All-to-All</code> passes.</li>
             <li><strong><code>EDP groups</code> (<code>{0,4}, {1,5}, {2,6}, {3,7}</code>):</strong> Sync gradients via <code>AllReduce</code> strictly across identical expert replicas—never averaging $E_0$ with $E_1$.</li>
@@ -684,13 +750,16 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
         <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
         <ol class="references">
             <li id="ref-1" data-brief="Introduces named device-mesh sharding notation, the four collective primitives, bidirectional ring latency/bandwidth formulas, and the four sharded-matmul cases."><a href="https://jax-ml.github.io/scaling-book/sharding/" target="_blank" rel="noopener">How to Scale Your Model, Part 3: Sharded Matrices and How to Multiply Them</a>. Austin, Bradbury, Blake, Chou, Douglas, Frostig, Levskaya, Pope, et al., Google DeepMind, 2025.</li>
-            <li id="ref-2" data-brief="Proposes intra-layer Column/Row-Parallel MLP and multi-head attention, vocab-parallel cross-entropy, conjugate f/g autograd ops, and rank-forked Dropout RNG."><a href="https://arxiv.org/abs/1909.08053" target="_blank" rel="noopener">Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism</a>. Shoeybi et al., NVIDIA, 2019 (arXiv:1909.08053).</li>
+            <li id="ref-2" data-brief="Proposes intra-layer Column/Row-Parallel MLP and multi-head attention, vocab-parallel cross-entropy, conjugate f/g autograd ops, rank-forked Dropout RNG, and 512-GPU GPT-2 scaling results."><a href="https://arxiv.org/abs/1909.08053" target="_blank" rel="noopener">Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism</a>. Shoeybi et al., NVIDIA, 2019 (arXiv:1909.08053).</li>
             <li id="ref-3" data-brief="Derives the sbh(34 + 5as/h) per-layer Transformer activation memory formula and introduces Sequence Parallelism (SP) with selective activation recomputation."><a href="https://arxiv.org/abs/2205.05198" target="_blank" rel="noopener">Reducing Activation Recomputation in Large Transformer Models</a>. Korthikanti et al., NVIDIA, 2022 (arXiv:2205.05198).</li>
             <li id="ref-4" data-brief="Breaks training HBM into 16Φ model states and residual states, introduces ZeRO Stages 1–3 to shard OS/gradients/parameters across DP, and ZeRO-R for residual memory."><a href="https://arxiv.org/abs/1910.02054" target="_blank" rel="noopener">ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</a>. Rajbhandari et al., Microsoft DeepSpeed, SC 2020 (arXiv:1910.02054).</li>
             <li id="ref-5" data-brief="Introduces micro-batch pipeline parallelism with bubble ratio (P−1)/(M+P−1) and stage-boundary activation re-materialization to scale deep models across devices."><a href="https://arxiv.org/abs/1811.06965" target="_blank" rel="noopener">GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism</a>. Huang et al., Google Brain, NeurIPS 2019 (arXiv:1811.06965).</li>
             <li id="ref-6" data-brief="Scales sparse Top-2 Mixture-of-Experts Transformers across devices using fixed Expert Capacity, auxiliary load-balancing loss, and All-to-All token dispatch."><a href="https://arxiv.org/abs/2006.16668" target="_blank" rel="noopener">GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding</a>. Lepikhin et al., Google Brain, ICLR 2021 (arXiv:2006.16668).</li>
             <li id="ref-7" data-brief="Details DeepSpeed-Megatron MoE training with two-pass All-to-All dispatch/combine and orthogonal DP = EP × EDP process groups alongside TP and PP."><a href="https://arxiv.org/abs/2201.05596" target="_blank" rel="noopener">DeepSpeed-MoE: Advancing Mixture-of-Experts Inference and Training to Power Next-Generation AI Scale</a>. Rajbhandari et al., ICML 2022 (arXiv:2201.05596).</li>
-            <li id="ref-8" data-brief="Illustrated Chinese deep-dive series covering GPipe, DP/DDP/ZeRO, Megatron-LM tensor parallelism and mpu source code (parts 2–3), and DeepSpeed-Megatron MoE internals."><span lang="zh-CN">猛猿，《图解大模型训练》系列：流水线并行（GPipe）、数据并行（DP / DDP / ZeRO）、Megatron-LM 张量并行与源码解读（2–3）、DeepSpeed-Megatron MoE 原理与源码解读，知乎专栏「前面de算法」。</span></li>
+            <li id="ref-8" data-brief="Walks through Parameter Server DP bottlenecks, asynchronous bounded-delay updates, multi-server PS, and step-by-step 4-GPU Ring-AllReduce communication math."><span lang="zh-CN"><a href="https://zhuanlan.zhihu.com/p/617133971" target="_blank" rel="noopener">图解大模型训练之：数据并行上篇（DP, DDP 与 ZeRO）</a>，猛猿（公众号：大猿搬砖简记），知乎。</span></li>
+            <li id="ref-9" data-brief="Explains ZeRO Stages 1–3 with 7.5B/64-GPU memory tables, paper 3Φ vs practical 2Φ Stage-1 traffic, a 2-GPU PyTorch Memory Snapshot, ZeRO vs MP, ZeRO-R, and ZeRO-Offload."><span lang="zh-CN"><a href="https://zhuanlan.zhihu.com/p/618865052" target="_blank" rel="noopener">图解大模型训练之：数据并行下篇（DeepSpeed ZeRO，零冗余优化）</a>，猛猿（公众号：大猿搬砖简记），知乎。</span></li>
+            <li id="ref-10" data-brief="Derives row- and column-split linear layers, Megatron MLP/MHA/Embedding/Cross-Entropy sharding, tied-embedding PP sync, intra-node TP vs inter-node DP, and 512-GPU V100 scaling."><span lang="zh-CN"><a href="https://zhuanlan.zhihu.com/p/622212228" target="_blank" rel="noopener">图解大模型训练之：张量模型并行（TP），Megatron-LM</a>，猛猿（公众号：大猿搬砖简记），知乎。</span></li>
+            <li id="ref-11" data-brief="Compares FP16/BF16/FP32 ranges and rounding/underflow failures, distinguishes 16Φ/18Φ/20Φ peak states, and walks through main_grad, DynamicGradScaler hysteresis, and Float16OptimizerWithFloat16Params."><span lang="zh-CN"><a href="https://zhuanlan.zhihu.com/p/662700424" target="_blank" rel="noopener">图解大模型训练系列之：Megatron 源码解读 3，分布式混合精度训练</a>，猛猿（公众号：大猿搬砖简记），知乎。</span></li>
         </ol>
     </div>
 
