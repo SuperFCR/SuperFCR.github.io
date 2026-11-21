@@ -22,7 +22,7 @@ assets/css/blog.css           # 所有 blog 页面共用的样式（含深色模
 assets/js/blog-theme.js       # 亮暗切换
 assets/js/blog-list.js        # 列表页的类型/主题筛选、搜索和计数
 assets/js/blog-post.js        # 文章页增强（桌面端右侧目录、代码复制、阅读进度、图片放大）
-assets/imgs/logo.svg          # 站点图标（羽毛），用于顶部导航品牌位
+assets/imgs/logo.svg          # 站点图标（星芒轨道），用于顶部导航品牌位
 assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blog 共用
 ```
 
