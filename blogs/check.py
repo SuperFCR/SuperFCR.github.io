@@ -23,6 +23,7 @@ TYPES = {  # key: (English badge, Chinese badge)
     'tech-report': ('Tech Report', '技术报告'),
     'tutorial': ('Tutorial', '教程'),
     'paper-notes': ('Paper Notes', '论文笔记'),
+    'tool': ('Tool', '工具'),
 }
 LANG = {
     'en': dict(html='en', suffix=' | Chaoran Feng', author='Chaoran Feng',

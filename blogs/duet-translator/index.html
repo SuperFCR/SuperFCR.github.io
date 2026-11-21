@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Duet-Translator is a Manifest V3 browser extension for Edge and Chrome that renders the original page and its translation side by side in same-origin iframes with paragraph-aligned scrolling, inline format preservation, and on-demand LLM caching.">
+    <meta name="description" content="Duet-Translator is a Manifest V3 browser extension for Edge and Chrome that renders the original page and its translation side by side in same-origin iframes, tuned via a 6-round recursive self-improvement (RSI) loop for speed and cost.">
     <title>Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling | Chaoran Feng</title>
     <link rel="canonical" href="https://www.falcary.com/blogs/duet-translator/">
     <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png">
@@ -11,8 +11,8 @@
     <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png">
     <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
     <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261121.2">
-    <script src="../../assets/js/blog-theme.js?v=20261121.2"></script>
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261121.3">
+    <script src="../../assets/js/blog-theme.js?v=20261121.3"></script>
 </head>
 <body>
 
@@ -40,7 +40,7 @@
         <div class="post-header-top">
             <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
         </div>
-        <span class="post-type type-tech-report">Tech Report</span>
+        <span class="post-type type-tool">Tool</span>
         <h1 class="post-title">Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling</h1>
         <div class="post-meta"><span>November 21, 2026</span><span>11 min read</span><span>Chaoran Feng</span></div>
     </header>
@@ -58,8 +58,13 @@
                     </ul>
                 </li>
                 <li><a href="#pipeline">Preserving Formatting and Streaming Translations</a></li>
-                <li><a href="#cost-and-cache">On-Demand Scheduling, Caching, and Benchmarks</a></li>
-                <li><a href="#compatibility">Real-Site Compatibility and Limitations</a></li>
+                <li><a href="#rsi">Recursive Self-Improvement: Optimizing Cost and Latency in a Closed Loop</a>
+                    <ul>
+                        <li><a href="#rsi-harness">Building a Reproducible LLM and Browser Harness</a></li>
+                        <li><a href="#rsi-rounds">Six Rounds of Hypothesize, Measure, Keep, and Revert</a></li>
+                        <li><a href="#rsi-results">Before-and-After Results and Cache Eviction Study</a></li>
+                    </ul>
+                </li>
                 <li><a href="#try">Try It</a></li>
                 <li><a href="#citation">Citation</a></li>
                 <li><a href="#references">References</a></li>
@@ -124,7 +129,7 @@ target     t' = q * (H' - vh') / H'</code></pre>
         <p>Solving for <code>t'</code> guarantees that both panes hit top and bottom simultaneously while keeping the paragraph under your gaze aligned at every intermediate scroll position.</p>
 
         <h3 id="driver">Scroll-Cause Classification and Oscillation Control<a class="anchor" href="#driver" aria-hidden="true">#</a></h3>
-        <p>Because programmatic scrolling fires <code>scroll</code> events too, naive two-way listeners quickly ping-pong. Each pane classifies every scroll event by priority before reporting: <code>prog</code> (matches the last target sent by <code>shell.js</code>, checked first so recently active panes cannot steal leadership back), <code>user</code> (wheel, keyboard, touch, or pointer input within 700&nbsp;ms; only takes control if its input timestamp is newer than the current driver), <code>layout</code> (DOM resize or translation insertion within 700&nbsp;ms; the follower snaps back to alignment while the driver stays put), and <code>other</code> (such as in-page anchor jumps). On documentation sites or SPAs where <code>window</code> does not scroll, <code>pane.js</code> selects the largest scrollable <code>overflow-y: auto|scroll</code> element as the primary scroll container.</p>
+        <p>Because programmatic scrolling fires <code>scroll</code> events too, naive two-way listeners quickly ping-pong. Each pane classifies every scroll event by priority before reporting: <code>prog</code> (matches the last target sent by <code>shell.js</code>, checked first so recently active panes cannot steal leadership back), <code>user</code> (wheel, keyboard, touch, or pointer input within 700&nbsp;ms; only takes control if its input timestamp is newer than the current driver), <code>layout</code> (DOM resize or translation insertion within 700&nbsp;ms; the follower snaps back to alignment while the driver stays put), and <code>other</code> (such as in-page anchor jumps). On documentation sites or SPAs where <code>window</code> does not scroll, <code>pane.js</code> picks the scrollable <code>overflow-y: auto|scroll</code> container holding the most translatable prose, using area only to break ties—so split Markdown-plus-preview editors pick the preview pane rather than a larger code editor.</p>
 
         <h2 id="pipeline">Preserving Formatting and Streaming Translations<a class="anchor" href="#pipeline" aria-hidden="true">#</a></h2>
         <p>Pages rely heavily on inline links, bold emphasis, inline code, and citation footnotes. Stripping them produces walls of plain text; asking an LLM to emit raw HTML invites broken tags and lost event handlers. Duet-Translator instead serializes inline DOM trees into compact numbered placeholders:</p>
@@ -134,19 +139,66 @@ target     t' = q * (H' - vh') / H'</code></pre>
         <p>For OpenAI-compatible engines, requests stream a JSON string array over SSE. An incremental parser in <code>sw.js</code> strips reasoning <code>&lt;think&gt;...&lt;/think&gt;</code> blocks and markdown code fences, tracks top-level commas to dispatch completed segments immediately via <code>chrome.tabs.sendMessage</code>, and also extracts partial unclosed JSON strings every 150&nbsp;ms for intra-paragraph streaming previews. If a request is aborted or fails mid-stream, the pane reconstructs the original DOM from the serialized source so half-translated fragments are never left behind or re-sent as source text. If a batch still comes back with a mismatched length, the scheduler falls back to binary-splitting and eventually single-segment retries.</p>
         <p>Disabling unnecessary chain-of-thought reasoning via <code>extraBody</code> makes a dramatic difference for interactive browsing. On the English Wikipedia Typography page (275 visible segments) with DeepSeek V4.1 Flash, disabling thinking (<code>{"thinking":{"type":"disabled"}}</code>) dropped single-paragraph latency from 5.1&nbsp;s to 1.9&nbsp;s and cut output tokens from 411 to 68 compared with <code>reasoning_effort: low</code>; on MiniMax M3.1 Flash, lowering reasoning effort cut latency from 9.1&nbsp;s to 4.5&nbsp;s and output tokens from 508 to 146.</p>
 
-        <h2 id="cost-and-cache">On-Demand Scheduling, Caching, and Benchmarks<a class="anchor" href="#cost-and-cache" aria-hidden="true">#</a></h2>
-        <p>Rather than translating an entire document when a split opens, Duet-Translator translates a sliding window covering 0.25 screens above, the current viewport, and 0.5 screens ahead by default (configurable down to 0). Scrolling pauses requests until 300&nbsp;ms after real user movement—ignoring layout-driven scroll adjustments caused by incoming translations—and in-flight requests for paragraphs that move more than 1.5 screens above or 2.5 screens below the viewport are aborted on the wire so the server stops generating.</p>
-        <p>Fast jump reading (skimming A &rarr; B &rarr; C in quick succession) introduces a subtler bottleneck: requests from B can still occupy every concurrency slot while technically staying inside the abort margin, starving C. Duet-Translator preempts older requests only if they were launched <em>before</em> the reader's most recent movement, never touching requests belonging to the current screen. Hidden elements, text already in the target language, and duplicate strings on the same page (such as repeated forum <code>reply</code> / <code>share</code> links) are deduplicated or skipped, and concurrent duplicate segments share the same in-flight promise. For small self-hosted models, setting <code>contextTokens</code> automatically splits batches before sending so prompt + input + estimated output fit safely inside the context window.</p>
-        <p>Two cache layers cut cost further:</p>
+        <h2 id="rsi">Recursive Self-Improvement: Optimizing Cost and Latency in a Closed Loop<a class="anchor" href="#rsi" aria-hidden="true">#</a></h2>
+        <p>Early versions of Duet-Translator already translated only the visible viewport plus a 0.5-screen prefetch margin, waited 300&nbsp;ms after scrolling stopped, and aborted off-screen requests—keeping real Wikipedia usage to roughly 11,600 characters across four stops out of 46,600 visible characters (~75% less text sent). Yet first-screen paint still took 5.7&nbsp;s, revisiting a page took 1.6&nbsp;s, and jumping rapidly between sections left the reader waiting 4–6&nbsp;s. Rather than tweaking heuristics by intuition, I gave Claude Code a bounded autonomous <strong>Recursive Self-Improvement (RSI)</strong> loop (1–2 hours, backed by subagents) with one rule: build a measurement harness first, then iterate strictly via <em>hypothesize &rarr; patch &rarr; benchmark &rarr; keep only measured wins</em>.</p>
+
+        <h3 id="rsi-harness">Building a Reproducible LLM and Browser Harness<a class="anchor" href="#rsi-harness" aria-hidden="true">#</a></h3>
+        <p>Before touching scheduling or caching code, the loop built <code>test/bench/</code> so every candidate change ran in real headless Chromium against deterministic network and billing physics:</p>
         <ul>
-            <li><strong>Local two-tier LRU + second-chance cache (<code>cache.js</code>).</strong> Lookups hit a 4,000-entry in-memory LRU before querying IndexedDB (scoped by SHA-1 hash of engine, model, language pair, custom prompt hash, and source text, capped at 64&nbsp;MB and 90-day TTL). Cache-only queries even run during scrolling across 3 screens above and 4 below so revisited pages appear instantaneously. Because a one-off whole-page translation can easily flush short navigation strings out of a small cache, eviction grants a second chance to entries hit at least twice by halving their hit counter and advancing their access timestamp.</li>
-            <li><strong>Server-side prefix caching.</strong> Keeping the system prompt fixed at the front of every message list (with page title placed at the very end) lets providers with automatic prefix caching—such as DeepSeek at 64-token granularity—bill shared instructions at roughly 1/50 of normal input token pricing. Real cached/miss token counts from SSE <code>usage</code> fields appear live in the top bar's green meter.</li>
+            <li><strong>Simulated OpenAI-compatible LLM (<code>llm-sim.mjs</code>).</strong> Models DeepSeek V4 Flash latency (<code>600&nbsp;ms</code> base TTFT plus <code>0.05&nbsp;ms</code> per uncached input token, <code>45&nbsp;tok/s</code> SSE streaming), 64-token prefix caching, and real billing (<code>$0.14</code> / <code>$0.0028</code> / <code>$0.28</code> per 1M miss / prefix-hit / output tokens), including aborted-stream output token billing.</li>
+            <li><strong>Playwright reading scenarios (<code>bench.mjs</code> &amp; <code>compare.mjs</code>).</strong> Drives five realistic reading patterns against frozen <code>extension/</code> snapshots via <code>EXT_DIR</code>: <em>slow read</em> (12 &times; 0.4-screen steps, 3.5&nbsp;s dwell), <em>revisit</em> (warm profile reopened in a new tab), <em>fast skim</em> (flick to bottom, stop, flick back), <em>forum thread</em> (150 nested comments with heavy duplicate <code>reply</code>/<code>share</code> strings), and later <em>jump reading</em> (A &rarr; B &rarr; C rapid skips).</li>
+            <li><strong>120-day cache eviction replay (<code>cache-policy.mjs</code>).</strong> Simulates 25 sites &times; 40 shared navigation strings, 60 cross-site strings, 40 visits/day, 30% revisits, and periodic 6,000–15,000-segment whole-page flushes.</li>
         </ul>
-        <p>A synthetic 120-day browsing simulation (<code>node test/bench/cache-policy.mjs</code> across 25 sites with shared UI strings and periodic 6,000–15,000-segment whole-page flushes) verified the eviction design:</p>
+        <p>Alongside the harness, the scheduling and caching core was tightened into the live architecture: a fixed system prompt placed at message index 0 (with page title moved to the tail) to maximize provider prefix-cache hits, a <code>max_tokens</code> runaway-loop cap (persisting parameter fallbacks in <code>chrome.storage.session</code> across 30&nbsp;s MV3 worker recycles), optional per-engine <code>contextTokens</code> pre-flight batch splitting for small self-hosted models, a two-tier 4,000-entry memory LRU + 64&nbsp;MB / 90-day IndexedDB cache with SHA-1 namespace keys, and a live green usage/cost meter in the top bar.</p>
+
+        <h3 id="rsi-rounds">Six Rounds of Hypothesize, Measure, Keep, and Revert<a class="anchor" href="#rsi-rounds" aria-hidden="true">#</a></h3>
+        <p>Each round was diffed against the frozen baseline commit (<code>10f056a</code>). Regressions and dead ends were surfaced by the harness and reverted rather than papered over:</p>
         <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Capacity &amp; Workload</th><th>FIFO</th><th>LRU</th><th>LFU</th><th>LRU + 2nd Chance</th></tr>
+                    <tr><th>Round</th><th>Hypothesis &amp; Change</th><th>Measured Outcome &amp; Verdict</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>R1</strong></td><td>Add two-tier LRU, scroll-time cache backfill, in-page dedup, in-flight coalescing</td><td>Skim segs &minus;40%, forum segs &minus;14%; <strong>caught regression</strong>: forum 1st segment +23% (2.99&nbsp;s &rarr; 3.69&nbsp;s) from awaiting a 300-seg cache sweep upfront</td></tr>
+                    <tr><td><strong>R2</strong></td><td>Split cache lookup into <code>near</code> (&le;120 segs) vs. <code>wide</code> (bg); visible-first wave; 2&nbsp;s dwell prefetch</td><td>Blocked sweep fixed; <strong>caught two flaws</strong>: greedy bin-packing pushed trailing visible blocks to wave 2, and dwell prefetch cost +10% with zero p90 gain</td></tr>
+                    <tr><td><strong>R3</strong></td><td>Balanced bin-packing + <strong>startup timer bug found in trace</strong> (<code>lastScrollTs=0</code> vs. new iframe <code>performance.now()=0</code> triggered 1.5&nbsp;s fallback)</td><td>Open 1st seg 2.49&nbsp;s &rarr; 1.10&nbsp;s; revisit 1.56&nbsp;s &rarr; 0.15&nbsp;s (0 req); <strong>caught</strong> single-slot prefetch queuing spiking slow-read p90 (1.17&nbsp;s &rarr; 2.90&nbsp;s)</td></tr>
+                    <tr><td><strong>R4</strong></td><td>Pipeline prefetch across free slots + <strong>revert dwell prefetch</strong></td><td>Restored slow-read wait and eliminated the +10% prefetch cost overhead</td></tr>
+                    <tr><td><strong>R5</strong></td><td>Sweep concurrency <code>4 / 6 / 8</code> under 1/50 prefix-cache billing</td><td><code>6</code> cut skim wait &minus;32% and forum 1st screen &minus;45% at flat cost (<code>8</code> added no gain); DeepSeek preset raised 4 &rarr; 6</td></tr>
+                    <tr><td><strong>Audit</strong></td><td>Re-audit original prompt before closing loop</td><td>Caught <code>new Array(n)</code> sparse-hole bug (hit rate always read 100%) and missing memory-LRU writeback; added <code>cache-policy.mjs</code> and <code>contextTokens</code> pre-flight split (<code>6 &rarr; 2+1+2+1</code>)</td></tr>
+                    <tr><td><strong>R6</strong></td><td>Dogfooding surfaced slow <code>A &rarr; B &rarr; C</code> jumps; added <code>jump</code> scenario, 150&nbsp;ms intra-paragraph previews, and pre-move preemption</td><td>Preemption alone failed (6.4&nbsp;s: single-block calls were non-streaming); naive position preemption thrashed aborts 6 &rarr; 34 from layout wobble; pre-move rule held aborts to 17 and cut C wait 4.8&nbsp;s &rarr; 1.57&nbsp;s</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <figure>
+            <img src="./fig-rsi.svg" width="1600" height="760" alt="Duet-Translator RSI latency chart: six horizontal grouped bar comparisons across Open page first segment, Open page first screen, Revisit warm cache, Fast skim stop wait p90, 150-comment Forum first screen, and Jump A-B-C mean wait." loading="lazy">
+            <figcaption>Fig. 3. End-to-end latency progression from frozen baseline through Round 5 and Round 6 under simulated DeepSeek V4 Flash streaming and prefix-cache billing. <a href="./fig-rsi.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h3 id="rsi-results">Before-and-After Results and Cache Eviction Study<a class="anchor" href="#rsi-results" aria-hidden="true">#</a></h3>
+        <p>Across the four core scenarios, Round 5 cut first-paragraph latency by 60% and revisit latency by 90% while edging total cost down by 2.7%. Because the baseline already restricted translation to the visible area, single-pass token cost was already near its floor—the biggest cost savings came from stripping duplicate segments, aborting scrolled-past requests, and capping runaway loops. Adding Round 6 streaming previews and jump preemption trades a modest +3.6% net cost over baseline (+6.5% over R5) for sub-second perceived responses when skimming or jumping:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Scenario</th><th>Metric</th><th>Baseline</th><th>After R5</th><th>After R6 (Previews)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Open page</td><td>First segment / 1st screen</td><td>2.49&nbsp;s / 5.73&nbsp;s</td><td>0.98&nbsp;s / 3.31&nbsp;s</td><td class="best">0.78&nbsp;s / 2.13&nbsp;s (&minus;69% / &minus;63%)</td></tr>
+                    <tr><td>Revisit page</td><td>1st screen (warm cache)</td><td>1.56&nbsp;s</td><td class="best">0.15&nbsp;s (0 req)</td><td class="best">0.15&nbsp;s (&minus;90%, 0 req)</td></tr>
+                    <tr><td>Fast skim</td><td>Stop wait p90 / segs</td><td>7.78&nbsp;s (30 segs)</td><td>4.20&nbsp;s (20 segs)</td><td class="best">2.28&nbsp;s (25 segs, &minus;71%)</td></tr>
+                    <tr><td>150-comment forum</td><td>Segs sent / 1st screen</td><td>110 / 8.04&nbsp;s</td><td>95 / 4.29&nbsp;s</td><td class="best">96 / 3.27&nbsp;s (&minus;59%)</td></tr>
+                    <tr><td>Slow read</td><td>Step wait mean / p90</td><td>0.48&nbsp;s / 1.17&nbsp;s</td><td>0.51&nbsp;s / 1.48&nbsp;s</td><td class="best">0&nbsp;ms / 0&nbsp;ms</td></tr>
+                    <tr><td>Jump <code>A &rarr; B &rarr; C</code> (c=6)</td><td>Mean wait / p90</td><td>4.78&nbsp;s / 5.56&nbsp;s (pre-R6)</td><td>—</td><td class="best">1.57&nbsp;s / 2.22&nbsp;s (&minus;67%)</td></tr>
+                    <tr><td>4-scenario total</td><td>Simulated API cost</td><td>$0.003644</td><td class="best">$0.003544 (&minus;2.7%)</td><td>$0.003776 (+3.6%)</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Two caveats apply to these numbers: absolute timings come from the local <code>llm-sim.mjs</code> physics model (use <code>test/e2e/live.mjs</code> to check a live endpoint's exact TTFT and throughput), and Round 6's <code>0&nbsp;ms</code> slow-read wait reflects intra-paragraph streaming previews appearing immediately rather than waiting for full-paragraph completion.</p>
+        <p>In the 120-day eviction study (<code>test/bench/cache-policy.mjs</code>), switching from FIFO to LRU eliminated roughly three-quarters of avoidable misses under tight capacity, LFU performed worst by letting stale high-frequency entries cling forever, and adding a second chance (halving hits and advancing the timestamp for entries hit &ge;2 times) protected shared navigation strings when a periodic whole-page translation flushed the cache:</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Capacity &amp; Workload (hit rate)</th><th>FIFO</th><th>LRU</th><th>LFU</th><th>LRU + 2nd Chance</th></tr>
                 </thead>
                 <tbody>
                     <tr><td>10k entries, daily browsing</td><td>94.3%</td><td>98.5%</td><td>90.9%</td><td class="best">98.5%</td></tr>
@@ -156,47 +208,6 @@ target     t' = q * (H' - vh') / H'</code></pre>
                 </tbody>
             </table>
         </div>
-        <p>End-to-end latency and billing were measured in Playwright against a simulated OpenAI-compatible server (<code>test/bench/bench.mjs</code>, 600&nbsp;ms TTFT, 45&nbsp;tok/s streaming, DeepSeek V4 Flash pricing at $0.14 / $0.0028 / $0.28 per 1M miss / prefix-hit / output tokens):</p>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Scenario</th><th>Metric</th><th>Baseline</th><th>Optimized</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Open page</td><td>First segment / Full 1st screen</td><td>2.49&nbsp;s / 5.73&nbsp;s</td><td class="best">0.98&nbsp;s / 3.31&nbsp;s</td></tr>
-                    <tr><td>Revisit page</td><td>1st screen (all local cache)</td><td>1.56&nbsp;s</td><td class="best">0.15&nbsp;s (0 requests)</td></tr>
-                    <tr><td>Fast skim</td><td>Full screen after stop (segs / cost)</td><td>7.8&nbsp;s (30 / $0.000555)</td><td class="best">4.2&nbsp;s (20 / $0.000501)</td></tr>
-                    <tr><td>150-comment forum</td><td>Segments sent / 1st screen</td><td>110 / 8.04&nbsp;s</td><td class="best">95 / 4.29&nbsp;s</td></tr>
-                    <tr><td>4-scenario total</td><td>Simulated API cost</td><td>$0.003644</td><td class="best">$0.003544 (-2.7%)</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <p>Adding pre-move jump preemption and 150&nbsp;ms intra-paragraph streaming previews in a follow-up iteration reduced time until all visible segments begin showing translated text on rapid A &rarr; B &rarr; C jumps from 4.0–5.6&nbsp;s down to 0.95–2.2&nbsp;s at concurrency 6.</p>
-
-        <h2 id="compatibility">Real-Site Compatibility and Limitations<a class="anchor" href="#compatibility" aria-hidden="true">#</a></h2>
-        <p><code>node test/e2e/compat.mjs</code> verifies real websites in headless Chromium (1400&times;900, offline Mock engine, 7 &times; 650&nbsp;px left-pane scrolls) and checks each pane's DOM independently at the focus line:</p>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Site</th><th>Split &amp; Translate</th><th>Max Sync Error</th><th>Notes</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Wikipedia (EN &amp; ZH)</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Floats, infoboxes, and side captions filtered by overlap filter</td></tr>
-                    <tr><td>GitHub repo / README</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Sends <code>X-Frame-Options: DENY</code>; handled by per-tab DNR rule</td></tr>
-                    <tr><td>GitHub Docs &amp; Python docs</td><td>Pass</td><td class="best">1&nbsp;px</td><td>Code blocks remain untouched</td></tr>
-                    <tr><td>MDN &amp; React docs (Next.js)</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Client-side hydration preserved</td></tr>
-                    <tr><td>Hacker News</td><td>Pass</td><td class="best">0&nbsp;px</td><td>Table layout and mixed inline/block comment runs</td></tr>
-                    <tr><td>arXiv HTML (ar5iv)</td><td>Pass</td><td class="best">0&nbsp;px</td><td>MathML formulas and section numbering intact</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <p>Several practical boundaries remain by design:</p>
-        <ul>
-            <li><strong>Two independent page loads.</strong> Pages with randomized elements, A/B experiments, or stateful POST views may render slight differences between panes; LIS removes unmatched anchors, though differing blocks remain unaligned. Cookie consent banners also need to be dismissed in each pane.</li>
-            <li><strong>Strict bot protection and browser restrictions.</strong> Sites that trigger Cloudflare security challenges inside iframes (for example Medium when redirecting to subdomains) detect the challenge and report it in the top bar; <code>edge://</code>, extension stores, and built-in PDF viewers forbid script injection.</li>
-            <li><strong>Shadow DOM and script edge cases.</strong> Text inside closed or open Shadow DOM web components is not segmented. When targeting Simplified Chinese, pages written in Traditional Chinese are currently skipped by the CJK script detector.</li>
-            <li><strong>Verification scope.</strong> Automated suites run on headless Chromium; the Edge desktop build and live DeepL API adapter (requiring a paid/free DeepL key) have not yet been tested end-to-end manually.</li>
-        </ul>
 
         <h2 id="try">Try It<a class="anchor" href="#try" aria-hidden="true">#</a></h2>
         <p>There is no build step. Load the unpacked <code>extension/</code> directory directly in Edge or Chrome:</p>
@@ -206,7 +217,7 @@ target     t' = q * (H' - vh') / H'</code></pre>
             <li>Click <strong>Load unpacked</strong> and select the <code>extension/</code> folder inside the cloned repository.</li>
             <li>In the welcome page or toolbar popup, pick an engine (DeepSeek V4.1 Flash, MiniMax M3.1 Flash, DeepL, or a self-hosted OpenAI-compatible server—for remote GPU boxes, forward with <code>ssh -L 8000:localhost:8000 gpu-host</code> and set base URL <code>http://127.0.0.1:8000/v1</code>), test the connection, and press <code>Alt+Shift+Y</code> (<code>⌥⇧Y</code> on macOS) on any page.</li>
         </ol>
-        <p>To run the unit, UI, e2e, and simulated-LLM benchmark suites locally:</p>
+        <p>To run the unit, e2e, and simulated-LLM benchmark suites locally:</p>
 <pre><code>cd Duet-Translator/test
 npm install
 npx playwright install chromium
@@ -232,7 +243,7 @@ node bench/bench.mjs</code></pre>
         <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
         <ol class="references">
             <li>Duet-Translator source repository, <a href="https://github.com/SuperFCR/Duet-Translator">github.com/SuperFCR/Duet-Translator</a>.</li>
-            <li>Duet-Translator architecture and benchmark log, <a href="https://github.com/SuperFCR/Duet-Translator/blob/main/docs/DESIGN.md">docs/DESIGN.md</a> and <a href="https://github.com/SuperFCR/Duet-Translator/blob/main/docs/COMPAT.md">docs/COMPAT.md</a>.</li>
+            <li>Duet-Translator architecture and RSI benchmark log, <a href="https://github.com/SuperFCR/Duet-Translator/blob/main/docs/DESIGN.md">docs/DESIGN.md</a> and <a href="https://github.com/SuperFCR/Duet-Translator/blob/main/test/bench/README.md">test/bench/README.md</a>.</li>
             <li>Chrome Developers. <a href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest"><code>chrome.declarativeNetRequest</code> (Manifest V3)</a>.</li>
             <li>DeepSeek API Docs. <a href="https://api-docs.deepseek.com/guides/kv_cache">Context Caching on Disk</a>.</li>
             <li>DeepL API Docs. <a href="https://developers.deepl.com/docs/xml-and-html-handling/xml">XML Handling in Translation Requests</a>.</li>
@@ -257,6 +268,6 @@ node bench/bench.mjs</code></pre>
     &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
 </footer>
 
-<script src="../../assets/js/blog-post.js?v=20261121.2"></script>
+<script src="../../assets/js/blog-post.js?v=20261121.3"></script>
 </body>
 </html>

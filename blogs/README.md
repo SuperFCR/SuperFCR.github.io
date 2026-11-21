@@ -73,6 +73,7 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 | Tech Report | `tech-report` | 技术报告 | 自己项目、实验或复现的记录与结果 |
 | Tutorial | `tutorial` | 教程 | 一步步教会读者做某件事 |
 | Paper Notes | `paper-notes` | 论文笔记 | 单篇论文的精读笔记 |
+| Tool | `tool` | 工具 | 自己开发并可直接使用的工具、插件或工作流 |
 
 文章页在标题上方放同一个徽章：英文版写英文名，中文版写中文名，例如 `<span class="post-type type-deep-dive">深入探索</span>`。
 
@@ -149,7 +150,7 @@ FONTCONFIG_FILE=$HOME/.local/lib/chromium-deps/fonts.conf node -e "require('shar
 
 ## 改样式或脚本之后
 
-GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121.2`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
+GitHub Pages 给静态文件设了 10 分钟缓存。页面引用 `blog.css`、`blog-theme.js`、`blog-list.js`、`blog-post.js` 时都带着版本号，例如 `blog.css?v=20261121.3`。改了这些文件之后，要把所有 blog 页面里的版本号统一换成新的，否则读者的浏览器可能拿新页面配旧样式，页面会显示错乱。
 
 版本号用当天日期 `YYYYMMDD`；同一天第二次改就加 `.2`，第三次加 `.3`，依此类推。在仓库根目录运行（把 `OLD`、`NEW` 换成实际的版本号）：
 

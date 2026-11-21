@@ -226,10 +226,12 @@ body > header {
 .type-tech-report { --type: #9a4a0c; }
 .type-tutorial    { --type: #146c50; }
 .type-paper-notes { --type: #6237a0; }
+.type-tool        { --type: #0e6b74; }
 :root[data-theme="dark"] .type-deep-dive   { --type: #82add9; }
 :root[data-theme="dark"] .type-tech-report { --type: #e3a764; }
 :root[data-theme="dark"] .type-tutorial    { --type: #68cfa7; }
 :root[data-theme="dark"] .type-paper-notes { --type: #b9a4e8; }
+:root[data-theme="dark"] .type-tool        { --type: #5cc4cf; }
 
 .post-type {
     display: inline-flex;
