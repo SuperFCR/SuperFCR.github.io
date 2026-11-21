@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" width="1600" height="760" font-family="'Segoe UI', Arial, sans-serif">
+  <title>ODE-to-SDE sampling and temporal credit assignment schedules</title>
+  <desc>Four-panel comparison across reverse denoising time t=1 to t=0: deterministic ODE, full-step SDE (Flow-GRPO / DanceGRPO), mixed ODE-SDE sliding window (MixGRPO), and trajectory branching with noise-aware weighting (TempFlow-GRPO / BranchGRPO).</desc>
+  <defs>
+    <marker id="arr-navy" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#205488"/>
+    </marker>
+    <marker id="arr-teal" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b45309"/>
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6237a0"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="760" fill="#ffffff"/>
+
+  <!-- Header -->
+  <text x="44" y="54" font-size="28" font-weight="700" fill="#141923">Reverse-Time Sampling &amp; Temporal Credit Assignment (t = 1 → 0)</text>
+  <text x="44" y="84" font-size="19" fill="#475569">How Flow Matching RL methods inject stochasticity, reduce rollout cost, and localize terminal reward credit</text>
+
+  <!-- Panel 1: Deterministic Flow ODE -->
+  <rect x="40" y="110" width="744" height="290" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2.5"/>
+  <path d="M40 166 V128 a18 18 0 0 1 18 -18 H766 a18 18 0 0 1 18 18 V166 Z" fill="#e2e8f0"/>
+  <text x="66" y="147" font-size="22" font-weight="700" fill="#0f172a">1. Deterministic Flow ODE (Baseline)</text>
+  <text x="758" y="147" font-size="18" font-weight="600" fill="#475569" text-anchor="end">No RL exploration</text>
+
+  <line x1="120" y1="258" x2="650" y2="258" stroke="#205488" stroke-width="4" marker-end="url(#arr-navy)"/>
+  <circle cx="104" cy="258" r="24" fill="#eef4fb" stroke="#205488" stroke-width="2.5"/>
+  <text x="104" y="265" text-anchor="middle" font-size="20" font-weight="700" fill="#205488">x₁</text>
+  <circle cx="678" cy="258" r="24" fill="#ffffff" stroke="#205488" stroke-width="2.5"/>
+  <text x="678" y="265" text-anchor="middle" font-size="20" font-weight="700" fill="#205488">x₀</text>
+  <g fill="#205488">
+    <circle cx="204" cy="258" r="6"/><circle cx="304" cy="258" r="6"/><circle cx="404" cy="258" r="6"/>
+    <circle cx="504" cy="258" r="6"/><circle cx="604" cy="258" r="6"/>
+  </g>
+  <text x="386" y="226" text-anchor="middle" font-size="19" font-weight="600" fill="#205488" font-family="Consolas, monospace">dx_t = v_θ(x_t, t) dt  (σ_t = 0)</text>
+  <text x="66" y="346" font-size="18" fill="#475569">• Single deterministic trajectory per initial noise x₁</text>
+  <text x="66" y="376" font-size="18" fill="#9a4a0c" font-weight="600">• Transition p(x_{t+Δt} | x_t) is Dirac δ — log-prob undefined</text>
+
+  <!-- Panel 2: Full-Step SDE -->
+  <rect x="816" y="110" width="744" height="290" rx="18" fill="#f3f8fe" stroke="#205488" stroke-width="2.5"/>
+  <path d="M816 166 V128 a18 18 0 0 1 18 -18 H1542 a18 18 0 0 1 18 18 V166 Z" fill="#205488"/>
+  <text x="842" y="147" font-size="22" font-weight="700" fill="#ffffff">2. Full-Step SDE (Flow-GRPO / DanceGRPO)</text>
+  <text x="1534" y="147" font-size="18" font-weight="600" fill="#dbeafe" text-anchor="end">Uniform Aᵢ</text>
+
+  <circle cx="880" cy="258" r="24" fill="#eef4fb" stroke="#205488" stroke-width="2.5"/>
+  <text x="880" y="265" text-anchor="middle" font-size="20" font-weight="700" fill="#205488">x₁</text>
+  <path d="M904 252 Q 1080 190 1424 218" fill="none" stroke="#205488" stroke-width="3" marker-end="url(#arr-navy)"/>
+  <path d="M904 258 Q 1120 250 1424 258" fill="none" stroke="#0f766e" stroke-width="3.5" marker-end="url(#arr-teal)"/>
+  <path d="M904 264 Q 1090 322 1424 298" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arr-amber)"/>
+  <g fill="#0f766e">
+    <circle cx="1010" cy="255" r="5.5"/><circle cx="1115" cy="253" r="5.5"/><circle cx="1220" cy="254" r="5.5"/><circle cx="1325" cy="256" r="5.5"/>
+  </g>
+  <rect x="1434" y="200" width="96" height="114" rx="12" fill="#ffffff" stroke="#205488" stroke-width="2"/>
+  <text x="1482" y="232" text-anchor="middle" font-size="19" font-weight="700" fill="#205488">r₁, r₂</text>
+  <text x="1482" y="264" text-anchor="middle" font-size="19" font-weight="700" fill="#0f766e">… r_G</text>
+  <text x="1482" y="298" text-anchor="middle" font-size="18" font-weight="700" fill="#b45309">→ Aᵢ</text>
+  <text x="842" y="346" font-size="18" fill="#1e3a5f">• Gaussian SDE transition at every step (Flow-GRPO uses T = 10)</text>
+  <text x="842" y="376" font-size="18" fill="#475569">• DanceGRPO shares x₁ across group; broadcasts Aᵢ uniformly to all T steps</text>
+
+  <!-- Panel 3: Mixed ODE-SDE Sliding Window -->
+  <rect x="40" y="428" width="744" height="296" rx="18" fill="#f2fbf9" stroke="#0f766e" stroke-width="2.5"/>
+  <path d="M40 484 V446 a18 18 0 0 1 18 -18 H766 a18 18 0 0 1 18 18 V484 Z" fill="#0f766e"/>
+  <text x="66" y="465" font-size="22" font-weight="700" fill="#ffffff">3. Mixed ODE–SDE Window (MixGRPO / Flash)</text>
+  <text x="758" y="465" font-size="18" font-weight="600" fill="#ccfbf1" text-anchor="end">~71% faster</text>
+
+  <rect x="240" y="514" width="212" height="118" rx="12" fill="#d1fae5" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="346" y="538" text-anchor="middle" font-size="18" font-weight="700" fill="#0f766e">SDE Window S = [t₁, t₂]</text>
+
+  <circle cx="104" cy="582" r="24" fill="#ffffff" stroke="#205488" stroke-width="2.5"/>
+  <text x="104" y="589" text-anchor="middle" font-size="20" font-weight="700" fill="#205488">x₁</text>
+  <line x1="128" y1="582" x2="240" y2="582" stroke="#205488" stroke-width="4"/>
+  <text x="184" y="560" text-anchor="middle" font-size="18" font-weight="600" fill="#205488">ODE</text>
+  <path d="M240 582 Q 335 548 452 562" fill="none" stroke="#0f766e" stroke-width="3"/>
+  <path d="M240 582 Q 335 582 452 582" fill="none" stroke="#0f766e" stroke-width="3.5"/>
+  <path d="M240 582 Q 335 616 452 602" fill="none" stroke="#0f766e" stroke-width="3"/>
+
+  <line x1="452" y1="562" x2="646" y2="562" stroke="#205488" stroke-width="2.5" marker-end="url(#arr-navy)"/>
+  <line x1="452" y1="582" x2="646" y2="582" stroke="#0f766e" stroke-width="3.5" marker-end="url(#arr-teal)"/>
+  <line x1="452" y1="602" x2="646" y2="602" stroke="#b45309" stroke-width="2.5" marker-end="url(#arr-amber)"/>
+  <text x="550" y="542" text-anchor="middle" font-size="18" font-weight="600" fill="#205488">DPM-Solver++ ODE</text>
+  <rect x="654" y="548" width="88" height="68" rx="10" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+  <text x="698" y="578" text-anchor="middle" font-size="18" font-weight="700" fill="#0f766e">GRPO</text>
+  <text x="698" y="602" text-anchor="middle" font-size="18" fill="#475569">on S</text>
+
+  <text x="66" y="668" font-size="18" fill="#134e4a">• Restricts stochastic SDE &amp; policy ratio updates to window S only</text>
+  <text x="66" y="698" font-size="18" fill="#475569">• Uses fast higher-order ODE outside S with negligible quality loss</text>
+
+  <!-- Panel 4: Trajectory Branching & Noise-Aware Weighting -->
+  <rect x="816" y="428" width="744" height="296" rx="18" fill="#fdfaf5" stroke="#b45309" stroke-width="2.5"/>
+  <path d="M816 484 V446 a18 18 0 0 1 18 -18 H1542 a18 18 0 0 1 18 18 V484 Z" fill="#b45309"/>
+  <text x="842" y="465" font-size="22" font-weight="700" fill="#ffffff">4. Trajectory Branching (TempFlow / BranchGRPO)</text>
+  <text x="1534" y="465" font-size="18" font-weight="600" fill="#fef3c7" text-anchor="end">Local credit</text>
+
+  <circle cx="880" cy="582" r="24" fill="#ffffff" stroke="#205488" stroke-width="2.5"/>
+  <text x="880" y="589" text-anchor="middle" font-size="20" font-weight="700" fill="#205488">x₁</text>
+
+  <line x1="904" y1="582" x2="1050" y2="582" stroke="#205488" stroke-width="4"/>
+  <circle cx="1050" cy="582" r="14" fill="#fef3c7" stroke="#b45309" stroke-width="3"/>
+  <text x="1050" y="550" text-anchor="middle" font-size="18" font-weight="700" fill="#b45309">ω₁ (large)</text>
+  <path d="M1062 574 L1190 532 L1420 532" fill="none" stroke="#b45309" stroke-width="3" marker-end="url(#arr-amber)"/>
+  <line x1="1064" y1="582" x2="1220" y2="582" stroke="#205488" stroke-width="4"/>
+  <circle cx="1220" cy="582" r="9" fill="#ede9fe" stroke="#6237a0" stroke-width="3"/>
+  <text x="1220" y="624" text-anchor="middle" font-size="18" font-weight="700" fill="#6237a0">ω₂ (small)</text>
+  <path d="M1229 582 L1420 582" fill="none" stroke="#0f766e" stroke-width="3.5" marker-end="url(#arr-teal)"/>
+  <path d="M1228 588 L1315 628 L1420 628" fill="none" stroke="#6237a0" stroke-width="3" marker-end="url(#arr-purple)"/>
+
+  <rect x="1434" y="518" width="96" height="122" rx="12" fill="#ffffff" stroke="#b45309" stroke-width="2"/>
+  <text x="1482" y="550" text-anchor="middle" font-size="18" font-weight="700" fill="#b45309">Branch</text>
+  <text x="1482" y="580" text-anchor="middle" font-size="18" font-weight="700" fill="#0f766e">Credit</text>
+  <text x="1482" y="614" text-anchor="middle" font-size="18" font-weight="600" fill="#6237a0">@ k₁, k₂</text>
+
+  <text x="842" y="668" font-size="18" fill="#7c2d12">• Isolates stochastic divergence to branch nodes (no noisy-latent PRM)</text>
+  <text x="842" y="698" font-size="18" fill="#475569">• Weights policy step by noise σ_t√|Δt|; BranchGRPO prunes weak paths</text>
+</svg>

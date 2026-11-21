@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A comprehensive deep dive into reinforcement learning for Flow Matching models: from MDP formulation, PPO/DPO/GRPO and post-R1 variants to ODE-to-SDE conversion (with PyTorch code), Flow-GRPO, DanceGRPO, MixGRPO, TempFlow-GRPO, DiffusionNFT, optimal control, and multi-turn Agentic RL.">
+    <title>Reinforcement Learning in Flow Matching Models | Chaoran Feng</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/flow-matching-rl/">
+    <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/flow-matching-rl/">
+    <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/blogs/flow-matching-rl/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://www.falcary.com/blogs/flow-matching-rl/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png?v=20261121.5">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg?v=20261121.5">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png?v=20261121.5">
+    <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Chaoran Feng">
+    <meta property="og:title" content="Reinforcement Learning in Flow Matching Models">
+    <meta property="og:description" content="Connecting MDP and GRPO foundations, marginal-preserving ODE-to-SDE conversion and PyTorch implementation, forward-process DiffusionNFT, stochastic optimal control, and Agentic RL for Flow Matching.">
+    <meta property="og:url" content="https://www.falcary.com/blogs/flow-matching-rl/">
+    <meta property="og:image" content="https://www.falcary.com/blogs/flow-matching-rl/cover.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261121.5">
+    <script src="../../assets/js/blog-theme.js?v=20261121.5"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../"><img class="nav-mark" src="../../assets/imgs/logo.svg?v=20261121.5" width="26" height="26" alt="">Chaoran Feng</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../"><span class="active">Posts</span></a></li>
+                <li><a href="../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+            <div class="lang-switch" role="navigation" aria-label="Language"><a href="./" class="active" aria-current="page">EN</a><a href="./zh/">中文</a></div>
+        </div>
+        <span class="post-type type-deep-dive">Deep Dive</span>
+        <h1 class="post-title">Reinforcement Learning in Flow Matching Models</h1>
+        <div class="post-meta">
+            <span>September 2, 2026</span>
+            <span>27 min read</span>
+            <span>Chaoran Feng</span>
+        </div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+        <ul>
+            <li><a href="#rl-foundations">RL Foundations: From MDP to GRPO</a>
+                <ul>
+                    <li><a href="#denoising-mdp">Framing Iterative Generation as an MDP</a></li>
+                    <li><a href="#importance-sampling">Policy Gradient and Importance Sampling</a></li>
+                    <li><a href="#ppo-dpo">PPO, GAE, and Direct Preference Optimization</a></li>
+                    <li><a href="#grpo-variants">GRPO and Its Post-R1 Evolution</a></li>
+                </ul>
+            </li>
+            <li><a href="#ode-to-sde">Bridging Flow Matching and Online RL: ODE-to-SDE</a>
+                <ul>
+                    <li><a href="#sde-derivation">Marginal-Preserving SDE Derivation</a></li>
+                    <li><a href="#ode2sde-code">Implementing sde_step_with_logprob in PyTorch</a></li>
+                </ul>
+            </li>
+            <li><a href="#flow-grpo-family">Reverse-Process Flow-GRPO Family</a>
+                <ul>
+                    <li><a href="#flow-and-dance">Flow-GRPO and DanceGRPO: Establishing the Online RL Baseline</a></li>
+                    <li><a href="#mix-and-tempflow">MixGRPO, TempFlow-GRPO, and BranchGRPO: Efficiency and Temporal Credit</a></li>
+                    <li><a href="#stability-refinements">Stabilizing Rewards and Ratios: Pref-GRPO, GRPO-Guard, and Flow-CPS</a></li>
+                </ul>
+            </li>
+            <li><a href="#beyond-sde">Beyond Reverse-SDE: Forward-Process, Optimal Control, and Control Policies</a>
+                <ul>
+                    <li><a href="#diffusion-nft">DiffusionNFT: Online RL Directly on the Forward Process</a></li>
+                    <li><a href="#soc-and-control">Stochastic Optimal Control and Embodied Flow Policies</a></li>
+                </ul>
+            </li>
+            <li><a href="#agentic-rl">From Single-Pass Denoising to Reasoning and Agentic RL</a>
+                <ul>
+                    <li><a href="#coupled-cot">Coupled Reasoning and Generation: T2I-R1 and Autoregressive CoT</a></li>
+                    <li><a href="#agentic-flow-rl">Agentic RL with Flow Matching Generators</a></li>
+                </ul>
+            </li>
+            <li><a href="#comparison">Landscape Comparison and Practical Takeaways</a></li>
+            <li><a href="#citation">Citation</a></li>
+            <li><a href="#references">References</a></li>
+        </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>Flow Matching (FM) and Rectified Flow models—powering visual backbones such as Stable Diffusion 3.5 and FLUX—owe their remarkable sampling speed and generation quality to a simple geometric choice: transporting Gaussian noise along straight, <strong>deterministic</strong> ordinary differential equation (ODE) paths. Yet the very determinism that makes Flow Matching fast at inference creates an immediate friction when we try to post-train these models with online Reinforcement Learning (RL). Policy gradient methods require two ingredients that a deterministic ODE lacks: <em>stochastic exploration</em> to discover higher-reward samples from the same prompt, and <em>tractable transition probabilities</em> $\log \pi_\theta(a_t \mid s_t)$ to compute importance ratios and KL regularization.</p>
+
+        <p>Over the past year and a half, research at the intersection of RL and Flow Matching has moved rapidly from importing LLM-style Group Relative Policy Optimization (GRPO) via ODE-to-SDE conversion, to localizing credit across denoising timesteps, to bypassing reverse-time SDE likelihoods altogether via forward-process optimization and stochastic optimal control—and finally to wrapping flow generators inside multi-turn <strong>Agentic RL</strong> loops capable of visual inspection and self-correction. These notes connect the full arc: starting from MDP and policy-optimization foundations, walking through the exact SDE derivation and PyTorch step implementation, mapping every major branch of Flow-GRPO and forward-process RL, and synthesizing how reasoning and agentic RL extend continuous flow models.</p>
+
+        <div class="callout">
+            <p><strong>Notation Convention (Lipman FM vs. SD3.5 / Flow-GRPO):</strong> In the foundational Flow Matching literature, $t=0$ typically denotes noise and $t=1$ denotes clean data ($X_t = t X_1 + (1-t) X_0$). In contrast, Rectified Flow diffusion backbones (Stable Diffusion 3.5, FLUX) and RL papers such as Flow-GRPO adopt the diffusion-aligned convention where <strong>$t=1$ is pure Gaussian noise</strong> $x_1 \sim \mathcal{N}(0, I)$ and <strong>$t=0$ is clean data</strong> $x_0 \sim q$:
+            $$x_t = (1-t)x_0 + t x_1, \qquad v_t = \frac{dx_t}{dt} = x_1 - x_0.$$
+            Reverse-time generation therefore integrates from $t=1$ down to $t=0$ with negative step sizes $\Delta t = t_{\text{prev}} - t \lt 0$. Throughout Sections 2–4 below, we stick consistently to this SD3.5 / Flow-GRPO convention so every drift sign, score relation, and PyTorch line matches without ambiguity.</p>
+        </div>
+
+        <h2 id="rl-foundations">RL Foundations: From MDP to GRPO<a class="anchor" href="#rl-foundations" aria-hidden="true">#</a></h2>
+
+        <p>Before converting continuous ODEs into RL policies, it helps to trace why modern post-training converged on critic-free group-relative objectives—and where continuous visual generation inherits or breaks LLM assumptions.</p>
+
+        <h3 id="denoising-mdp">Framing Iterative Generation as an MDP<a class="anchor" href="#denoising-mdp" aria-hidden="true">#</a></h3>
+        <p>As formalized by DDPO<a class="cite" href="#ref-1">[1]</a>, an iterative generative process over discrete reverse steps $t \in \{T, T-1, \dots, 1\}$ forms a finite-horizon Markov Decision Process $(\mathcal{S}, \mathcal{A}, \rho_0, P, R)$:</p>
+        <ul>
+            <li><strong>State $s_t \triangleq (c, t, x_t)$:</strong> the conditioning prompt $c$, current timestep $t$, and intermediate noisy latent $x_t$.</li>
+            <li><strong>Action $a_t \triangleq x_{t-1}$</strong> (or $x_{t+\Delta t}$ in continuous time): the next denoised latent produced by the sampler.</li>
+            <li><strong>Policy $\pi_\theta(a_t \mid s_t) \triangleq p_\theta(x_{t-1} \mid x_t, c)$:</strong> the conditional transition distribution induced by the neural network at step $t$.</li>
+            <li><strong>Transition kernel $P(s_{t+1} \mid s_t, a_t) \triangleq (\delta_c, \delta_{t-1}, \delta_{x_{t-1}})$:</strong> completely deterministic once action $a_t$ is sampled.</li>
+            <li><strong>Initial distribution $\rho_0(s_0) \triangleq (p(c), \delta_T, \mathcal{N}(0, I))$:</strong> prompt sampled from dataset distribution and latent initialized from isotropic Gaussian noise.</li>
+            <li><strong>Sparse terminal reward $R(s_t, a_t)$:</strong> equal to $r(x_0, c)$ only at the final clean image $x_0$, and $0$ at every intermediate step.</li>
+        </ul>
+        <p>Notice the core tension embedded in this MDP: every intermediate action $x_{t-1}$ receives zero immediate feedback, while the terminal reward $r(x_0, c)$ (from human preference models, OCR detectors, or VLM judges) only becomes observable once the entire trajectory finishes.</p>
+
+        <h3 id="importance-sampling">Policy Gradient and Importance Sampling<a class="anchor" href="#importance-sampling" aria-hidden="true">#</a></h3>
+        <p>To maximize expected trajectory return $J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)]$, the REINFORCE policy gradient uses the log-derivative identity $\nabla_\theta P(\tau \mid \pi_\theta) = P(\tau \mid \pi_\theta)\nabla_\theta \log P(\tau \mid \pi_\theta)$. Expanding $P(\tau \mid \pi_\theta) = \rho_0(s_0)\prod_{t} P(s_{t+1}\mid s_t, a_t)\pi_\theta(a_t \mid s_t)$ causes the policy-independent initial distribution and transition kernels to vanish under the gradient, yielding:</p>
+        $$\nabla_\theta J(\pi_\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\!\left[\sum_{t} \big(R(\tau) - b(s_t)\big)\,\nabla_\theta \log \pi_\theta(a_t \mid s_t)\right]$$
+        <p>where subtracting an action-independent baseline $b(s_t)$ preserves unbiasedness ($\mathbb{E}_{a_t \sim \pi_\theta}[b(s_t)\nabla_\theta \log \pi_\theta(a_t \mid s_t)] = 0$) while reducing gradient variance.</p>
+        <p>In visual generation, however, generating a batch of trajectories $\tau$ requires tens of forward passes through a multi-billion-parameter DiT plus expensive VLM or detector reward evaluations. Performing only a single gradient update per rollout batch wastes almost all compute. <strong>Importance Sampling</strong> resolves this via the measure-change identity:</p>
+        $$\mathbb{E}_{x \sim p}[f(x)] = \int f(x)\,\frac{p(x)}{q(x)}\,q(x)\,dx = \mathbb{E}_{x \sim q}\!\left[\frac{p(x)}{q(x)}\,f(x)\right]$$
+        <p>Applying this to trajectories sampled from a cached behavior policy $\pi_{\theta_{\text{old}}}$ yields the off-policy surrogate gradient weighted by the per-step probability ratio $\rho_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{old}}(a_t \mid s_t)}$. Because $\pi_\theta$ can perform multiple mini-batch epochs on the same rollout buffer, sample efficiency rises sharply—until $\pi_\theta$ drifts too far from $\pi_{\text{old}}$, causing $\rho_t(\theta)$ to explode in variance and destabilize updates. Bounding that step size is precisely what separates vanilla policy gradients from PPO and GRPO.</p>
+
+        <h3 id="ppo-dpo">PPO, GAE, and Direct Preference Optimization<a class="anchor" href="#ppo-dpo" aria-hidden="true">#</a></h3>
+        <p><strong>PPO</strong><a class="cite" href="#ref-2">[2]</a> addresses both high variance and uncontrolled step sizes. First, it introduces a learned value critic $V_\psi(s_t)$ estimating expected future return and computes Generalized Advantage Estimation (GAE) from single-step TD residuals $\delta_t = r_t + \gamma V_\psi(s_{t+1}) - V_\psi(s_t)$:</p>
+        $$\widehat A_t^{\text{GAE}(\gamma, \lambda)} = \sum_{k=0}^{T-1-t} (\gamma\lambda)^k \delta_{t+k}, \qquad \widehat A_t = \delta_t + \gamma\lambda\,\widehat A_{t+1}$$
+        <p>Tuning $\lambda \in [0, 1]$ smoothly interpolates between low-variance/high-bias TD(0) ($\lambda=0$) and unbiased/high-variance Monte Carlo returns ($\lambda=1$). In PyTorch (e.g., <code>verl</code>-style implementations), GAE is computed in a single reverse pass over the trajectory:</p>
+        <pre><code class="language-python">with torch.no_grad():
+    nextvalues = 0.0
+    lastgaelam = 0.0
+    advantages_reversed = []
+    gen_len = token_level_rewards.shape[-1]
+
+    for t in reversed(range(gen_len)):
+        delta = token_level_rewards[:, t] + gamma * nextvalues - values[:, t]
+        lastgaelam = delta + gamma * lam * lastgaelam
+        # Apply step/token mask if episodes have variable length
+        nextvalues = values[:, t]
+        advantages_reversed.append(lastgaelam)
+
+    advantages = torch.stack(advantages_reversed[::-1], dim=1)
+    returns = advantages + values</code></pre>
+        <p>Second, PPO constrains the policy shift by clipping $\rho_t(\theta)$ to $[1-\epsilon, 1+\epsilon]$, combining clipped actor loss, clipped value loss, entropy bonus, and KL penalty against a reference policy $\pi_{\text{ref}}$:</p>
+        $$\mathcal{L}_{\text{PPO}}(\theta,\psi) = \mathbb{E}_{\tau \sim \pi_{\text{old}}}\!\left[\frac{1}{T}\sum_{t=0}^{T-1}\Big(-\min\big(\rho_t(\theta)\widehat A_t,\, \operatorname{clip}(\rho_t(\theta),1-\epsilon,1+\epsilon)\widehat A_t\big) + c_V \ell_t^{\text{value}}(\psi) - c_H \mathcal{H}(\pi_\theta) + \beta\,D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}})\Big)\right]$$
+        <p>While effective in text RLHF, PPO requires keeping four models resident in memory (Actor, Critic, Reward, Reference)—and training a reliable $V_\psi(x_t, t, c)$ over high-dimensional noisy latents $x_t$ is notoriously brittle.</p>
+
+        <p><strong>DPO</strong><a class="cite" href="#ref-3">[3]</a> bypasses both the online critic and explicit reward model by noticing that the KL-regularized RL objective $\max_\pi \mathbb{E}[r(x,y)] - \beta D_{\text{KL}}(\pi \,\|\, \pi_{\text{ref}})$ admits an exact closed-form optimum $\pi^*(y \mid x) = \frac{1}{Z(x)}\pi_{\text{ref}}(y \mid x)\exp(r(x,y)/\beta)$. Inverting for $r(x,y) = \beta\log\frac{\pi^*(y\mid x)}{\pi_{\text{ref}}(y\mid x)} + \beta\log Z(x)$ and substituting into the Bradley–Terry preference likelihood eliminates the partition function $Z(x)$, leaving a pure supervised contrastive loss over preference pairs $(x, y_w, y_l)$:</p>
+        $$\mathcal{L}_{\text{DPO}}(\theta) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}\!\left[\log \sigma\!\left(\beta\log\frac{\pi_\theta(y_w \mid x)}{\pi_{\text{ref}}(y_w \mid x)} - \beta\log\frac{\pi_\theta(y_l \mid x)}{\pi_{\text{ref}}(y_l \mid x)}\right)\right]$$
+        <p>Mathematically, DPO solves the exact same KL-regularized RL objective as PPO via supervised regression rather than online rollouts—though because it only constrains the <em>margin</em> between winner and loser, both likelihoods can drift downward simultaneously if $y_l$ merely drops faster. Extending DPO to visual diffusion, <strong>Diffusion-DPO</strong><a class="cite" href="#ref-4">[4]</a> replaces the intractable marginal $\log \pi_\theta(x_0 \mid c)$ with its ELBO noise-prediction MSE along the forward process, enabling offline pairwise alignment on datasets like Pick-a-Pic, yet still remaining confined to static offline preference pairs without online exploration.</p>
+
+        <h3 id="grpo-variants">GRPO and Its Post-R1 Evolution<a class="anchor" href="#grpo-variants" aria-hidden="true">#</a></h3>
+        <p><strong>GRPO (Group Relative Policy Optimization)</strong><a class="cite" href="#ref-5">[5]</a> restores online exploration while dropping PPO's expensive value critic. For each prompt $q$, the policy samples a group of $G$ rollouts $\{o_i\}_{i=1}^G$, scores each outcome to obtain $\mathbf{R} = (R_1, \dots, R_G)$, and computes a group-normalized relative advantage broadcast across all steps/tokens $t$ of trajectory $i$:</p>
+        $$\widehat A_{i,t} = \widehat A_i = \frac{R_i - \operatorname{mean}(\mathbf{R})}{\operatorname{std}(\mathbf{R}) + \delta}$$
+        <p>Using step-level importance ratios $r_{i,t}(\theta) = \frac{\pi_\theta(a_{i,t} \mid s_{i,t})}{\pi_{\text{old}}(a_{i,t} \mid s_{i,t})}$ and an unbiased low-variance KL penalty against $\pi_{\text{ref}}$ (typically the Schulman $k_3$ estimator $\frac{\pi_{\text{ref}}}{\pi_\theta} - \log\frac{\pi_{\text{ref}}}{\pi_\theta} - 1$), GRPO minimizes:</p>
+        $$\mathcal{L}_{\text{GRPO}}(\theta) = -\mathbb{E}_{q, \{o_i\}}\!\left[\frac{1}{G}\sum_{i=1}^G \frac{1}{|o_i|}\sum_{t=1}^{|o_i|} \min\!\Big(r_{i,t}(\theta)\widehat A_{i,t},\, \operatorname{clip}(r_{i,t}(\theta), 1-\epsilon, 1+\epsilon)\widehat A_{i,t}\Big)\right] + \beta\,\mathbb{E}_{i,t}\!\left[D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}})\right]$$
+        <pre><code class="language-python"># Group-relative advantage computation (standard GRPO vs. Dr. GRPO)
+scores = token_level_rewards.sum(dim=-1)
+with torch.no_grad():
+    for i in range(bsz):
+        id2score[index[i]].append(scores[i])
+    for idx, vals in id2score.items():
+        t = torch.stack(vals)
+        id2mean[idx] = t.mean()
+        id2std[idx] = t.std()
+    for i in range(bsz):
+        if norm_adv_by_std_in_grpo:
+            scores[i] = (scores[i] - id2mean[index[i]]) / (id2std[index[i]] + eps)
+        else:
+            scores[i] = scores[i] - id2mean[index[i]]  # Dr. GRPO omits std scaling
+    advantages = scores.unsqueeze(-1) * response_mask</code></pre>
+
+        <p>Rapid follow-ups in LLM reasoning uncovered subtle failure modes in GRPO—nearly every one of which soon reappeared in Flow Matching RL:</p>
+        <ul>
+            <li><strong>MDPO (Kimi k1.5)</strong><a class="cite" href="#ref-6">[6]</a> grounds group-relative updates in online mirror descent: sampling trajectories $(y, z) \sim \pi_{\theta_i}$ from the current policy iterate and approximating $\tau\log Z(x) \approx \bar r$, it regresses $\tau\log\frac{\pi_\theta(y\mid x)}{\pi_{\theta_i}(y\mid x)}$ directly toward $r(x,y,y^*) - \bar r$. Kimi k1.5 also underscored why outcome rewards (ORM) often outperform learned step critics (PRM) for emergent exploration: aggressive value penalties can suppress near-miss reasoning paths before "aha moments" appear.</li>
+            <li><strong>DAPO</strong><a class="cite" href="#ref-7">[7]</a> diagnoses four pathologies at 32B scale and introduces (1) <em>Clip-Higher</em> asymmetric bounds $[1-\epsilon_{\text{low}}, 1+\epsilon_{\text{high}}]$ to prevent entropy collapse by leaving upward room for low-probability exploratory actions, (2) <em>Dynamic Sampling</em> to discard zero-variance groups where every rollout is all-correct or all-wrong, (3) token-level mean aggregation to avoid length bias, and (4) soft overlong shaping.</li>
+            <li><strong>VAPO</strong><a class="cite" href="#ref-8">[8]</a> demonstrates that value-based RL can match or surpass critic-free GRPO on long horizons once value learning is stabilized via <em>Value-Pretraining</em>, <em>Decoupled-GAE</em> ($\lambda_{\text{critic}} = 1.0$ for unbiased value regression vs. $\lambda_{\text{actor}} = 0.95$), <em>Length-Adaptive GAE</em>, Clip-Higher, and an auxiliary positive-example LM loss.</li>
+            <li><strong>GSPO</strong><a class="cite" href="#ref-9">[9]</a> fixes length sensitivity and off-policy noise in token-level clipping by replacing per-token ratios with a length-normalized sequence-level geometric mean ratio $s_i(\theta) = \exp\!\big(\frac{1}{|y_i|}\sum_t \log r_{i,t}(\theta)\big)$, implemented cleanly via stop-gradient detach tricks.</li>
+            <li><strong>On-Policy Distillation (OPD)</strong><a class="cite" href="#ref-10">[10]</a> bridges SFT's dense per-step feedback with RL's on-policy state distribution—sampling rollouts from the student $\pi_\theta$ while querying a teacher $\nu$ at every visited state via either Forward KL $D_{\text{KL}}(\nu \,\|\, \pi_\theta)$ (mode-covering, as in GKD) or Reverse KL $D_{\text{KL}}(\pi_\theta \,\|\, \nu)$ (mode-seeking, as in PG-OPD).</li>
+        </ul>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="nw">Paradigm</th>
+                        <th>Rollout Source</th>
+                        <th>State Distribution</th>
+                        <th>Feedback Density</th>
+                        <th>Primary Bottleneck</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="nw">SFT / Offline Distill</td>
+                        <td>Teacher / static data</td>
+                        <td>Teacher trajectory</td>
+                        <td>Dense (every step/token)</td>
+                        <td>Exposure bias &amp; compounding error</td>
+                    </tr>
+                    <tr>
+                        <td class="nw">RL (PPO / GRPO)</td>
+                        <td>Student self-rollout</td>
+                        <td>On-policy student</td>
+                        <td>Sparse terminal scalar</td>
+                        <td>Credit assignment &amp; high variance</td>
+                    </tr>
+                    <tr>
+                        <td class="nw">On-Policy Distillation</td>
+                        <td>Student self-rollout</td>
+                        <td>On-policy student</td>
+                        <td>Dense teacher log-probs</td>
+                        <td>Requires online teacher queries</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Every concept above maps straight onto continuous visual generation: <em>Clip-Higher</em> reappears in GRPO-Guard to curb ratio drift; <em>zero-std groups</em> motivate pairwise preferences in Pref-GRPO; <em>credit assignment</em> drives TempFlow-GRPO and BranchGRPO; and <em>dense on-policy supervision without reverse trajectories</em> anticipates DiffusionNFT.</p>
+
+        <h2 id="ode-to-sde">Bridging Flow Matching and Online RL: ODE-to-SDE<a class="anchor" href="#ode-to-sde" aria-hidden="true">#</a></h2>
+
+        <p>Why cannot we simply plug GRPO into a pre-trained Rectified Flow model out of the box? Because Flow Matching generates samples via the deterministic probability flow ODE $dx_t = v_\theta(x_t, t, c)\,dt$ ($t: 1 \to 0$). Discretized with Euler or a high-order solver, a single initial noise $x_1$ produces one fixed trajectory and a degenerate Dirac-delta transition $p_\theta(x_{t+\Delta t} \mid x_t, c) = \delta(x_{t+\Delta t} - \Phi(x_t))$. That kills both RL prerequisites at once: zero exploration variance and an undefined transition log-probability $\log \pi_\theta$.</p>
+
+        <h3 id="sde-derivation">Marginal-Preserving SDE Derivation<a class="anchor" href="#sde-derivation" aria-hidden="true">#</a></h3>
+        <p><strong>Flow-GRPO</strong><a class="cite" href="#ref-12">[12]</a> resolves this cleanly by converting the deterministic ODE into a stochastic differential equation (SDE) whose marginal density $p_t(x)$ matches the original flow model at every time $t \in [0, 1]$<a class="cite" href="#ref-11">[11]</a>.</p>
+
+        <p><strong>Step 1: Forward Fokker–Planck equivalence.</strong> Under forward noising time ($t: 0 \to 1$), the flow ODE velocity $v_t$ preserves $p_t$ via the Continuity Equation $\partial_t p_t + \nabla\cdot(p_t v_t) = 0$. Now consider a forward Itô SDE $dx_t = f_t^{\text{fwd}}(x_t)\,dt + \sigma_t\,dw_t$, whose marginal density evolves according to the Fokker–Planck equation:</p>
+        $$\frac{\partial p_t}{\partial t} + \nabla\cdot(p_t f_t^{\text{fwd}}) = \frac{1}{2}\sigma_t^2 \Delta p_t = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}\nabla p_t\right) = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}p_t\nabla\log p_t\right)$$
+        <p>Matching $\nabla\cdot(p_t v_t) = \nabla\cdot(p_t f_t^{\text{fwd}} - \frac{\sigma_t^2}{2}p_t\nabla\log p_t)$ gives the marginal-preserving forward drift $f_t^{\text{fwd}}(x_t) = v_t(x_t) + \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)$.</p>
+
+        <p><strong>Step 2: Anderson time-reversal ($t: 1 \to 0$).</strong> By Anderson's reverse-time SDE theorem<a class="cite" href="#ref-11">[11]</a>, reversing a forward SDE with drift $f_t^{\text{fwd}}$ and diffusion $\sigma_t$ subtracts $\sigma_t^2\nabla\log p_t(x_t)$ from the drift:</p>
+        $$dx_t = \Big(f_t^{\text{fwd}}(x_t) - \sigma_t^2 \nabla\log p_t(x_t)\Big)dt + \sigma_t\,d\bar w_t = \left[v_t(x_t) - \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\right]dt + \sigma_t\,d\bar w_t$$
+        <p>Intuitively, as time flows backward from noise ($t=1$) toward data ($t=0$), $dt \lt 0$, so $-\frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\,dt$ pushes the trajectory <em>upward</em> along the log-density gradient to counteract the random diffusion $\sigma_t\,d\bar w_t$.</p>
+
+        <p><strong>Step 3: Expressing the score via the flow velocity.</strong> For Rectified Flow linear interpolation $x_t = (1-t)x_0 + t x_1$ with $x_1 \sim \mathcal{N}(0, I)$, the conditional transition is Gaussian $p(x_t \mid x_0) = \mathcal{N}((1-t)x_0, t^2 I)$. Thus $\nabla_{x_t}\log p(x_t \mid x_0) = -\frac{x_t - (1-t)x_0}{t^2} = -\frac{x_1}{t}$, and taking conditional expectation via Tweedie's identity yields $\nabla\log p_t(x_t) = -\frac{\mathbb{E}[x_1 \mid x_t]}{t}$. Meanwhile, the optimal velocity satisfies $v_t(x_t) = \mathbb{E}[x_1 - x_0 \mid x_t]$ alongside $x_t = (1-t)\mathbb{E}[x_0 \mid x_t] + t\,\mathbb{E}[x_1 \mid x_t]$, which eliminates $\mathbb{E}[x_0 \mid x_t]$ to give $\mathbb{E}[x_1 \mid x_t] = x_t + (1-t)v_t(x_t)$. Substituting yields the exact score–velocity identity:</p>
+        $$\nabla \log p_t(x_t) = -\frac{1}{t}\Big(x_t + (1-t)v_t(x_t)\Big)$$
+
+        <p><strong>Step 4: Euler–Maruyama discretization and closed-form KL.</strong> Plugging the score identity into the reverse SDE and discretizing with negative step $\Delta t = t_{\text{prev}} - t \lt 0$ (moving from $t$ to $t+\Delta t$) gives the Gaussian policy transition $\pi_\theta(x_{t+\Delta t} \mid x_t, c) = \mathcal{N}(\mu_\theta(x_t, t),\, \sigma_t^2 |\Delta t|\,I)$:</p>
+        $$x_{t+\Delta t} = \underbrace{x_t + \left[v_\theta(x_t, t) + \frac{\sigma_t^2}{2t}\big(x_t + (1-t)v_\theta(x_t, t)\big)\right]\Delta t}_{\mu_\theta(x_t, t)} + \sigma_t\sqrt{|\Delta t|}\,\epsilon, \qquad \epsilon \sim \mathcal{N}(0, I)$$
+        <p>Factoring $x_t$ and $v_\theta(x_t, t)$ inside $\mu_\theta$ gives the exact form implemented in Diffusers schedulers:</p>
+        $$\mu_\theta(x_t, t) = x_t\left(1 + \frac{\sigma_t^2}{2t}\Delta t\right) + v_\theta(x_t, t)\left(1 + \frac{\sigma_t^2(1-t)}{2t}\right)\Delta t$$
+        <p>With noise schedule $\sigma_t = a\sqrt{\frac{t}{1-t}}$ (where $a$ is a scalar noise-level hyperparameter), both $\pi_\theta$ and $\pi_{\text{ref}}$ share identical isotropic variance $\sigma_t^2 |\Delta t| I$. Their step-wise KL divergence therefore reduces to a closed-form weighted $L_2$ distance between velocity predictions—no Monte Carlo estimation needed:</p>
+        $$D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}}) = \frac{\|\mu_\theta - \mu_{\text{ref}}\|^2}{2\sigma_t^2 |\Delta t|} = \frac{|\Delta t|}{2}\left(\frac{1}{\sigma_t} + \frac{\sigma_t(1-t)}{2t}\right)^2 \|v_\theta(x_t, t) - v_{\text{ref}}(x_t, t)\|^2$$
+
+        <h3 id="ode2sde-code">Implementing sde_step_with_logprob in PyTorch<a class="anchor" href="#ode2sde-code" aria-hidden="true">#</a></h3>
+        <p>In the official <code>yifan123/flow_grpo</code> codebase<a class="cite" href="#ref-12">[12]</a>, a single patched scheduler function <code>sde_step_with_logprob</code> handles both trajectory sampling during rollout (when <code>prev_sample=None</code>) and exact log-probability re-evaluation during GRPO policy updates (when <code>prev_sample</code> is fed back from the replay buffer):</p>
+        <pre><code class="language-python">def sde_step_with_logprob(
+    self,
+    model_output: torch.FloatTensor,   # v_theta(x_t, t, c)
+    timestep: Union[float, torch.Tensor],
+    sample: torch.FloatTensor,         # current latent x_t
+    noise_level: float = 0.7,
+    prev_sample: Optional[torch.FloatTensor] = None,
+    generator: Optional[torch.Generator] = None,
+):
+    model_output = model_output.float()
+    sample = sample.float()
+    if prev_sample is not None:
+        prev_sample = prev_sample.float()
+
+    # Map discrete scheduler timestep to continuous sigma schedule t in [0, 1]
+    step_index = [self.index_for_timestep(t) for t in timestep]
+    prev_step_index = [step + 1 for step in step_index]
+    sigma = self.sigmas[step_index].view(-1, *([1] * (sample.ndim - 1)))
+    sigma_prev = self.sigmas[prev_step_index].view(-1, *([1] * (sample.ndim - 1)))
+    sigma_max = self.sigmas[1].item()  # guard 1 / (1 - sigma) singularity at sigma = 1
+
+    dt = sigma_prev - sigma  # strictly negative during denoising (1 -&gt; 0)
+    std_dev_t = torch.sqrt(sigma / (1 - torch.where(sigma == 1, sigma_max, sigma))) * noise_level
+
+    # Marginal-preserving SDE drift mean: mu_theta(x_t, t)
+    prev_sample_mean = (
+        sample * (1 + std_dev_t**2 / (2 * sigma) * dt)
+        + model_output * (1 + std_dev_t**2 * (1 - sigma) / (2 * sigma)) * dt
+    )
+
+    # Mode 1 (Rollout): sample next latent x_{t+dt}; Mode 2 (Update): score stored transition
+    if prev_sample is None:
+        variance_noise = randn_tensor(
+            model_output.shape, generator=generator, device=model_output.device, dtype=model_output.dtype
+        )
+        prev_sample = prev_sample_mean + std_dev_t * torch.sqrt(-1 * dt) * variance_noise
+
+    # Isotropic Gaussian transition log-prob (averaged over latent dimensions for ratio stability)
+    step_std = std_dev_t * torch.sqrt(-1 * dt)
+    log_prob = (
+        -((prev_sample.detach() - prev_sample_mean) ** 2) / (2 * (step_std**2))
+        - torch.log(step_std)
+        - torch.log(torch.sqrt(2 * torch.as_tensor(math.pi, device=sample.device)))
+    )
+    log_prob = log_prob.mean(dim=tuple(range(1, log_prob.ndim)))
+    return prev_sample, log_prob, prev_sample_mean, std_dev_t</code></pre>
+        <p>Four engineering subtleties in this snippet matter directly in practice:</p>
+        <ul>
+            <li><strong>Sign of <code>dt</code>:</strong> Because <code>sigma_prev &lt; sigma</code> along the reverse schedule, <code>dt</code> is negative; multiplying by <code>-1 * dt</code> inside <code>torch.sqrt</code> gives $|\Delta t|$, while the drift term uses signed <code>dt</code> so $x_t$ moves toward clean data.</li>
+            <li><strong>Boundary singularity guard:</strong> At the very first step $t = \sigma = 1$, $\sqrt{\sigma/(1-\sigma)}$ divides by zero; <code>torch.where(sigma == 1, sigma_max, sigma)</code> cleanly caps it at the second schedule grid point.</li>
+            <li><strong>Detach on <code>prev_sample</code>:</strong> During optimization, gradients flow exclusively through <code>prev_sample_mean</code> (i.e., $v_\theta$), treating the realized latent transition <code>prev_sample</code> as a fixed action sample.</li>
+            <li><strong>Per-dimension mean vs. raw sum:</strong> Averaging <code>log_prob</code> across $(C, H, W)$ instead of summing tens of thousands of latent coordinates prevents $\exp(\log\pi_\theta - \log\pi_{\text{old}})$ from underflowing or exploding immediately to clipping bounds.</li>
+        </ul>
+
+        <h2 id="flow-grpo-family">Reverse-Process Flow-GRPO Family<a class="anchor" href="#flow-grpo-family" aria-hidden="true">#</a></h2>
+
+        <p>Once <code>sde_step_with_logprob</code> unlocks step-level policy gradients for continuous flows, an entire ecosystem of methods emerged to scale it across modalities, slash rollout cost, fix temporal credit assignment, and prevent reward hacking.</p>
+
+        <figure>
+            <img src="./fig-ode-to-sde.svg" width="1600" height="760" alt="Four-panel comparison of reverse-time sampling and temporal credit assignment from deterministic ODE to full-step SDE, MixGRPO sliding window, and TempFlow/BranchGRPO trajectory branching." loading="lazy">
+            <figcaption>Fig. 1. Evolution of reverse-time sampling schedules in Flow-GRPO variants from $t=1$ to $t=0$: deterministic ODE baseline, full-step SDE (Flow-GRPO / DanceGRPO), mixed ODE–SDE sliding window (MixGRPO), and localized trajectory branching with noise-aware weighting (TempFlow-GRPO / BranchGRPO). <a href="./fig-ode-to-sde.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h3 id="flow-and-dance">Flow-GRPO and DanceGRPO: Establishing the Online RL Baseline<a class="anchor" href="#flow-and-dance" aria-hidden="true">#</a></h3>
+        <p><strong>Flow-GRPO</strong><a class="cite" href="#ref-12">[12]</a> pairs the ODE-to-SDE conversion above with a simple but decisive systems optimization: <strong>Denoising Reduction</strong>. Running 40 SDE steps during every RL training iteration is prohibitively slow, yet Flow-GRPO shows that trajectories collected with a coarse $T=10$ SDE schedule still provide strong, informative reward rankings for policy updates—while test-time inference keeps the full $T=40$ deterministic ODE schedule to preserve high visual fidelity. Combined with closed-form KL regularization to curb reward hacking, Flow-GRPO delivered sharp gains on SD3.5 across compositional generation (GenEval), visual text rendering (OCR), and human preference benchmarks.</p>
+        <p><strong>DanceGRPO</strong><a class="cite" href="#ref-13">[13]</a> generalizes the same SDE-MDP formulation into a unified visual RL engine spanning both diffusion and rectified-flow backbones (SD1.4, FLUX, HunyuanVideo, SkyReels-I2V) across text-to-image, text-to-video, and image-to-video synthesis. Optimizing the clipped group-relative objective across $G$ trajectories and $T$ steps:</p>
+        $$J_{\text{DanceGRPO}}(\theta) = \mathbb{E}_{\{o_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}}\!\left[\frac{1}{G}\sum_{i=1}^G \frac{1}{T}\sum_{t=1}^T \min\!\Big(\rho_{i,t}(\theta)\widehat A_i,\, \operatorname{clip}(\rho_{i,t}(\theta), 1-\epsilon, 1+\epsilon)\widehat A_i\Big)\right]$$
+        <p>DanceGRPO isolates four practical engineering recipes that determine whether large-scale visual RL converges cleanly:</p>
+        <ul>
+            <li><strong>Shared initialization noise:</strong> Unlike earlier diffusion RL work (e.g., DDPO) that sampled independent initial latents $x_1$ for every rollout, DanceGRPO initializes all $G$ samples in a prompt group from the <em>same</em> $x_1$—so variance comes purely from intermediate SDE exploration rather than lucky/unlucky starting noise, dramatically lowering variance.</li>
+            <li><strong>Timestep subsampling:</strong> Only a subset of denoising steps needs gradient updates per iteration, cutting backward-pass compute with minimal quality impact.</li>
+            <li><strong>Multi-reward ensembling:</strong> Optimizing a single preference score (such as HPS-v2.1 alone) causes over-saturated, "oily" textures; pairing aesthetic rewards with semantic alignment (e.g., CLIP / VLM judges) balances fidelity and visual naturalness.</li>
+            <li><strong>Omitting KL + Best-of-$N$ alignment:</strong> Under shared noise and multi-reward stabilization, DanceGRPO finds that dropping the explicit KL term does not destabilize training and lifts final alignment; pairing with Best-of-$N$ selection further accelerates high-reward convergence.</li>
+        </ul>
+
+        <h3 id="mix-and-tempflow">MixGRPO, TempFlow-GRPO, and BranchGRPO: Efficiency and Temporal Credit<a class="anchor" href="#mix-and-tempflow" aria-hidden="true">#</a></h3>
+        <p>Despite strong results, full-trajectory SDE RL suffers from two structural flaws: (1) <strong>high rollout and re-evaluation cost</strong>, since computing ratios across all $T$ steps requires running both $\pi_\theta$ and $\pi_{\text{old}}$ across the full denoising chain; and (2) the <strong>temporal uniformity assumption</strong>, which broadcasts a single sparse terminal reward $r(x_0, c)$ identically to every step even though early high-noise steps govern global layout while late steps merely refine high-frequency texture.</p>
+        <p><strong>MixGRPO</strong><a class="cite" href="#ref-14">[14]</a> attacks the cost bottleneck with a <strong>mixed ODE–SDE sliding window</strong>. Rather than injecting noise everywhere, it restricts stochastic SDE sampling—and thus MDP policy evaluation and GRPO updates—to a moving sub-interval $S = [t_1, t_2]$ that sweeps across the denoising horizon, while keeping deterministic ODE integration outside $S$:</p>
+        $$dx_t = \begin{cases} \left[v_\theta(x_t, t) - \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\right]dt + \sigma_t\,d\bar w_t, & t \in S \\ v_\theta(x_t, t)\,dt, & t \notin S \end{cases}$$
+        <p>Because steps outside $S$ never require transition log-probabilities, <strong>MixGRPO-Flash</strong> swaps Euler ODE outside the window for higher-order solvers like DPM-Solver++, cutting training time by up to ~71% while preserving or improving HPS-v2.1, PickScore, ImageReward, and UnifiedReward metrics.</p>
+        <p><strong>TempFlow-GRPO</strong><a class="cite" href="#ref-15">[15]</a> directly tackles temporal uniformity through two complementary mechanisms:</p>
+        <ul>
+            <li><strong>Trajectory Branching for Process Credit:</strong> Evaluating intermediate noisy latents $x_t$ with a learned Process Reward Model (PRM) is unreliable because partially denoised features lack clear semantics. Instead, TempFlow-GRPO runs deterministic ODE up to a chosen branch step $k$, injects a single stochastic SDE fork $x_{k+\Delta t} = \text{SDE}(x_k, \epsilon)$ to generate distinct branches, and completes every branch deterministically via ODE to clean images $x_0$. By <em>Credit Localization</em>, all variance in final terminal rewards across branches is strictly attributable to the policy's decision at step $k$—yielding exact process credit from standard terminal reward models alone.</li>
+            <li><strong>Noise-Aware Policy Weighting:</strong> Measuring reward standard deviation across timesteps confirms that exploration variance peaks early (high noise $\sigma_t$) and decays toward zero near $t \to 0$. TempFlow-GRPO scales each timestep's clipped objective by its normalized SDE noise magnitude $\operatorname{Norm}(\sigma_t\sqrt{|\Delta t|})$:</li>
+        </ul>
+        $$\mathcal{J}_{\text{TempFlow}}(\theta) = \frac{1}{G}\sum_{i=1}^G \frac{1}{T}\sum_{t=0}^{T-1} \operatorname{Norm}(\sigma_t\sqrt{|\Delta t|}) \cdot \min\!\Big(r_{i,t}(\theta)\widehat A_{i,t},\, \operatorname{clip}(r_{i,t}(\theta), 1-\epsilon, 1+\epsilon)\widehat A_{i,t}\Big)$$
+        <p>This gives early structural steps strong learning pressure for global layout exploration while letting low-noise refinement steps perform gentle, stable adjustments.</p>
+        <p><strong>BranchGRPO</strong><a class="cite" href="#ref-16">[16]</a> generalizes single-node branching into a structured <strong>prefix-sharing rollout tree</strong>: trajectories reuse shared deterministic prefixes, fork selectively across high-leverage depths, compute parent-relative advantages at tree edges, and prune unpromising branches early—trimming diffusion RL runtime by up to ~55% while tightening credit assignment.</p>
+
+        <h3 id="stability-refinements">Stabilizing Rewards and Ratios: Pref-GRPO, GRPO-Guard, and Flow-CPS<a class="anchor" href="#stability-refinements" aria-hidden="true">#</a></h3>
+        <p>A parallel cluster of late-2025 refinements targets the statistical failure modes of group-normalized SDE RL:</p>
+        <ul>
+            <li><strong>Pref-GRPO</strong><a class="cite" href="#ref-17">[17]</a> notes that when a pointwise reward model assigns nearly indistinguishable scores to $G$ images in a group, dividing by $\operatorname{std}(\mathbf{R})$ blows up tiny scorer noise into huge gradients and triggers illusory reward hacking. Replacing pointwise scoring with a <strong>Pairwise Preference Reward Model (PPRM)</strong> and deriving advantages from within-group win rates stabilizes text-to-image RL substantially.</li>
+            <li><strong>GRPO-Guard</strong><a class="cite" href="#ref-18">[18]</a> analyzes importance ratio distribution shifts across timesteps on FLUX.1-dev and SD3.5-M, discovering that uncalibrated clipping causes implicit over-optimization (generating degraded artifacts even as proxy reward climbs); introducing noise-condition-regulated clipping bounds prevents ratio drift.</li>
+            <li><strong>Flow-CPS</strong><a class="cite" href="#ref-19">[19]</a> improves the discretization itself via <strong>Coefficients-Preserving Sampling</strong>, keeping exact marginal variance under coarse SDE step counts without brittle noise-level retuning.</li>
+        </ul>
+
+        <h2 id="beyond-sde">Beyond Reverse-SDE: Forward-Process, Optimal Control, and Control Policies<a class="anchor" href="#beyond-sde" aria-hidden="true">#</a></h2>
+
+        <p>Even with sliding windows and branching trees, reverse-SDE methods remain tethered to discretized Gaussian transition densities and backward step tracking. A major conceptual shift in late 2025 and 2026 asks: <em>must RL happen inside the reverse SDE chain at all?</em></p>
+
+        <figure>
+            <img src="./fig-paradigms.svg" width="1600" height="780" alt="Three paradigms of Reinforcement Learning for Flow Matching: inner-loop reverse-SDE RL, forward-process and stochastic optimal control RL, and outer-loop agentic and CoT RL." loading="lazy">
+            <figcaption>Fig. 2. Three structural paradigms for RL in Flow Matching: (1) inner-loop reverse-SDE policy gradients, (2) forward-process regression and stochastic optimal control (DiffusionNFT, RAM, FPO), and (3) outer-loop reasoning and Agentic RL wrapping flow models as tools. <a href="./fig-paradigms.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h3 id="diffusion-nft">DiffusionNFT: Online RL Directly on the Forward Process<a class="anchor" href="#diffusion-nft" aria-hidden="true">#</a></h3>
+        <p><strong>DiffusionNFT</strong><a class="cite" href="#ref-20">[20]</a> breaks free from reverse-SDE restrictions entirely. Traditional rejection-sampling fine-tuning (RFT) discards half the rollouts—training only on high-reward images—which leaves the model blind to failure modes and prone to reward collapse. DiffusionNFT instead runs online rollouts using <em>any</em> black-box sampler (high-order ODE, few-step solver, or CFG-free inference), scores clean images with a normalized optimality reward $r(x_0, c) \in [0, 1]$, and optimizes the network directly on the <strong>forward</strong> flow-matching interpolation $x_t = (1-t)x_0 + t\epsilon$ with target velocity $\epsilon - x_0$.</p>
+        <p>Its central insight is an <strong>implicit parameterization</strong> around the old/reference policy $v^{\text{old}}$ with update strength $\beta \gt 0$:</p>
+        $$v_\theta^+(x_t, t, c) = (1 - \beta)\,v^{\text{old}}(x_t, t, c) + \beta\,v_\theta(x_t, t, c), \qquad v_\theta^-(x_t, t, c) = (1 + \beta)\,v^{\text{old}}(x_t, t, c) - \beta\,v_\theta(x_t, t, c)$$
+        <p>Given clean rollout $(x_0, c)$ and optimality score $r(x_0, c) \in [0, 1]$, DiffusionNFT minimizes the negative-aware forward regression loss:</p>
+        $$\mathcal{L}_{\text{NFT}}(\theta) = \mathbb{E}_{(x_0, c) \sim \pi_{\text{old}},\, t,\, \epsilon}\!\left[r(x_0, c)\,\big\|v_\theta^+(x_t, t, c) - (\epsilon - x_0)\big\|^2 + \big(1 - r(x_0, c)\big)\,\big\|v_\theta^-(x_t, t, c) - (\epsilon - x_0)\big\|^2\right]$$
+        <p>Look closely at the geometry: $v_\theta^+ - v_\theta^- = 2\beta(v_\theta - v^{\text{old}})$, which is mathematically <strong>isomorphic to Classifier-Free Guidance (CFG)</strong>—except instead of contrasting conditional vs. unconditional predictions at double inference cost, DiffusionNFT contrasts high-reward vs. low-reward trajectories during training and <strong>internalizes preference guidance directly into a single CFG-free velocity field</strong>! Because forward regression needs no step log-probabilities and avoids forward–reverse discretization mismatch, DiffusionNFT achieves up to a $25\times$ efficiency speedup over Flow-GRPO, lifting SD3.5-Medium on GenEval from $0.24$ to $0.98$ within ~1k steps using a clean two-stage curriculum:</p>
+        <ol>
+            <li><strong>Stage 1 (Model-based preference):</strong> Jointly optimize PickScore, CLIPScore, and HPSv2.1 on Pick-a-Pic prompts to instill human aesthetics and prompt alignment.</li>
+            <li><strong>Stage 2 (Rule-based verifiers):</strong> Add verifiable GenEval and OCR rewards to sharpen spatial counting, attribute binding, and text rendering without losing visual quality.</li>
+        </ol>
+
+        <h3 id="soc-and-control">Stochastic Optimal Control and Embodied Flow Policies<a class="anchor" href="#soc-and-control" aria-hidden="true">#</a></h3>
+        <p>Two closely related lines—Stochastic Optimal Control (SOC) in generative modeling and continuous flow policies in robotics—converged independently on the exact same mathematical divide between <em>noise injection</em> and <em>forward-loss surrogates</em>:</p>
+        <ul>
+            <li><strong>Adjoint Matching &amp; RAM:</strong> <strong>Adjoint Matching</strong><a class="cite" href="#ref-21">[21]</a> formulates KL-regularized flow fine-tuning as a memoryless SOC problem via regression onto an adjoint ODE without differentiating through the entire sampling chain—though originally requiring reward gradients $\nabla_{x_0} r(x_0)$. <strong>Reinforce Adjoint Matching (RAM)</strong><a class="cite" href="#ref-22">[22]</a> removes that requirement by combining adjoint-matching optimality with a REINFORCE identity, yielding a pure consistency-regression loss that scales to non-differentiable rewards (VLM judges, OCR) on SD3.5 with neither backward adjoint sweeps nor step-wise importance ratios.</li>
+            <li><strong>Embodied Flow RL (ReinFlow &amp; FPO):</strong> Outside vision, flow matching now powers high-frequency robotic manipulation and continuous control policies, where RL fine-tuning mirrors image generation one-for-one. <strong>ReinFlow</strong><a class="cite" href="#ref-23">[23]</a> injects learnable noise networks into deterministic Rectified Flow and Shortcut action policies to turn them into discrete-time Markov chains with exact transition log-probs—analogous to Flow-GRPO's SDE conversion, but tuned for 1–4 step control. Conversely, <strong>FPO (Flow Policy Optimization)</strong><a class="cite" href="#ref-24">[24]</a> avoids exact likelihoods altogether by replacing the log-ratio in PPO-clip with an ELBO surrogate derived directly from the conditional flow matching (CFM) regression loss—conceptually the control-policy twin of DiffusionNFT and RAM.</li>
+        </ul>
+
+        <h2 id="agentic-rl">From Single-Pass Denoising to Reasoning and Agentic RL<a class="anchor" href="#agentic-rl" aria-hidden="true">#</a></h2>
+
+        <p>All methods in Sections 2 and 3 optimize the <em>inner loop</em> of a single forward generation pass. Yet complex compositional prompts ("three red cubes stacked left of a handwritten chalkboard sign") or multi-constraint image editing tasks often exceed what a single 28-step velocity pass can plan reliably without explicit decomposition, visual inspection, and iterative repair. This motivated a second frontier: bringing LLM-style <strong>Chain-of-Thought (CoT)</strong> and <strong>Agentic RL</strong> to visual synthesis.</p>
+
+        <h3 id="coupled-cot">Coupled Reasoning and Generation: T2I-R1 and Autoregressive CoT<a class="anchor" href="#coupled-cot" aria-hidden="true">#</a></h3>
+        <p><strong>T2I-R1</strong><a class="cite" href="#ref-25">[25]</a> pioneered R1-style reasoning in unified multimodal models (built on Janus-Pro) via two coupled levels of CoT trained jointly with <strong>BiCoT-GRPO</strong>:</p>
+        <ol>
+            <li><strong>Semantic-level CoT:</strong> Cold-started on GPT-4o reasoning traces, the language side plans object layout, visual attributes, and spatial relations in text before emitting any image tokens.</li>
+            <li><strong>Token-level CoT:</strong> The autoregressive visual head generates discrete image patches token-by-token conditioned on the semantic plan.</li>
+        </ol>
+        <p>Both stages are reinforced jointly using an ensemble of four complementary rewards: (a) <strong>Human Preference Models</strong> (HPS, ImageReward) for aesthetics, (b) <strong>Object Detectors</strong> (GroundingDINO, YOLO-World) verifying presence and spatial position, (c) <strong>VQA Models</strong> (LLaVA) auditing attribute binding, and (d) a fine-tuned multimodal <strong>Output Reward Model</strong> (LLaVA-OneVision). Related autoregressive models such as <strong>ReasonGen-R1</strong><a class="cite" href="#ref-26">[26]</a> and <strong>GoT-R1</strong><a class="cite" href="#ref-27">[27]</a> adopt the same single-policy coupled SFT + GRPO recipe.</p>
+        <p>From an architectural standpoint, however, treating autoregressive image-patch emission as "token-level CoT" is something of a convenient abstraction: discrete AR generators still lag behind continuous Flow Matching Diffusion Transformers like FLUX.1-dev and SD3.5 in photorealism, typography, and local spatial precision. This raises a natural question: <em>can we keep continuous Flow Matching models as the visual engine while still training an RL policy to reason, inspect, and iterate?</em></p>
+
+        <h3 id="agentic-flow-rl">Agentic RL with Flow Matching Generators<a class="anchor" href="#agentic-flow-rl" aria-hidden="true">#</a></h3>
+        <p>Rather than forcing a single transformer to emit both reasoning text and discrete visual tokens, recent <strong>Agentic RL</strong> systems decouple cognition and rendering—treating continuous Flow Matching generators and editors as <em>invokable tools</em> inside a multi-turn closed-loop MDP:</p>
+        <ul>
+            <li><strong>Multi-Turn Tool-Use Agents (GenAgent &amp; Generation Navigator):</strong> <strong>GenAgent</strong><a class="cite" href="#ref-28">[28]</a> frames text-to-image synthesis as an agentic <em>Plan → Generate → Inspect → Reflect → Refine</em> trajectory. An MLLM core agent invokes off-the-shelf Flow Matching backbones (such as FLUX.1-dev) and local editing tools, inspects intermediate renders visually, diagnoses missing objects or broken bindings, and issues targeted refinements—trained via cold-start trajectory SFT followed by Agentic RL with pointwise outcome rewards. Taking the MDP formulation further, <strong>Generation Navigator</strong><a class="cite" href="#ref-29">[29]</a> models multi-turn generation as a state-conditioned decision process optimized with trajectory-level <strong>PRE-GRPO</strong>, explicitly rewarding peak visual quality, attribute retention across edits, and turn efficiency so the agent stops once constraints are satisfied.</li>
+            <li><strong>Reasoning-Reward &amp; Multi-Agent Editing RL (Edit-R1 &amp; ImageEdit-R1):</strong> Instruction-guided editing with flow models (e.g., FLUX.1-Kontext) struggles when scalar rewards miss subtle semantic edits or background preservation. <strong>UniWorld-V2 / Edit-R1</strong><a class="cite" href="#ref-30">[30]</a> pairs a Chain-of-Thought Reasoning Reward Model (decomposing edit instructions into verifiable visual checks) with DiffusionNFT / GRPO updates directly on the flow editor. Meanwhile, <strong>ImageEdit-R1</strong><a class="cite" href="#ref-31">[31]</a> orchestrates a GRPO-trained multi-agent editing pipeline that decomposes complex compound instructions into ordered atomic edit calls before executing them on flow backbones.</li>
+            <li><strong>In-Context Reflection in DiTs (Reflect-DiT):</strong> Bridging inner and outer loops, <strong>Reflect-DiT</strong><a class="cite" href="#ref-32">[32]</a> equips Diffusion Transformers directly with in-context reflection over previously generated images and textual VLM critiques, enabling systematic test-time refinement rather than blind Best-of-$N$ sampling.</li>
+        </ul>
+        <p>Taken together, inner-loop RL (<code>Flow-GRPO</code>, <code>DiffusionNFT</code>, <code>RAM</code>) and outer-loop Agentic RL (<code>GenAgent</code>, <code>ImageEdit-R1</code>) are complementary layers rather than competitors: inner-loop RL raises the single-shot ceiling of the continuous velocity field, while outer-loop Agentic RL supplies deliberate planning, tool orchestration, and error recovery over multi-step visual tasks.</p>
+
+        <h2 id="comparison">Landscape Comparison and Practical Takeaways<a class="anchor" href="#comparison" aria-hidden="true">#</a></h2>
+
+        <p>The table below contrasts the representative methods across sampling assumptions, credit granularity, regularization, and ideal deployment regimes:</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="nw">Method</th>
+                        <th>Paradigm</th>
+                        <th>Solver Freedom</th>
+                        <th>Credit Granularity</th>
+                        <th>KL / CFG Handling</th>
+                        <th>Best Fit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="nw"><code>Flow-GRPO</code><a class="cite" href="#ref-12">[12]</a></td>
+                        <td>Reverse-SDE GRPO</td>
+                        <td>Euler SDE ($T=10$ train)</td>
+                        <td>Uniform across all $T$ steps</td>
+                        <td>Closed-form velocity KL</td>
+                        <td>General T2I alignment baseline on SD3.5</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>DanceGRPO</code><a class="cite" href="#ref-13">[13]</a></td>
+                        <td>Unified SDE GRPO</td>
+                        <td>Euler SDE + shared $x_1$</td>
+                        <td>Subsampled steps, uniform $A_i$</td>
+                        <td>KL omitted; multi-reward</td>
+                        <td>Large-scale T2I / T2V / I2V (FLUX, HunyuanVideo)</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>MixGRPO / Flash</code><a class="cite" href="#ref-14">[14]</a></td>
+                        <td>Mixed ODE–SDE window</td>
+                        <td>SDE in $S$, DPM++ outside</td>
+                        <td>Localized to sliding window $S$</td>
+                        <td>Clipped GRPO on $S$</td>
+                        <td>Cutting reverse-SDE wall-clock cost (~71%)</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>TempFlow-GRPO</code><a class="cite" href="#ref-15">[15]</a></td>
+                        <td>Branching + noise weight</td>
+                        <td>ODE + SDE branch forks</td>
+                        <td>Exact node + $\sigma_t\sqrt{|\Delta t|}$ weight</td>
+                        <td>Noise-aware clipped GRPO</td>
+                        <td>Fine-grained layout vs. detail credit</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>BranchGRPO</code><a class="cite" href="#ref-16">[16]</a></td>
+                        <td>Prefix-tree branching</td>
+                        <td>Shared-prefix tree SDE</td>
+                        <td>Parent-relative tree edges</td>
+                        <td>Path pruning + GRPO</td>
+                        <td>High-throughput trajectory exploration (~55% faster)</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>Pref-GRPO / Guard</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-18">[18]</a></td>
+                        <td>Stabilized SDE GRPO</td>
+                        <td>Reverse SDE</td>
+                        <td>Pairwise win-rate / regulated</td>
+                        <td>Regulated ratio clipping</td>
+                        <td>Preventing reward hacking &amp; ratio drift on FLUX</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>DiffusionNFT</code><a class="cite" href="#ref-20">[20]</a></td>
+                        <td>Forward-process contrast</td>
+                        <td><strong>Any black-box solver</strong></td>
+                        <td>Direct forward FM regression</td>
+                        <td><strong>CFG-free</strong> ($v^+, v^-$)</td>
+                        <td>Fastest single-pass alignment (~25× vs Flow-GRPO)</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>RAM</code><a class="cite" href="#ref-22">[22]</a></td>
+                        <td>SOC consistency</td>
+                        <td><strong>Arbitrary sampler</strong></td>
+                        <td>Adjoint-REINFORCE loss</td>
+                        <td>Built-in KL target</td>
+                        <td>Non-differentiable rewards without SDE ratios</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>T2I-R1</code><a class="cite" href="#ref-25">[25]</a></td>
+                        <td>Coupled AR CoT GRPO</td>
+                        <td>Autoregressive tokens</td>
+                        <td>Semantic + token BiCoT</td>
+                        <td>Multi-expert reward ensemble</td>
+                        <td>Unified discrete MLLMs needing prompt CoT</td>
+                    </tr>
+                    <tr>
+                        <td class="nw"><code>GenAgent / Edit-R1</code><a class="cite" href="#ref-28">[28]</a><a class="cite" href="#ref-30">[30]</a></td>
+                        <td>Outer-loop Agentic RL</td>
+                        <td>Wraps FLUX / Flow DiT</td>
+                        <td>Multi-turn trajectory + CoT RRM</td>
+                        <td>Trajectory RL / tool verify</td>
+                        <td>Complex spatial layouts &amp; multi-step editing</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>In practice, choosing a Flow Matching RL stack comes down to four concrete rules of thumb:</p>
+        <ol>
+            <li><strong>Prioritize forward-process or hybrid windows for compute efficiency:</strong> If you only need single-pass preference or verifier alignment and want fast turnaround without reverse-SDE plumbing, start with <strong>DiffusionNFT</strong> (bonus: CFG-free inference) or <strong>MixGRPO-Flash</strong>.</li>
+            <li><strong>Separate structural exploration from texture refinement:</strong> When full-trajectory SDE updates distort fine textures or converge slowly, adopt <strong>TempFlow-GRPO</strong>'s noise-aware weighting or <strong>BranchGRPO</strong>'s prefix-sharing tree so high-noise early steps do the heavy exploration.</li>
+            <li><strong>Guard against silent reward hacking early:</strong> Always share initial noise $x_1$ across prompt groups (DanceGRPO), combine aesthetic models with semantic/rule verifiers (OCR, GenEval), and replace noisy scalar differences with <strong>Pref-GRPO</strong> pairwise rankings or <strong>GRPO-Guard</strong> clipping whenever proxy scores outrun human visual quality.</li>
+            <li><strong>Add an outer Agentic RL loop when single-pass prompts hit a ceiling:</strong> When failure modes stem from spatial planning, multi-object counting, or iterative editing rather than per-step denoising fidelity, wrap your aligned Flow Matching model inside an MLLM planning-and-inspection agent (<strong>GenAgent</strong>, <strong>Generation Navigator</strong>, or <strong>ImageEdit-R1</strong>) instead of overloading the velocity field alone.</li>
+        </ol>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>If you reference these notes or diagrams, please cite:</p>
+            <blockquote cite="https://www.falcary.com/blogs/flow-matching-rl/">
+                <p>Chaoran Feng (2026). "Reinforcement Learning in Flow Matching Models". <em>Chaoran Feng's Blog</em>. https://www.falcary.com/blogs/flow-matching-rl/</p>
+            </blockquote>
+            <pre><code>@article{feng2026flowrl,
+  title   = {Reinforcement Learning in Flow Matching Models},
+  author  = {Feng, Chaoran},
+  year    = {2026},
+  month   = {September},
+  url     = {https://www.falcary.com/blogs/flow-matching-rl/}
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li id="ref-1" data-brief="Formulates iterative diffusion denoising as a finite-horizon Markov Decision Process (MDP) with sparse terminal rewards and introduces policy gradient fine-tuning (DDPO) for visual models."><a href="https://arxiv.org/abs/2305.13301" target="_blank" rel="noopener">Training Diffusion Models with Reinforcement Learning</a>. Black, Janner, Du, Kostrikov, Levine, ICLR 2024 (arXiv:2305.13301).</li>
+            <li id="ref-2" data-brief="Introduces Proximal Policy Optimization (PPO) with clipped importance-ratio surrogate objectives and Generalized Advantage Estimation (GAE) for stable policy updates."><a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noopener">Proximal Policy Optimization Algorithms</a>. Schulman, Wolski, Dhariwal, Radford, Klimov, 2017 (arXiv:1707.06347).</li>
+            <li id="ref-3" data-brief="Derives the closed-form solution to KL-regularized RLHF and turns preference optimization into a supervised Bradley-Terry classification objective without an explicit reward model."><a href="https://arxiv.org/abs/2305.18290" target="_blank" rel="noopener">Direct Preference Optimization: Your Language Model is Secretly a Reward Model</a>. Rafailov, Sharma, Mitchell, Ermon, Manning, Finn, NeurIPS 2023 (arXiv:2305.18290).</li>
+            <li id="ref-4" data-brief="Adapts DPO to diffusion models by substituting intractable sample log-likelihoods with the forward ELBO noise-prediction objective on pairwise human preferences."><a href="https://arxiv.org/abs/2311.12908" target="_blank" rel="noopener">Diffusion Model Alignment Using Direct Preference Optimization</a>. Wallace, Dang, Rafailov, Zhou, Lou, Purushwalkam, Ermon, Xiong, Joty, Naik, CVPR 2024 (arXiv:2311.12908).</li>
+            <li id="ref-5" data-brief="Introduces Group Relative Policy Optimization (GRPO), replacing PPO's learned critic with within-group reward normalization across sampled rollouts."><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noopener">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a>. Shao, Wang, Zhu, Xu, Song, Bi, Zhang, Zhang, Li, Wu, Guo, 2024 (arXiv:2402.03300).</li>
+            <li id="ref-6" data-brief="Scales long-CoT RL via online Mirror Descent Policy Optimization (MDPO) with rule-based outcome rewards, analyzing why outcome rewards encourage exploration over brittle step critics."><a href="https://arxiv.org/abs/2501.12599" target="_blank" rel="noopener">Kimi k1.5: Scaling Reinforcement Learning with LLMs</a>. Kimi Team, 2025 (arXiv:2501.12599).</li>
+            <li id="ref-7" data-brief="Identifies entropy collapse and zero-gradient groups in GRPO, proposing Clip-Higher, Dynamic Sampling, token-mean loss, and soft overlong reward shaping."><a href="https://arxiv.org/abs/2503.14476" target="_blank" rel="noopener">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a>. Yu, Zhang, Zhu, Yuan, Zuo, Yue, et al., 2025 (arXiv:2503.14476).</li>
+            <li id="ref-8" data-brief="Demonstrates stable value-based RL for long-horizon reasoning via Value-Pretraining, Decoupled-GAE, Length-Adaptive GAE, Clip-Higher, and positive-example NLL loss."><a href="https://arxiv.org/abs/2504.05118" target="_blank" rel="noopener">VAPO: Efficient and Reliable Reinforcement Learning for Advanced Reasoning Tasks</a>. Yue, Yuan, Yu, Zuo, Zhu, Xu, et al., 2025 (arXiv:2504.05118).</li>
+            <li id="ref-9" data-brief="Replaces token-level clipping with length-normalized sequence-level importance ratios (Group Sequence Policy Optimization) to eliminate sequence-length variance spikes."><a href="https://arxiv.org/abs/2507.18071" target="_blank" rel="noopener">Group Sequence Policy Optimization</a>. Zheng, Liu, Li, Chen, Yu, Gao, et al. (Qwen Team), 2025 (arXiv:2507.18071).</li>
+            <li id="ref-10" data-brief="Introduces Generalized Knowledge Distillation (GKD) for on-policy distillation on student-generated rollouts using Forward, Reverse, and JSD objectives."><a href="https://arxiv.org/abs/2306.13649" target="_blank" rel="noopener">On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes</a>. Agarwal, Vieillard, Stańczyk, Ramos, Geist, Bachem, ICLR 2024 (arXiv:2306.13649).</li>
+            <li id="ref-11" data-brief="Establishes the unifying SDE / Fokker-Planck / Probability Flow ODE framework and Anderson time-reversal formulas connecting deterministic flows and stochastic diffusion samplers."><a href="https://arxiv.org/abs/2011.13456" target="_blank" rel="noopener">Score-Based Generative Modeling through Stochastic Differential Equations</a>. Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole, ICLR 2021 (arXiv:2011.13456).</li>
+            <li id="ref-12" data-brief="Pioneers online RL for Flow Matching via marginal-preserving ODE-to-SDE conversion (sde_step_with_logprob), closed-form velocity KL, and Denoising Reduction (yifan123/flow_grpo)."><a href="https://arxiv.org/abs/2505.05470" target="_blank" rel="noopener">Flow-GRPO: Training Flow Matching Models via Online RL</a>. Liu, Liu, Liang, Li, Liu, Wang, Wan, Zhang, Ouyang, NeurIPS 2025 (arXiv:2505.05470).</li>
+            <li id="ref-13" data-brief="Unifies GRPO across diffusion and rectified-flow T2I/T2V/I2V models using SDE reformulation, shared initial noise, timestep subsampling, and multi-reward ensembling."><a href="https://arxiv.org/abs/2505.07818" target="_blank" rel="noopener">DanceGRPO: Unleashing GRPO on Visual Generation</a>. Xue, Wu, Gao, Kong, Zhu, Chen, Liu, Liu, Guo, Huang, Luo, 2025 (arXiv:2505.07818).</li>
+            <li id="ref-14" data-brief="Confines SDE exploration and GRPO updates to a sliding window while applying fast higher-order ODE solvers outside it (MixGRPO-Flash), cutting training time up to ~71%."><a href="https://arxiv.org/abs/2507.21802" target="_blank" rel="noopener">MixGRPO: Unlocking Flow-based GRPO Efficiency with Mixed ODE-SDE</a>. Li, Cui, Huang, Ma, Fan, Yang, Zhong, ECCV 2026 (arXiv:2507.21802).</li>
+            <li id="ref-15" data-brief="Breaks the temporal uniformity assumption in Flow-GRPO using trajectory branching for PRM-free process credit localization and noise-aware step reweighting."><a href="https://arxiv.org/abs/2508.04324" target="_blank" rel="noopener">TempFlow-GRPO: When Timing Matters for GRPO in Flow Models</a>. He, Fu, Zhao, Li, Yang, Yin, Rao, Zhang, 2025 (arXiv:2508.04324).</li>
+            <li id="ref-16" data-brief="Structures SDE rollouts into prefix-sharing branching trees with parent-relative branch advantages and low-reward path pruning, saving up to ~55% training cost."><a href="https://arxiv.org/abs/2509.06040" target="_blank" rel="noopener">BranchGRPO: Stable and Efficient GRPO with Structured Branching in Diffusion Models</a>. Li, Wang, Zhu, Zhao, Lu, She, Zhang, ICLR 2026 (arXiv:2509.06040).</li>
+            <li id="ref-17" data-brief="Replaces noisy scalar reward models with Pairwise Preference Reward Models (PPRM) inside GRPO to eliminate variance-amplified reward hacking."><a href="https://arxiv.org/abs/2508.20751" target="_blank" rel="noopener">Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning</a>. Wang, Li, Zang, Zhou, Bu, Wang, Lu, Jin, Wang, 2025 (arXiv:2508.20751).</li>
+            <li id="ref-18" data-brief="Diagnoses timestep-dependent importance-ratio shifts in continuous flow SDE policies and stabilizes FLUX.1-dev / SD3.5-M training via regulated clipping."><a href="https://arxiv.org/abs/2510.22319" target="_blank" rel="noopener">GRPO-Guard: Mitigating Implicit Over-Optimization in Flow Matching via Regulated Clipping</a>. Wang, Liang, Liu, Liu, Liu, Zheng, Pang, Ma, Xie, Wang, Wang, Wan, Liang, 2025 (arXiv:2510.22319).</li>
+            <li id="ref-19" data-brief="Introduces Coefficients-Preserving Sampling (Flow-CPS) to eliminate coarse-step SDE discretization bias within flow-matching RL training loops."><a href="https://arxiv.org/abs/2509.05952" target="_blank" rel="noopener">Coefficients-Preserving Sampling for Reinforcement Learning with Flow Matching</a>. Wang, Yu, 2025 (arXiv:2509.05952).</li>
+            <li id="ref-20" data-brief="Performs online RL directly on the forward flow-matching process using implicit positive/negative velocity parameterization, enabling arbitrary black-box solvers and CFG-free alignment (~25x faster than Flow-GRPO)."><a href="https://arxiv.org/abs/2509.16117" target="_blank" rel="noopener">DiffusionNFT: Online Diffusion Reinforcement with Forward Process</a>. Zheng, Chen, Ye, Wang, Zhang, Jiang, Su, Ermon, Zhu, Liu, ICLR 2026 Oral (arXiv:2509.16117).</li>
+            <li id="ref-21" data-brief="Formulates reward fine-tuning of flow and diffusion models as memoryless stochastic optimal control via regression onto an adjoint ODE without full chain backprop."><a href="https://arxiv.org/abs/2409.08861" target="_blank" rel="noopener">Adjoint Matching: Fine-tuning Flow and Diffusion Generative Models with Memoryless Stochastic Optimal Control</a>. Domingo-Enrich, Drozdzal, Karrer, Chen, ICLR 2025 (arXiv:2409.08861).</li>
+            <li id="ref-22" data-brief="Combines adjoint-matching optimality with a REINFORCE consistency identity, scaling SOC RL post-training to non-differentiable rewards on SD3.5 without backward adjoint sweeps."><a href="https://arxiv.org/abs/2605.10759" target="_blank" rel="noopener">Reinforce Adjoint Matching: Scaling RL Post-Training of Diffusion and Flow-Matching Models</a>. Bergmeister, Jegelka, Nüsken, Domingo-Enrich, Pidstrigach, 2026 (arXiv:2605.10759).</li>
+            <li id="ref-23" data-brief="Injects learnable noise networks into deterministic robotic flow policies (Rectified Flow, Shortcut Models) to obtain discrete-time Markov transitions and exact log-likelihoods for online RL."><a href="https://arxiv.org/abs/2505.22094" target="_blank" rel="noopener">ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning</a>. Zhang, Yu, Su, Wang, NeurIPS 2025 (arXiv:2505.22094).</li>
+            <li id="ref-24" data-brief="Introduces Flow Policy Optimization (FPO), constructing a PPO-clip policy-gradient surrogate directly from the conditional flow matching ELBO without exact likelihood evaluation."><a href="https://arxiv.org/abs/2507.21053" target="_blank" rel="noopener">Flow Matching Policy Gradients</a>. McAllister, Ge, Yi, Kim, Weber, Choi, Feng, Kanazawa, 2025 (arXiv:2507.21053).</li>
+            <li id="ref-25" data-brief="Jointly trains semantic-level prompt CoT and autoregressive token-level generation via BiCoT-GRPO and four heterogeneous vision/VLM rewards on Janus-Pro."><a href="https://arxiv.org/abs/2505.00703" target="_blank" rel="noopener">T2I-R1: Reinforcing Image Generation with Collaborative Semantic-level and Token-level CoT</a>. Jiang, Guo, Zhang, Zong, Li, Zhuo, Yan, Heng, Li, 2025 (arXiv:2505.00703).</li>
+            <li id="ref-26" data-brief="Trains a unified autoregressive visual generator to emit explicit textual layout reasoning prior to image tokens via SFT cold-start and GRPO."><a href="https://arxiv.org/abs/2505.24875" target="_blank" rel="noopener">ReasonGen-R1: CoT for Autoregressive Image Generation Models through SFT and RL</a>. Zhang, Li, Yang, Wang, Yang, Qi, Bao, Chen, Luo, Qiu, 2025 (arXiv:2505.24875).</li>
+            <li id="ref-27" data-brief="Applies structured Generation Chain-of-Thought with RL to improve spatial layout planning and multi-object composition in autoregressive image synthesis."><a href="https://arxiv.org/abs/2505.17022" target="_blank" rel="noopener">GoT-R1: Unleashing Reasoning Capability of Autoregressive Visual Generation with Reinforcement Learning</a>. Duan, Fang, Wang, Wang, Huang, Zeng, Li, Liu, 2025 (arXiv:2505.17022).</li>
+            <li id="ref-28" data-brief="Decouples multimodal reasoning and continuous flow generation: an MLLM agent invokes FLUX.1-dev and editing tools over multi-turn reflection loops trained with Agentic RL."><a href="https://arxiv.org/abs/2601.18543" target="_blank" rel="noopener">GenAgent: Scaling Text-to-Image Generation via Agentic Multimodal Reasoning</a>. Jiang, Wang, Zhou, Li, Liu, Xie, Chen, Zheng, Zhang, ECCV 2026 (arXiv:2601.18543).</li>
+            <li id="ref-29" data-brief="Models multi-turn text-to-image synthesis as a state-conditioned MDP and proposes PRE-GRPO to optimize peak quality, attribute retention across turns, and iteration efficiency."><a href="https://arxiv.org/abs/2605.17969" target="_blank" rel="noopener">Generation Navigator: A State-Aware Agentic Framework for Image Generation</a>. Liu, Feng, Wang, Zeng, Jin, 2026 (arXiv:2605.17969).</li>
+            <li id="ref-30" data-brief="Reinforces instruction-guided image editing by combining MLLM implicit feedback / reasoning reward modeling with DiffusionNFT updates on continuous flow editing backbones."><a href="https://arxiv.org/abs/2510.16888" target="_blank" rel="noopener">UniWorld-V2: Reinforce Image Editing with Diffusion Negative-aware Finetuning and MLLM Implicit Feedback</a>. Li, Liu, Zhang, Lin, Wu, Yuan, Yan, Ye, Yu, Niu, Wang, Cheng, Yuan, 2025 (arXiv:2510.16888).</li>
+            <li id="ref-31" data-brief="Trains a multi-agent image editing planner via GRPO to decompose complex compound editing requests into sequenced, verifiable atomic edits."><a href="https://arxiv.org/abs/2603.08059" target="_blank" rel="noopener">ImageEdit-R1: Boosting Multi-Agent Image Editing via Reinforcement Learning</a>. Zhao, Ye, Liu, Shieh, Bui, 2026 (arXiv:2603.08059).</li>
+            <li id="ref-32" data-brief="Equips Diffusion Transformers with in-context reflection over previously generated candidates and VLM feedback for inference-time iterative visual refinement."><a href="https://arxiv.org/abs/2503.12271" target="_blank" rel="noopener">Reflect-DiT: Inference-Time Scaling for Text-to-Image Diffusion Transformers via In-Context Reflection</a>. Li, Kallidromitis, Gokul, Koneru, Kato, Kozuka, Grover, 2025 (arXiv:2503.12271).</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../?tag=Flow%20Matching">Flow Matching</a></li>
+            <li><a href="../?tag=RL">RL</a></li>
+            <li><a href="../?tag=GRPO">GRPO</a></li>
+            <li><a href="../?tag=Image%20Generation">Image Generation</a></li>
+            <li><a href="../?tag=Agentic%20RL">Agentic RL</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../pocketrig/"><span class="title">« Newer post</span>PocketRig: A Phone-First Workflow for Coding Agents with Paseo</a>
+            <a class="next" href="../"><span class="title">All posts »</span>Back to the list</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+<script src="../../assets/vendor/katex/katex.min.js"></script>
+<script src="../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../assets/js/blog-post.js?v=20261121.5"></script>
+</body>
+</html>

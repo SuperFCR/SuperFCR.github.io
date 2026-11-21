@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 780" width="1600" height="780" font-family="'Segoe UI', Arial, sans-serif">
+  <title>Three paradigms for reinforcement learning in Flow Matching models</title>
+  <desc>Architectural comparison across inner-loop reverse-SDE RL, forward-process / optimal control RL (DiffusionNFT, RAM, FPO), and outer-loop reasoning &amp; agentic RL (T2I-R1, GenAgent, Edit-R1, Generation Navigator).</desc>
+  <defs>
+    <marker id="arr-navy" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#205488"/>
+    </marker>
+    <marker id="arr-teal" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="780" fill="#ffffff"/>
+
+  <text x="44" y="52" font-size="28" font-weight="700" fill="#141923">Three Paradigms of Reinforcement Learning for Flow Matching</text>
+  <text x="44" y="82" font-size="19" fill="#475569">From step-level reverse SDE policy gradients to likelihood-free forward updates and outer-loop agentic reasoning</text>
+
+  <!-- Row 1: Inner-Loop Reverse-SDE RL -->
+  <rect x="40" y="106" width="1520" height="196" rx="18" fill="#f3f8fe" stroke="#205488" stroke-width="2.5"/>
+  <path d="M58 106 H312 V302 H58 a18 18 0 0 1 -18 -18 V124 a18 18 0 0 1 18 -18 Z" fill="#205488"/>
+  <text x="64" y="152" font-size="23" font-weight="700" fill="#ffffff">1. Inner-Loop</text>
+  <text x="64" y="184" font-size="23" font-weight="700" fill="#ffffff">Reverse-SDE RL</text>
+  <text x="64" y="224" font-size="18" fill="#dbeafe">Flow-GRPO · DanceGRPO</text>
+  <text x="64" y="252" font-size="18" fill="#dbeafe">MixGRPO · TempFlow</text>
+  <text x="64" y="280" font-size="18" fill="#dbeafe">BranchGRPO · GRPO-Guard</text>
+
+  <rect x="338" y="138" width="256" height="132" rx="12" fill="#ffffff" stroke="#b9cde4" stroke-width="2"/>
+  <text x="466" y="176" text-anchor="middle" font-size="20" font-weight="700" fill="#0f2c4c">SDE Rollout (x₁ → x₀)</text>
+  <text x="466" y="210" text-anchor="middle" font-size="18" fill="#475569">Euler–Maruyama / CPS</text>
+  <text x="466" y="240" text-anchor="middle" font-size="18" fill="#205488" font-family="Consolas, monospace">save {x_t, log π_old}</text>
+
+  <line x1="594" y1="204" x2="634" y2="204" stroke="#205488" stroke-width="3" marker-end="url(#arr-navy)"/>
+
+  <rect x="642" y="138" width="252" height="132" rx="12" fill="#ffffff" stroke="#b9cde4" stroke-width="2"/>
+  <text x="768" y="176" text-anchor="middle" font-size="20" font-weight="700" fill="#0f2c4c">Group Reward Scoring</text>
+  <text x="768" y="210" text-anchor="middle" font-size="18" fill="#475569">VLM / OCR / GenEval</text>
+  <text x="768" y="240" text-anchor="middle" font-size="18" fill="#205488">or Pairwise (Pref-GRPO)</text>
+
+  <line x1="894" y1="204" x2="934" y2="204" stroke="#205488" stroke-width="3" marker-end="url(#arr-navy)"/>
+
+  <rect x="942" y="138" width="592" height="132" rx="12" fill="#ffffff" stroke="#205488" stroke-width="2"/>
+  <text x="970" y="176" font-size="20" font-weight="700" fill="#0f2c4c">Step-Level Clipped GRPO Update (+ Closed-Form KL)</text>
+  <text x="970" y="210" font-size="18" fill="#334155" font-family="Consolas, monospace">ρ_t(θ) = π_θ(x_{t+Δt} | x_t) / π_old(x_{t+Δt} | x_t)</text>
+  <text x="970" y="242" font-size="18" fill="#475569">Requires SDE steps; optimizes step transition likelihoods</text>
+
+  <!-- Row 2: Forward-Process & SOC RL -->
+  <rect x="40" y="328" width="1520" height="196" rx="18" fill="#f2fbf9" stroke="#0f766e" stroke-width="2.5"/>
+  <path d="M58 328 H312 V524 H58 a18 18 0 0 1 -18 -18 V346 a18 18 0 0 1 18 -18 Z" fill="#0f766e"/>
+  <text x="64" y="374" font-size="23" font-weight="700" fill="#ffffff">2. Forward-Process</text>
+  <text x="64" y="406" font-size="23" font-weight="700" fill="#ffffff">&amp; SOC RL</text>
+  <text x="64" y="446" font-size="18" fill="#ccfbf1">DiffusionNFT (CFG-free)</text>
+  <text x="64" y="474" font-size="18" fill="#ccfbf1">Adjoint Matching · RAM</text>
+  <text x="64" y="502" font-size="18" fill="#ccfbf1">FPO · ReinFlow (Robotics)</text>
+
+  <rect x="338" y="360" width="256" height="132" rx="12" fill="#ffffff" stroke="#99d5c9" stroke-width="2"/>
+  <text x="466" y="398" text-anchor="middle" font-size="20" font-weight="700" fill="#134e4a">Black-Box Solver Rollout</text>
+  <text x="466" y="432" text-anchor="middle" font-size="18" fill="#475569">Any ODE / DPM / 1-step</text>
+  <text x="466" y="462" text-anchor="middle" font-size="18" fill="#0f766e">No step log-prob needed</text>
+
+  <line x1="594" y1="426" x2="634" y2="426" stroke="#0f766e" stroke-width="3" marker-end="url(#arr-teal)"/>
+
+  <rect x="642" y="360" width="252" height="132" rx="12" fill="#ffffff" stroke="#99d5c9" stroke-width="2"/>
+  <text x="768" y="398" text-anchor="middle" font-size="20" font-weight="700" fill="#134e4a">Clean Sample + Reward</text>
+  <text x="768" y="432" text-anchor="middle" font-size="18" fill="#475569">Optimality r(x₀, c) ∈ [0, 1]</text>
+  <text x="768" y="462" text-anchor="middle" font-size="18" fill="#0f766e">Forward x_t = (1−t)x₀ + tε</text>
+
+  <line x1="894" y1="426" x2="934" y2="426" stroke="#0f766e" stroke-width="3" marker-end="url(#arr-teal)"/>
+
+  <rect x="942" y="360" width="592" height="132" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+  <text x="970" y="398" font-size="20" font-weight="700" fill="#134e4a">Forward Velocity Regression / SOC Consistency</text>
+  <text x="970" y="432" font-size="18" fill="#334155" font-family="Consolas, monospace">v⁺ = (1−β)v_old + βv_θ , v⁻ = (1+β)v_old − βv_θ</text>
+  <text x="970" y="464" font-size="18" fill="#475569">Internalizes CFG &amp; reward contrast; ~25× speedup on SD3.5</text>
+
+  <!-- Row 3: Outer-Loop Agentic RL -->
+  <rect x="40" y="550" width="1520" height="200" rx="18" fill="#fdfaf5" stroke="#b45309" stroke-width="2.5"/>
+  <path d="M58 550 H312 V750 H58 a18 18 0 0 1 -18 -18 V568 a18 18 0 0 1 18 -18 Z" fill="#b45309"/>
+  <text x="64" y="596" font-size="23" font-weight="700" fill="#ffffff">3. Outer-Loop</text>
+  <text x="64" y="628" font-size="23" font-weight="700" fill="#ffffff">Agentic &amp; CoT RL</text>
+  <text x="64" y="668" font-size="18" fill="#fef3c7">T2I-R1 (Coupled AR CoT)</text>
+  <text x="64" y="696" font-size="18" fill="#fef3c7">GenAgent · GenNavigator</text>
+  <text x="64" y="724" font-size="18" fill="#fef3c7">Edit-R1 · ImageEdit-R1</text>
+
+  <rect x="338" y="582" width="256" height="136" rx="12" fill="#ffffff" stroke="#f0c896" stroke-width="2"/>
+  <text x="466" y="618" text-anchor="middle" font-size="20" font-weight="700" fill="#7c2d12">MLLM Planner &amp; CoT</text>
+  <text x="466" y="652" text-anchor="middle" font-size="18" fill="#475569">Decompose prompt / layout</text>
+  <text x="466" y="684" text-anchor="middle" font-size="18" fill="#b45309">Select tool &amp; prompt edit</text>
+
+  <line x1="594" y1="650" x2="634" y2="650" stroke="#b45309" stroke-width="3" marker-end="url(#arr-amber)"/>
+
+  <rect x="642" y="582" width="252" height="136" rx="12" fill="#ffffff" stroke="#f0c896" stroke-width="2"/>
+  <text x="768" y="618" text-anchor="middle" font-size="20" font-weight="700" fill="#7c2d12">Flow Generator Tool</text>
+  <text x="768" y="652" text-anchor="middle" font-size="18" fill="#475569">FLUX.1-dev / Kontext</text>
+  <text x="768" y="684" text-anchor="middle" font-size="18" fill="#b45309">or SD3.5 / Edit Model</text>
+
+  <line x1="894" y1="650" x2="934" y2="650" stroke="#b45309" stroke-width="3" marker-end="url(#arr-amber)"/>
+
+  <rect x="942" y="582" width="592" height="136" rx="12" fill="#ffffff" stroke="#b45309" stroke-width="2"/>
+  <text x="970" y="618" font-size="20" font-weight="700" fill="#7c2d12">Visual Inspection, Reflection &amp; Trajectory GRPO</text>
+  <text x="970" y="652" font-size="18" fill="#334155">Multi-turn loop: Plan → Generate → Inspect → Reflect → Refine</text>
+  <text x="970" y="684" font-size="18" fill="#475569">Optimizes tool orchestration, retention &amp; CoT rewards</text>
+
+  <!-- Feedback arc for outer-loop reflection -->
+  <path d="M1238 582 C 1238 558, 466 558, 466 578" fill="none" stroke="#b45309" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arr-amber)"/>
+</svg>
