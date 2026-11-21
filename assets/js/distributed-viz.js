@@ -1693,6 +1693,203 @@
         render();
     }
 
+    /* =========================================================================
+       7b. megatron-groups: 16-GPU 3D Parallelism (TP=2, PP=2, DP=4 & MP=TPxPP)
+    ========================================================================= */
+    function initMegatronGroups(fig) {
+        const MODES = [
+            {
+                id: 'tp', pill: 'TP (8×2)', col: COL.amber,
+                status: 'TP groups: stride = 1 · [0,1]..[14,15]',
+                desc: t(
+                    'Innermost TP (stride=1): contiguous ranks on the same NVLink node form [0,1], [2,3], ..., [14,15]',
+                    '最内层 TP（步长=1）：同一台机内相邻 NVLink 卡两两编组 [0,1], [2,3], ..., [14,15]'
+                )
+            },
+            {
+                id: 'dp', pill: 'DP (4×4)', col: COL.navy,
+                status: 'DP groups: stride = TP(2) · [0,2,4,6] etc.',
+                desc: t(
+                    'Middle DP (stride=TP=2): links identical weight slices across mirrored model replicas in each PP stage',
+                    '中间层 DP（步长=TP=2）：同一 Stage 下跨副本连接切片位置相同的卡（如 [0,2,4,6] 与 [1,3,5,7]）'
+                )
+            },
+            {
+                id: 'pp', pill: 'PP (8×2)', col: COL.teal,
+                status: 'PP groups: stride = 8 · [0,8]..[7,15]',
+                desc: t(
+                    'Outermost PP (stride=world/PP=8): pairs corresponding ranks across nodes into 8 pipelines [0,8]..[7,15]',
+                    '最外层 PP（步长=world/PP=8）：跨机连接 Stage 0 与 Stage 1 对应位置的卡 [0,8]..[7,15]'
+                )
+            },
+            {
+                id: 'mp', pill: 'MP = TP×PP', col: COL.plum,
+                status: 'MP groups: 4 replicas · [0,1,8,9] etc.',
+                desc: t(
+                    'MP = TP×PP ([0,1,8,9]..): each 4-GPU slice holds 1 full model; syncs found_inf MAX & global clip_grad_norm',
+                    '模型并行全组 MP = TP×PP（[0,1,8,9]..）：每组构成 1 份完整模型，用于全局 found_inf 检查与 L2 梯度裁剪'
+                )
+            }
+        ];
+        let step = 0;
+
+        const ui = mountAnim(fig, {
+            height: 236,
+            stepMs: 2200,
+            aria: t('Megatron 16-GPU 3D process groups (TP=2, PP=2, DP=4)', 'Megatron 16 卡三维并行通信域分组（TP=2, PP=2, DP=4）'),
+            pills: MODES.map((m) => ({ label: m.pill })),
+            onPill: (idx) => {
+                step = idx;
+                ui.setPaused(true);
+                render();
+            },
+            onTick: () => {
+                step = (step + 1) % MODES.length;
+                render();
+            }
+        });
+
+        function render() {
+            const m = MODES[step];
+            const svg = ui.svg;
+            svg.innerHTML = '';
+            addArrowDefs(svg);
+            ui.setActivePill(step);
+            ui.setStatus(m.status);
+
+            const baseX = 72, colPitch = 150, w = 54, tpOff = 68, boxH = 38;
+            const rowY = [42, 138];
+            const rx = (p, d, tp) => baseX + d * colPitch + tp * tpOff;
+
+            // Left Stage / Node labels
+            [0, 1].forEach((p) => {
+                svg.appendChild(el('text', {
+                    x: 10, y: rowY[p] + 15, 'font-size': 10, 'font-weight': 700,
+                    'font-family': 'var(--sans)', fill: 'var(--vz-ink)'
+                }, `Stage ${p}`));
+                svg.appendChild(el('text', {
+                    x: 10, y: rowY[p] + 28, 'font-size': 9,
+                    'font-family': 'var(--mono)', fill: 'var(--vz-muted)'
+                }, `Node ${p}`));
+            });
+
+            // Background enclosures behind cards (TP pairs or MP columns)
+            if (m.id === 'tp') {
+                for (let p = 0; p < 2; p++) {
+                    for (let d = 0; d < 4; d++) {
+                        svg.appendChild(el('rect', {
+                            x: baseX + d * colPitch - 5, y: rowY[p] - 5, width: 132, height: boxH + 10, rx: 7,
+                            fill: COL.amber.bg, stroke: COL.amber.fg, 'stroke-width': 1.5, 'stroke-dasharray': '4 2.5'
+                        }));
+                    }
+                }
+            } else if (m.id === 'mp') {
+                for (let d = 0; d < 4; d++) {
+                    const bx = baseX + d * colPitch - 6;
+                    svg.appendChild(el('rect', {
+                        x: bx, y: 34, width: 134, height: 150, rx: 8,
+                        fill: COL.plum.bg, stroke: COL.plum.fg, 'stroke-width': 1.6, 'stroke-dasharray': '5 3'
+                    }));
+                    const r0 = d * 2;
+                    svg.appendChild(el('text', {
+                        x: bx + 67, y: 26, 'text-anchor': 'middle', 'font-size': 9.5, 'font-weight': 700,
+                        'font-family': 'var(--mono)', fill: COL.plum.fg
+                    }, `MP #${d} [${r0},${r0 + 1},${r0 + 8},${r0 + 9}]`));
+                }
+            }
+
+            // DP horizontal stride-2 buses behind cards
+            if (m.id === 'dp') {
+                const dpBuses = [
+                    { p: 0, tp: 0, yBus: 20,  col: COL.navy,  arr: 'url(#arr-navy)',  lbl: '[0,2,4,6]' },
+                    { p: 0, tp: 1, yBus: 98,  col: COL.teal,  arr: 'url(#arr-teal)',  lbl: '[1,3,5,7]' },
+                    { p: 1, tp: 0, yBus: 118, col: COL.amber, arr: 'url(#arr-amber)', lbl: '[8,10,12,14]' },
+                    { p: 1, tp: 1, yBus: 196, col: COL.plum,  arr: 'url(#arr-plum)',  lbl: '[9,11,13,15]' }
+                ];
+                dpBuses.forEach((b) => {
+                    const xStart = rx(b.p, 0, b.tp) + w / 2;
+                    const xEnd = rx(b.p, 3, b.tp) + w / 2;
+                    const bus = el('line', {
+                        x1: xStart, y1: b.yBus, x2: xEnd, y2: b.yBus,
+                        stroke: b.col.fg, 'stroke-width': 1.8
+                    });
+                    bus.setAttribute('class', 'vz-flow');
+                    svg.appendChild(bus);
+                    for (let d = 0; d < 4; d++) {
+                        const cx = rx(b.p, d, b.tp) + w / 2;
+                        const yBox = b.tp === 0 ? rowY[b.p] : rowY[b.p] + boxH;
+                        svg.appendChild(el('line', {
+                            x1: cx, y1: b.yBus, x2: cx, y2: yBox,
+                            stroke: b.col.fg, 'stroke-width': 1.4
+                        }));
+                    }
+                    svg.appendChild(el('text', {
+                        x: 656, y: b.yBus + 3.5, 'font-size': 9.5, 'font-weight': 700,
+                        'font-family': 'var(--mono)', fill: b.col.fg
+                    }, b.lbl));
+                });
+            }
+
+            // Draw all 16 GPU cards
+            for (let p = 0; p < 2; p++) {
+                for (let d = 0; d < 4; d++) {
+                    for (let tp = 0; tp < 2; tp++) {
+                        const rank = p * 8 + d * 2 + tp;
+                        const x = rx(p, d, tp);
+                        const y = rowY[p];
+                        let cardCol = COL.navy;
+                        if (m.id === 'tp') cardCol = COL.amber;
+                        else if (m.id === 'dp') cardCol = GROUP_COLS[p * 2 + tp];
+                        else if (m.id === 'pp') cardCol = p === 0 ? COL.navy : COL.teal;
+                        else cardCol = COL.plum;
+
+                        drawBox(svg, x, y, w, boxH, `GPU ${rank}`, `tp=${tp}`, cardCol, true);
+                    }
+                    if (m.id === 'tp') {
+                        const x1 = rx(p, d, 0) + w + 1;
+                        const x2 = rx(p, d, 1) - 1;
+                        const ym = rowY[p] + boxH / 2;
+                        const l = el('line', {
+                            x1, y1: ym, x2, y2: ym, stroke: COL.amber.fg, 'stroke-width': 1.8
+                        });
+                        l.setAttribute('class', 'vz-flow');
+                        svg.appendChild(l);
+                    }
+                }
+            }
+
+            // PP vertical links between Stage 0 and Stage 1
+            if (m.id === 'pp') {
+                for (let d = 0; d < 4; d++) {
+                    for (let tp = 0; tp < 2; tp++) {
+                        const cx = rx(0, d, tp) + w / 2;
+                        const l = el('line', {
+                            x1: cx, y1: rowY[0] + boxH + 1, x2: cx, y2: rowY[1] - 2,
+                            stroke: COL.teal.fg, 'stroke-width': 1.8, 'marker-end': 'url(#arr-teal)'
+                        });
+                        l.setAttribute('class', 'vz-flow');
+                        svg.appendChild(l);
+                    }
+                }
+                svg.appendChild(el('rect', {
+                    x: 280, y: 100, width: 174, height: 18, rx: 4,
+                    fill: 'var(--vz-card-bg)', stroke: COL.teal.fg, 'stroke-width': 1
+                }));
+                svg.appendChild(el('text', {
+                    x: 367, y: 112.5, 'text-anchor': 'middle', 'font-size': 9.5, 'font-weight': 700,
+                    'font-family': 'var(--mono)', fill: COL.teal.fg
+                }, 'P2P send/recv: [0,8]..[7,15]'));
+            }
+
+            svg.appendChild(el('text', {
+                x: 380, y: 222, 'text-anchor': 'middle', 'font-size': 10,
+                'font-family': 'var(--sans)', fill: 'var(--vz-ink)'
+            }, m.desc));
+        }
+
+        render();
+    }
+
     const REGISTRY = {
         'mesh-sharding':        initMeshSharding,
         'collectives-toy':      initCollectivesToy,
@@ -1700,6 +1897,7 @@
         'ring-cost':            initRingCost,
         'sharded-matmul':       initShardedMatmul,
         'ddp-vs-fsdp':          initDdpVsFsdp,
+        'megatron-groups':      initMegatronGroups,
         'tp-megatron':          initTpMegatron,
         'pp-schedule':          initPpSchedule,
         'moe-alltoall':         initMoeAlltoall,

@@ -454,33 +454,90 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         <p>算下来，每个标准 Transformer 层在 TP 下就是<strong>前向 2 次 <code>AllReduce</code>、反向 2 次 <code>AllReduce</code></strong>。如果继续叠上<strong>序列并行（Megatron-SP）</strong>，就把残差出入位置的 <code>AllReduce</code> 拆成 <code>AllGather</code> 和 <code>ReduceScatter</code>，通信总字节一模一样，顺便把 LayerNorm 与 Dropout 上巨大的残差激活也切成了 $1/\text{TP}$。</p>
 
         <h3 id="tp-internals">Megatron 实现细节<a class="anchor" href="#tp-internals" aria-hidden="true">#</a></h3>
-        <p>落地到 Megatron 的 <code>mpu</code> 源码，有三处设计决定了多维并行的正确性与速度：</p>
-        <p><strong>1. 通信域分组编号原则：</strong>比如 16 张卡配 $\text{TP}=2, \text{PP}=2, \text{DP}=4$，初始化永远把相邻编号留给需要高带宽的组——<strong>机内 NVLink 给 TP，镜像 Stage 给 DP，跨节点给 PP</strong>：</p>
+        <p>落地到 Megatron 的 <code>mpu</code>（<code>parallel_state</code>）源码，多维并行跑得通、不漂移，靠的是三处精细设计：</p>
+
+        <p><strong>1. 3D 进程组划分（<code>initialize_model_parallel</code>）：</strong>Megatron 固定按<strong>内层 <code>TP</code> &rarr; 中层 <code>DP</code> &rarr; 外层 <code>PP</code></strong>的顺序展开全局 Rank 编号。假设 16 张卡（两台 8 卡机器）配 $\text{TP}=2, \text{PP}=2, \text{DP}=4$，这四套正交通信域各自承担完全不同的流量：</p>
         <ul>
-            <li><strong>TP 组：</strong><code>[0,1], [2,3], ..., [14,15]</code>（同一台机内）。</li>
-            <li><strong>PP 组：</strong><code>[0,8], [1,9], ..., [7,15]</code>（跨机衔接 Stage）。</li>
-            <li><strong>DP 组：</strong><code>[0,2,4,6], [1,3,5,7]</code>（Stage 0）与 <code>[8,10,12,14], [9,11,13,15]</code>（Stage 1）。</li>
+            <li><strong>TP 组（步长 $1$，共 $8$ 个 $2$ 卡组）：</strong><code>[0,1], [2,3], ..., [14,15]</code>，相邻编号保证落在同一台机的 NVLink 内。</li>
+            <li><strong>DP 组（步长 $\text{TP}=2$，共 $4$ 个 $4$ 卡组）：</strong>Stage 0 为 <code>[0,2,4,6]</code> 与 <code>[1,3,5,7]</code>，Stage 1 为 <code>[8,10,12,14]</code> 与 <code>[9,11,13,15]</code>——专门在同位置切片的副本之间同步梯度。</li>
+            <li><strong>PP 组（步长 $\text{world}/\text{PP}=8$，共 $8$ 条 $2$ 卡流水线）：</strong><code>[0,8], [1,9], ..., [7,15]</code>，跨节点衔接不同流水阶段。</li>
+            <li><strong>模型并行全组 $\text{MP} = \text{TP} \times \text{PP}$（共 $4$ 个 $4$ 卡组）：</strong><code>[0,1,8,9], [2,3,10,11], [4,5,12,13], [6,7,14,15]</code>——每一组凑齐 1 份完整模型，专门给上一节的全局 <code>found_inf</code> 共识和全局 L2 梯度裁剪用。</li>
         </ul>
-        <p><strong>2. 共轭桥接算子 <code>f</code> 与 <code>g</code>：</strong>前向放行的算子反向做 <code>AllReduce</code>，前向做 <code>AllReduce</code> 的算子反向放行——因为前向把同一份 $X$ 喂给所有 $A_i$，反向根据链式法则必须把各支路偏导加起来（$\frac{\partial\mathcal{L}}{\partial X} = \sum_i \frac{\partial\mathcal{L}}{\partial Y_i}A_i^\top$）：</p>
+
+        <figure class="anim-fig" data-anim="megatron-groups">
+            <figcaption>图 7：16 卡集群（$\text{TP}=2, \text{PP}=2, \text{DP}=4$）在 <code>initialize_model_parallel</code> 中生成的四套正交通信域与编号规律。</figcaption>
+        </figure>
+
+        <p>对应到 Megatron 的初始化源码，四重循环按上述步长构造全局排好序的 Rank 列表，并调用 <code>torch.distributed.new_group(ranks)</code>；注意 PyTorch 要求哪怕当前卡不在某个 <code>ranks</code> 列表里，<strong>全集群所有进程也必须按完全相同的顺序一起调用 <code>new_group</code></strong> 才能避免集合通信建组死锁：</p>
+        <pre><code class="language-python">def initialize_model_parallel(tp_size: int = 2, pp_size: int = 2):
+    world_size = dist.get_world_size()          # 例如 16 = TP(2) * PP(2) * DP(4)
+    rank = dist.get_rank()
+    dp_size = world_size // (tp_size * pp_size)
+    num_tp_groups = world_size // tp_size       # 8 个 TP 组
+    num_pp_groups = world_size // pp_size       # 8 条 PP 流水线
+
+    # 1. DP 组 (步长 = tp_size): [0,2,4,6], [1,3,5,7], ...
+    for i in range(pp_size):
+        start = i * num_pp_groups
+        end = (i + 1) * num_pp_groups
+        for j in range(tp_size):
+            ranks = list(range(start + j, end, tp_size))
+            group = dist.new_group(ranks)
+            if rank in ranks:
+                _DATA_PARALLEL_GROUP = group
+
+    # 2. Tensor Parallel 组 (连续相邻, 步长 = 1)：[0,1], [2,3], ..., [14,15]
+    for i in range(num_tp_groups):
+        ranks = list(range(i * tp_size, (i + 1) * tp_size))
+        group = dist.new_group(ranks)
+        if rank in ranks:
+            _TENSOR_MODEL_PARALLEL_GROUP = group
+
+    # 3. Pipeline Parallel 组 (步长 = num_pp_groups = 8)：[0,8], [1,9], ..., [7,15]
+    for i in range(num_pp_groups):
+        ranks = list(range(i, world_size, num_pp_groups))
+        group = dist.new_group(ranks)
+        if rank in ranks:
+            _PIPELINE_MODEL_PARALLEL_GROUP = group
+
+    # 4. Model Parallel 全组 (TP x PP)：[0,1,8,9], [2,3,10,11], [4,5,12,13], [6,7,14,15]
+    for i in range(dp_size):
+        ranks = [i * tp_size + p * num_pp_groups + t
+                 for p in range(pp_size) for t in range(tp_size)]
+        group = dist.new_group(ranks)
+        if rank in ranks:
+            _MODEL_PARALLEL_GROUP = group</code></pre>
+
+        <p><strong>2. 共轭桥接算子 <code>f</code> / <code>g</code> 与并行线性层串联：</strong><code>ColumnParallelLinear</code> 入口调用算子 <code>f</code>（若 <code>gather_output=False</code> 则直接把切片结果交给 <code>GeLU</code>），随后 <code>RowParallelLinear</code>（<code>input_is_parallel=True</code>）直接吃切片输入并在出口调用算子 <code>g</code>。前向把同一份 $X$ 喂给所有 $A_i$，反向根据链式法则必须把各支路偏导加起来（$\frac{\partial\mathcal{L}}{\partial X} = \sum_i \frac{\partial\mathcal{L}}{\partial Y_i}A_i^\top$），正好落在 <code>f.backward</code> 上：</p>
         <pre><code class="language-python">class _CopyToModelParallelRegion(torch.autograd.Function):
-    """算子 f：前向 Identity，反向 AllReduce"""
+    """算子 f：前向 Identity，反向 AllReduce（SP 开启时改为 ReduceScatter）"""
     @staticmethod
     def forward(ctx, input_): return input_
     @staticmethod
     def backward(ctx, grad_output): return _reduce(grad_output)
 
 class _ReduceFromModelParallelRegion(torch.autograd.Function):
-    """算子 g：前向 AllReduce，反向 Identity"""
+    """算子 g：前向 AllReduce（SP 开启时改为 ReduceScatter），反向 Identity"""
     @staticmethod
     def forward(ctx, input_): return _reduce(input_)
     @staticmethod
-    def backward(ctx, grad_output): return grad_output</code></pre>
-        <p><strong>3. 随机数状态追踪器（<code>CudaRNGStatesTracker</code>）：</strong>Dropout 在模型并行区内外不能混用同一颗种子：切分后的隐状态上各卡负责不同神经元，需要各卡独立且固定的 <code>model-parallel-rng</code>；而在并行区外完全复制的残差流上，所有 TP 卡必须同步使用基础种子产生完全相同的掩码。</p>
-        <p>正因为 TP 的同步 <code>AllReduce</code> 卡死在层内关键路径上无法异步掩盖，工程上几乎总是把 $\text{TP} \le 8$ 锁在单机 NVLink 域之内。</p>
+    def backward(ctx, grad_output): return grad_output
+
+# ParallelMLP 前向组合（中间 GeLU 零通信）：
+# x -> f -> ColParallelLinear(gather_output=False) -> GeLU
+#   -> RowParallelLinear(input_is_parallel=True) -> g -> out</code></pre>
 
         <figure class="anim-fig" data-anim="tp-megatron">
-            <figcaption>图 7：Megatron-LM MLP 的前向 / 反向信号流与共轭算子 <code>f / g</code>；可切换查看开启 <code>TP + SP</code> 后如何将 AllReduce 拆回 AllGather 与 ReduceScatter。</figcaption>
+            <figcaption>图 8：Megatron-LM MLP 的前向 / 反向信号流与共轭算子 <code>f / g</code>；可切换查看开启 <code>TP + SP</code> 后如何将 AllReduce 拆回 AllGather 与 ReduceScatter。</figcaption>
         </figure>
+
+        <p><strong>3. 随机数状态追踪器（<code>CudaRNGStatesTracker</code>）：</strong>Dropout 在模型并行区内外不能混用同一颗种子。切分后的隐状态上各卡负责不同神经元，需要用 <code>base_seed + 2718 + tp_rank</code> 初始化独立且固定的 <code>model-parallel-rng</code>；而在并行区外完全复制的残差流上，所有 TP 卡必须退出上下文切换回基础种子产生完全同步的掩码：</p>
+        <pre><code class="language-python">with get_cuda_rng_tracker().fork('model-parallel-rng'):
+    # 切分区域（如自注意力头内部的 dropout）：不同 tp_rank 掩码独立
+    attention_probs = self.attention_dropout(attention_probs)
+# 退出上下文后恢复共享 base_seed（残差流 dropout）：同组 tp_rank 掩码完全一致
+hidden_states = self.hidden_dropout(output)</code></pre>
+        <p>正因为 TP 的同步 <code>AllReduce</code> 卡死在层内关键路径上无法异步掩盖，工程上几乎总是把 $\text{TP} \le 8$ 锁在单机 NVLink 域之内。</p>
 
         <h2 id="pipeline-parallel">流水线并行<a class="anchor" href="#pipeline-parallel" aria-hidden="true">#</a></h2>
 
@@ -493,7 +550,7 @@ class _ReduceFromModelParallelRegion(torch.autograd.Function):
         <p>即便开了重计算，GPipe 依然要等所有 $M$ 份前向边界输入全算完才开始反向，Stage 0 缓存数量还是随微批数 $\mathcal{O}(M)$ 线性增加。后来的 <strong>1F1B</strong> 在流水线填满后严格交替跑「一步前向 + 一步反向 + 立即释放激活」，气泡率与 GPipe 完全相同，却把峰值激活微批数永久锁死在阶段数 $\mathcal{O}(P)$ 上；<strong>Interleaved 1F1B</strong> 再把同阶段层交错拆成 $v$ 份，用稍微多一点点 P2P 通信再把气泡率压低到 $\frac{P-1}{vM + P - 1}$。注意实战里第一和最后一个 Stage 多了 Embedding / 词表输出头，通常要适度减少首尾分的层数。</p>
 
         <figure class="anim-fig" data-anim="pp-schedule">
-            <figcaption>图 8：$P=4, M=8$ 下 Naive、GPipe、1F1B 与 Interleaved v=2 的时间线推进，右侧实时显示 Stage 0 同时缓存的微批激活数量（$\mathcal{O}(M)$ vs $\mathcal{O}(P)$）。</figcaption>
+            <figcaption>图 9：$P=4, M=8$ 下 Naive、GPipe、1F1B 与 Interleaved v=2 的时间线推进，右侧实时显示 Stage 0 同时缓存的微批激活数量（$\mathcal{O}(M)$ vs $\mathcal{O}(P)$）。</figcaption>
         </figure>
 
         <h2 id="moe-parallel">MoE 专家并行<a class="anchor" href="#moe-parallel" aria-hidden="true">#</a></h2>
@@ -531,7 +588,7 @@ combined = _AllToAll.apply(ep_group, expert_out)            # 第 2 趟：原路
 output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
 
         <figure class="anim-fig" data-anim="moe-alltoall">
-            <figcaption>图 9：MoE 两趟 <code>All-to-All</code> 完整周期，以及开启 4 卡热门偏斜场景时 <code>CF=1.0</code> 的容量截断与丢包示意。</figcaption>
+            <figcaption>图 10：MoE 两趟 <code>All-to-All</code> 完整周期，以及开启 4 卡热门偏斜场景时 <code>CF=1.0</code> 的容量截断与丢包示意。</figcaption>
         </figure>
 
         <p>在 DeepSpeed-Megatron 里，有一个很容易绕晕但非常关键的通信域拆分：非专家参数（Attention、Embedding、LN、Router）依然跨全部数据并行卡共享，而专家本身沿 $\text{EP}$ 切开了。假设共有 $8$ 张 DP 卡、$4$ 个专家且设 $\text{EP} = 4$，那整群恰好放下 $2$ 份专家副本——也就是 <strong>$\text{DP}(8) = \text{EP}(4) \times \text{EDP}(2)$</strong>：</p>
@@ -543,7 +600,7 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
         <p>此外每个专家的 FFN 内部还可以继续套机内 <code>TP</code>，集群总规模保持 $\text{world\_size} = \text{PP} \times \text{DP} \times \text{TP}$，而专家分支拆成 $\text{DP} = \text{EP} \times \text{EDP}$。</p>
 
         <figure class="anim-fig" data-anim="moe-groups">
-            <figcaption>图 10：8 卡集群上的正交分组 <code>DP(8) = EP(4) × EDP(2)</code>：水平方向交换 token，垂直方向对齐同编号专家梯度，全局同步共享层权重。</figcaption>
+            <figcaption>图 11：8 卡集群上的正交分组 <code>DP(8) = EP(4) × EDP(2)</code>：水平方向交换 token，垂直方向对齐同编号专家梯度，全局同步共享层权重。</figcaption>
         </figure>
 
         <h2 id="hybrid-parallel">4D 并行组合<a class="anchor" href="#hybrid-parallel" aria-hidden="true">#</a></h2>
@@ -660,7 +717,7 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
 
 <script src="../../../assets/vendor/katex/katex.min.js"></script>
 <script src="../../../assets/vendor/katex/contrib/auto-render.min.js"></script>
-<script src="../../../assets/js/distributed-viz.js?v=20261121.6"></script>
+<script src="../../../assets/js/distributed-viz.js?v=20261121.7"></script>
 <script src="../../../assets/js/blog-post.js?v=20261121.4"></script>
 </body>
 </html>
