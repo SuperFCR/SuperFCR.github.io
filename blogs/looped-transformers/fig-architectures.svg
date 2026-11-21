@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="720" viewBox="0 0 1400 720">
+  <rect width="1400" height="720" rx="16" fill="#ffffff"/>
+
+  <!-- Header -->
+  <text x="700" y="42" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" font-weight="700" fill="#1e293b">Three Looped Transformer Architectures Compared</text>
+  <text x="700" y="68" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" fill="#64748b">Same high-level idea (repeat a shared core), three distinct solutions to budget matching, gradient flow, and inter-loop state routing</text>
+
+  <defs>
+    <marker id="arrBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1f4e79"/>
+    </marker>
+    <marker id="arrTeal" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#0e6b74"/>
+    </marker>
+    <marker id="arrAmber" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#b45309"/>
+    </marker>
+    <marker id="arrCoral" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#b83b5e"/>
+    </marker>
+  </defs>
+
+  <!-- ==================== PANEL A: SMELT ==================== -->
+  <rect x="28" y="92" width="430" height="600" rx="14" fill="#f8fafd" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="28" y="92" width="430" height="54" rx="14" fill="#1f4e79"/>
+  <rect x="28" y="132" width="430" height="14" fill="#1f4e79"/>
+  <text x="243" y="122" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#ffffff">A. SMELT (MoE, Middle ×2)</text>
+  <text x="243" y="142" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#dbeafe">Match FLOPs · Params · KV Cache Simultaneously</text>
+
+  <!-- Unshared Entry -->
+  <rect x="78" y="168" width="330" height="58" rx="10" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+  <text x="243" y="194" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700" fill="#1f4e79">Entry Layers (e.g., L1–3)</text>
+  <text x="243" y="215" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#475569">Runs once · standard residual 1×</text>
+
+  <line x1="243" y1="226" x2="243" y2="256" stroke="#1f4e79" stroke-width="2.5" marker-end="url(#arrBlue)"/>
+
+  <!-- Looped Span Container -->
+  <rect x="52" y="262" width="382" height="238" rx="14" fill="#eef4fa" stroke="#1f4e79" stroke-width="2.5" stroke-dasharray="7 5"/>
+  <rect x="78" y="278" width="330" height="96" rx="10" fill="#1f4e79"/>
+  <text x="243" y="308" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="18" font-weight="700" fill="#ffffff">Shared Middle 50% (L4–9) ×2</text>
+  <text x="243" y="334" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" fill="#e2e8f0">Residuals scaled:  Δx_attn / 2,  Δx_moe / 2</text>
+  <text x="243" y="357" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#bfdbfe">Top-8 routing recomputed dynamically on Visit 2</text>
+
+  <!-- Loopback arrow -->
+  <path d="M 408 326 C 434 326, 434 368, 396 376" fill="none" stroke="#b83b5e" stroke-width="3" marker-end="url(#arrCoral)"/>
+  <rect x="78" y="392" width="330" height="90" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="243" y="418" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#1e293b">3-Budget Equalization (200M S≈95%)</text>
+  <text x="243" y="442" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#334155">FLOPs: shrink hidden H (1280 → 1056)</text>
+  <text x="243" y="463" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#334155">Params: add experts (192 → 288) · KV: GQA</text>
+
+  <line x1="243" y1="500" x2="243" y2="528" stroke="#1f4e79" stroke-width="2.5" marker-end="url(#arrBlue)"/>
+
+  <!-- Unshared Exit -->
+  <rect x="78" y="534" width="330" height="58" rx="10" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+  <text x="243" y="560" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700" fill="#1f4e79">Exit Layers (e.g., L10–12)</text>
+  <text x="243" y="581" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#475569">Runs once → LM head</text>
+
+  <!-- Footer pill -->
+  <rect x="52" y="614" width="382" height="58" rx="10" fill="#dbeafe"/>
+  <text x="243" y="639" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#1e3a8a">12 stored → 18 executed · Full BPTT</text>
+  <text x="243" y="660" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#1e40af">Saves 6.8–18.0% FLOPs up to 54B total params</text>
+
+  <!-- ==================== PANEL B: TRUNCATE OR NOT ==================== -->
+  <rect x="485" y="92" width="430" height="600" rx="14" fill="#fdfaf6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="485" y="92" width="430" height="54" rx="14" fill="#9a4a0c"/>
+  <rect x="485" y="132" width="430" height="14" fill="#9a4a0c"/>
+  <text x="700" y="122" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#ffffff">B. Truncate or Not? (Dense (T, B))</text>
+  <text x="700" y="142" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#fef3c7">Input Re-Injection s₀ + (T, B) Gradient Horizon</text>
+
+  <!-- Prelude -->
+  <rect x="530" y="168" width="230" height="56" rx="10" fill="#ffffff" stroke="#9a4a0c" stroke-width="2"/>
+  <text x="645" y="193" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700" fill="#9a4a0c">Prelude P(x) → s₀</text>
+  <text x="645" y="213" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#475569">ℓ_p layers · N_once</text>
+
+  <!-- s0 bus rail -->
+  <line x1="760" y1="196" x2="862" y2="196" stroke="#1f4e79" stroke-width="3"/>
+  <line x1="862" y1="196" x2="862" y2="478" stroke="#1f4e79" stroke-width="3"/>
+  <text x="875" y="340" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="700" fill="#1f4e79" transform="rotate(90 875 340)" text-anchor="middle">Input injection s₀ at EVERY loop t</text>
+
+  <line x1="645" y1="224" x2="645" y2="250" stroke="#9a4a0c" stroke-width="2.5" marker-end="url(#arrAmber)"/>
+
+  <!-- Forward only loops 1..T-B -->
+  <rect x="515" y="256" width="262" height="92" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="646" y="283" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="700" fill="#475569">Loops 1 … T−B</text>
+  <text x="646" y="306" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#64748b">Forward only (2 N_rec each)</text>
+  <text x="646" y="330" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12.5" font-weight="600" fill="#1f4e79">s_t = RMSNorm(R(W_inj[s₀; s_{t-1}]))</text>
+  <line x1="862" y1="302" x2="785" y2="302" stroke="#1f4e79" stroke-width="2.5" marker-end="url(#arrBlue)"/>
+
+  <!-- detach wall -->
+  <line x1="508" y1="364" x2="852" y2="364" stroke="#b83b5e" stroke-width="2.5" stroke-dasharray="7 5"/>
+  <rect x="546" y="350" width="198" height="28" rx="14" fill="#b83b5e"/>
+  <text x="645" y="369" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#ffffff">detach s_{T−B} (stop-grad)</text>
+
+  <!-- Backpropagated loops T-B+1..T -->
+  <rect x="520" y="388" width="250" height="114" rx="10" fill="#fef3c7" stroke="#9a4a0c" stroke-width="2.5"/>
+  <text x="645" y="416" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="700" fill="#7c2d12">Last B Loops (B trained)</text>
+  <text x="645" y="440" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#9a4a0c">Fwd + Bwd (6 N_rec per loop)</text>
+  <text x="645" y="464" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#7c2d12">Prelude still gets grad via s₀!</text>
+  <text x="645" y="486" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#92400e">W_inj ∈ R^{d×2d} initialized to [I, 0]</text>
+  <line x1="862" y1="478" x2="778" y2="478" stroke="#1f4e79" stroke-width="2.5" marker-end="url(#arrBlue)"/>
+
+  <line x1="645" y1="502" x2="645" y2="528" stroke="#9a4a0c" stroke-width="2.5" marker-end="url(#arrAmber)"/>
+
+  <!-- Coda -->
+  <rect x="530" y="534" width="230" height="58" rx="10" fill="#ffffff" stroke="#9a4a0c" stroke-width="2"/>
+  <text x="645" y="560" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700" fill="#9a4a0c">Coda C(s_T) → Loss</text>
+  <text x="645" y="581" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#475569">ℓ_c layers · reads s_T only</text>
+
+  <!-- Footer pill -->
+  <rect x="509" y="614" width="382" height="58" rx="10" fill="#fef3c7"/>
+  <text x="700" y="639" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#7c2d12">3/6/3 (240M) · FLOPs: 6N_once + (2T+4B)N_rec</text>
+  <text x="700" y="660" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#9a4a0c">Full BPTT wins iso-compute: (4,4) &gt; (8,2)</text>
+
+  <!-- ==================== PANEL C: INKLING 2 MINI ==================== -->
+  <rect x="942" y="92" width="430" height="600" rx="14" fill="#f5fbfb" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="942" y="92" width="430" height="54" rx="14" fill="#0e6b74"/>
+  <rect x="942" y="132" width="430" height="14" fill="#0e6b74"/>
+  <text x="1157" y="122" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#ffffff">C. Inkling 2 Mini (MoE + AttnRes, ×3)</text>
+  <text x="1157" y="142" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#ccfbf1">No Single Residual Stream · Block Attention</text>
+
+  <!-- Block 1 -->
+  <rect x="988" y="168" width="338" height="58" rx="10" fill="#ffffff" stroke="#0e6b74" stroke-width="2"/>
+  <text x="1157" y="194" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700" fill="#0e6b74">Block 1: L1–6 (runs once → v₁)</text>
+  <text x="1157" y="215" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#475569">6-layer block sum + embedding v₀ feeds every pass</text>
+
+  <line x1="1157" y1="226" x2="1157" y2="254" stroke="#0e6b74" stroke-width="2.5" marker-end="url(#arrTeal)"/>
+
+  <!-- Core Blocks 2 & 3 looped 3x -->
+  <rect x="966" y="260" width="382" height="242" rx="14" fill="#ecfdf5" stroke="#0e6b74" stroke-width="2.5" stroke-dasharray="7 5"/>
+  <rect x="988" y="276" width="338" height="44" rx="8" fill="#0e6b74"/>
+  <text x="1157" y="304" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" font-weight="700" fill="#ffffff">Block 2 (L7–12) → Block 3 (L13–18)  ×3</text>
+
+  <!-- Dual pathways inside -->
+  <rect x="988" y="332" width="338" height="72" rx="10" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="1157" y="357" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#1d4ed8">Depth-wise Attn (x = Σ α_j v̂_j)</text>
+  <text x="1157" y="381" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#334155">Reads v₀, v₁, and current-loop sums v₂[t], v₃[t]</text>
+
+  <rect x="982" y="416" width="350" height="72" rx="10" fill="#ffffff" stroke="#b83b5e" stroke-width="2"/>
+  <text x="1157" y="440" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#9f1239">Cross-loop Attn (t ≥ 2, Q/K/V/MoE)</text>
+  <text x="1157" y="463" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#334155">Reads prev loop v₂[t−1], v₃[t−1] · x' = κ⊙x + γ⊙m</text>
+
+  <!-- Cross-loop cycle indicator -->
+  <path d="M 1326 452 C 1362 452, 1362 350, 1334 350" fill="none" stroke="#b83b5e" stroke-width="3" marker-end="url(#arrCoral)"/>
+
+  <line x1="1157" y1="502" x2="1157" y2="528" stroke="#0e6b74" stroke-width="2.5" marker-end="url(#arrTeal)"/>
+
+  <!-- Block 4 -->
+  <rect x="988" y="534" width="338" height="58" rx="10" fill="#ffffff" stroke="#0e6b74" stroke-width="2"/>
+  <text x="1157" y="560" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="700" fill="#0e6b74">Block 4: L19–24 (runs once → Coda)</text>
+  <text x="1157" y="581" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#475569">Reads v₀, v₁, v₂[3], v₃[3], v₄ · 8/128 experts</text>
+
+  <!-- Footer pill -->
+  <rect x="966" y="614" width="382" height="58" rx="10" fill="#ccfbf1"/>
+  <text x="1157" y="639" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#134e4a">24 stored → 48 executed · Open NVFP4/MXFP8</text>
+  <text x="1157" y="660" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#0f766e">26.4B total / 3.4B active / 5.4B eff. active</text>
+</svg>
