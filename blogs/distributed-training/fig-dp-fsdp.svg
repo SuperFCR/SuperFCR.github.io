@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="780" viewBox="0 0 1600 780">
+  <defs>
+    <marker id="arrNavy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#23476a"/>
+    </marker>
+    <marker id="arrTeal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#1f6b63"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="780" rx="16" fill="#fcfaf6" stroke="#ddd6ca" stroke-width="2"/>
+
+  <!-- Main Header -->
+  <text x="48" y="54" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#1b2230">DDP vs. ZeRO / FSDP: Communication Lifecycle &amp; Memory Footprint</text>
+  <text x="48" y="84" font-family="Inter, -apple-system, sans-serif" font-size="18" fill="#5b6472">Top: 2-GPU backward sync with g₀ = [1, 2], g₁ = [3, 4]  ·  Bottom: steady-state model-state bytes per GPU (N = 8)</text>
+
+  <!-- TOP LEFT: DDP -->
+  <rect x="40" y="108" width="744" height="332" rx="14" fill="#f7f4ec" stroke="#d5dce5" stroke-width="1.5"/>
+  <text x="68" y="144" font-family="Inter, sans-serif" font-size="20.5" font-weight="700" fill="#1e3a5f">DDP · Replicated Weights, AllReduce Gradients</text>
+
+  <rect x="64" y="164" width="334" height="58" rx="8" fill="#ffffff" stroke="#23476a" stroke-width="1.5"/>
+  <text x="231" y="189" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1b2230">GPU 0: Full W + Full OS</text>
+  <text x="231" y="211" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="15.5" fill="#475569">Fwd/Bwd batch 0 → g₀ = [1, 2]</text>
+
+  <rect x="426" y="164" width="334" height="58" rx="8" fill="#ffffff" stroke="#23476a" stroke-width="1.5"/>
+  <text x="593" y="189" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1b2230">GPU 1: Full W + Full OS</text>
+  <text x="593" y="211" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="15.5" fill="#475569">Fwd/Bwd batch 1 → g₁ = [3, 4]</text>
+
+  <line x1="231" y1="224" x2="231" y2="254" stroke="#23476a" stroke-width="2" marker-end="url(#arrNavy)"/>
+  <line x1="593" y1="224" x2="593" y2="254" stroke="#23476a" stroke-width="2" marker-end="url(#arrNavy)"/>
+  <rect x="64" y="258" width="696" height="44" rx="8" fill="#23476a"/>
+  <text x="412" y="286" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#ffffff">AllReduce(g) in Gradient Buckets  (overlap with backward)</text>
+
+  <line x1="231" y1="304" x2="231" y2="334" stroke="#23476a" stroke-width="2" marker-end="url(#arrNavy)"/>
+  <line x1="593" y1="304" x2="593" y2="334" stroke="#23476a" stroke-width="2" marker-end="url(#arrNavy)"/>
+
+  <rect x="64" y="338" width="334" height="80" rx="8" fill="#e9eff7" stroke="#23476a" stroke-width="1.5"/>
+  <text x="231" y="366" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17.5" font-weight="700" fill="#1e3a5f">GPU 0 holds [4, 6]</text>
+  <text x="231" y="396" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#334155">Updates full W with full Adam</text>
+
+  <rect x="426" y="338" width="334" height="80" rx="8" fill="#e9eff7" stroke="#23476a" stroke-width="1.5"/>
+  <text x="593" y="366" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17.5" font-weight="700" fill="#1e3a5f">GPU 1 holds [4, 6]</text>
+  <text x="593" y="396" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#334155">Identical Adam step on GPU 1</text>
+
+  <!-- TOP RIGHT: ZeRO-3 / FSDP -->
+  <rect x="816" y="108" width="744" height="332" rx="14" fill="#f7f4ec" stroke="#c7d8d2" stroke-width="1.5"/>
+  <text x="844" y="144" font-family="Inter, sans-serif" font-size="20.5" font-weight="700" fill="#16524b">ZeRO-3 / FSDP · Sharded State, AllGather + ReduceScatter</text>
+
+  <rect x="838" y="164" width="340" height="58" rx="8" fill="#ffffff" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="1008" y="189" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1b2230">GPU 0 owns W₀ + OS₀</text>
+  <text x="1008" y="211" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="15" fill="#475569">AllGather W → g₀=[1,2] → drop W₁</text>
+
+  <rect x="1198" y="164" width="340" height="58" rx="8" fill="#ffffff" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="1368" y="189" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1b2230">GPU 1 owns W₁ + OS₁</text>
+  <text x="1368" y="211" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="15" fill="#475569">AllGather W → g₁=[3,4] → drop W₀</text>
+
+  <line x1="1008" y1="224" x2="1008" y2="254" stroke="#1f6b63" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <line x1="1368" y1="224" x2="1368" y2="254" stroke="#1f6b63" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <rect x="838" y="258" width="700" height="44" rx="8" fill="#1f6b63"/>
+  <text x="1188" y="286" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#ffffff">ReduceScatter(g) per Layer  (free local grad shards after step)</text>
+
+  <line x1="1008" y1="304" x2="1008" y2="334" stroke="#1f6b63" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <line x1="1368" y1="304" x2="1368" y2="334" stroke="#1f6b63" stroke-width="2" marker-end="url(#arrTeal)"/>
+
+  <rect x="838" y="338" width="340" height="80" rx="8" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="1008" y="366" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17.5" font-weight="700" fill="#16524b">GPU 0 keeps [4] only</text>
+  <text x="1008" y="396" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" fill="#334155">Updates W₀ via OS₀; next AG gets W</text>
+
+  <rect x="1198" y="338" width="340" height="80" rx="8" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="1368" y="366" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17.5" font-weight="700" fill="#16524b">GPU 1 keeps [6] only</text>
+  <text x="1368" y="396" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" fill="#334155">Updates W₁ via OS₁; zero duplicate state</text>
+
+  <!-- BOTTOM PANEL: MEMORY BARS (16 Phi scale = 912px, 57px per Phi starting at x=362) -->
+  <rect x="40" y="462" width="1520" height="294" rx="14" fill="#ffffff" stroke="#d8d1c4" stroke-width="1.5"/>
+  <text x="68" y="498" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#1b2230">Per-GPU Model-State Memory (Mixed Precision + Adam, N = 8)</text>
+
+  <!-- Legend safely right-aligned starting at x=900 -->
+  <g transform="translate(894,480)">
+    <rect x="0" y="0" width="22" height="22" rx="4" fill="#23476a"/>
+    <text x="28" y="17" font-family="Inter, sans-serif" font-size="16.5" fill="#334155">Params (2Φ)</text>
+    <rect x="152" y="0" width="22" height="22" rx="4" fill="#1f6b63"/>
+    <text x="180" y="17" font-family="Inter, sans-serif" font-size="16.5" fill="#334155">Grads (2Φ)</text>
+    <rect x="294" y="0" width="22" height="22" rx="4" fill="#c77838"/>
+    <text x="322" y="17" font-family="Inter, sans-serif" font-size="16.5" fill="#334155">Adam States (12Φ: FP32 m, v, W)</text>
+  </g>
+
+  <!-- Row 1: DDP = 16 Phi (114 + 114 + 684 = 912px from x=366..1278) -->
+  <text x="68" y="558" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">DDP (Baseline)</text>
+  <rect x="366" y="532" width="114" height="38" rx="4" fill="#23476a"/>
+  <rect x="482" y="532" width="114" height="38" rx="4" fill="#1f6b63"/>
+  <rect x="598" y="532" width="684" height="38" rx="4" fill="#c77838"/>
+  <text x="423" y="557" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#ffffff">2Φ</text>
+  <text x="539" y="557" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#ffffff">2Φ</text>
+  <text x="940" y="557" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#ffffff">12Φ (FP32 master W + m + v)</text>
+  <text x="1302" y="557" font-family="ui-monospace, Menlo, monospace" font-size="18" font-weight="700" fill="#1b2230">16.0 Φ</text>
+
+  <!-- Row 2: ZeRO-1 = 4 Phi + 1.5 Phi (114 + 114 + 86) -->
+  <text x="68" y="610" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">ZeRO-1 (Shard OS)</text>
+  <rect x="366" y="584" width="114" height="38" rx="4" fill="#23476a"/>
+  <rect x="482" y="584" width="114" height="38" rx="4" fill="#1f6b63"/>
+  <rect x="598" y="584" width="86" height="38" rx="4" fill="#c77838"/>
+  <text x="423" y="609" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#ffffff">2Φ</text>
+  <text x="539" y="609" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#ffffff">2Φ</text>
+  <text x="641" y="609" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#ffffff">1.5Φ</text>
+  <text x="704" y="609" font-family="ui-monospace, Menlo, monospace" font-size="18" font-weight="700" fill="#1b2230">4Φ + 12Φ/N = 5.50 Φ   (2.9×)</text>
+
+  <!-- Row 3: ZeRO-2 = 2 Phi + 0.25 Phi + 1.5 Phi (114 + 16 + 86) -->
+  <text x="68" y="662" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">ZeRO-2 (+ Grads)</text>
+  <rect x="366" y="636" width="114" height="38" rx="4" fill="#23476a"/>
+  <rect x="482" y="636" width="16" height="38" rx="3" fill="#1f6b63"/>
+  <rect x="500" y="636" width="86" height="38" rx="4" fill="#c77838"/>
+  <text x="423" y="661" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#ffffff">2Φ</text>
+  <text x="543" y="661" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#ffffff">1.5Φ</text>
+  <text x="606" y="661" font-family="ui-monospace, Menlo, monospace" font-size="18" font-weight="700" fill="#1b2230">2Φ + 14Φ/N = 3.75 Φ   (4.3×)</text>
+
+  <!-- Row 4: ZeRO-3 / FSDP = 16 Phi / 8 = 2.0 Phi (14 + 14 + 86) -->
+  <text x="68" y="714" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#16524b">ZeRO-3 / FSDP (+ Params)</text>
+  <rect x="366" y="688" width="14" height="38" rx="3" fill="#23476a"/>
+  <rect x="382" y="688" width="14" height="38" rx="3" fill="#1f6b63"/>
+  <rect x="398" y="688" width="86" height="38" rx="4" fill="#c77838"/>
+  <text x="441" y="713" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#ffffff">1.5Φ</text>
+  <text x="504" y="713" font-family="ui-monospace, Menlo, monospace" font-size="18" font-weight="700" fill="#16524b">16Φ/N = 2.00 Φ   (8.0× linear scaling; 1.5× AR comm vs 1× AR in DDP)</text>
+</svg>

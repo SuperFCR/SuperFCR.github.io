@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760">
+  <defs>
+    <marker id="arrDark" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#334155"/>
+    </marker>
+    <marker id="arrNavy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#23476a"/>
+    </marker>
+    <marker id="arrTeal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#1f6b63"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="760" rx="16" fill="#fcfaf6" stroke="#ddd6ca" stroke-width="2"/>
+
+  <!-- Main Header -->
+  <text x="48" y="54" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#1b2230">Megatron-LM Tensor Parallelism (TP = 2)</text>
+  <text x="48" y="84" font-family="Inter, -apple-system, sans-serif" font-size="18" fill="#5b6472">Pair Column-Parallel → Local Nonlinearity → Row-Parallel so forward activations need no sync until the residual</text>
+
+  <!-- LEFT PANEL: MLP -->
+  <rect x="40" y="108" width="744" height="548" rx="14" fill="#f7f4ec" stroke="#ded7c8" stroke-width="1.5"/>
+  <text x="68" y="144" font-family="Inter, sans-serif" font-size="21" font-weight="700" fill="#1b2230">1. Two-Layer MLP Block</text>
+
+  <!-- Output top -->
+  <rect x="282" y="164" width="260" height="44" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+  <text x="412" y="192" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="18" font-weight="700" fill="#1b2230">Output Z [B, S, D]</text>
+
+  <!-- Operator g (AllReduce in Fwd) -->
+  <line x1="412" y1="246" x2="412" y2="212" stroke="#23476a" stroke-width="2.4" marker-end="url(#arrNavy)"/>
+  <rect x="220" y="248" width="384" height="44" rx="22" fill="#23476a"/>
+  <text x="412" y="276" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#ffffff">g : AllReduce(Fwd) · Identity(Bwd)</text>
+
+  <!-- Arrows from RowParallel to g -->
+  <path d="M 244 334 L 244 304 L 372 304 L 372 296" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <path d="M 580 334 L 580 304 L 452 304 L 452 296" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- RowParallel W_down -->
+  <rect x="104" y="336" width="280" height="58" rx="8" fill="#e9eff7" stroke="#23476a" stroke-width="1.6"/>
+  <text x="244" y="362" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">GPU 0 · Row B₀ [F/2, D]</text>
+  <text x="244" y="384" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Partial Z₀ [B, S, D]{U_Y}</text>
+
+  <rect x="440" y="336" width="280" height="58" rx="8" fill="#e9eff7" stroke="#23476a" stroke-width="1.6"/>
+  <text x="580" y="362" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">GPU 1 · Row B₁ [F/2, D]</text>
+  <text x="580" y="384" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Partial Z₁ [B, S, D]{U_Y}</text>
+
+  <!-- Arrows from GeLU to RowParallel -->
+  <line x1="244" y1="424" x2="244" y2="398" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <line x1="580" y1="424" x2="580" y2="398" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- Local GeLU (Zero Comm!) -->
+  <rect x="104" y="426" width="280" height="44" rx="8" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="244" y="454" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#16524b">GeLU(Y₀)  ·  Local</text>
+
+  <rect x="440" y="426" width="280" height="44" rx="8" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="580" y="454" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#16524b">GeLU(Y₁)  ·  Local</text>
+
+  <!-- Zero comm pill between GeLUs -->
+  <rect x="386" y="432" width="52" height="32" rx="6" fill="#ffffff" stroke="#1f6b63" stroke-width="1.2"/>
+  <text x="412" y="453" text-anchor="middle" font-family="Inter, sans-serif" font-size="12.5" font-weight="700" fill="#16524b">0 sync</text>
+
+  <!-- Arrows from ColumnParallel to GeLU -->
+  <line x1="244" y1="500" x2="244" y2="474" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <line x1="580" y1="500" x2="580" y2="474" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- ColumnParallel A -->
+  <rect x="104" y="502" width="280" height="58" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.6"/>
+  <text x="244" y="528" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">GPU 0 · Col A₀ [D, F/2]</text>
+  <text x="244" y="550" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Produces Y₀ [B, S, F_Y]</text>
+
+  <rect x="440" y="502" width="280" height="58" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.6"/>
+  <text x="580" y="528" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">GPU 1 · Col A₁ [D, F/2]</text>
+  <text x="580" y="550" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Produces Y₁ [B, S, F_Y]</text>
+
+  <!-- Arrows from f to ColumnParallel -->
+  <path d="M 372 586 L 372 574 L 244 574 L 244 564" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <path d="M 452 586 L 452 574 L 580 574 L 580 564" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- Operator f -->
+  <rect x="220" y="588" width="384" height="44" rx="22" fill="#1f6b63"/>
+  <text x="412" y="616" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#ffffff">f : Identity(Fwd) · AllReduce(Bwd)</text>
+
+  <!-- RIGHT PANEL: SELF-ATTENTION -->
+  <rect x="816" y="108" width="744" height="548" rx="14" fill="#f7f4ec" stroke="#ded7c8" stroke-width="1.5"/>
+  <text x="844" y="144" font-family="Inter, sans-serif" font-size="21" font-weight="700" fill="#1b2230">2. Multi-Head Self-Attention (Split by Heads)</text>
+
+  <!-- Output top -->
+  <rect x="1058" y="164" width="260" height="44" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+  <text x="1188" y="192" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="18" font-weight="700" fill="#1b2230">Output O [B, S, D]</text>
+
+  <!-- Operator g -->
+  <line x1="1188" y1="246" x2="1188" y2="212" stroke="#23476a" stroke-width="2.4" marker-end="url(#arrNavy)"/>
+  <rect x="996" y="248" width="384" height="44" rx="22" fill="#23476a"/>
+  <text x="1188" y="276" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#ffffff">g : AllReduce(Fwd) · Identity(Bwd)</text>
+
+  <!-- Arrows from RowParallel W^O -->
+  <path d="M 1020 334 L 1020 304 L 1148 304 L 1148 296" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <path d="M 1356 334 L 1356 304 L 1228 304 L 1228 296" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- RowParallel W^O -->
+  <rect x="880" y="336" width="280" height="58" rx="8" fill="#e9eff7" stroke="#23476a" stroke-width="1.6"/>
+  <text x="1020" y="362" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">GPU 0 · Row W^O₀</text>
+  <text x="1020" y="384" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Partial O₀ [B, S, D]{U_Y}</text>
+
+  <rect x="1216" y="336" width="280" height="58" rx="8" fill="#e9eff7" stroke="#23476a" stroke-width="1.6"/>
+  <text x="1356" y="362" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">GPU 1 · Row W^O₁</text>
+  <text x="1356" y="384" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Partial O₁ [B, S, D]{U_Y}</text>
+
+  <!-- Arrows from Attention to RowParallel -->
+  <line x1="1020" y1="424" x2="1020" y2="398" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <line x1="1356" y1="424" x2="1356" y2="398" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- Local Multi-Head Attention -->
+  <rect x="880" y="426" width="280" height="44" rx="8" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="1020" y="454" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#16524b">Heads 0..h/2−1 (Local)</text>
+
+  <rect x="1216" y="426" width="280" height="44" rx="8" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="1356" y="454" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#16524b">Heads h/2..h−1 (Local)</text>
+
+  <rect x="1162" y="432" width="52" height="32" rx="6" fill="#ffffff" stroke="#1f6b63" stroke-width="1.2"/>
+  <text x="1188" y="453" text-anchor="middle" font-family="Inter, sans-serif" font-size="12.5" font-weight="700" fill="#16524b">0 sync</text>
+
+  <!-- Arrows from QKV to Attention -->
+  <line x1="1020" y1="500" x2="1020" y2="474" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <line x1="1356" y1="500" x2="1356" y2="474" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- ColumnParallel QKV -->
+  <rect x="880" y="502" width="280" height="58" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.6"/>
+  <text x="1020" y="528" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">GPU 0 · Col QKV₀</text>
+  <text x="1020" y="550" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Q₀, K₀, V₀ [B, S, N_Y, K]</text>
+
+  <rect x="1216" y="502" width="280" height="58" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.6"/>
+  <text x="1356" y="528" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">GPU 1 · Col QKV₁</text>
+  <text x="1356" y="550" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#475569">Q₁, K₁, V₁ [B, S, N_Y, K]</text>
+
+  <!-- Arrows from f to QKV -->
+  <path d="M 1148 586 L 1148 574 L 1020 574 L 1020 564" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+  <path d="M 1228 586 L 1228 574 L 1356 574 L 1356 564" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrDark)"/>
+
+  <!-- Operator f -->
+  <rect x="996" y="588" width="384" height="44" rx="22" fill="#1f6b63"/>
+  <text x="1188" y="616" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#ffffff">f : Identity(Fwd) · AllReduce(Bwd)</text>
+
+  <!-- Footer Summary Bar -->
+  <rect x="40" y="676" width="1520" height="58" rx="10" fill="#ffffff" stroke="#d1c8b9" stroke-width="1.5"/>
+  <text x="800" y="704" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">Per Transformer Layer: 2 AllReduces in Forward (MHA g + MLP g)  +  2 AllReduces in Backward (MLP f + MHA f)</text>
+  <text x="800" y="726" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#5b6472">With Sequence Parallelism (Megatron-SP): replace AllReduce f / g with AllGather / ReduceScatter so LayerNorm &amp; Dropout stay sharded along S</text>
+</svg>

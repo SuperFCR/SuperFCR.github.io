@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760">
+  <defs>
+    <marker id="arrNavy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#23476a"/>
+    </marker>
+    <marker id="arrTeal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#1f6b63"/>
+    </marker>
+    <marker id="arrAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#a8552a"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="760" rx="16" fill="#fcfaf6" stroke="#ddd6ca" stroke-width="2"/>
+
+  <!-- Header -->
+  <text x="48" y="54" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#1b2230">MoE All-to-All Routing &amp; DeepSpeed-Megatron Hybrid Groups</text>
+  <text x="48" y="84" font-family="Inter, -apple-system, sans-serif" font-size="18" fill="#5b6472">Left: two All-to-All passes move tokens to fixed experts and back  ·  Right: decomposing DP = EP × EDP on 8 GPUs</text>
+
+  <!-- LEFT PANEL: 2-GPU DISPATCH & COMBINE (x=40..880 width=840) -->
+  <rect x="40" y="108" width="840" height="616" rx="14" fill="#f7f4ec" stroke="#ded7c8" stroke-width="1.5"/>
+  <text x="68" y="144" font-family="Inter, sans-serif" font-size="21" font-weight="700" fill="#1b2230">1. Token Routing Across Experts (2 GPUs: a, b, c, d)</text>
+
+  <!-- Step 1: Input tokens + Router gate -->
+  <rect x="74" y="168" width="340" height="84" rx="10" fill="#ffffff" stroke="#b8c4d4" stroke-width="1.6"/>
+  <text x="244" y="196" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">GPU 0 Input Tokens</text>
+  <rect x="104" y="208" width="124" height="32" rx="6" fill="#e9eff7" stroke="#23476a" stroke-width="1.4"/>
+  <text x="166" y="230" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" font-weight="700" fill="#1e3a5f">a → E0</text>
+  <rect x="260" y="208" width="124" height="32" rx="6" fill="#faece3" stroke="#a8552a" stroke-width="1.4"/>
+  <text x="322" y="230" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" font-weight="700" fill="#9a461e">b → E1</text>
+
+  <rect x="506" y="168" width="340" height="84" rx="10" fill="#ffffff" stroke="#c7d8d2" stroke-width="1.6"/>
+  <text x="676" y="196" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#16524b">GPU 1 Input Tokens</text>
+  <rect x="536" y="208" width="124" height="32" rx="6" fill="#e9eff7" stroke="#23476a" stroke-width="1.4"/>
+  <text x="598" y="230" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" font-weight="700" fill="#1e3a5f">c → E0</text>
+  <rect x="692" y="208" width="124" height="32" rx="6" fill="#faece3" stroke="#a8552a" stroke-width="1.4"/>
+  <text x="754" y="230" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" font-weight="700" fill="#9a461e">d → E1</text>
+
+  <!-- 1st All-to-All Dispatch Arrows -->
+  <line x1="166" y1="256" x2="166" y2="352" stroke="#23476a" stroke-width="2.5" marker-end="url(#arrNavy)"/>
+  <line x1="754" y1="256" x2="754" y2="352" stroke="#a8552a" stroke-width="2.5" marker-end="url(#arrAmber)"/>
+  <line x1="322" y1="256" x2="598" y2="352" stroke="#a8552a" stroke-width="2.6" marker-end="url(#arrAmber)"/>
+  <line x1="598" y1="256" x2="322" y2="352" stroke="#23476a" stroke-width="2.6" marker-end="url(#arrNavy)"/>
+
+  <rect x="315" y="286" width="290" height="36" rx="18" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+  <text x="460" y="310" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#9a461e">1st All-to-All (Dispatch)</text>
+
+  <!-- Step 2: Expert FFNs -->
+  <rect x="74" y="360" width="340" height="96" rx="10" fill="#e9eff7" stroke="#23476a" stroke-width="1.8"/>
+  <text x="244" y="390" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#1e3a5f">GPU 0 · Expert 0 FFN</text>
+  <rect x="114" y="406" width="260" height="36" rx="6" fill="#ffffff" stroke="#23476a" stroke-width="1.2"/>
+  <text x="244" y="430" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17" font-weight="700" fill="#1b2230">Computes [ a , c ]</text>
+
+  <rect x="506" y="360" width="340" height="96" rx="10" fill="#faece3" stroke="#a8552a" stroke-width="1.8"/>
+  <text x="676" y="390" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#9a461e">GPU 1 · Expert 1 FFN</text>
+  <rect x="546" y="406" width="260" height="36" rx="6" fill="#ffffff" stroke="#a8552a" stroke-width="1.2"/>
+  <text x="676" y="430" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17" font-weight="700" fill="#1b2230">Computes [ b , d ]</text>
+
+  <!-- 2nd All-to-All Combine Arrows -->
+  <line x1="166" y1="460" x2="166" y2="556" stroke="#23476a" stroke-width="2.5" marker-end="url(#arrNavy)"/>
+  <line x1="754" y1="460" x2="754" y2="556" stroke="#a8552a" stroke-width="2.5" marker-end="url(#arrAmber)"/>
+  <line x1="322" y1="460" x2="598" y2="556" stroke="#23476a" stroke-width="2.6" marker-end="url(#arrNavy)"/>
+  <line x1="598" y1="460" x2="322" y2="556" stroke="#a8552a" stroke-width="2.6" marker-end="url(#arrAmber)"/>
+
+  <rect x="315" y="490" width="290" height="36" rx="18" fill="#ffffff" stroke="#1f6b63" stroke-width="1.5"/>
+  <text x="460" y="514" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#16524b">2nd All-to-All (Combine)</text>
+
+  <!-- Step 3: Restored Outputs -->
+  <rect x="74" y="564" width="340" height="84" rx="10" fill="#ffffff" stroke="#1f6b63" stroke-width="1.6"/>
+  <text x="244" y="592" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">GPU 0 Output → Next Layer</text>
+  <rect x="128" y="604" width="232" height="32" rx="6" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.4"/>
+  <text x="244" y="626" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17" font-weight="700" fill="#16524b">[ a' , b' ] · Residual</text>
+
+  <rect x="506" y="564" width="340" height="84" rx="10" fill="#ffffff" stroke="#1f6b63" stroke-width="1.6"/>
+  <text x="676" y="592" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b2230">GPU 1 Output → Next Layer</text>
+  <rect x="560" y="604" width="232" height="32" rx="6" fill="#e5f2ee" stroke="#1f6b63" stroke-width="1.4"/>
+  <text x="676" y="626" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="17" font-weight="700" fill="#16524b">[ c' , d' ] · Residual</text>
+
+  <text x="460" y="692" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#475569">Weights stay stationary; tokens fly via All-to-All. (Compare ZeRO-3: weights fly via AllGather.)</text>
+
+  <!-- RIGHT PANEL: DEEPSPEED-MEGATRON 8-GPU MESH (x=904..1560 width=656) -->
+  <rect x="904" y="108" width="656" height="616" rx="14" fill="#f7f4ec" stroke="#ded7c8" stroke-width="1.5"/>
+  <text x="930" y="144" font-family="Inter, sans-serif" font-size="21" font-weight="700" fill="#1b2230">2. Process Groups: DP (8) = EP (4) × EDP (2)</text>
+  <text x="930" y="170" font-family="Inter, sans-serif" font-size="16" fill="#5b6472">Attn replicated on all 8 GPUs; 4 Experts sharded (EP=4, EDP=2)</text>
+
+  <!-- Outer DP group border -->
+  <rect x="928" y="196" width="608" height="352" rx="12" fill="#ffffff" stroke="#23476a" stroke-width="2" stroke-dasharray="8 5"/>
+  <rect x="992" y="182" width="480" height="28" rx="6" fill="#23476a"/>
+  <text x="1232" y="202" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" font-weight="700" fill="#ffffff">DP Group (size 8) · AllReduce Non-Expert Grads</text>
+
+  <!-- Row 0 EP Group box -->
+  <rect x="948" y="228" width="568" height="114" rx="10" fill="#fcf2eb" stroke="#a8552a" stroke-width="1.8"/>
+  <text x="966" y="252" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#9a461e">EP Group 0 (size 4 · All-to-All Token Dispatch)</text>
+
+  <!-- Row 1 EP Group box -->
+  <rect x="948" y="414" width="568" height="114" rx="10" fill="#fcf2eb" stroke="#a8552a" stroke-width="1.8"/>
+  <text x="966" y="438" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#9a461e">EP Group 1 (size 4 · All-to-All Token Dispatch)</text>
+
+  <!-- Vertical EDP bars linking row 0 and row 1 -->
+  <g stroke="#1f6b63" stroke-width="2.5">
+    <line x1="1028" y1="336" x2="1028" y2="446"/>
+    <line x1="1164" y1="336" x2="1164" y2="446"/>
+    <line x1="1300" y1="336" x2="1300" y2="446"/>
+    <line x1="1436" y1="336" x2="1436" y2="446"/>
+  </g>
+  <rect x="962" y="362" width="540" height="32" rx="6" fill="#1f6b63"/>
+  <text x="1232" y="384" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" font-weight="700" fill="#ffffff">4 EDP Columns (size 2) · AllReduce Expert Grads (E0..E3)</text>
+
+  <!-- GPU cells Row 0 -->
+  <g transform="translate(966,264)" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">
+    <rect x="0" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="62" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 0</text>
+    <text x="62" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E0</text>
+
+    <rect x="136" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="198" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 1</text>
+    <text x="198" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E1</text>
+
+    <rect x="272" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="334" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 2</text>
+    <text x="334" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E2</text>
+
+    <rect x="408" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="470" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 3</text>
+    <text x="470" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E3</text>
+  </g>
+
+  <!-- GPU cells Row 1 -->
+  <g transform="translate(966,450)" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">
+    <rect x="0" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="62" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 4</text>
+    <text x="62" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E0</text>
+
+    <rect x="136" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="198" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 5</text>
+    <text x="198" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E1</text>
+
+    <rect x="272" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="334" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 6</text>
+    <text x="334" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E2</text>
+
+    <rect x="408" y="0" width="124" height="66" rx="8" fill="#ffffff" stroke="#a8552a" stroke-width="1.5"/>
+    <text x="470" y="26" font-size="16" font-weight="700" fill="#1b2230">GPU 7</text>
+    <text x="470" y="48" font-size="15" font-weight="600" fill="#9a461e">Attn + E3</text>
+  </g>
+
+  <!-- Summary Rule Box -->
+  <rect x="928" y="566" width="608" height="136" rx="10" fill="#ffffff" stroke="#d8d1c4" stroke-width="1.5"/>
+  <text x="950" y="594" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1b2230">Why split DP into EP and EDP?</text>
+  <text x="950" y="622" font-family="Inter, sans-serif" font-size="16" fill="#475569">• Different experts (E0 ≠ E1) must never average their gradients.</text>
+  <text x="950" y="648" font-family="Inter, sans-serif" font-size="16" fill="#475569">• Replicas of E0 (GPU 0 &amp; 4) sync via EDP=2; Attn syncs via DP=8.</text>
+  <text x="950" y="676" font-family="Inter, sans-serif" font-size="15.5" fill="#64748b">Full 4D cluster: world_size = PP × DP × TP, where DP = EP × EDP.</text>
+</svg>
