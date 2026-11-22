@@ -39,7 +39,7 @@
     --primary: #1f4e79;
     --primary-soft: rgba(31, 78, 121, 0.30);
     --on-primary: #faf9f6;
-    --code-bg: #f1efe9;
+    --code-bg: rgba(20, 25, 35, 0.045);
     --pre-bg: #1b1e24;
     --pre-fg: #e7e5e0;
     --figure-bg: #ffffff;
@@ -66,7 +66,7 @@
     --primary: #82add9;
     --primary-soft: rgba(130, 173, 217, 0.34);
     --on-primary: #141416;
-    --code-bg: #202026;
+    --code-bg: rgba(255, 255, 255, 0.065);
     --pre-bg: #0e0e11;
     --pre-fg: #e5e3de;
     --figure-bg: #f4f3ef;
@@ -558,8 +558,10 @@ body > header.is-scrolled {
     border-color: var(--border);
 }
 
-/* ---------- article (sits directly on paper canvas, no modal card box) ---------- */
+/* ---------- article (centered monograph spine on paper canvas, no modal card box) ---------- */
 .paper {
+    max-width: 680px;
+    margin: 0 auto;
     padding: 0;
 }
 
@@ -615,23 +617,22 @@ body > header.is-scrolled {
 .post-header .post-type { margin: 0 0 10px; }
 .post-title {
     margin: 0 0 14px;
-    max-width: 760px;
     font-family: var(--serif);
-    font-size: 2.4rem;
+    font-size: 2.25rem;
     font-weight: 400;
-    line-height: 1.2;
+    line-height: 1.22;
     letter-spacing: -0.02em;
     color: var(--heading);
     text-wrap: balance;
 }
 .post-meta { font-size: 0.86rem; color: var(--secondary); font-variant-numeric: tabular-nums; }
 
-/* Collapsible TOC (mobile / narrow viewports) */
+/* Collapsible TOC (mobile / tablet < 1160px) */
 .toc {
     margin: 0 0 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background: var(--glass-control);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
     font-size: 0.88rem;
 }
 .toc summary {
@@ -648,37 +649,49 @@ body > header.is-scrolled {
 .toc a { color: var(--secondary); transition: color 0.15s ease; }
 .toc a:hover { color: var(--heading); }
 
-/* Desktop 2-column monograph layout: 690px reading column + 220px sticky outline */
-@media (min-width: 960px) {
+/* Desktop 3-column symmetric monograph layout: quiet left TOC + dead-center 680px prose + open right margin */
+@media (min-width: 1160px) {
+    .main:has(.paper) {
+        max-width: 1320px;
+    }
     .paper {
+        max-width: none;
         display: grid;
-        grid-template-columns: minmax(0, 690px) minmax(0, 1fr);
-        column-gap: 64px;
+        grid-template-columns: minmax(180px, 1fr) minmax(0, 680px) minmax(180px, 1fr);
+        column-gap: clamp(32px, 3.5vw, 48px);
         align-items: start;
     }
-    .post-header { grid-column: 1 / -1; grid-row: 1; }
-    .post-content { grid-column: 1; grid-row: 2; min-width: 0; }
-    .post-footer { grid-column: 1; grid-row: 3; min-width: 0; }
+    .post-header { grid-column: 2; grid-row: 1; min-width: 0; }
+    .post-content { grid-column: 2; grid-row: 2; min-width: 0; }
+    .post-footer { grid-column: 2; grid-row: 3; min-width: 0; }
     .toc {
-        grid-column: 2;
+        grid-column: 1;
         grid-row: 2 / 4;
+        justify-self: start;
+        width: min(100%, 212px);
         position: sticky;
-        top: calc(var(--header-h) + 24px);
-        max-height: calc(100vh - var(--header-h) - 48px);
+        top: calc(var(--header-h) + 28px);
+        max-height: calc(100vh - var(--header-h) - 56px);
         overflow-y: auto;
         margin: 0;
         padding: 2px 0;
         background: transparent;
         border: 0;
         border-radius: 0;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         scrollbar-width: thin;
+        opacity: 0.48;
+        transition: opacity 0.22s ease;
+    }
+    .toc:hover,
+    .toc:focus-within {
+        opacity: 1;
     }
     .toc summary {
         list-style: none;
         padding: 0 0 10px 14px;
         font-family: var(--mono);
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 500;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -695,13 +708,19 @@ body > header.is-scrolled {
         padding-left: 0;
     }
     .toc ul ul {
-        padding-left: 12px;
-        margin-top: 2px;
+        padding-left: 11px;
+        margin: 2px 0 4px;
+    }
+    .toc.toc-collapsible ul ul {
+        display: none;
+    }
+    .toc.toc-collapsible li.is-branch-open > ul {
+        display: block;
     }
     .toc li { margin: 0; }
     .toc a {
         display: block;
-        padding: 4px 0 4px 13px;
+        padding: 3.5px 0 3.5px 13px;
         margin-left: -1px;
         border-left: 1.5px solid transparent;
         color: var(--secondary);
@@ -710,20 +729,22 @@ body > header.is-scrolled {
     .toc a:hover { color: var(--heading); }
     .toc a.is-active {
         color: var(--heading);
-        border-left-color: var(--heading);
-        font-weight: 550;
+        border-left-color: var(--primary);
+        font-weight: 580;
     }
 }
 
 /* ---------- article prose ---------- */
 .post-content {
-    font-size: 1.02rem;
-    line-height: 1.85;
+    font-size: 1.03rem;
+    line-height: 1.88;
     color: var(--content);
     overflow-wrap: break-word;
 }
-html[lang="en"] .post-content { line-height: 1.76; }
-.post-content p { margin: 0 0 1.2em; }
+html[lang="zh-CN"] .post-content { letter-spacing: 0.014em; }
+html[lang="en"] .post-content { line-height: 1.75; }
+.post-content p { margin: 0 0 1.24em; }
+html[lang="zh-CN"] .post-content p { margin: 0 0 1.32em; }
 .post-content a {
     color: var(--primary);
     text-decoration: underline;
@@ -742,14 +763,16 @@ html[lang="en"] .post-content { line-height: 1.76; }
     scroll-margin-top: calc(var(--header-h) + 24px);
 }
 .post-content h2 {
-    margin: 2.2em 0 0.7em;
+    margin: 2.7em 0 0.8em;
+    padding-top: 1.3em;
+    border-top: 1px solid var(--border);
     font-family: var(--serif);
-    font-size: 1.6rem;
+    font-size: 1.66rem;
     font-weight: 400;
     line-height: 1.3;
     letter-spacing: -0.015em;
 }
-.post-content h2:first-child { margin-top: 0; }
+.post-content h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 .post-content h3 {
     margin: 1.7em 0 0.5em;
     font-size: 1.12rem;
@@ -804,12 +827,24 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
 .callout > :last-child { margin-bottom: 0; }
 
 .post-content code {
-    padding: 0.12em 0.36em;
+    padding: 0.08em 0.3em;
     border-radius: 4px;
     background: var(--code-bg);
+    color: var(--heading);
     font-family: var(--mono);
-    font-size: 0.85em;
+    font-size: 0.855em;
     overflow-wrap: anywhere;
+}
+
+@media (min-width: 1360px) {
+    .post-content figure,
+    .post-content .table-wrap {
+        margin-inline: -44px;
+    }
+    .post-content figcaption {
+        max-width: 680px;
+        margin-inline: auto;
+    }
 }
 
 .code-block { position: relative; margin: 1.5em 0; }

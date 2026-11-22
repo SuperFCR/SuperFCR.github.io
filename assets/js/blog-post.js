@@ -53,17 +53,19 @@
         header.appendChild(progressEl);
     }
 
-    // 2. Desktop sticky TOC auto-open + ScrollSpy
+    // 2. Desktop sticky TOC auto-open, ScrollSpy & auto-accordion
     const toc = document.querySelector('details.toc');
-    const desktopMq = window.matchMedia('(min-width: 960px)');
+    const desktopMq = window.matchMedia('(min-width: 1160px)');
     const syncToc = () => {
         if (!toc) return;
-        if (desktopMq.matches) toc.open = true;
+        toc.open = desktopMq.matches;
     };
     syncToc();
     desktopMq.addEventListener('change', syncToc);
 
     const tocLinks = toc ? Array.from(toc.querySelectorAll('a[href^="#"]')) : [];
+    const topBranches = toc ? Array.from(toc.querySelectorAll('.inner > ul > li')) : [];
+    if (toc && tocLinks.length > 14) toc.classList.add('toc-collapsible');
     const sections = tocLinks
         .map((a) => ({ a, el: document.getElementById(a.getAttribute('href').slice(1)) }))
         .filter((s) => s.el);
@@ -89,6 +91,8 @@
             }
             currentId = active.el.id;
             for (const s of sections) s.a.classList.toggle('is-active', s === active);
+            const activeBranch = active.a.closest('.inner > ul > li');
+            for (const li of topBranches) li.classList.toggle('is-branch-open', li === activeBranch);
         }
         if (backTop) backTop.classList.toggle('is-visible', window.scrollY > 420);
     };
