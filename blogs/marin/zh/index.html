@@ -56,7 +56,7 @@
         <h1 class="post-title">Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</h1>
         <div class="post-meta">
             <span>2026 年 11 月 22 日</span>
-            <span>26 分钟阅读</span>
+            <span>27 分钟阅读</span>
             <span>冯超然</span>
         </div>
     </header>
@@ -180,14 +180,46 @@
         $$\Delta F_{\text{layer}}^{\text{latent}} = 2 \cdot 3 \, d_{\text{ff}} \, K (d_l - D) + 4 D d_l, \qquad \text{MFU} = \frac{F_{\text{train/token}} \times \text{tokens/sec}}{N_{\text{GPU}} \times P_{\text{peak/GPU}}}$$
 
         <h3 id="attn-pos-norm">注意力、位置编码与归一化<a class="anchor" href="#attn-pos-norm" aria-hidden="true">#</a></h3>
-        <p>推理期单序列缓存 $S$ 个位置、元素占 $b_{\text{elem}}$ 字节时，KV cache 占用为 $2 S H_{kv} d_h b_{\text{elem}}$。GQA 按 $g(h) = \lfloor h / (H_q/H_{kv}) \rfloor$ 共享 KV 头：Mochi 局部层用 12 头将 BF16 缓存由 $24$ 降至 $6\text{ KiB/tok}$/层，全局层用 6 头进一步压至 $3\text{ KiB/tok}$/层。对比 DeepSeek MLA 先压缩 KV 至低秩向量 $c_t = x_t W_{\text{DKV}} \in \mathbb{R}^{d_c}$ 再重构 $k_t^C = c_t W_{UK}, v_t^C = c_t W_{UV}$（并配解耦 RoPE），Mochi 选择把 Attention 保持为更简洁的 GQA，将潜空间压缩专用于 MoE 专家路径。</p>
+        <p>自回归推理期按元素字节宽 $b_{\text{elem}}$ 缓存长度 $S$ 的 KV 序列时，每层显存占用由保存的 KV 头数 $H_{kv}$ 决定。<strong>Grouped Query Attention（GQA）</strong>通过分组映射 $g(h)$ 将 $H_q$ 个查询头按每组 $H_q / H_{kv}$ 个头共享同一组 KV：</p>
+        $$\begin{aligned}
+        \mathrm{KV}_{\text{bytes}}^{\text{GQA}} &= 2 S H_{kv} d_h b_{\text{elem}}, \qquad g(h) = \left\lfloor \frac{h}{H_q / H_{kv}} \right\rfloor \\
+        o_t^{(h)} &= \sum_{j \le t} \operatorname{softmax}_j\!\left(\frac{q_t^{(h)} \bigl(k_j^{(g(h))}\bigr)^\top}{\sqrt{d_h}}\right) v_j^{(g(h))}
+        \end{aligned}$$
+        <p>在 Mochi（$H_q = 48$、$d_h = 128$、BF16 下 $b_{\text{elem}} = 2\text{ B}$）中，全量 MHA（$H_{kv}=48$）每 token 每层需 $24\text{ KiB}$；局部 <code>4:1</code> GQA（$H_{kv}=12$）将缓存压至 $6\text{ KiB/tok/层}$，全局 <code>8:1</code> GQA（$H_{kv}=6$）则进一步降到 $3\text{ KiB/tok/层}$。</p>
 
-        <p>位置编码、前向归一化与权重投影协同作用如下：</p>
-        <ul>
-            <li><strong>Partial RoPE 与 NoPE：</strong>RoPE 按频段 $\omega_j = b^{-2j/d_r}$ 旋转坐标对，使内积 $(R(p\omega_j)q_{p,j})^\top (R(t\omega_j)k_{t,j}) = q_{p,j}^\top R((t-p)\omega_j)k_{t,j}$ 严格依赖相对位移 $t-p$。Mochi 在局部 SWA 层仅对 50% 头维施用 RoPE，全局层则彻底使用 NoPE。</li>
-            <li><strong>LeRoPE vs. YaRN 温度外推：</strong>LeRoPE 让频率乘子 $\tilde{\omega}_j = e^{\alpha_j}\omega_j$ 可训练；YaRN 则结合原窗旋转圈数 $r_j = L_{\text{old}}\omega_j/(2\pi)$、过渡截断函数 $\gamma_j = \operatorname{clip}((r_j-\alpha)/(\beta-\alpha), 0, 1)$（如 $\alpha=1,\beta=32$）分段插值低频，并用幅度因子 $m(s)^2$（$m(s) = 1 + 0.1\ln s$）放大 logits，防止长窗注意力过度分散。</li>
-            <li><strong>QK-Norm 与 GatedNorm：</strong>无参数 <code>RMSNorm</code> 将 $\|\hat{q}\|_2, \|\hat{k}\|_2$ 锚定在 $\sqrt{d_h}$，使注意力打分成为纯粹角度度量 $\ell = c\sqrt{d_h}\cos\theta$（Mochi 在 $c=1.3$ 时约 $14.71\cos\theta$）；<code>RMSNorm</code> 后的 rank-128 <strong>GatedNorm</strong> $u \odot \sigma(\operatorname{SiLU}(u W_{\text{down}}) W_{\text{up}})$ 则恢复逐维输入门控能力。</li>
-        </ul>
+        <p>作为对照，DeepSeek 提出的 <strong>Multi-head Latent Attention（MLA）</strong>先将隐状态压缩为共享低秩 KV 潜向量 $c_t^{KV} \in \mathbb{R}^{d_c}$ 与解耦旋转键 $k_t^R = \operatorname{RoPE}(x_t W_{KR}) \in \mathbb{R}^{d_h^R}$，再通过升维矩阵重构 $k_t^C, v_t^C$，并在推理解码时把 $W_{UK}^\top$ 吸收进查询投影，使缓存仅需保留 $(c_t^{KV}, k_t^R)$：</p>
+        $$\begin{aligned}
+        c_t^{KV} &= x_t W_{\text{DKV}} \in \mathbb{R}^{d_c}, \qquad k_t^C = c_t^{KV} W_{UK},\qquad v_t^C = c_t^{KV} W_{UV} \\
+        q_t^C (k_j^C)^\top &= \bigl(q_t^C W_{UK}^\top\bigr)\bigl(c_j^{KV}\bigr)^\top, \qquad \mathrm{KV}_{\text{bytes}}^{\text{MLA}} = S (d_c + d_h^R) b_{\text{elem}}
+        \end{aligned}$$
+        <p>Mochi 选择把 Attention 保持在内核高效、与 FA4 更贴合的 GQA，将低秩潜空间压缩专用于 384 专家 MoE 通信瓶颈路径。</p>
+
+        <p><strong>RoPE、Partial RoPE 与 NoPE：</strong>旋转位置编码以底数 $b$ 和几何频率 $\omega_j$ 旋转每对二维坐标 $(2j, 2j+1)$；利用二维旋转矩阵的正交性，位置 $p, t$ 的内积自然化为仅与相对位移 $t-p$ 相关的旋转内积。<strong>Partial RoPE</strong> 只对前 $d_r$ 维施加旋转、其余维度保留静态 NoPE：</p>
+        $$\begin{aligned}
+        R(\theta) &= \begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix}, \qquad \omega_j = b^{-2j/d_r}\ \ \bigl(j = 0,\dots,\tfrac{d_r}{2}-1\bigr) \\
+        \bigl(R(p\omega_j)\,q_{p,j}\bigr)^\top \bigl(R(t\omega_j)\,k_{t,j}\bigr) &= q_{p,j}^\top R(p\omega_j)^\top R(t\omega_j)\,k_{t,j} = q_{p,j}^\top R\bigl((t-p)\omega_j\bigr)\,k_{t,j} \\
+        \tilde{q}_p &= \Bigl[\underbrace{\operatorname{RoPE}_{p}(q_{p,\,1:d_r})}_{d_r = d_h/2},\;\underbrace{q_{p,\,d_r+1:d_h}}_{\text{NoPE}}\Bigr]
+        \end{aligned}$$
+        <p>Mochi 在局部 SWA 层启用 50% Partial RoPE（$d_r = 64, d_h = 128$）以保留静止维供 Partial Key Offset 归纳匹配，而在全部 12 个全局注意力层彻底采用 <strong>NoPE</strong>（$d_r = 0$）。</p>
+
+        <p><strong>LeRoPE vs. YaRN 频率插值与温度外推：</strong>将上下文扩展倍率为 $s = L_{\text{new}} / L_{\text{old}}$ 时，<strong>LeRoPE</strong> 将各频段缩放写成可学习对数乘子 $\alpha_j$；<strong>YaRN</strong> 则按原窗内的旋转圈数 $r_j$ 划分三段——高频（$r_j \ge \beta$）保持原速以保局部精度，低频（$r_j \le \alpha$）按 $1/s$ 线性拉伸，中间带按截断斜坡 $\gamma_j$ 平滑过渡（典型取 $\alpha=1,\beta=32$），并用温度系数 $m(s)^2$ 拉高注意力 logits 防长窗熵散失：</p>
+        $$\begin{aligned}
+        \text{LeRoPE:}\quad \tilde{\omega}_j &= e^{\alpha_j}\omega_j \quad (\alpha_j\text{ learnable}) \\
+        \text{YaRN:}\quad r_j &= \frac{L_{\text{old}}\,\omega_j}{2\pi}, \qquad \gamma_j = \operatorname{clip}\!\left(\frac{r_j - \alpha}{\beta - \alpha},\, 0,\, 1\right), \qquad \tilde{\omega}_j = (1 - \gamma_j)\frac{\omega_j}{s} + \gamma_j \omega_j \\
+        \text{Logits:}\quad \ell_{p,t} &= \frac{m(s)^2}{\sqrt{d_h}}\,\tilde{q}_p^\top \tilde{k}_t, \qquad m(s) = 1 + 0.1\ln s, \qquad s = \frac{L_{\text{new}}}{L_{\text{old}}}
+        \end{aligned}$$
+        <p>正因全局层采用 NoPE，Mochi 后续 <code>65K → 262K</code> 长窗外推（见<a href="#long-context-262k">第 6.2 节</a>）只需继承这套对数平方 $m(s)^2$ 温度重标定，无需强改旋转波长。</p>
+
+        <p><strong>QK-Norm 角度界、Rank-128 GatedNorm 与 Logit $z$-Loss：</strong>注意力头的无参数 <code>RMSNorm</code> 将向量 $L_2$ 范数严格钉死在 $\|\hat{q}_p\|_2 = \|\hat{k}_t\|_2 = \sqrt{d_h}$，乘以固定缩放系数 $c$ 后使注意力分数退化为纯粹的夹角余弦度量（4K 起步 $c=1.3, d_h=128 \Rightarrow c\sqrt{d_h} \approx 14.71$）：</p>
+        $$\begin{aligned}
+        \operatorname{RMSNorm}(x) &= \frac{x}{\sqrt{\frac{1}{d}\sum_{i=1}^{d} x_i^2 + \varepsilon}} \;\Longrightarrow\; \|\hat{q}_p\|_2 = \|\hat{k}_t\|_2 = \sqrt{d_h} \\
+        \ell_{p,t} &= c \cdot \frac{\hat{q}_p^\top \hat{k}_t}{\sqrt{d_h}} = c \cdot \frac{\|\hat{q}_p\|_2\|\hat{k}_t\|_2\cos\theta_{p,t}}{\sqrt{d_h}} = c\sqrt{d_h}\cos\theta_{p,t} \approx 14.71\cos\theta_{p,t}
+        \end{aligned}$$
+        <p>同时为在定范数约束下保留逐维输入门控、并防止过训期词表输出对数配分函数漂移，Mochi 在残差支路加入 rank-128 <strong>GatedNorm</strong>（$W_{\text{down}} \in \mathbb{R}^{D\times 128}, W_{\text{up}} \in \mathbb{R}^{128\times D}$），在输出端保留二次 <strong>logit $z$-loss</strong>：</p>
+        $$\begin{aligned}
+        \operatorname{GatedNorm}(x) &= u \odot \sigma\!\bigl(\operatorname{SiLU}(u W_{\text{down}})\,W_{\text{up}}\bigr), \qquad u = \operatorname{RMSNorm}(x) \odot g \\
+        \mathcal{L}_z &= \lambda_z \cdot \frac{1}{BS}\sum_{t=1}^{BS} \left(\log \sum_{v=1}^{V} e^{z_{t,v}}\right)^2 \qquad (\lambda_z = 10^{-4})
+        \end{aligned}$$
 
         <p>前向激活 Norm 与优化器 <strong>Hyperball (<code>MuonH</code> / <code>AdamH</code>)</strong> 属于正交机制——前者缩放前向激活，后者在每步更新后将权重块投回初始 Frobenius 范数球面 $R = \|W\|_F$：</p>
         $$\widetilde{W} = W - \eta R \frac{U}{\|U\|_F}, \qquad W_{\text{next}} = R \frac{\widetilde{W}}{\|\widetilde{W}\|_F}$$
