@@ -116,8 +116,8 @@
         <h2 id="memory">显存与混合精度<a class="anchor" href="#memory" aria-hidden="true">#</a></h2>
 
         <h3 id="memory-budget">显存花在了哪<a class="anchor" href="#memory-budget" aria-hidden="true">#</a></h3>
-        <p>参照 ZeRO 论文的划分<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a><a class="cite" href="#ref-11">[11]</a>，训练期 GPU 显存分成两大块：只与参数量 $\Phi$ 有关的<strong>模型状态（Model States）</strong>（权重、梯度、Adam 的一阶/二阶动量），以及受批大小、序列长度与内存分配节奏影响的<strong>剩余状态（Residual States）</strong>（激活值、通信临时缓冲区与碎片空间）。</p>
-        <p>现代大模型基本采用<strong>混合精度 + Adam</strong><a class="cite" href="#ref-9">[9]</a><a class="cite" href="#ref-11">[11]</a>：前向/反向吃 16-bit（<code>FP16</code> 或 <code>BF16</code>）权重并存 16-bit 梯度（共 $2\Phi + 2\Phi$），而优化器内保留 <code>FP32</code> 主权重与 Adam 状态 $m, v$（各 $4\Phi$，对通用优化器记为 $K\Phi$，Adam 下 $K=12$），静态基线共 $\mathbf{16\Phi}$。但在实际 <code>optimizer.step()</code> 更新阶段<a class="cite" href="#ref-11">[11]</a>，16-bit 梯度需转换成 <code>FP32</code>（$4\Phi$）：若原地释放或覆盖旧的 16-bit 梯度，峰值为 $\mathbf{18\Phi}$；若代码里 16-bit 与 32-bit 梯度共存（例如梯度累积或 Megatron 拷贝阶段未立刻释放），峰值会到 $\mathbf{20\Phi}$：</p>
+        <p>参照 ZeRO 论文的划分<a class="cite" href="#ref-4">[4]</a>，训练期 GPU 显存分成两大块：只与参数量 $\Phi$ 有关的<strong>模型状态（Model States）</strong>（权重、梯度、Adam 的一阶/二阶动量），以及受批大小、序列长度与内存分配节奏影响的<strong>剩余状态（Residual States）</strong>（激活值、通信临时缓冲区与碎片空间）。</p>
+        <p>现代大模型基本采用<strong>混合精度 + Adam</strong>：前向/反向吃 16-bit（<code>FP16</code> 或 <code>BF16</code>）权重并存 16-bit 梯度（共 $2\Phi + 2\Phi$），而优化器内保留 <code>FP32</code> 主权重与 Adam 状态 $m, v$（各 $4\Phi$，对通用优化器记为 $K\Phi$，Adam 下 $K=12$），静态基线共 $\mathbf{16\Phi}$。但在实际 <code>optimizer.step()</code> 更新阶段，16-bit 梯度需转换成 <code>FP32</code>（$4\Phi$）：若原地释放或覆盖旧的 16-bit 梯度，峰值为 $\mathbf{18\Phi}$；若代码里 16-bit 与 32-bit 梯度共存（例如梯度累积或 Megatron 拷贝阶段未立刻释放），峰值会到 $\mathbf{20\Phi}$：</p>
         <div class="table-wrap">
             <table>
                 <thead>
@@ -222,13 +222,13 @@
                 </tbody>
             </table>
         </div>
-        <p>为什么不能从头到尾纯用半精度训练？主要有两类数值障碍<a class="cite" href="#ref-11">[11]</a>：</p>
+        <p>为什么不能从头到尾纯用半精度训练？主要有两类数值障碍：</p>
         <ul>
             <li><strong>舍入误差（Rounding Error）：</strong><code>FP16</code> 在区间 $[2^{-3}, 2^{-2}]$ 内的最小步进间隔固定为 $2^{-13}$，如果权重为 $2^{-3}$、单步梯度为 $2^{-14}$，直接相加会被舍入为 $2^{-3}+2^{-14}=2^{-3}$——这轮更新直接被吞掉（<code>BF16</code> 尾数更短、$\varepsilon$ 更大，更依赖 <code>FP32</code> 主权重更新）。</li>
-            <li><strong>梯度下溢（Underflow）：</strong>实测训练后期约 <strong>67% 的激活梯度</strong>会落到 $2^{-24}$ 以下（超出 <code>FP16</code> 最小正规数下界），直接归零。把前向 Loss 放大 $S$ 倍（Loss Scale）就能同步抬高反向梯度脱离下溢区；而 <code>BF16</code> 指数位与 <code>FP32</code> 同宽（“先到了对的范围，再谈精度”），基本不会下溢，可省去动态 Loss Scale<a class="cite" href="#ref-11">[11]</a>。</li>
+            <li><strong>梯度下溢（Underflow）：</strong>实测训练后期约 <strong>67% 的激活梯度</strong>会落到 $2^{-24}$ 以下（超出 <code>FP16</code> 最小正规数下界），直接归零。把前向 Loss 放大 $S$ 倍（Loss Scale）就能同步抬高反向梯度脱离下溢区；而 <code>BF16</code> 指数位与 <code>FP32</code> 同宽（“先到了对的范围，再谈精度”），基本不会下溢，可省去动态 Loss Scale。</li>
         </ul>
         <p>此外，LayerNorm / BatchNorm 参数与 Loss 本身显存极小却对数值极为敏感，因此始终保持 <code>FP32</code>。</p>
-        <p>在 Megatron 的 <code>Float16OptimizerWithFloat16Params</code> 源码实现中<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-11">[11]</a>，有三个常被误解但非常关键的工程设计：</p>
+        <p>在 Megatron 的 <code>Float16OptimizerWithFloat16Params</code> 源码实现中，有三个常被误解但非常关键的工程设计：</p>
         <ul>
             <li><strong><code>main_grad</code> 并不代表“FP32 梯度”：</strong>当启用 Megatron 本地 DDP（<code>DDP_impl == "local"</code>，即 <code>params_have_main_grad=True</code>）时，源码把同 <code>dtype</code> 的参数梯度打包进一块连续 <code>MemoryBuffer</code>（挂在 <code>tensor.main_grad</code> 上），目的是消除离散分配碎片、并用一次大块 <code>AllReduce</code> 同步。在 <code>FP16</code> 训练下 <code>main_grad</code> 本身仍是 <code>FP16</code>，真正转成 <code>FP32</code> 发生在优化器拷贝步骤。</li>
             <li><strong><code>main_param = param.detach().clone().float()</code>：</strong>初始化 <code>FP32</code> 主权重副本时不能只用 <code>clone()</code>（会留在计算图内多算梯度），也不能只用 <code>detach()</code>（仍与原 <code>FP16</code> 权重共享底层内存），必须先脱离计算图再深拷贝并转 <code>float</code>；随后复制 TP 分片属性及跨 PP 的共享 Word Embedding 标记（<code>param.shared</code>），并让 <code>optimizer.param_groups</code> 改指 <code>main_param</code>。</li>
@@ -250,7 +250,7 @@ else:
         self._growth_tracker = 0
         self._hysteresis_tracker = self.hysteresis
         self._scale = self._scale * self.growth_factor</code></pre>
-        <p>在此基础上，<code>Float16OptimizerWithFloat16Params.step()</code> 每步严格按这 6 步推进<a class="cite" href="#ref-11">[11]</a>：</p>
+        <p>在此基础上，<code>Float16OptimizerWithFloat16Params.step()</code> 每步严格按这 6 步推进：</p>
         <ol>
             <li><strong>梯度搬运与升精度（<code>_copy_model_grads_to_main_grads</code>）：</strong>从 <code>model_param.main_grad</code>（或 <code>.grad</code>）转成 <code>FP32</code> 赋给 <code>main_param.grad</code>。</li>
             <li><strong>反缩放与全局 <code>found_inf</code> 共识（<code>_unscale_main_grads_and_check_for_nan</code>）：</strong>先调用 <code>torch._amp_foreach_non_finite_check_and_unscale_</code> 本地检查 <code>inf/NaN</code> 并除以 $S$，再对整个模型并行组（<code>TP × PP</code>）做一次标量 <code>all_reduce(MAX)</code>，接着调用 <code>grad_scaler.update(found_inf_flag)</code>；只要集群里任意一卡溢出，全体一齐跳过本步更新。</li>
@@ -423,7 +423,7 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         <p>记未切分完整张量总字节为 $V$、轴上卡数为 $|X|$、单向链路带宽为 $W_{\text{ici}}$、单跳启动延迟为 $T_{\min}$。在双向环上跑 <code>AllGather</code> 或 <code>ReduceScatter</code> 时，每卡把 $\frac{V}{|X|}$ 分片同时向左右发送，覆盖全环需约 $\frac{|X|}{2}$ 跳；若同时跨越 $N_{\text{axes}}$ 个正交硬件轴，带宽同步放大，耗时的 Roofline 为：</p>
         $$T_{\text{AG / RS}} = \max\!\left(\frac{T_{\min} \cdot \sum_i |X_i|}{2},\; \frac{V}{W_{\text{ici}} \cdot N_{\text{axes}}}\right)$$
         <p>在带宽受限区（大张量），<code>AllGather</code> 和 <code>ReduceScatter</code> 耗时 $\frac{V}{W_{\text{ici}}}$ 与组内卡数 $|X|$ 基本无关，而 <code>AllReduce</code> 由两者串联，带宽耗时恰好翻倍成 $\frac{2V}{W_{\text{ici}}}$。</p>
-        <p>相比之下，<strong>双向环上的 <code>All-to-All</code> 只要 <code>AllGather</code> 四分之一的时间</strong><a class="cite" href="#ref-1">[1]</a>：<code>AllGather</code> 要把整份本地切片传过全部跨距，总流量按 $D^2$ 算；<code>All-to-All</code> 发往不同目标卡的数据互不相同，最近邻居只传 1 跳、最远只走 $D/2$ 跳，三角和压缩后总传输量降到 $1/4$。推广到多维网格 $(A \times B \times \dots)$ 共 $N$ 卡：</p>
+        <p>相比之下，<strong>双向环上的 <code>All-to-All</code> 只要 <code>AllGather</code> 四分之一的时间</strong>：<code>AllGather</code> 要把整份本地切片传过全部跨距，总流量按 $D^2$ 算；<code>All-to-All</code> 发往不同目标卡的数据互不相同，最近邻居只传 1 跳、最远只走 $D/2$ 跳，三角和压缩后总传输量降到 $1/4$。推广到多维网格 $(A \times B \times \dots)$ 共 $N$ 卡：</p>
         $$T_{\text{AllToAll}} = \frac{V \cdot \max(A, B, \dots)}{4 \cdot N \cdot W_{\text{ici}}} \xrightarrow{\text{1D 环 } (N = A)} \frac{V}{4 \cdot W_{\text{ici}}} = \frac{1}{4}\, T_{\text{AllGather}}$$
 
         <figure class="anim-fig" data-anim="ring-cost">
@@ -438,7 +438,7 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         <p>因为线性算子 $y = \mathcal{A}x$ 的反向梯度是 $\mathcal{A}^\top$，所以<strong>前向 <code>AllGather</code> 在反向求导时天然对应 <code>ReduceScatter</code></strong>，反过来也一样。</p>
 
         <h3 id="sharded-matmul">分布式矩阵乘法<a class="anchor" href="#sharded-matmul" aria-hidden="true">#</a></h3>
-        <p>任何分布式的线性层都能写成 $A[I, J] \cdot B[J, K] \to C[I, K]$（$J$ 是收缩内维）。按切分位置看，只有四种合法或需解冲突的情形<a class="cite" href="#ref-1">[1]</a>：</p>
+        <p>任何分布式的线性层都能写成 $A[I, J] \cdot B[J, K] \to C[I, K]$（$J$ 是收缩内维）。按切分位置看，只有四种合法或需解冲突的情形：</p>
         <ol>
             <li><strong>收缩维 $J$ 两侧都不切：</strong>$A[I_X, J] \cdot B[J, K_Y] \to C[I_X, K_Y]$。<strong>前向零通信</strong>，典型例子就是标准 DP 前向和 Megatron 列并行。</li>
             <li><strong>仅一侧切了收缩维：</strong>$A[I, J_X] \cdot B[J, K]$。工程上（比如 FSDP）先执行 <code>AllGather_X</code> 把参数拼回完整矩阵，再本地相乘。在硬件算力 $C$、链路带宽 $W_{\text{ici}}$ 下，耗时 $\max(\frac{2BDF}{C}, \frac{2DF}{W_{\text{ici}}})$，只要微批总 token 数 $B > \frac{C}{W_{\text{ici}}}$ 就能把通信藏进算力里。之所以不采用“本地算完再 <code>AllReduce</code>”路线，是因为训练时激活通常也切在同一个 $X$ 轴上，冲突时只允许先把权重取回来。</li>
@@ -457,7 +457,7 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         <p>数据并行就是前向用情形 1（切 Batch 维 $B_{\text{DP}}$）、反向算权重梯度时沿 $B_{\text{DP}}$ 收缩，从而触发情形 3 得到部分和 $\{U_{\text{DP}}\}$。</p>
         <p>最早的参数服务器（Parameter Server）<strong>DP</strong><a class="cite" href="#ref-8">[8]</a> 由 1 个梯度聚合 <code>Server</code>（单机下常直接指定 <code>GPU 0</code>）和多个计算 <code>Worker</code> 组成。Worker 算完各自微批梯度 <code>Push</code> 给 Server 聚合，再 <code>Pull</code> 回全局梯度更新权重；若每张卡梯度为 $\Phi$、共 $N$ 卡，Server 收发各 $N\Phi$（全网总流量 $2N\Phi$），多机场景下 Server 成了随 $N$ 线性膨胀的单点带宽瓶颈（多 Server 模式可分摊到多个节点）。</p>
         <p>为避免 Worker 在 Server 搬运期间空等，PS 也常配<strong>异步梯度更新（Bounded Delay）</strong>：允许 Worker 在上一轮梯度未写回前继续用旧权重算下一批（如 1-Bounded Delay 要求第 12 轮开始前已完成第 10、11 轮更新），用略慢的 SGD 收敛换取更高的硬件利用率。</p>
-        <p><strong>DDP</strong> 采用 <strong>Ring-AllReduce</strong> 彻底去掉中心服务器<a class="cite" href="#ref-8">[8]</a>：每张卡把自己算出的<strong>完整梯度</strong>（切分的是梯度而非样本批）划成 $N$ 块（每块 $\Phi/N$），按环拓扑只与左右邻居通信——先跑 $N-1$ 跳 <code>ReduceScatter</code>（每卡发出 $(N-1)\frac{\Phi}{N}$ 并在主槽收齐总和），再跑 $N-1$ 跳 <code>AllGather</code>（同样发出 $(N-1)\frac{\Phi}{N}$ 广播完整和），每卡发送量恒为 $\mathbf{2\frac{N-1}{N}\Phi \approx 2\Phi}$，与总卡数 $N$ 无关。</p>
+        <p><strong>DDP</strong> 采用 <strong>Ring-AllReduce</strong> 彻底去掉中心服务器：每张卡把自己算出的<strong>完整梯度</strong>（切分的是梯度而非样本批）划成 $N$ 块（每块 $\Phi/N$），按环拓扑只与左右邻居通信——先跑 $N-1$ 跳 <code>ReduceScatter</code>（每卡发出 $(N-1)\frac{\Phi}{N}$ 并在主槽收齐总和），再跑 $N-1$ 跳 <code>AllGather</code>（同样发出 $(N-1)\frac{\Phi}{N}$ 广播完整和），每卡发送量恒为 $\mathbf{2\frac{N-1}{N}\Phi \approx 2\Phi}$，与总卡数 $N$ 无关。</p>
         <p>工程上 PyTorch DDP 通过一卡一进程消除 GIL，依靠 C++ <code>Reducer</code> 将参数按反向计算逆序装进约 25 MB 的通信桶（bucket），把梯度同步异步隐藏在正在进行的反向计算背后。</p>
 
         <h3 id="zero-fsdp">ZeRO 与 FSDP<a class="anchor" href="#zero-fsdp" aria-hidden="true">#</a></h3>
@@ -506,20 +506,20 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                 </tbody>
             </table>
         </div>
-        <p><strong>关于 ZeRO-1 通信量的论文 vs 实操差异</strong><a class="cite" href="#ref-9">[9]</a>：原论文按概念把 Stage 1 写成对完整梯度做 <code>AllReduce</code>（$2\Phi$）再对更新后权重做 <code>AllGather</code>（$\Phi$），总计 $3\Phi$；而工程实现直接用 <code>ReduceScatter(G)</code>（$\Phi$）配 <code>AllGather(W)</code>（$\Phi$），流量与 Stage 2 同为 $2\Phi$。不过在 $m$ 步<strong>梯度累积（Gradient Accumulation）</strong>时，Stage 1 保留完整梯度能在本地累计满 $m$ 步再通信一次（省掉 $m-1$ 轮同步流量），而 Stage 2 每步算完层就得立刻散播梯度。</p>
-        <p>从 2 卡 PyTorch Memory Snapshot 实测还可以看到两个工程细节<a class="cite" href="#ref-9">[9]</a>：</p>
+        <p><strong>关于 ZeRO-1 通信量的论文 vs 实操差异</strong>：原论文按概念把 Stage 1 写成对完整梯度做 <code>AllReduce</code>（$2\Phi$）再对更新后权重做 <code>AllGather</code>（$\Phi$），总计 $3\Phi$；而工程实现直接用 <code>ReduceScatter(G)</code>（$\Phi$）配 <code>AllGather(W)</code>（$\Phi$），流量与 Stage 2 同为 $2\Phi$。不过在 $m$ 步<strong>梯度累积（Gradient Accumulation）</strong>时，Stage 1 保留完整梯度能在本地累计满 $m$ 步再通信一次（省掉 $m-1$ 轮同步流量），而 Stage 2 每步算完层就得立刻散播梯度。</p>
+        <p>从 2 卡 PyTorch Memory Snapshot 实测还可以看到两个工程细节：</p>
         <ul>
             <li><strong><code>FP16</code> 权重原地复用显存：</strong>ZeRO-1 更新后直接通过 <code>_copy_(fp32)</code> 就地覆盖计算副本并持久复用显存池。</li>
             <li><strong>Adam 动量惰性分配：</strong>一、二阶动量 $m, v$ 要等到第一个没有 <code>NaN/inf</code> 溢出、真正执行 <code>step()</code> 的迭代才会分配显存。</li>
         </ul>
-        <p>本质上，<strong>ZeRO 是“模型并行的形式，数据并行的实质”</strong><a class="cite" href="#ref-9">[9]</a>：即便 Stage 3 把权重也切到各卡，每次逐层计算前依然靠 <code>AllGather</code> 凑出该层完整权重（用完即删 peer 分片，避免全网峰值），各卡处理的依然是互不相同的样本 $X_i$。</p>
-        <p>在此之上，<strong>ZeRO-R</strong> 专门从三方面治理剩余状态<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a>：</p>
+        <p>本质上，<strong>ZeRO 是“模型并行的形式，数据并行的实质”</strong>：即便 Stage 3 把权重也切到各卡，每次逐层计算前依然靠 <code>AllGather</code> 凑出该层完整权重（用完即删 peer 分片，避免全网峰值），各卡处理的依然是互不相同的样本 $X_i$。</p>
+        <p>在此之上，<strong>ZeRO-R</strong> 专门从三方面治理剩余状态：</p>
         <ul>
             <li><strong>$P_a$（激活切分）：</strong>对<strong>张量模型并行（TP）</strong>组内的重复激活做切分（纯 DP 激活本就按 batch 切分）。</li>
             <li><strong>$C_B$（定长通信缓冲）：</strong>先攒够固定大小的 buffer 再发送，避免零碎小包打不满通信带宽。</li>
             <li><strong>$M_D$（显存碎片整理）：</strong>定期重整长短寿命张量交错释放留下的 HBM 碎片。</li>
         </ul>
-        <p>若显存依然吃紧，<strong>ZeRO-Offload / ZeRO-Infinity</strong> 会把计算密集的前/反向 <code>FP16</code> 权重与激活留在 GPU，把大显存低算力的 <code>FP32</code> 主权重、Adam 动量和参数更新计算卸载到 CPU 内存<a class="cite" href="#ref-9">[9]</a>。</p>
+        <p>若显存依然吃紧，<strong>ZeRO-Offload / ZeRO-Infinity</strong> 会把计算密集的前/反向 <code>FP16</code> 权重与激活留在 GPU，把大显存低算力的 <code>FP32</code> 主权重、Adam 动量和参数更新计算卸载到 CPU 内存。</p>
 
         <figure class="anim-fig" data-anim="ddp-vs-fsdp">
             <figcaption>图 6：DDP 与 ZeRO-3 / FSDP 步内显存驻留和通信操作对照，以及 N=8 时单卡静态模型状态的压缩幅度。</figcaption>
@@ -533,11 +533,11 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
             <li><strong>按行切（沿输入维 $h$）：</strong>必须把 $X$ 同步按列切成 $X_1, X_2$；前向靠算子 $g$ 对部分和求和 $Y = X_1 W_1 + X_2 W_2$，反向则把梯度复制下发、再由算子 $f$ 把各卡 $\partial\mathcal{L}/\partial X_i$ 拼回。</li>
             <li><strong>按列切（沿输出维 $h'$）：</strong>每张卡只需拿完整 $X$ 算出各自输出片 $Y_i = X W_i$ 并拼接；反向时因为 $X$ 同时参与了每路乘法，算子 $f$ 必须将各卡传回的 $\partial\mathcal{L}/\partial X|_i$ 做 <strong><code>AllReduce</code> 求和</strong>。</li>
         </ul>
-        <p>Megatron-LM 把<strong>列并行</strong>和<strong>行并行</strong>一前一后配对，恰好让夹在中间的非线性函数和 Softmax 全程零通信跑完<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>：</p>
+        <p>Megatron-LM 把<strong>列并行</strong>和<strong>行并行</strong>一前一后配对，恰好让夹在中间的非线性函数和 Softmax 全程零通信跑完：</p>
         <ul>
             <li><strong>MLP 层：</strong>输入 $X \in \mathbb{R}^{b \times s \times h}$，第一层权重按列切为 $A = [A_0, A_1]$，第二层按行切为 $B = \begin{bmatrix} B_0 \\ B_1 \end{bmatrix}$。之所以不先做行切，是因为 GeLU 非线性不可拆：$\text{GeLU}(Y_1+Y_2) \neq \text{GeLU}(Y_1)+\text{GeLU}(Y_2)$，若先做行切必须额外插一次 <code>AllReduce</code>；而按列切满足 $\text{GeLU}([Y_1,Y_2]) = [\text{GeLU}(Y_1),\text{GeLU}(Y_2)]$，各卡独立算完 GeLU 再喂进 $B_i$，仅出口做 1 次 <code>AllReduce</code>，整块前向 + 反向共 <strong>2 次 <code>AllReduce</code></strong>（按半步通信量 $\Phi_{\text{TP}}=bsh$ 算共 $4bsh$）：$$Z = \text{AllReduce}\!\left(\sum_i \text{GeLU}(X A_i)\, B_i\right)$$</li>
             <li><strong>多头注意力（MHA）：</strong>按 Head 数天然列切 $W^Q, W^K, W^V$（每卡各算 $h / \text{TP}$ 个独立完整的头，需保证总头数被 $\text{TP}$ 整除），输出投影矩阵 $W^O$ 按行切分，末尾同样是前向 1 次、反向 1 次共 $4bsh$。合计每个标准 Transformer 层在 TP 下<strong>前向 2 次、反向 2 次共 4 次 <code>AllReduce</code>（$8bsh$）</strong>；若叠加<strong>序列并行（Megatron-SP）</strong><a class="cite" href="#ref-3">[3]</a>，则将 <code>AllReduce</code> 拆成 <code>AllGather</code> 与 <code>ReduceScatter</code>，总字节完全不变，但消除了 LayerNorm 与 Dropout 残差路径上 TP 倍冗余激活。</li>
-            <li><strong>词表与输出交叉熵（<code>VocabParallelCrossEntropy</code>）：</strong>Position Embedding $[s_{\max}, h]$ 较小可全卡复制，但 Word Embedding $[V, h]$ 按词表区间切分。例如 $V=300$ 分到 2 卡 $[0,150)$ 与 $[150,299)$、输入序列 <code>[0,212,7,9]</code> 时，两卡查表得 <code>[ok,0,ok,ok]</code> 与 <code>[0,ok,0,0]</code>，一次 <code>AllReduce</code> 直接相加复原完整词向量。<strong>注意若同时开了 $\text{PP} \gt 1$，由于输入和输出共享同一套 Word Embedding，优化器更新前必须在第一和最后一个 Pipeline Stage 之间对词表梯度做 <code>AllReduce</code></strong><a class="cite" href="#ref-10">[10]</a>。到了输出端计算交叉熵，如果直接 <code>AllGather</code> $[b,s,V]$ logits 会多传 $bsV$ 流量；改为各卡只同步三个轻量的 $[b,s]$ 标量（全局最大值做数值稳定、局部 $\sum e^{z'}$ 与目标 logit）：
+            <li><strong>词表与输出交叉熵（<code>VocabParallelCrossEntropy</code>）：</strong>Position Embedding $[s_{\max}, h]$ 较小可全卡复制，但 Word Embedding $[V, h]$ 按词表区间切分。例如 $V=300$ 分到 2 卡 $[0,150)$ 与 $[150,299)$、输入序列 <code>[0,212,7,9]</code> 时，两卡查表得 <code>[ok,0,ok,ok]</code> 与 <code>[0,ok,0,0]</code>，一次 <code>AllReduce</code> 直接相加复原完整词向量。<strong>注意若同时开了 $\text{PP} \gt 1$，由于输入和输出共享同一套 Word Embedding，优化器更新前必须在第一和最后一个 Pipeline Stage 之间对词表梯度做 <code>AllReduce</code></strong>。到了输出端计算交叉熵，如果直接 <code>AllGather</code> $[b,s,V]$ logits 会多传 $bsV$ 流量；改为各卡只同步三个轻量的 $[b,s]$ 标量（全局最大值做数值稳定、局部 $\sum e^{z'}$ 与目标 logit）：
                 $$\begin{aligned}
                 m_{\text{global}} &amp;= \text{AllReduce}_{\max}\!\left(\max_{j \in V_i} z_{i,j}\right), \qquad z'_{i,j} = z_{i,j} - m_{\text{global}} \\
                 S_{\text{global}} &amp;= \text{AllReduce}_{\text{sum}}\!\left(\sum_{j \in V_i} e^{z'_{i,j}}\right), \qquad z'_{\text{target}} = \text{AllReduce}_{\text{sum}}\!\left(\mathbb{I}[y \in V_i]\, z'_{i,y}\right) \\
@@ -545,15 +545,15 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                 \end{aligned}$$
             </li>
         </ul>
-        <p><strong>为什么工程上一定把 TP 锁在单机内、DP 放到跨机间？</strong>主要有两层原因<a class="cite" href="#ref-10">[10]</a>：</p>
+        <p><strong>为什么工程上一定把 TP 锁在单机内、DP 放到跨机间？</strong>主要有两层原因：</p>
         <ul>
             <li><strong>每层通信量对比：</strong>TP 每层通信量为 $8bsh$，标准 DP 为 $2h^2$，约掉公因子 $h$ 后即对比 $[b\cdot s]$ 与 $[h]$——两者同处 $10^5$ 量级，但大序列场景下 TP 通信量通常更大。</li>
             <li><strong>决定性差异——反向梯度是否阻塞：</strong>DP 把本层算完的梯度扔进后台异步 <code>AllReduce</code> 后，下一层反向立刻接着计算；而 TP 每一层反向都必须死等本层 <code>AllReduce</code> 回传完 $\partial\mathcal{L}/\partial X$ 才能继续往下传播。</li>
         </ul>
-        <p>实测数据印证了这一点<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>：Megatron 在 32 台 16 卡 DGX-2H（512 × V100-32GB）训练 GPT-2（1.2B → 8.3B）时，单机纯 TP 从 1→2→4→8 卡扩展效率为 100%→95%→82%→77%（每机用到 8 卡即顶满，更大学模型单机仍受激活显存限制）；再在外围叠加 64 路跨机 DP 到 512 卡后，总吞吐达 15,100 TFLOPs，对比无通信理想值 $39 \times 512 = 19{,}968\text{ TFLOPs}$ 依然保持 <strong>76% Weak Scaling 利用率</strong>。</p>
+        <p>实测数据印证了这一点：Megatron 在 32 台 16 卡 DGX-2H（512 × V100-32GB）训练 GPT-2（1.2B → 8.3B）时，单机纯 TP 从 1→2→4→8 卡扩展效率为 100%→95%→82%→77%（每机用到 8 卡即顶满，更大学模型单机仍受激活显存限制）；再在外围叠加 64 路跨机 DP 到 512 卡后，总吞吐达 15,100 TFLOPs，对比无通信理想值 $39 \times 512 = 19{,}968\text{ TFLOPs}$ 依然保持 <strong>76% Weak Scaling 利用率</strong>。</p>
 
         <h3 id="tp-internals">Megatron 实现细节<a class="anchor" href="#tp-internals" aria-hidden="true">#</a></h3>
-        <p>落地到 Megatron 的 <code>mpu</code>（<code>parallel_state</code>）源码，多维并行跑得通、不漂移，靠的是三处精细设计<a class="cite" href="#ref-2">[2]</a>：</p>
+        <p>落地到 Megatron 的 <code>mpu</code>（<code>parallel_state</code>）源码，多维并行跑得通、不漂移，靠的是三处精细设计：</p>
 
         <p><strong>1. 3D 进程组划分（<code>initialize_model_parallel</code>）：</strong>Megatron 固定按<strong>内层 <code>TP</code> &rarr; 中层 <code>DP</code> &rarr; 外层 <code>PP</code></strong>的顺序展开全局 Rank 编号。假设 16 张卡（两台 8 卡机器）配 $\text{TP}=2, \text{PP}=2, \text{DP}=4$，这四套正交通信域各自承担完全不同的流量：</p>
         <ul>
@@ -645,7 +645,7 @@ hidden_states = self.hidden_dropout(output)</code></pre>
         <p>如果一次喂完整 Batch，同一时间只有 1 个阶段在跑，$P=4$ 时空闲气泡高达 $\frac{P-1}{P} = 75\%$。<strong>GPipe</strong><a class="cite" href="#ref-5">[5]</a> 把 Batch 切成 $M$ 份微批次（Micro-batch）连续推入流水线，设前/反向单格各耗时 1 个节拍，总气泡率立即缩为：</p>
         $$r_{\text{GPipe}} = \frac{P - 1}{M + P - 1}$$
         <p>当 $M \ge 4P$（例如 $P=4, M=16$）时，气泡率降到 $\frac{3}{19} \approx 15.8\%$。</p>
-        <p>但前向积攒全部 $M$ 个微批次的激活会把 Stage 0 撑爆，所以 GPipe 标配了<strong>激活重计算（Re-materialization）</strong><a class="cite" href="#ref-5">[5]</a>：前向时 Stage 内只保留边界输入、丢掉中间激活，等反向轮到时现场重算一次前向。这样用约 33% 额外算力换取了峰值显存降到 $\mathcal{O}\!\left(N + \frac{L}{P}\cdot\frac{N}{M}\right)$。</p>
+        <p>但前向积攒全部 $M$ 个微批次的激活会把 Stage 0 撑爆，所以 GPipe 标配了<strong>激活重计算（Re-materialization）</strong>：前向时 Stage 内只保留边界输入、丢掉中间激活，等反向轮到时现场重算一次前向。这样用约 33% 额外算力换取了峰值显存降到 $\mathcal{O}\!\left(N + \frac{L}{P}\cdot\frac{N}{M}\right)$。</p>
         <p>即便开了重计算，GPipe 依然要等所有 $M$ 份前向边界输入全算完才开始反向，Stage 0 缓存的微批数仍随 $\mathcal{O}(M)$ 线性增长。后续流水线调度通过交错前反向解决了这一瓶颈：</p>
         <ul>
             <li><strong>1F1B：</strong>流水线填满后严格交替执行「一步前向 + 一步反向 + 立即释放激活」，气泡率与 GPipe 相同，却把峰值缓存微批数永久压低到阶段数 $\mathcal{O}(P)$。</li>
@@ -664,12 +664,12 @@ hidden_states = self.hidden_dropout(output)</code></pre>
         <p>为让 GPU 内核保持规整的静态张量形状，不能任由 token 无限挤进同一个热门专家，需要预先规定每个专家槽位容量（<code>Expert Capacity</code>）<a class="cite" href="#ref-6">[6]</a>：</p>
         $$C = \left\lceil \frac{N_{\text{tokens}} \cdot k}{E} \cdot \text{capacity\_factor} \right\rceil$$
         <p>容量因子一般设 $1.0 \text{–} 1.5$。超过容量的 token 会被直接丢弃（借助残差连接跨过本层），没坐满的空槽则补零。</p>
-        <p>只靠交叉熵损失的话，门控很容易塌缩到只用少数一两个专家造成大量丢包，所以都会加一条可微分的负载均衡辅助损失<a class="cite" href="#ref-6">[6]</a>：</p>
+        <p>只靠交叉熵损失的话，门控很容易塌缩到只用少数一两个专家造成大量丢包，所以都会加一条可微分的负载均衡辅助损失：</p>
         $$\mathcal{L}_{\text{aux}} = \alpha \cdot E \sum_{i=1}^{E} f_i \cdot P_i$$
         <p>其中 $f_i$ 是该批实际落入专家 $i$ 的 token 比例，$P_i$ 是门控预测概率均值。由 $\sum f_i = \sum P_i = 1$ 及柯西不等式可知，当且仅当完全均衡 $f_i = P_i = 1/E$ 时损失取最小值 $\alpha$。</p>
 
         <h3 id="moe-alltoall">两趟 All-to-All 与分组<a class="anchor" href="#moe-alltoall" aria-hidden="true">#</a></h3>
-        <p>与 ZeRO-3“token 不动、搬运权重”相反，<strong>专家并行（EP）</strong><a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>让庞大的专家权重钉死在各自 GPU 上，改为靠两趟 <code>All-to-All</code> 来回寄送 token——而且前面已经算过，双向环上 <code>All-to-All</code> 的耗时只有 <code>AllGather</code> 的四分之一。</p>
+        <p>与 ZeRO-3“token 不动、搬运权重”相反，<strong>专家并行（EP）</strong><a class="cite" href="#ref-7">[7]</a>让庞大的专家权重钉死在各自 GPU 上，改为靠两趟 <code>All-to-All</code> 来回寄送 token——而且前面已经算过，双向环上 <code>All-to-All</code> 的耗时只有 <code>AllGather</code> 的四分之一。</p>
         <p>拿 2 卡为例：专家 $E_0$ 在 GPU 0、$E_1$ 在 GPU 1。Attention 算完后 GPU 0 拿着 $[a, b]$、GPU 1 拿着 $[c, d]$，门控把 $a, c$ 派去 $E_0$，$b, d$ 派去 $E_1$。第一趟 <code>All-to-All</code>（Dispatch）跨卡交换出 $b$ 和 $c$，各自就地算完专家 FFN；第二趟 <code>All-to-All</code>（Combine）按原路寄回，恢复成 $[a', b']$ 和 $[c', d']$ 进入下一层 Attention。</p>
         <pre><code class="language-python">class _AllToAll(torch.autograd.Function):
     @staticmethod
@@ -695,7 +695,7 @@ output = torch.einsum("sec,ecm-&gt;sm", combine_weights, combined)</code></pre>
             <figcaption>图 10：MoE 两趟 <code>All-to-All</code> 完整周期，以及开启 4 卡热门偏斜场景时 <code>CF=1.0</code> 的容量截断与丢包示意。</figcaption>
         </figure>
 
-        <p>在 DeepSpeed-Megatron<a class="cite" href="#ref-7">[7]</a> 里，有一个很容易绕晕但非常关键的通信域拆分：非专家参数（Attention、Embedding、LN、Router）依然跨全部数据并行卡共享，而专家本身沿 $\text{EP}$ 切开了。假设共有 $8$ 张 DP 卡、$4$ 个专家且设 $\text{EP} = 4$，那整群恰好放下 $2$ 份专家副本——也就是 <strong>$\text{DP}(8) = \text{EP}(4) \times \text{EDP}(2)$</strong>：</p>
+        <p>在 DeepSpeed-Megatron 里，有一个很容易绕晕但非常关键的通信域拆分：非专家参数（Attention、Embedding、LN、Router）依然跨全部数据并行卡共享，而专家本身沿 $\text{EP}$ 切开了。假设共有 $8$ 张 DP 卡、$4$ 个专家且设 $\text{EP} = 4$，那整群恰好放下 $2$ 份专家副本——也就是 <strong>$\text{DP}(8) = \text{EP}(4) \times \text{EDP}(2)$</strong>：</p>
         <ul>
             <li><strong><code>EP 组</code>（<code>{0,1,2,3}</code> 和 <code>{4,5,6,7}</code>）：</strong>组内拼齐 4 个不同专家，跑两趟 <code>All-to-All</code> 路由 token。</li>
             <li><strong><code>EDP 组</code>（<code>{0,4}, {1,5}, {2,6}, {3,7}</code>）：</strong>只在<strong>编号相同的专家副本</strong>之间做梯度 <code>AllReduce</code>（GPU 0 的 $E_0$ 绝不会和 GPU 1 的 $E_1$ 混在一起求平均）。</li>

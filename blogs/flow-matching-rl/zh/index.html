@@ -271,7 +271,7 @@ with torch.no_grad():
         $$\frac{\partial p_t}{\partial t} + \nabla\cdot(p_t f_t^{\text{fwd}}) = \frac{1}{2}\sigma_t^2 \Delta p_t = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}\nabla p_t\right) = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}p_t\nabla\log p_t\right)$$
         <p>令两式对 $\partial_t p_t$ 的演化完全一致，即 $\nabla\cdot(p_t v_t) = \nabla\cdot(p_t f_t^{\text{fwd}} - \frac{\sigma_t^2}{2}p_t\nabla\log p_t)$，解得正向 Marginal-Preserving Drift：$f_t^{\text{fwd}}(x_t) = v_t(x_t) + \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)$。</p>
 
-        <p><strong>第二步：Anderson Time-Reversal（$t: 1 \to 0$）。</strong> 根据 Anderson 逆时 SDE 定理<a class="cite" href="#ref-11">[11]</a>，将正向 SDE 反转用于生成采样时，Drift 需减去 $\sigma_t^2\nabla\log p_t(x_t)$，于是得到 Reverse-Time SDE：</p>
+        <p><strong>第二步：Anderson Time-Reversal（$t: 1 \to 0$）。</strong> 根据 Anderson 逆时 SDE 定理，将正向 SDE 反转用于生成采样时，Drift 需减去 $\sigma_t^2\nabla\log p_t(x_t)$，于是得到 Reverse-Time SDE：</p>
         $$dx_t = \Big(f_t^{\text{fwd}}(x_t) - \sigma_t^2 \nabla\log p_t(x_t)\Big)dt + \sigma_t\,d\bar w_t = \left[v_t(x_t) - \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\right]dt + \sigma_t\,d\bar w_t$$
         <p>从物理直觉上看，逆向采样中 $dt \lt 0$，因此 $-\frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\,dt$ 恰好沿 Score Function（对数概率密度梯度）方向拉回样本，抵消随机布朗运动 $\sigma_t\,d\bar w_t$ 带来的扩散发散。</p>
 
@@ -286,7 +286,7 @@ with torch.no_grad():
         $$D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}}) = \frac{\|\mu_\theta - \mu_{\text{ref}}\|^2}{2\sigma_t^2 |\Delta t|} = \frac{|\Delta t|}{2}\left(\frac{1}{\sigma_t} + \frac{\sigma_t(1-t)}{2t}\right)^2 \|v_\theta(x_t, t) - v_{\text{ref}}(x_t, t)\|^2$$
 
         <h3 id="ode2sde-code">PyTorch 实现：sde_step_with_logprob<a class="anchor" href="#ode2sde-code" aria-hidden="true">#</a></h3>
-        <p>在官方 <code>yifan123/flow_grpo</code> 代码库<a class="cite" href="#ref-12">[12]</a>中，整个 ODE-to-SDE 转换被封装在一个兼顾“Rollout 采样”与“Policy Update 重算 log-prob”的函数 <code>sde_step_with_logprob</code> 中：</p>
+        <p>在官方 <code>yifan123/flow_grpo</code> 代码库中，整个 ODE-to-SDE 转换被封装在一个兼顾“Rollout 采样”与“Policy Update 重算 log-prob”的函数 <code>sde_step_with_logprob</code> 中：</p>
         <pre><code class="language-python">def sde_step_with_logprob(
     self,
     model_output: torch.FloatTensor,   # 网络预测速度场 v_theta(x_t, t, c)
@@ -461,7 +461,7 @@ with torch.no_grad():
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="nw"><code>Flow-GRPO</code><a class="cite" href="#ref-12">[12]</a></td>
+                        <td class="nw"><code>Flow-GRPO</code></td>
                         <td>Reverse-SDE GRPO</td>
                         <td>Euler SDE（训练 $T=10$）</td>
                         <td>全部 $T$ 步均匀分摊</td>
@@ -469,7 +469,7 @@ with torch.no_grad():
                         <td>SD3.5 通用 Online RL 对齐基线</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>DanceGRPO</code><a class="cite" href="#ref-13">[13]</a></td>
+                        <td class="nw"><code>DanceGRPO</code></td>
                         <td>Unified SDE GRPO</td>
                         <td>Euler SDE + 共享 $x_1$</td>
                         <td>Subsampled steps、均匀 $A_i$</td>
@@ -477,7 +477,7 @@ with torch.no_grad():
                         <td>大规模 T2I / T2V / I2V（FLUX、HunyuanVideo）</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>MixGRPO / Flash</code><a class="cite" href="#ref-14">[14]</a></td>
+                        <td class="nw"><code>MixGRPO / Flash</code></td>
                         <td>Mixed ODE–SDE Window</td>
                         <td>窗内 SDE + 窗外 DPM++</td>
                         <td>局限在 Sliding Window $S$ 内</td>
@@ -485,7 +485,7 @@ with torch.no_grad():
                         <td>大幅削减 Reverse-SDE 训练耗时（约省 71%）</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>TempFlow-GRPO</code><a class="cite" href="#ref-15">[15]</a></td>
+                        <td class="nw"><code>TempFlow-GRPO</code></td>
                         <td>Branching + Noise Weight</td>
                         <td>ODE + 单步 SDE Branch</td>
                         <td>精确分支点 + $\sigma_t\sqrt{|\Delta t|}$</td>
@@ -493,7 +493,7 @@ with torch.no_grad():
                         <td>区分早期构图探索与后期细节微调</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>BranchGRPO</code><a class="cite" href="#ref-16">[16]</a></td>
+                        <td class="nw"><code>BranchGRPO</code></td>
                         <td>Prefix-Tree Branching</td>
                         <td>Shared-prefix tree SDE</td>
                         <td>Parent-relative tree edges</td>
@@ -501,7 +501,7 @@ with torch.no_grad():
                         <td>高吞吐路径探索（约省 55% 算力）</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>Pref-GRPO / Guard</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-18">[18]</a></td>
+                        <td class="nw"><code>Pref-GRPO / Guard</code></td>
                         <td>Stabilized SDE GRPO</td>
                         <td>Reverse SDE</td>
                         <td>Pairwise 胜率 / Regulated Clipping</td>
@@ -509,7 +509,7 @@ with torch.no_grad():
                         <td>抑制 FLUX / SD3.5 上的 Reward Hacking 与崩溃</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>DiffusionNFT</code><a class="cite" href="#ref-20">[20]</a></td>
+                        <td class="nw"><code>DiffusionNFT</code></td>
                         <td>Forward-Process Contrast</td>
                         <td><strong>任意 Black-Box Solver</strong></td>
                         <td>Forward FM 直接回归</td>
@@ -517,7 +517,7 @@ with torch.no_grad():
                         <td>最高性价比单轮对齐（比 Flow-GRPO 快 ~25×）</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>RAM</code><a class="cite" href="#ref-22">[22]</a></td>
+                        <td class="nw"><code>RAM</code></td>
                         <td>SOC Consistency</td>
                         <td><strong>任意 Sampler</strong></td>
                         <td>Adjoint–REINFORCE 一致性</td>
@@ -525,7 +525,7 @@ with torch.no_grad():
                         <td>不可微 VLM Reward 且免伴随反向扫描</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>T2I-R1</code><a class="cite" href="#ref-25">[25]</a></td>
+                        <td class="nw"><code>T2I-R1</code></td>
                         <td>Coupled AR CoT GRPO</td>
                         <td>Autoregressive tokens</td>
                         <td>Semantic + Token BiCoT</td>
@@ -533,7 +533,7 @@ with torch.no_grad():
                         <td>需要图文一体 CoT 的统一离散多模态模型</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>GenAgent / Edit-R1</code><a class="cite" href="#ref-28">[28]</a><a class="cite" href="#ref-30">[30]</a></td>
+                        <td class="nw"><code>GenAgent / Edit-R1</code></td>
                         <td>Outer-Loop Agentic RL</td>
                         <td>调用 FLUX / Flow DiT</td>
                         <td>Multi-turn trajectory + CoT RRM</td>

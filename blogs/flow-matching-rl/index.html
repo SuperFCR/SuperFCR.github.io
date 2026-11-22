@@ -271,7 +271,7 @@ with torch.no_grad():
         $$\frac{\partial p_t}{\partial t} + \nabla\cdot(p_t f_t^{\text{fwd}}) = \frac{1}{2}\sigma_t^2 \Delta p_t = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}\nabla p_t\right) = \nabla\cdot\!\left(\frac{\sigma_t^2}{2}p_t\nabla\log p_t\right)$$
         <p>Matching $\nabla\cdot(p_t v_t) = \nabla\cdot(p_t f_t^{\text{fwd}} - \frac{\sigma_t^2}{2}p_t\nabla\log p_t)$ gives the marginal-preserving forward drift $f_t^{\text{fwd}}(x_t) = v_t(x_t) + \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)$.</p>
 
-        <p><strong>Step 2: Anderson time-reversal ($t: 1 \to 0$).</strong> By Anderson's reverse-time SDE theorem<a class="cite" href="#ref-11">[11]</a>, reversing a forward SDE with drift $f_t^{\text{fwd}}$ and diffusion $\sigma_t$ subtracts $\sigma_t^2\nabla\log p_t(x_t)$ from the drift:</p>
+        <p><strong>Step 2: Anderson time-reversal ($t: 1 \to 0$).</strong> By Anderson's reverse-time SDE theorem, reversing a forward SDE with drift $f_t^{\text{fwd}}$ and diffusion $\sigma_t$ subtracts $\sigma_t^2\nabla\log p_t(x_t)$ from the drift:</p>
         $$dx_t = \Big(f_t^{\text{fwd}}(x_t) - \sigma_t^2 \nabla\log p_t(x_t)\Big)dt + \sigma_t\,d\bar w_t = \left[v_t(x_t) - \frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\right]dt + \sigma_t\,d\bar w_t$$
         <p>Intuitively, as time flows backward from noise ($t=1$) toward data ($t=0$), $dt \lt 0$, so $-\frac{\sigma_t^2}{2}\nabla\log p_t(x_t)\,dt$ pushes the trajectory <em>upward</em> along the log-density gradient to counteract the random diffusion $\sigma_t\,d\bar w_t$.</p>
 
@@ -286,7 +286,7 @@ with torch.no_grad():
         $$D_{\text{KL}}(\pi_\theta \,\|\, \pi_{\text{ref}}) = \frac{\|\mu_\theta - \mu_{\text{ref}}\|^2}{2\sigma_t^2 |\Delta t|} = \frac{|\Delta t|}{2}\left(\frac{1}{\sigma_t} + \frac{\sigma_t(1-t)}{2t}\right)^2 \|v_\theta(x_t, t) - v_{\text{ref}}(x_t, t)\|^2$$
 
         <h3 id="ode2sde-code">Implementing sde_step_with_logprob in PyTorch<a class="anchor" href="#ode2sde-code" aria-hidden="true">#</a></h3>
-        <p>In the official <code>yifan123/flow_grpo</code> codebase<a class="cite" href="#ref-12">[12]</a>, a single patched scheduler function <code>sde_step_with_logprob</code> handles both trajectory sampling during rollout (when <code>prev_sample=None</code>) and exact log-probability re-evaluation during GRPO policy updates (when <code>prev_sample</code> is fed back from the replay buffer):</p>
+        <p>In the official <code>yifan123/flow_grpo</code> codebase, a single patched scheduler function <code>sde_step_with_logprob</code> handles both trajectory sampling during rollout (when <code>prev_sample=None</code>) and exact log-probability re-evaluation during GRPO policy updates (when <code>prev_sample</code> is fed back from the replay buffer):</p>
         <pre><code class="language-python">def sde_step_with_logprob(
     self,
     model_output: torch.FloatTensor,   # v_theta(x_t, t, c)
@@ -461,7 +461,7 @@ with torch.no_grad():
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="nw"><code>Flow-GRPO</code><a class="cite" href="#ref-12">[12]</a></td>
+                        <td class="nw"><code>Flow-GRPO</code></td>
                         <td>Reverse-SDE GRPO</td>
                         <td>Euler SDE ($T=10$ train)</td>
                         <td>Uniform across all $T$ steps</td>
@@ -469,7 +469,7 @@ with torch.no_grad():
                         <td>General T2I alignment baseline on SD3.5</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>DanceGRPO</code><a class="cite" href="#ref-13">[13]</a></td>
+                        <td class="nw"><code>DanceGRPO</code></td>
                         <td>Unified SDE GRPO</td>
                         <td>Euler SDE + shared $x_1$</td>
                         <td>Subsampled steps, uniform $A_i$</td>
@@ -477,7 +477,7 @@ with torch.no_grad():
                         <td>Large-scale T2I / T2V / I2V (FLUX, HunyuanVideo)</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>MixGRPO / Flash</code><a class="cite" href="#ref-14">[14]</a></td>
+                        <td class="nw"><code>MixGRPO / Flash</code></td>
                         <td>Mixed ODE–SDE window</td>
                         <td>SDE in $S$, DPM++ outside</td>
                         <td>Localized to sliding window $S$</td>
@@ -485,7 +485,7 @@ with torch.no_grad():
                         <td>Cutting reverse-SDE wall-clock cost (~71%)</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>TempFlow-GRPO</code><a class="cite" href="#ref-15">[15]</a></td>
+                        <td class="nw"><code>TempFlow-GRPO</code></td>
                         <td>Branching + noise weight</td>
                         <td>ODE + SDE branch forks</td>
                         <td>Exact node + $\sigma_t\sqrt{|\Delta t|}$ weight</td>
@@ -493,7 +493,7 @@ with torch.no_grad():
                         <td>Fine-grained layout vs. detail credit</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>BranchGRPO</code><a class="cite" href="#ref-16">[16]</a></td>
+                        <td class="nw"><code>BranchGRPO</code></td>
                         <td>Prefix-tree branching</td>
                         <td>Shared-prefix tree SDE</td>
                         <td>Parent-relative tree edges</td>
@@ -501,7 +501,7 @@ with torch.no_grad():
                         <td>High-throughput trajectory exploration (~55% faster)</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>Pref-GRPO / Guard</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-18">[18]</a></td>
+                        <td class="nw"><code>Pref-GRPO / Guard</code></td>
                         <td>Stabilized SDE GRPO</td>
                         <td>Reverse SDE</td>
                         <td>Pairwise win-rate / regulated</td>
@@ -509,7 +509,7 @@ with torch.no_grad():
                         <td>Preventing reward hacking &amp; ratio drift on FLUX</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>DiffusionNFT</code><a class="cite" href="#ref-20">[20]</a></td>
+                        <td class="nw"><code>DiffusionNFT</code></td>
                         <td>Forward-process contrast</td>
                         <td><strong>Any black-box solver</strong></td>
                         <td>Direct forward FM regression</td>
@@ -517,7 +517,7 @@ with torch.no_grad():
                         <td>Fastest single-pass alignment (~25× vs Flow-GRPO)</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>RAM</code><a class="cite" href="#ref-22">[22]</a></td>
+                        <td class="nw"><code>RAM</code></td>
                         <td>SOC consistency</td>
                         <td><strong>Arbitrary sampler</strong></td>
                         <td>Adjoint-REINFORCE loss</td>
@@ -525,7 +525,7 @@ with torch.no_grad():
                         <td>Non-differentiable rewards without SDE ratios</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>T2I-R1</code><a class="cite" href="#ref-25">[25]</a></td>
+                        <td class="nw"><code>T2I-R1</code></td>
                         <td>Coupled AR CoT GRPO</td>
                         <td>Autoregressive tokens</td>
                         <td>Semantic + token BiCoT</td>
@@ -533,7 +533,7 @@ with torch.no_grad():
                         <td>Unified discrete MLLMs needing prompt CoT</td>
                     </tr>
                     <tr>
-                        <td class="nw"><code>GenAgent / Edit-R1</code><a class="cite" href="#ref-28">[28]</a><a class="cite" href="#ref-30">[30]</a></td>
+                        <td class="nw"><code>GenAgent / Edit-R1</code></td>
                         <td>Outer-loop Agentic RL</td>
                         <td>Wraps FLUX / Flow DiT</td>
                         <td>Multi-turn trajectory + CoT RRM</td>
