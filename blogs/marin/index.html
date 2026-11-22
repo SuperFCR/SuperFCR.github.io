@@ -56,7 +56,7 @@
         <h1 class="post-title">Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</h1>
         <div class="post-meta">
             <span>November 22, 2026</span>
-            <span>39 min read</span>
+            <span>46 min read</span>
             <span>Chaoran Feng</span>
         </div>
     </header>
@@ -89,11 +89,18 @@
                     <li><a href="#harrier-buckets-mix">Harrier Buckets &amp; Proxy Mix</a></li>
                 </ul>
             </li>
+            <li><a href="#scaling-laws">Scaling Laws &amp; Scaling Ladder</a>
+                <ul>
+                    <li><a href="#isoflop-chinchilla-vpnls">IsoFLOPs, Chinchilla Bias &amp; VPNLS</a></li>
+                    <li><a href="#delphi-moe-scaling">Delphi 300× &amp; Dense-to-MoE Speedup</a></li>
+                    <li><a href="#hparam-lr-transfer">HParam &amp; MoeHeuristic LR Law</a></li>
+                    <li><a href="#scaling-ladder-lr">5-Rung Scaling Ladder &amp; Hero Results</a></li>
+                </ul>
+            </li>
             <li><a href="#pretraining">535B Pre-Training Systems</a>
                 <ul>
                     <li><a href="#gb200-ep64-transport">Pooled-Wave &amp; Ragged EP</a></li>
                     <li><a href="#muonh-optimizer">MuonH &amp; Numerical Stability</a></li>
-                    <li><a href="#scaling-ladder-lr">Scaling Ladder &amp; LR Law</a></li>
                 </ul>
             </li>
             <li><a href="#mid-training">Mid-Training &amp; 262K Context</a>
@@ -138,7 +145,7 @@
         </ul>
 
         <div class="callout callout-tip">
-            <p><strong>How this guide is organized:</strong> Section 1 builds the shared mathematical vocabulary (parameter/FLOP accounting, GQA vs. MLA, Hyperball, Quantile Balancing, and 5D sharding). Sections 2–5 trace Mochi at Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a> from block design and Datakit curation through GB200 pre-training and 262K mid-training. Sections 6–8 examine Snowball's post-training DAG (Relay SFT, Plateau Dropping, TITO GRPO, EAGLE-3) and Marin's 26-benchmark Eval Policy<a class="cite" href="#ref-16">[16]</a>.</p>
+            <p><strong>How this guide is organized:</strong> Section 1 builds the shared mathematical vocabulary (parameter/FLOP accounting, GQA vs. MLA, Hyperball, Quantile Balancing, and 5D sharding). Sections 2–6 trace Mochi at Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a> through block design, Datakit 25T curation, Scaling Laws &amp; the 5-rung Scaling Ladder (<code>#scaling-laws</code>), GB200 pre-training systems, and 262K mid-training. Sections 7–9 examine Snowball's post-training DAG (Relay SFT, Plateau Dropping, TITO GRPO, EAGLE-3) and Marin's 26-benchmark Eval Policy<a class="cite" href="#ref-16">[16]</a>.</p>
         </div>
 
         <h2 id="overview">Why Marin Matters<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
@@ -147,8 +154,8 @@
         <p>Marin evolved across four engineering milestones to restore that white-box loop at scale<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-37">[37]</a><a class="cite" href="#ref-38">[38]</a>:</p>
         <ul>
             <li><strong>From scrappy &ldquo;Tootsie&rdquo; dense runs to Open Athena:</strong> with 1 FTE on free TPU Research Cloud (TRC) slices, Marin matched Llama 3.1 8B on 16/19 evals, then limped Marin 32B across preemption chaos by diagnosing loss spikes with Qwen3-style QK-Norm and fixing Dolmino GSM8K contamination<a class="cite" href="#ref-10">[10]</a>. Joining Open Athena grew the team to 10 FTEs and funded a cluster scheduler called <strong>Iris</strong> (harnessing multi-region preemptible capacity and cutting fault recovery from ~1 hour to minutes).</li>
-            <li><strong>Delphi &amp; MoE V1 (6.7× theoretical / 3.6× realized speedup):</strong> first established predictable dense scaling laws (<code>Delphi</code>, extrapolating $300\times$ within 0.2%), then launched <code>Marin MoE V1</code> (<code>129B-A16B</code>, 1T tokens, $10^{23}$ FLOPs on TPU v4) using Quantile Balancing, AdamH, GatedNorm, and XSA—hitting <code>2.234</code> Paloma loss, 0.8% below its <code>2.252</code> preregistered forecast.</li>
-            <li><strong>Stacked pre-Hero speedups (additional 2.1× over MoE V1):</strong> systematic four-scale isoFLOP ablations<a class="cite" href="#ref-37">[37]</a> stacked finer expert sparsity (<code>64 → 256</code> experts, $1.4\times$ theoretical / $1.3\times$ realized), <code>MuonH</code> ($1.3\times$ / $1.25\times$), Partial Key Offset with 50% Partial RoPE ($1.2\times$ / $1.2\times$), and community contributor Elie Bakouch's $2.5$ Sigmoid output rescaling ($1.04\times$), shifting isoFLOP optima toward fewer active parameters and more tokens.</li>
+            <li><strong>Delphi &amp; MoE V1 (6.7× theoretical / 3.6× realized speedup):</strong> first established predictable dense scaling laws (<a href="#scaling-laws"><code>Delphi</code></a>, extrapolating $300\times$ within <code>0.2%</code>), then launched <code>Marin MoE V1</code> (<code>129B-A16B</code>, 1T tokens, $10^{23}$ FLOPs on TPU v4) using Quantile Balancing, AdamH, GatedNorm, and XSA—hitting <code>2.234</code> Paloma loss, 0.8% below its <code>2.252</code> preregistered forecast.</li>
+            <li><strong>Stacked pre-Hero speedups (additional 2.1× over MoE V1):</strong> systematic four-scale IsoFLOP ablations (detailed in <a href="#delphi-moe-scaling">Section 4</a>)<a class="cite" href="#ref-37">[37]</a> stacked finer expert sparsity (<code>64 → 256</code> experts, $1.4\times$ theoretical / $1.3\times$ realized), <code>MuonH</code> ($1.3\times$ / $1.25\times$), Partial Key Offset with 50% Partial RoPE ($1.2\times$ / $1.2\times$), and community contributor Elie Bakouch's $2.5$ Sigmoid output rescaling ($1.04\times$), shifting IsoFLOP optima toward fewer active parameters and more tokens.</li>
             <li><strong>Hard July GB200 objectives &amp; Marin Belay:</strong> when the Jen-Hsun and Lori Huang Foundation granted 768 GB200s (11 healthy racks of 64 GPUs) with a December deadline, Mochi prioritized (1) <strong>realized MFU first</strong>, (2) <strong>preregistered predictability</strong> live-streamed on W&amp;B<a class="cite" href="#ref-1">[1]</a>, and (3) <strong>post-training readiness</strong> via conservative inductive biases and a 5% terminal LR<a class="cite" href="#ref-2">[2]</a>—alongside <strong>Marin Belay</strong>, an automated agent loop that tests community GitHub ideas up the scaling ladder.</li>
         </ul>
 
@@ -397,8 +404,117 @@ def moe_forward_latent_qb(self, x_flat):
         </ol>
         <p>The learned recipe (<code>harrier_mix_2026_08_18.py</code>) splits into a 15T / 3.75T (80% / 20%) two-phase simplex scaled proportionally to Mochi's 18T schedule, packed via Feistel permutation into 4,096-token rows with document segment masks blocking cross-document attention and <code>SConv</code>.</p>
 
+        <h2 id="scaling-laws">Scaling Laws &amp; Scaling Ladder<a class="anchor" href="#scaling-laws" aria-hidden="true">#</a></h2>
+        <p>Why run small experiments as &ldquo;wind tunnels&rdquo; before spending three months on 704 GB200 GPUs<a class="cite" href="#ref-40">[40]</a>? Open Athena's scaling methodology unifies four layers: unbiased parametric loss-surface fitting (<code>VPNLS</code>), compute-transferable optimization recipes (<code>Delphi</code>), empirical LR/Adam heuristics (<code>MoeHeuristic</code>), and a compute-matched 5-rung <strong>Scaling Ladder</strong> that forecasts Hero loss $300\times$ ahead of the largest ladder point.</p>
+
+        <h3 id="isoflop-chinchilla-vpnls">IsoFLOPs, Chinchilla Bias &amp; VPNLS<a class="anchor" href="#isoflop-chinchilla-vpnls" aria-hidden="true">#</a></h3>
+        <p>Starting from the 5-parameter Chinchilla loss surface over active parameters $N$ and training tokens $D$ constrained by total compute $C \approx 6 N_{\text{act}} D$, substituting $N = C/(6D)$ expresses each fixed-FLOPs slice purely as a univariate curve in token horizon $D$<a class="cite" href="#ref-41">[41]</a>:</p>
+        $$L(N,D) = E + \frac{A}{N^\alpha} + \frac{B}{D^\beta} \qquad \Longrightarrow \qquad L(D; C) = E + A\left(\frac{6D}{C}\right)^{\alpha} + \frac{B}{D^\beta}$$
+        <p>Setting $\frac{\partial L}{\partial D} = \frac{\alpha A}{D}\left(\frac{6D}{C}\right)^\alpha - \frac{\beta B}{D^{\beta+1}} = 0$ yields the compute-optimal token/parameter scaling exponents and irreducible asymptote law in compute $C$:</p>
+        $$D^*(C) = \left(\frac{\beta B}{\alpha A}\right)^{\frac{1}{\alpha+\beta}}\left(\frac{C}{6}\right)^{\frac{\alpha}{\alpha+\beta}}, \qquad N^*(C) \propto C^{\frac{\beta}{\alpha+\beta}}, \qquad L^*(C) = E + K \cdot C^{-\gamma}, \quad \gamma = \frac{\alpha\beta}{\alpha+\beta}$$
+        <p>Inverting a baseline curve $L_{\text{base}}(C) = E + A_{\text{base}} C^{-\gamma}$ defines Marin's two core ablation gauges<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-37">[37]</a>—mapping any measured loss $L_{\text{new}}$ at budget $C_{\text{new}}$ to an equivalent baseline compute $C_{\text{equiv}}$:</p>
+        $$S_{\text{theo}} = \frac{C_{\text{equiv}}}{C_{\text{new}}} = \frac{1}{C_{\text{new}}}\left(\frac{A_{\text{base}}}{L_{\text{new}} - E}\right)^{1/\gamma}, \qquad S_{\text{real}} = S_{\text{theo}} \cdot \frac{\mathrm{MFU}_{\text{new}}}{\mathrm{MFU}_{\text{base}}}$$
+        <p>On Mochi's component benchmark curve $L(C) = 1.6 + 88.90 \cdot C^{-0.0941}$, $S_{\text{theo}} = 1.18\times$ means the baseline would burn $18\%$ more FLOPs to match that loss, whereas $S_{\text{real}}$ scales that theoretical multiple by measured GB200 MFU<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <p>Standard <strong>Chinchilla Approach 2</strong> estimates $(\alpha,\beta)$ indirectly by fitting parabolas to $(\log D, L)$ on fixed-compute IsoFLOP bowls and regressing the parabola vertices against $C$. As Eric Czech demonstrated in <em>Problems with Chinchilla Approach 2</em><a class="cite" href="#ref-41">[41]</a>, $L(\log D; C)$ is asymmetric whenever $\alpha \neq \beta$, making a parabola only a symmetric 2nd-order Taylor approximation near the exact minimum. Wide sampling grids, uncentered token grids, or large $|\alpha - \beta|$ skew the parabola vertex systematically—causing a <strong>~6.5% compute misallocation</strong> (<code>DCL %</code>, worth &gt;$1M on Llama-3-scale pre-training) even on clean synthetic or public IsoFLOP data.</p>
+
+        <p>To eliminate parabolic proxy bias without sacrificing solver stability, Open Athena introduced <strong>Variable Projection with Nonlinear Least Squares (<code>VPNLS</code>)</strong><a class="cite" href="#ref-41">[41]</a><a class="cite" href="#ref-42">[42]</a> for direct 5-parameter fitting (Chinchilla Approach 3): conditioned on candidate exponents $(\alpha, \beta)$, $L(N_i, D_i) = E + A N_i^{-\alpha} + B D_i^{-\beta}$ is strictly linear in $\mathbf{c} = (E, A, B)^\top$, allowing exact closed-form inner solution $\mathbf{c}^*(\alpha,\beta)$ via linear/IRLS least squares:</p>
+        $$\min_{\alpha,\beta &gt; 0}\; \min_{E,A,B \ge 0} \sum_{i} \rho_{\delta}\!\left(E + A N_i^{-\alpha} + B D_i^{-\beta} - L_i\right) \quad \Longleftrightarrow \quad \min_{\alpha,\beta &gt; 0} \sum_{i} \rho_{\delta}\!\left(\bigl[\mathbf{\Phi}(\alpha,\beta)\,\mathbf{c}^*(\alpha,\beta)\bigr]_i - L_i\right)$$
+        <p>Collapsing a non-convex 5D search into a smooth 2D landscape over $(\alpha,\beta)$ lets Cython grid search + envelope-theorem L-BFGS-B avoid local minima, consume arbitrary non-IsoFLOP schedules, recover synthetic laws exactly (zero systematic bias), and beat <code>apple/ml-scalefit</code> by <strong>15.8× runtime speedup</strong> (<code>0.106s</code> vs <code>1.672s</code>, lower Huber loss <code>13.1</code> vs <code>13.4 × 10<sup>−6</sup></code>)<a class="cite" href="#ref-42">[42]</a>.</p>
+
+        <h3 id="delphi-moe-scaling">Delphi 300× &amp; Dense-to-MoE Speedup<a class="anchor" href="#delphi-moe-scaling" aria-hidden="true">#</a></h3>
+        <p>Before touching 535B MoEs, Will Held built <strong>Delphi</strong><a class="cite" href="#ref-40">[40]</a> (Qwen 3 dense architecture, <code>Nemotron-CC + StarCoderData + ProofPile 2</code>, WSD 10% warmup / 20% linear decay to zero) to answer why scaling suites fail on long token horizons. Attempt 1 used <code>Cautious AdamC</code> ($\eta = 0.33\sqrt{B}/H$, fixed <code>WD=0.1</code>) and fit seven IsoFLOP buckets ($3\times 10^{18}$–$3\times 10^{20}$ FLOPs) cleanly—only to miss the held-out $10^{22}$ run by <code>2.5%</code> and diverge completely at $10^{23}$ FLOPs because oversized token-horizon batches inflated peak LR.</p>
+
+        <p>Delphi Attempt 2 (<code>completed_adamh.py</code>) unified three fixes: (1) swapping to Kaiyue Wen's <strong><code>AdamH</code></strong>, whose Frobenius-sphere projection removes weight decay and stabilizes width transfer without needing a $1/H$ LR factor; (2) applying <code>Complete(d)P</code>-inspired token-horizon attenuation calibrated to $T^{-0.3}$ ($\eta \propto T^{-0.3}$ later echoed by Ren et al.'s $T^{-0.320}$ on MuonH); and (3) joint Gaussian-process tuning via Google Vizier anchored on reference run ($B_0=64$ seqs, $T_0=2.5\text{B}$ tokens, $\eta_0=0.00630$, $\eta_{0,\text{Adam}}=0.000656$, $\varepsilon_0=1.85\times 10^{-8}$)<a class="cite" href="#ref-40">[40]</a>:</p>
+        $$\begin{aligned}
+        \eta_{\text{proj}} &= \eta_0 \sqrt{\frac{B}{B_0}}\left(\frac{T_0}{T}\right)^{0.3}, & \eta_{\text{scalar}} &= \eta_{0,\text{Adam}}\sqrt{\frac{B\,T_0}{B_0\,T}} \\
+        \varepsilon &= \varepsilon_0\sqrt{\frac{B_0\,T}{B\,T_0}}, & \beta_2 &= \mathrm{clip}\!\left(0.9999^{B/B_0},\, 0.9,\, 0.9999\right)
+        \end{aligned}$$
+        <ul>
+            <li><strong>300× Dense extrapolation within 0.2%:</strong> fit strictly on seven IsoFLOP optima ($3\times 10^{18}\to 3\times 10^{20}$ FLOPs, Paloma <code>3.586 → 2.883</code>), $L_{\text{dense}}(C) = 1.65 + 117.8 \cdot C^{-0.0966}$ forecast held-out checkpoints at $10^{21}$ (<code>2.759</code>, <code>+0.5%</code>), $10^{22}$ (<code>2.532</code>, <code>+0.2%</code>), and $10^{23}$ FLOPs (25B params, 600B tokens: <code>2.355</code>, <strong><code>+0.2%</code></strong>). Across 3 random seeds at $10^{21}$ and $10^{22}$, seed spread (~<code>0.1%</code>) was $10\times$ narrower than the bootstrap 95% CI (<code>±0.5% → ±4%</code>)<a class="cite" href="#ref-40">[40]</a>.</li>
+            <li><strong>Downstream emergence &amp; overtraining tax:</strong> fitting a compute law to <em>continuous soft evals</em> (correct-option log-prob for MMLU, reference BPB for HumanEval/GSM8K) composed with a sigmoid fit across public Llama/Qwen/OLMo checkpoints accurately forecast $10^{23}$ hard accuracy (<code>~60%</code> MMLU, <code>19%</code> HumanEval, <code>27%</code> GSM8K). Extrapolating off-optima curves at $10\times$ overtraining incurred roughly a <strong>~6× compute penalty</strong> on dense transformers vs. only <strong>~2×</strong> on Marin MoEs<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-40">[40]</a>.</li>
+            <li><strong>Dense → Marin MoE V1 (6.7× theoretical / 3.6× realized):</strong> migrating to a 64-expert top-4 MoE at <code>62:1</code> optimal tokens/active-param yielded $L_{\text{MoE-V1}}(C) = 1.6 + 95.18 \cdot C^{-0.0941}$: predicting $10^{21}$ at <code>2.598</code> (actual <code>2.599</code>) and $10^{23}$ (<code>129B-A16B</code>, 1T tokens) at <code>2.252</code> vs. measured <strong><code>2.234</code></strong> (<code>-0.8%</code>)<a class="cite" href="#ref-37">[37]</a>.</li>
+            <li><strong>Four stacked pre-Hero upgrades (+2.1× theoretical / ~1.8× realized):</strong> adding <code>64 → 256</code> experts (<code>1.4×/1.3×</code>), <code>MuonH</code> (<code>1.3×/1.25×</code>), PKO + 50% Partial RoPE (<code>1.2×/1.2×</code>), and <code>2.5</code> Sigmoid renormalization (<code>1.04×</code>) shifted IsoFLOP bowl vertices down and to the right—fewer active parameters, more tokens—cutting compute needed at $3\times 10^{19}$ FLOPs in half again<a class="cite" href="#ref-37">[37]</a>:</li>
+        </ul>
+
+        <figure>
+            <img src="./fig-scaling-dense-moe.webp" width="1560" height="1978" alt="Top: Delphi dense scaling law (1.65 + 117.8 C^-0.0966) compared against Marin MoE V1 optima, showing 4.0x to 4.3x compute speedup at IsoFLOP scales widening to 6.7x theoretical (3.6x realized) at 1e23 FLOPs. Bottom: IsoFLOP parabolas across four budgets (1e18 to 3e19 FLOPs) comparing baseline vs the four-feature combined recipe, with optima shifting toward more tokens and fewer active parameters." loading="lazy">
+            <figcaption>Fig. 6. Top: Dense Delphi scaling law vs. Marin MoE V1 IsoFLOP optima and held-out runs, reaching a <code>6.7×</code> theoretical (<code>3.6×</code> realized) FLOP speedup at $10^{23}$ FLOPs. Bottom: Four-scale IsoFLOP bowls showing how combining 256 experts, <code>MuonH</code>, PKO, and 2.5 Sigmoid normalization shifts optimal configurations toward more tokens and achieves an extra <code>~2.1×</code> speedup. Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-37">[37]</a>.</figcaption>
+        </figure>
+
+        <h3 id="hparam-lr-transfer">HParam &amp; MoeHeuristic LR Law<a class="anchor" href="#hparam-lr-transfer" aria-hidden="true">#</a></h3>
+        <p>To prevent LR tuning bias from masquerading as architectural gain, Marin sweeps learning rate per $(D, T)$ cell, fits a log-quadratic curve to held-out BPB in each cell, and regresses the optima $\eta^*(T, D, B)$ jointly in log-space across 19 cells (<code>d512–d1280</code>, scaled to layers $L \propto D$)<a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-37">[37]</a>. Dividing empirical optima by $D^{c}$ collapses every model width onto a single token-horizon power law ($\eta^*\cdot D^{-c} \propto T^b$):</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Marin Recipe Fit</th><th>Base LR Law ($\text{lr}_{\text{adam}}$)</th><th>Optimizer &amp; Fit Diagnostics</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>MoE V1 (<code>#4225</code>)</strong></td><td>$1.680 \cdot T^{-0.2815} \cdot D^{-0.3721} \cdot \sqrt{B_{\text{seq}}}$</td><td><code>AdamH</code>; $R^2=0.994$ across 19 cells ($9.50\cdot T^{-0.281}\cdot D^{-0.372}$ at <code>bs=32</code>)<a class="cite" href="#ref-37">[37]</a></td></tr>
+                <tr><td><strong>May Recipe (<code>#5951</code>)</strong></td><td>$0.06602 \cdot T^{-0.395} \cdot D^{-0.150} \cdot \sqrt{B_{\text{tok}}}$</td><td>Early <code>MuonH</code> fit; weaker width attenuation ($D^{-0.150}$), steeper horizon decay<a class="cite" href="#ref-17">[17]</a></td></tr>
+                <tr><td><strong>Hero <code>MoeHeuristic</code> (<code>#7856/#8003</code>)</strong></td><td>$0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}$</td><td><code>MuonH</code> ($\frac{13}{3}\text{lr}_{\text{adam}}$); $R^2=0.978$, calibrated from <code>seq_len=8192</code> ($\frac{34.35}{\frac{13}{3}\sqrt{8192}}$)<a class="cite" href="#ref-17">[17]</a></td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        $$\text{lr}_{\text{adam}} = 0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}, \qquad \text{lr}_{\text{muonh}} = \frac{13}{3}\text{lr}_{\text{adam}}$$
+        $$\epsilon = 9.676\times 10^{-18} \sqrt{\frac{T}{B_{\text{tok}}}}, \qquad \beta_2 = \mathrm{clip}\!\left(0.999^{B_{\text{tok}}/131{,}072},\ 0.95,\ 0.9999\right)$$
+        <p>Here <code>beta1 = 0.90</code>, linear warmup runs <code>1%</code> with zero global gradient clipping (<code>max_grad_norm</code> off) and decays linearly to <code>5%</code> of peak (<code>min_lr_ratio = 0.05</code>). Because Hero rungs use <code>4.19M</code> to <code>46.14M</code> tokens/batch (well above <code>131,072</code>), $\beta_2$ automatically hits the lower clip bound <code>0.95</code> from <code>d1024</code> onward<a class="cite" href="#ref-17">[17]</a>.</p>
+
+        <figure>
+            <img src="./fig-lr-formula-fit.webp" width="1560" height="555" alt="Three-panel plot of Marin's 19-cell LR formula fit (R^2 = 0.994): optimal Adam LR vs tokens colored by width d512 to d1280 (left), curves collapsing onto a single tokens^-0.281 line after multiplying by dim^0.372 (middle), and actual vs predicted optimal LR alignment (right)." loading="lazy">
+            <figcaption>Fig. 7. Joint 19-cell hyperparameter regression (<code>MoE V1</code>, $R^2 = 0.994$): multiplying measured optima by $D^{0.372}$ collapses all widths (<code>d512–d1280</code>) onto one clean horizon trend (middle), verifying zero width-transfer drift before applying <code>MoeHeuristic</code> ($R^2=0.978$) to Mochi. Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-37">[37]</a>.</figcaption>
+        </figure>
+
+        <h3 id="scaling-ladder-lr">5-Rung Scaling Ladder &amp; Hero Results<a class="anchor" href="#scaling-ladder-lr" aria-hidden="true">#</a></h3>
+        <p>Rather than burning 10 days on an extra $3\times 10^{23}$ rung, Mochi invested <strong>~1% of Hero compute (2 days)</strong> into a 5-rung weak-scaling ladder (<code>launch_scaling_ladder.py</code>, Issue <code>#8435</code>)<a class="cite" href="#ref-14">[14]</a><a class="cite" href="#ref-18">[18]</a> serving four operational roles: (1) catching recipe or data bugs early against prior MoE scaling laws; (2) characterizing scale-dependent dynamics—confirming gradient norms climb through <code>~40%</code> progress before decaying and tracking EP drop creep (<code>2.6% → 3.2% → 3.4%</code> at 5–20% progress); (3) publishing a preregistered forecast every <code>5%</code> of training; and (4) acting as a living reference if anomalies arise mid-Hero.</p>
+
+        <p>Because MoE IsoFLOP optima sit near <code>~60</code> tokens per active parameter (~1.4T tokens for 535B-A23B, where training 18T tokens is <code>~13×</code> overtrained at only <code>~2×</code> efficiency cost)<a class="cite" href="#ref-2">[2]</a>, every rung fixes <strong><code>TOKENS_PER_ACTIVE_PARAM = 791</code></strong> and scales batch size proportionally to healthy NVL72 racks (<code>1,024 × racks</code> at 4K context), so the <code>d2048</code> rung ($9.2\times 10^{21}$ FLOPs) reproduces Hero's exact <code>46.14M</code>-token batch and 11-rack collective traffic—bridging a $300\times$ extrapolation gap to Hero's $2.7\times 10^{24}$ FLOPs:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Rung</th><th>Racks (GPUs)</th><th>Batch (Tok)</th><th>Steps / Tokens</th><th>Act / Total</th><th>FLOPs</th><th>Adam / MuonH LR</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>d768</code> (8L)</td><td>1 (64)</td><td>1,024 (4.19M)</td><td>11,420 / 48B</td><td>61M / 1.6B</td><td>$5.5\times 10^{19}$</td><td><code>3.65e-3</code><br><code>1.58e-2</code></td></tr>
+                <tr><td><code>d1024</code> (12L)</td><td>2 (128)</td><td>2,048 (8.39M)</td><td>15,276 / 128B</td><td>162M / 4.0B</td><td>$2.7\times 10^{20}$</td><td><code>3.33e-3</code><br><code>1.44e-2</code></td></tr>
+                <tr><td><code>d1536</code> (16L)</td><td>6 (384)</td><td>6,144 (25.17M)</td><td>15,128 / 381B</td><td>481M / 11.5B</td><td>$1.8\times 10^{21}$</td><td><code>3.44e-3</code><br><code>1.49e-2</code></td></tr>
+                <tr><td><code>d2048</code> (22L)</td><td>11 (704)</td><td>11,264 (46.14M)</td><td>20,072 / 926B</td><td>1.2B / 27.7B</td><td>$9.2\times 10^{21}$</td><td><code>3.10e-3</code><br><code>1.34e-2</code></td></tr>
+                <tr><td><strong><code>d6144</code> (48L)</strong></td><td>11 (704)</td><td>11,264 (46.14M)</td><td>390,251* / <span class="best">18T</span></td><td class="best">22.8B / 535B</td><td class="best">$2.7\times 10^{24}$</td><td><code>7.60e-4</code><br><code>3.29e-3</code></td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p>*$\beta_2 = 0.9685$ on <code>d768</code> and clips to <code>0.95</code> from <code>d1024</code> onward; <code>d2048</code> hit a hardware crash at 81% progress (terminal points extrapolated for the forecast); Hero (<code>d6144</code>) completed 390,251 main steps (~18.1T tokens) on November 5, 2026 before executing post-schedule 262K updates through step ~393,491.</p>
+
+        <figure>
+            <img src="./fig-scaling-ladder.webp" width="1440" height="622" alt="Left: Training loss curves for the four smaller rungs of the Marin scaling ladder (1.6B to 27.7B). Right: Dropless Paloma macro-loss projecting 2.039 for 535B-A23B." loading="lazy">
+            <figcaption>Fig. 8. Five-rung scaling ladder (<code>1.6B–27.7B</code> predicting <code>535B</code>): per-step train loss (left) and dropless Paloma macro-loss projections fitting $L = 1.5 + A\cdot C^{-\alpha}$ every 5% to terminate at <code>2.039</code> (right; <code>d2048</code> crashed at 81%, hollow markers extrapolated). Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
+
+        <p>Comparing Mochi's 4K ladder law against Marin's earlier TPU recipes (excluding <code>lm_head</code> compute, evaluated at $2.6\times 10^{24}$ FLOPs) confirmed zero numerical penalty from the TPU → GB200 port, even against compute-optimal budgets<a class="cite" href="#ref-2">[2]</a>:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Marin Scaling Law (Excl. <code>lm_head</code>)</th><th>Fitted Power Law $L(C) = E + A\cdot C^{-\alpha}$</th><th>Overtraining</th><th>Hero Projection ($2.6\times 10^{24}$)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Hero Ladder (<code>4K</code>, GB200)</strong></td><td>$1.5 + 84.8 \cdot C^{-0.0900}$</td><td>~13× (791 tok/act)</td><td class="best">2.04 (2.039)</td></tr>
+                <tr><td>May Recipe (<code>4K</code>, TPU)</td><td>$1.6 + 88.3 \cdot C^{-0.0941}$</td><td>Compute-optimal (~1×)</td><td>2.05</td></tr>
+                <tr><td>Snowball <code>67B-A2B</code> (<code>8K</code>, TPU)</td><td>$1.4 + 84.7 \cdot C^{-0.0862}$</td><td>~100×</td><td>2.07</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <figure>
+            <img src="./fig-scaling-ladder-results.webp" width="1560" height="1691" alt="Top: Cross-recipe scaling-law comparison pitting the 535B-A23B Hero ladder law (2.04) against the May compute-optimal law (2.05) and 67B-A2B Snowball law (2.07). Bottom: Full unsmoothed 18T Hero training loss aligned by run progress against all four smaller scaling ladder rungs, highlighting the 80% Phase-2 data mix boundary where the ladder bumped upward (mix A) while Hero's refined mix B dropped downward." loading="lazy">
+            <figcaption>Fig. 9. Top: Mochi ladder scaling law outperforming both the compute-optimal May recipe and 100×-overtrained Snowball law at $2.6\times 10^{24}$ FLOPs. Bottom: Hero 18T loss overlaid on the 4 ladder rungs by progress—note how Hero's refined Phase-2 mix B pushed loss down at 80% after the ladder's earlier mix A flagged a temporary bump, and Mochi ultimately pulled past its <code>2.039</code> 4K dropless forecast to finish at <code>1.982</code> (see <a href="#paloma-dropless-scaling">Section 9.1</a>). Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
+
         <h2 id="pretraining">535B Pre-Training Systems<a class="anchor" href="#pretraining" aria-hidden="true">#</a></h2>
-        <p>Training Mochi across 704 GB200s on CoreWeave required matching parallelism strictly to NVLink vs. InfiniBand bandwidth, building custom fixed-capacity EP collectives, catching subtle SPMD sharding reductions, and calibrating learning rates across a 300× compute ladder.</p>
+        <p>With the scaling law and LR schedule locked by the 5-rung ladder, launching Mochi across 704 GB200 GPUs required aligning EP communication strictly with NVL72 rack topology, eliminating rare SPMD reduction and embedding stability bugs, and maximizing sustained MFU across a 390K-step production run.</p>
 
         <h3 id="gb200-ep64-transport">Pooled-Wave &amp; Ragged EP<a class="anchor" href="#gb200-ep64-transport" aria-hidden="true">#</a></h3>
         <p>Each healthy NVL72 rack connects 64 B200s (16 nodes × 4 GPUs, $11.6\text{ TiB}$ HBM) via <code>900 GB/s</code> uni-directional NVLink, whereas inter-rack InfiniBand drops 18× to <code>50 GB/s</code><a class="cite" href="#ref-6">[6]</a>. Marin locks <strong>EP=64 inside racks</strong> (6 routed experts/GPU: $\text{GPU}(e)=\lfloor e/6\rfloor$, $\text{local}(e)=e\bmod 6$, with FSDP managing dense/shared weights inside the rack) and <strong>DP=11 across racks</strong>—delivering $46{,}137{,}344$ tokens/step ($65{,}536$ tokens and $524{,}288$ top-8 assignments per GPU).</p>
@@ -426,14 +542,14 @@ def moe_forward_latent_qb(self, x_flat):
 
         <figure>
             <img src="./fig-ep-protocol.webp" width="1516" height="1581" alt="Official fixed pooled-wave all-to-all protocol diagram showing step 1 sender pools per destination GPU, step 2 inline header carrying local expert IDs, step 3 round-robin compaction per expert on receiver GPU C, step 4 batched MLP plus reverse all-to-all combine, and 3 sequential waves." loading="lazy">
-            <figcaption>Fig. 6. Destination-Pooled Static-Wave All-to-All protocol (CF <code>1.15</code> gives <code>3,141</code> sender slots + 1 header row and <code>33,497</code> receiver rows per wave). Notice no retry queue exists on overflow. Source: Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>.</figcaption>
+            <figcaption>Fig. 10. Destination-Pooled Static-Wave All-to-All protocol (CF <code>1.15</code> gives <code>3,141</code> sender slots + 1 header row and <code>33,497</code> receiver rows per wave). Notice no retry queue exists on overflow. Source: Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>.</figcaption>
         </figure>
 
         <p>Five pre-launch derisking checks (Issue <code>#8062</code>)—including a <code>4K → 65K</code> stress test where 37% assignment dropping stayed within <code>0.008</code> dropless Paloma loss of FSDP—validated the launch choice. Around <strong>step 82,000 (~21% progress)</strong>, Matt Wittmann landed fixes in XLA:GPU and NVIDIA's device-initiated <strong>ragged All-to-All</strong> kernel (cutting drops <code>3.4% → 0.01%</code> at 4K and <code>0.03%</code> at 65K while lifting MFU from <code>21.5%</code> to <code>23%</code>, then <code>~30%</code> with SM100 FA4 and mask-free MLP updates)<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-38">[38]</a>:</p>
 
         <figure>
             <img src="./fig-ep-metrics.webp" width="1636" height="991" alt="Six-panel production telemetry from Mochi showing total drop fraction, tokens per second, MFU jumping across pooled-wave, ragged All-to-All at step 82k, padding routing, and SM100 FA4 + mask-free MLP reaching ~30% MFU, plus stable router entropy." loading="lazy">
-            <figcaption>Fig. 7. Live Hero telemetry showing steady <code>~3.4%</code> sender drops collapsing to zero at the step-82k ragged All-to-All transition while sustained MFU climbs from <code>21.5% → ~30%</code> with flat router entropy. Source: Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>.</figcaption>
+            <figcaption>Fig. 11. Live Hero telemetry showing steady <code>~3.4%</code> sender drops collapsing to zero at the step-82k ragged All-to-All transition while sustained MFU climbs from <code>21.5% → ~30%</code> with flat router entropy. Source: Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>.</figcaption>
         </figure>
 
         <h3 id="muonh-optimizer">MuonH &amp; Numerical Stability<a class="anchor" href="#muonh-optimizer" aria-hidden="true">#</a></h3>
@@ -469,35 +585,11 @@ def _scale_invariant_2d(p, u, lr):
     new_p_norm = jnp.sqrt(jnp.sum(jnp.square(new_p.astype(jnp.float32))))
     return new_p / jnp.maximum(new_p_norm, 1e-10) * p_norm - p</code></pre>
 
-        <h3 id="scaling-ladder-lr">Scaling Ladder &amp; LR Law<a class="anchor" href="#scaling-ladder-lr" aria-hidden="true">#</a></h3>
-        <p>Using 19-cell small-scale sweeps, Marin fit <code>MoeHeuristic</code> ($R^2 = 0.978$, Issues <code>#7856/#8003</code>) across token horizons $T$, widths $D$, and global tokens/batch $B_{\text{tok}}$ (plus 1% warmup → 5% linear end, zero global grad clip)<a class="cite" href="#ref-17">[17]</a>:</p>
-        $$\text{lr}_{\text{adam}} = 0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}, \qquad \text{lr}_{\text{muonh}} = \frac{13}{3}\text{lr}_{\text{adam}}, \qquad \epsilon = 9.676\times 10^{-18} \sqrt{\frac{T}{B_{\text{tok}}}}$$
-        <p>Costing only ~1% of Hero compute and finished in 2 days<a class="cite" href="#ref-2">[2]</a>, a 5-rung scaling ladder holding <strong>791 tokens per active parameter</strong> and constant rack density (<code>1,024 × racks</code>) forecast Hero loss and normal gradient-norm curves (reassuring the team when Hero grad norms grew until 40% progress before falling)<a class="cite" href="#ref-14">[14]</a><a class="cite" href="#ref-18">[18]</a>:</p>
-
-        <div class="table-wrap">
-        <table>
-            <thead>
-                <tr><th>Rung (<code>D / L</code>)</th><th>Racks (GPUs)</th><th>Batch (Seqs)</th><th>Steps</th><th>Tokens</th><th>Active / Total</th><th>Training FLOPs</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>d768</code> (<code>8L</code>)</td><td>1 (64)</td><td>1,024</td><td>11,420</td><td>48B</td><td>61M / 1.6B</td><td>$5.5\times 10^{19}$</td></tr>
-                <tr><td><code>d1024</code> (<code>12L</code>)</td><td>2 (128)</td><td>2,048</td><td>15,276</td><td>128B</td><td>162M / 4.0B</td><td>$2.7\times 10^{20}$</td></tr>
-                <tr><td><code>d1536</code> (<code>16L</code>)</td><td>6 (384)</td><td>6,144</td><td>15,128</td><td>381B</td><td>481M / 11.5B</td><td>$1.8\times 10^{21}$</td></tr>
-                <tr><td><code>d2048</code> (<code>22L</code>)</td><td>11 (704)</td><td>11,264</td><td>20,072</td><td>926B</td><td>1.2B / 27.7B</td><td>$9.2\times 10^{21}$</td></tr>
-                <tr><td><strong><code>d6144</code> (<code>48L</code>, Hero)</strong></td><td>11 (704)</td><td>11,264</td><td>390,251*</td><td class="best">18T</td><td class="best">22.8B / 535.3B</td><td class="best">$2.7\times 10^{24}$</td></tr>
-            </tbody>
-        </table>
-        </div>
-        <p>*Mochi finished 390,251 main steps (~18.1T tokens) on November 5, 2026 before executing post-schedule 262K updates through step ~393,491.</p>
-
-        <figure>
-            <img src="./fig-scaling-ladder.webp" width="1440" height="622" alt="Left: Training loss curves for the four smaller rungs of the Marin scaling ladder (1.6B to 27.7B). Right: Dropless Paloma macro-loss projecting 2.039 for 535B-A23B." loading="lazy">
-            <figcaption>Fig. 8. Five-rung scaling ladder (<code>1.6B–27.7B</code> predicting <code>535B</code>): train loss (left) and dropless Paloma projections fitting $L = 1.5 + A\cdot C^{-\alpha}$ to <code>2.039</code> (right; <code>d2048</code> crashed at 81% hardware fault, hollow markers extrapolated). Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
-        </figure>
+        <p>Together, EP64/Ragged All-to-All transport, three-group Hyperball optimization, and hourly region-local checkpointing kept Mochi completely spike-free across all 390,251 main pre-training steps (~18.1T tokens finished November 5, 2026 before post-schedule 262K updates):</p>
 
         <figure>
             <img src="./fig-hero-loss.webp" width="1440" height="600" alt="Complete 18T-token Mochi training loss curve at every logged step with vertical lines marking ragged all-to-all EP, data mix updates, phase 2 cooldown, and 4k to 16k to 65k context switches." loading="lazy">
-            <figcaption>Fig. 9. Full 18T-token Mochi training loss curve demonstrating spike-free continuity across ragged All-to-All EP (~3.7T), Phase-2 cooldown (~80%), and 4K → 16K → 65K extensions. Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
+            <figcaption>Fig. 12. Full 18T-token Mochi training loss curve demonstrating spike-free continuity across ragged All-to-All EP (~3.7T), Phase-2 cooldown (~80%), and 4K → 16K → 65K extensions. Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
         </figure>
 
         <h2 id="mid-training">Mid-Training &amp; 262K Context<a class="anchor" href="#mid-training" aria-hidden="true">#</a></h2>
@@ -510,7 +602,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-mochi-checkpoints.webp" width="1636" height="1014" alt="Mochi training cross-entropy over 18.2T tokens showing 4K, 16K, 65K, and zoomed 262K phases along with circular markers for all 57 publicly released checkpoints." loading="lazy">
-            <figcaption>Fig. 10. Full 18.2T-token Mochi trajectory and enlarged long-context tail (step 393,491) marking all 57 public checkpoints across 4K, 16K, 65K, and 262K phases. Source: David Hall, Open Athena (2026) <a class="cite" href="#ref-5">[5]</a>.</figcaption>
+            <figcaption>Fig. 13. Full 18.2T-token Mochi trajectory and enlarged long-context tail (step 393,491) marking all 57 public checkpoints across 4K, 16K, 65K, and 262K phases. Source: David Hall, Open Athena (2026) <a class="cite" href="#ref-5">[5]</a>.</figcaption>
         </figure>
 
         <h3 id="long-context-262k">Context Extension &amp; QK Scale<a class="anchor" href="#long-context-262k" aria-hidden="true">#</a></h3>
@@ -533,7 +625,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-snowball-dag.webp" width="1041" height="1600" alt="14-node post-training lineage DAG for Snowball v0.1 showing progression from 67B-A2B pretraining and 262K extension through Datakit SFT Sep 21 (47.1%), FTPO, Antidoom RLVR1 (58.3%), Mixed-domain RLVR, DARE-TIES-02 merge (60.4%), and final Snowball v0.1 release (68.4% tournament win rate)." loading="lazy">
-            <figcaption>Fig. 11. Complete 14-node post-training DAG for Snowball v0.1 across SFT, FTPO, RLVR, and DARE-TIES merging evaluated by 23-benchmark pairwise tournament win rate. Source: Ben Feuer, Open Athena (2026) <a class="cite" href="#ref-8">[8]</a>.</figcaption>
+            <figcaption>Fig. 14. Complete 14-node post-training DAG for Snowball v0.1 across SFT, FTPO, RLVR, and DARE-TIES merging evaluated by 23-benchmark pairwise tournament win rate. Source: Ben Feuer, Open Athena (2026) <a class="cite" href="#ref-8">[8]</a>.</figcaption>
         </figure>
 
         <h3 id="relay-sft">Coding SFT &amp; Relay SFT<a class="anchor" href="#relay-sft" aria-hidden="true">#</a></h3>
@@ -560,7 +652,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-relay-sft.webp" width="1720" height="1366" alt="Top: Relay SFT turn timeline diagram showing student turns S (context only, no loss), single-turn teacher repair R (trained, student resumes), handover trigger on context limit or done claim, and trained teacher continuation T. Bottom: 93% of Relay SFT's 14.69M trained tokens sit inside Snowball 09-21's own episodes (54% context takeover, 27% 1-turn repairs, 8% done-claim, 3% loop)." loading="lazy">
-            <figcaption>Fig. 12. Official Relay SFT mechanism and corpus anatomy: student prefixes <code>S</code> stay masked while teacher repairs <code>R</code> and continuations <code>T</code> train (top), placing <code>93%</code> of <code>14.69M</code> trained tokens inside states Snowball <code>09-21</code> actually reaches (bottom). Source: Donghyun Lee (<a class="cite" href="#ref-11">[11]</a>, <a class="cite" href="#ref-13">[13]</a>).</figcaption>
+            <figcaption>Fig. 15. Official Relay SFT mechanism and corpus anatomy: student prefixes <code>S</code> stay masked while teacher repairs <code>R</code> and continuations <code>T</code> train (top), placing <code>93%</code> of <code>14.69M</code> trained tokens inside states Snowball <code>09-21</code> actually reaches (bottom). Source: Donghyun Lee (<a class="cite" href="#ref-11">[11]</a>, <a class="cite" href="#ref-13">[13]</a>).</figcaption>
         </figure>
 
         <h3 id="plateau-dropping">Plateau Dropping &amp; Footguns<a class="anchor" href="#plateau-dropping" aria-hidden="true">#</a></h3>
@@ -574,7 +666,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-plateau-dropping.webp" width="1448" height="777" alt="Stacked bar chart of Plateau Dropping over 760 steps (10 SWE epochs) showing trained tokens classified as still learning (falling 100% to 38%), dropped as learned (growing to 56%), and dropped as stuck (~5%)." loading="lazy">
-            <figcaption>Fig. 13. Token states across 10 SWE epochs (760 steps) under Plateau Dropping: by step 760, <code>56%</code> of tokens drop as learned and <code>~5%</code> drop as stuck while <code>38%</code> stay active, preserving <code>57</code> learnable tasks. Source: Varma, Lee, and Dimakis (2026) <a class="cite" href="#ref-12">[12]</a>.</figcaption>
+            <figcaption>Fig. 16. Token states across 10 SWE epochs (760 steps) under Plateau Dropping: by step 760, <code>56%</code> of tokens drop as learned and <code>~5%</code> drop as stuck while <code>38%</code> stay active, preserving <code>57</code> learnable tasks. Source: Varma, Lee, and Dimakis (2026) <a class="cite" href="#ref-12">[12]</a>.</figcaption>
         </figure>
 
         <div class="table-wrap">
@@ -625,7 +717,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-rl-debugging.webp" width="1600" height="1511" alt="Top: Switching from filtered top-p/top-k rollout logging to full-distribution sampling prevents 50% output entropy collapse over 40 RL updates. Bottom: Fixed TITO and probability-accounting RL stack achieves ~60% vs ~49% on familiar and new R2E-Gym repositories by update 24." loading="lazy">
-            <figcaption>Fig. 14. Diagnosing RL training collapse (top): matching rollout sampling to full-distribution probabilities halts entropy decay. Combined stack fixes (bottom) add <code>+10 pp</code> across both familiar (150 tasks) and unseen (115 tasks) repositories by step 24. Source: Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>.</figcaption>
+            <figcaption>Fig. 17. Diagnosing RL training collapse (top): matching rollout sampling to full-distribution probabilities halts entropy decay. Combined stack fixes (bottom) add <code>+10 pp</code> across both familiar (150 tasks) and unseen (115 tasks) repositories by step 24. Source: Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>.</figcaption>
         </figure>
 
         <h3 id="specdec-prompt-rl">EAGLE-3 &amp; Prompt-Distilled RL<a class="anchor" href="#specdec-prompt-rl" aria-hidden="true">#</a></h3>
@@ -653,7 +745,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-sft-rl-stages.webp" width="1440" height="757" alt="Bar chart comparing Snowball 09-21, Direct RL, CalibForge SFT, CalibForge + Kimi SFT, and Relay SFT at RL steps 0, 30, and 60 on Terminal-Bench 2.1, SWE-bench Verified r100, and OpenThoughts-TBLite." loading="lazy">
-            <figcaption>Fig. 15. Pass@1 progression across 0, 30, and 60 GRPO updates showing SFT + RL leading SWE-bench (<code>50.5%</code>) and TB2.1 (<code>23.9%</code>), whereas Direct RL excels on OpenThoughts-TBLite (<code>45.1%</code>). Source: Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>.</figcaption>
+            <figcaption>Fig. 18. Pass@1 progression across 0, 30, and 60 GRPO updates showing SFT + RL leading SWE-bench (<code>50.5%</code>) and TB2.1 (<code>23.9%</code>), whereas Direct RL excels on OpenThoughts-TBLite (<code>45.1%</code>). Source: Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>.</figcaption>
         </figure>
 
         <ul>
@@ -672,7 +764,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="./fig-eval-forecast-cd.webp" width="1600" height="1999" alt="Top: Hero 535B-A23B 4K dropless Paloma forecast (2.039) vs actual (1.982) across the 5-rung ladder. Bottom: Snowball v0.1 uncontrolled 26-benchmark Nemenyi critical-difference ranking (mean rank 8.13 vs gpt-oss-20b 8.93)." loading="lazy">
-            <figcaption>Fig. 16. Top: Hero 4K-re-evaluated dropless Paloma curve pulling below its <code>2.039</code> preregistered forecast to finish at <code>1.982</code> (<code>#8435</code>). Bottom: Snowball v0.1 Nemenyi critical-difference plot across 26 policy benchmarks (uncontrolled rank <code>8.13</code> vs. <code>gpt-oss-20b</code> <code>8.93</code>; FLOP-controlled rank <code>5.18</code>). Sources: Larry Dial (<a class="cite" href="#ref-2">[2]</a>) and Ben Feuer (<a class="cite" href="#ref-8">[8]</a>).</figcaption>
+            <figcaption>Fig. 19. Top: Hero 4K-re-evaluated dropless Paloma curve pulling below its <code>2.039</code> preregistered forecast to finish at <code>1.982</code> (<code>#8435</code>). Bottom: Snowball v0.1 Nemenyi critical-difference plot across 26 policy benchmarks (uncontrolled rank <code>8.13</code> vs. <code>gpt-oss-20b</code> <code>8.93</code>; FLOP-controlled rank <code>5.18</code>). Sources: Larry Dial (<a class="cite" href="#ref-2">[2]</a>) and Ben Feuer (<a class="cite" href="#ref-8">[8]</a>).</figcaption>
         </figure>
 
         <h3 id="mfu-eval-policy">MFU &amp; 26-Benchmark Policy<a class="anchor" href="#mfu-eval-policy" aria-hidden="true">#</a></h3>
@@ -740,6 +832,9 @@ def _scale_invariant_2d(p, u, lr):
             <li id="ref-37" data-brief="Pre-Hero four-scale isoFLOP speedups: Dense to Marin MoE V1 (6.7× FLOP / 3.6× wall-clock), 256 experts (1.4×), MuonH (1.3×), Partial Key Offset (1.2×), and 2.5 Sigmoid rescaling (1.04×)."><a href="https://openathena.ai/blog/pretraining-speedup/" target="_blank" rel="noopener">Improving Our LLM Pre-Training Efficiency</a>. Larry Dial, Open Athena, June 3, 2026.</li>
             <li id="ref-38" data-brief="Announcement and engineering team roles for Mochi 535B-A23B launch on CoreWeave GB200s, covering Iris recovery, Mixture-of-Kittens, vLLM Grug MoE, and mid-run ragged All-to-All."><a href="https://openathena.ai/blog/marin-535b-launch-note/" target="_blank" rel="noopener">Marin 535B-A23B Launch Note</a>. David Hall, Open Athena, September 3, 2026.</li>
             <li id="ref-39" data-brief="Five-month engineering log building Marin's preemptible TPU async RL pipeline with Arrow Flight BF16 weight sync, tpu-inference #1386 top-k bug fix, and 500-step Iris recovery."><a href="https://marin.community/blog/2026/05/21/async-rl-from-scratch/" target="_blank" rel="noopener">Async RL from Scratch on TPUs</a>. Ahmed et al., Marin Community, May 21, 2026.</li>
+            <li id="ref-40" data-brief="Marin's Delphi dense scaling suite (3e18–1e23 FLOPs): replacing Cautious AdamC with AdamH + T^-0.3 token-horizon transfer and Vizier GP tuning extrapolates 300× within 0.2% and forecasts MMLU/HumanEval/GSM8K via soft-metric + sigmoid projection."><a href="https://openathena.ai/blog/delphi/" target="_blank" rel="noopener">Scaling Laws That Extrapolate 300× past the Fit</a>. Will Held, Open Athena, May 11, 2026.</li>
+            <li id="ref-41" data-brief="Analyzes systematic bias in Chinchilla Approach 2 parabolic IsoFLOP vertex fits (causing ~6.5% DCL compute misallocation on Llama 3 data) and introduces Variable Projection reparameterization."><a href="https://openathena.ai/blog/problems-with-chinchilla-approach-2/" target="_blank" rel="noopener">Problems with Chinchilla Approach 2</a>. Eric Czech, Open Athena, March 27, 2026.</li>
+            <li id="ref-42" data-brief="Open-source Variable Projection with Nonlinear Least Squares solver (Cython/SciPy/JAX) flattening 5D Chinchilla fits to 2D exponent optimization—15.8× faster than ml-scalefit with lower Huber loss."><a href="https://github.com/Open-Athena/vpnls" target="_blank" rel="noopener">VPNLS: Variable Projection with Nonlinear Least Squares for Scaling Laws</a>. Eric Czech et al., Open Athena, 2026 (arXiv:2603.22339).</li>
         </ol>
     </div>
 

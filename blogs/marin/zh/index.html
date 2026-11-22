@@ -56,7 +56,7 @@
         <h1 class="post-title">Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</h1>
         <div class="post-meta">
             <span>2026 年 11 月 22 日</span>
-            <span>22 分钟阅读</span>
+            <span>26 分钟阅读</span>
             <span>冯超然</span>
         </div>
     </header>
@@ -89,11 +89,18 @@
                     <li><a href="#harrier-buckets-mix">Harrier 分桶与代理配比</a></li>
                 </ul>
             </li>
+            <li><a href="#scaling-laws">Scaling Law 推导与缩放梯子</a>
+                <ul>
+                    <li><a href="#isoflop-chinchilla-vpnls">IsoFLOPs、Approach 2 偏差与 VPNLS</a></li>
+                    <li><a href="#delphi-moe-scaling">Delphi 300× 外推与 Dense→MoE 提速</a></li>
+                    <li><a href="#hparam-lr-transfer">超参数迁移与 MoeHeuristic 学习率律</a></li>
+                    <li><a href="#scaling-ladder-lr">五阶 Scaling Ladder 与 535B 实测</a></li>
+                </ul>
+            </li>
             <li><a href="#pretraining">535B 预训练与系统工程</a>
                 <ul>
                     <li><a href="#gb200-ep64-transport">Pooled-Wave 与 Ragged EP</a></li>
                     <li><a href="#muonh-optimizer">MuonH 分组与数值稳定性</a></li>
-                    <li><a href="#scaling-ladder-lr">Scaling Ladder 与学习率律</a></li>
                 </ul>
             </li>
             <li><a href="#mid-training">Mid-Training 与 262K 扩窗</a>
@@ -138,7 +145,7 @@
         </ul>
 
         <div class="callout callout-tip">
-            <p><strong>阅读路线：</strong>第 1 章对齐参数/FLOP 核算、GQA vs. MLA、Hyperball、Quantile Balancing 与 5D 并行；第 2–5 章聚焦 Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a>，逐层剖析 Mochi 的架构消融、Datakit 25T 治理、GB200 系统工程与 262K 扩窗；第 6–8 章详解 Snowball 后训练 DAG（Relay SFT、Plateau Dropping、TITO GRPO、EAGLE-3）与 26 项基准 Eval Policy<a class="cite" href="#ref-16">[16]</a>。</p>
+            <p><strong>阅读路线：</strong>第 1 章对齐参数/FLOP 核算、GQA vs. MLA、Hyperball、Quantile Balancing 与 5D 并行；第 2–6 章聚焦 Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a>，逐层剖析 Mochi 架构消融、Datakit 25T 治理、Scaling Law 推导与 Scaling Ladder（<a href="#scaling-laws">#scaling-laws</a>）、GB200 系统工程与 262K 扩窗；第 7–9 章详解 Snowball 后训练 DAG（Relay SFT、Plateau Dropping、TITO GRPO、EAGLE-3）与 26 项基准 Eval Policy<a class="cite" href="#ref-16">[16]</a>。</p>
         </div>
 
         <h2 id="overview">为什么需要 Marin<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
@@ -147,8 +154,8 @@
         <p>从 2024 年 1 名全职人手起步，Marin 历经四步演进才具备挑战 535B 级模型的工程底气<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-37">[37]</a><a class="cite" href="#ref-38">[38]</a>：</p>
         <ul>
             <li><strong>从 &ldquo;Tootsie&rdquo; 稠密试错到 Open Athena：</strong>团队先用 Google TPU Research Cloud 免费算力以渐进续训（Tootsie）练出在 16/19 基准逼平 Llama 3.1 8B 的 Marin 8B；随后在可抢占 TPU 上勉力拉通 Marin 32B，靠接入 QK-Norm 平息尖刺并清理 Dolmino 中的 GSM8K 污染<a class="cite" href="#ref-10">[10]</a>。并入 Open Athena 后扩编至 10 名全职工程师，由 Russell Power 打造多区域调度器 <strong>Iris</strong>，将硬件故障恢复时间从 ~1 小时压缩到几分钟。</li>
-            <li><strong>Delphi 与 MoE V1（6.7× 理论 / 3.6× 实测加速）：</strong>先用 <code>Delphi</code> 验证稠密 Scaling Law 可在 $300\times$ 跨度内以 <code>0.2%</code> 误差外推，再在 TPU v4 上用 <code>Marin MoE V1</code>（<code>129B-A16B</code>，1T tokens，$10^{23}$ FLOPs）结合 Quantile Balancing、AdamH、GatedNorm 与 XSA 拿下 <code>2.234</code> Paloma loss，比预注册预测（<code>2.252</code>）再低 <code>0.8%</code>。</li>
-            <li><strong>Hero 之前的四项叠加提速（再获 2.1× 理论加速）：</strong>在 MoE V1 基础上经过四档算力严格消融<a class="cite" href="#ref-37">[37]</a>，依次叠加高稀疏专家（<code>64 → 256</code>，<code>1.4×</code> 理论 / <code>1.3×</code> 实测）、<code>MuonH</code>（<code>1.3×</code> / <code>1.25×</code>）、Partial Key Offset 配 50% Partial RoPE（<code>1.2×</code> / <code>1.2×</code>）以及社区成员 Elie Bakouch 建议的 2.5 Sigmoid 重归一（<code>1.04×</code>），同时推动 isoFLOP 最优点向“少激活参数、更多 token”偏移。</li>
+            <li><strong>Delphi 与 MoE V1（6.7× 理论 / 3.6× 实测加速）：</strong>先用 <a href="#scaling-laws"><code>Delphi</code></a> 验证稠密 Scaling Law 可在 $300\times$ 跨度内以 <code>0.2%</code> 误差外推，再在 TPU v4 上用 <code>Marin MoE V1</code>（<code>129B-A16B</code>，1T tokens，$10^{23}$ FLOPs）结合 Quantile Balancing、AdamH、GatedNorm 与 XSA 拿下 <code>2.234</code> Paloma loss，比预注册预测（<code>2.252</code>）再低 <code>0.8%</code>。</li>
+            <li><strong>Hero 之前的四项叠加提速（再获 2.1× 理论加速）：</strong>在 MoE V1 基础上经过四档算力严格消融（详推见<a href="#delphi-moe-scaling">第 4.2 节</a>）<a class="cite" href="#ref-37">[37]</a>，依次叠加高稀疏专家（<code>64 → 256</code>，<code>1.4×</code> 理论 / <code>1.3×</code> 实测）、<code>MuonH</code>（<code>1.3×</code> / <code>1.25×</code>）、Partial Key Offset 配 50% Partial RoPE（<code>1.2×</code> / <code>1.2×</code>）以及社区成员 Elie Bakouch 建议的 2.5 Sigmoid 重归一（<code>1.04×</code>），同时推动 IsoFLOP 最优点向“少激活参数、更多 token”偏移。</li>
             <li><strong>7 月集群倒计时下的三条铁律与 Marin Belay：</strong>拿到 Jen-Hsun &amp; Lori Huang Foundation 资助的 768 张 GB200 与 12 月交付窗口后，团队立下三条优先级<a class="cite" href="#ref-2">[2]</a>——实测 MFU 至上、预注册 Scaling 曲线并用 W&amp;B 实时直播<a class="cite" href="#ref-1">[1]</a>、保留利于 SFT/RL 的诱导偏置（含 5% 终点学习率）；此外还推出 <strong>Marin Belay</strong>，由 Agent 自动把社区在 GitHub Issue 提出的想法实现并送入缩放梯子检验。</li>
         </ul>
 
@@ -396,8 +403,117 @@ def moe_forward_latent_qb(self, x_flat):
         </ol>
         <p>最终 <code>harrier_mix_2026_08_18.py</code> 以 15T / 3.75T（80% / 20%）两阶段配比按比例映射到 Mochi 的 18T 规划，经 Feistel 置乱打包成 4,096 序列并用文档边界掩码阻断跨文档注意力与 <code>SConv</code>。</p>
 
+        <h2 id="scaling-laws">Scaling Law 推导与缩放梯子<a class="anchor" href="#scaling-laws" aria-hidden="true">#</a></h2>
+        <p>为什么敢在 704 张 GB200 上一跑三个月而不盲猜超参？Open Athena 把 Scaling Law 拆成四层“风洞”系统<a class="cite" href="#ref-40">[40]</a>：无偏参数曲面拟合器（<code>VPNLS</code>）、长周期可迁移优化器配方（<code>Delphi</code>）、19 格联合回归学习率律（<code>MoeHeuristic</code>），以及用 1% 算力 $300\times$ 外推预测 535B Hero 终点的五阶 <strong>Scaling Ladder</strong>。</p>
+
+        <h3 id="isoflop-chinchilla-vpnls">IsoFLOPs、Approach 2 偏差与 VPNLS<a class="anchor" href="#isoflop-chinchilla-vpnls" aria-hidden="true">#</a></h3>
+        <p>从五参数 Chinchilla 损失曲面出发，按前反向算力约束 $C \approx 6 N_{\text{act}} D$ 消去参数量 $N = C/(6D)$，每条等算力（IsoFLOP）切片均可写为训练 token 数 $D$ 的单变量函数<a class="cite" href="#ref-41">[41]</a>：</p>
+        $$L(N,D) = E + \frac{A}{N^\alpha} + \frac{B}{D^\beta} \qquad \Longrightarrow \qquad L(D; C) = E + A\left(\frac{6D}{C}\right)^{\alpha} + \frac{B}{D^\beta}$$
+        <p>令导数 $\frac{\partial L}{\partial D} = \frac{\alpha A}{D}\left(\frac{6D}{C}\right)^\alpha - \frac{\beta B}{D^{\beta+1}} = 0$，即推得固定算力下的算力最优配比幂律及包络下界：</p>
+        $$D^*(C) = \left(\frac{\beta B}{\alpha A}\right)^{\frac{1}{\alpha+\beta}}\left(\frac{C}{6}\right)^{\frac{\alpha}{\alpha+\beta}}, \qquad N^*(C) \propto C^{\frac{\beta}{\alpha+\beta}}, \qquad L^*(C) = E + K \cdot C^{-\gamma}, \quad \gamma = \frac{\alpha\beta}{\alpha+\beta}$$
+        <p>将基线定律 $L_{\text{base}}(C) = E + A_{\text{base}} C^{-\gamma}$ 反解到算力轴，就得到 Marin 全文用来裁决架构消融与系统吞吐的两把核心标尺<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-37">[37]</a>：</p>
+        $$S_{\text{theo}} = \frac{C_{\text{equiv}}}{C_{\text{new}}} = \frac{1}{C_{\text{new}}}\left(\frac{A_{\text{base}}}{L_{\text{new}} - E}\right)^{1/\gamma}, \qquad S_{\text{real}} = S_{\text{theo}} \cdot \frac{\mathrm{MFU}_{\text{new}}}{\mathrm{MFU}_{\text{base}}}$$
+        <p>在 Mochi 组件基准曲线 $L(C) = 1.6 + 88.90 \cdot C^{-0.0941}$ 上，$S_{\text{theo}} = 1.18\times$ 意味着基线配方必须多烧 <code>18%</code> FLOPs 才能追平同样 loss，而真正拍板上线的是乘入 GB200 实测 MFU 比值后的实测加速比 $S_{\text{real}}$<a class="cite" href="#ref-2">[2]</a>。</p>
+
+        <p>主流的 <strong>Chinchilla Approach 2</strong> 先在各档 $(\log D, L)$ 上拟合对称抛物线求极小值，再拿极小值点回归 $(\alpha,\beta)$。Open Athena 研究员 Eric Czech 在 <em>Problems with Chinchilla Approach 2</em><a class="cite" href="#ref-41">[41]</a> 中指出：只要 $\alpha \neq \beta$，$L(\log D; C)$ 本身就不对称，抛物线仅是极值邻域的二阶泰勒近似；一旦采样网格偏宽或中心偏离最优点，顶点拟合就会出现系统偏移——实测在 Llama 3 IsoFLOP 数据上即引发约 <strong>6.5% 算力错配（<code>DCL %</code>）</strong>，相当于百万美元级硬件损耗。</p>
+
+        <p>为此 Open Athena 提出基于变量投影的直接五参数求解器 <strong>VPNLS（Approach 3 重参数化）</strong><a class="cite" href="#ref-41">[41]</a><a class="cite" href="#ref-42">[42]</a>：只要给定候选指数 $(\alpha, \beta)$，模型对 $(E, A, B)$ 便完全呈线性，内层可在任意散点上通过线性最小二乘 / IRLS 闭式求出最优线性系数 $\mathbf{c}^*(\alpha,\beta)$，从而把非凸五维搜索压缩为光滑二维面上的搜索：</p>
+        $$\min_{\alpha,\beta &gt; 0}\; \min_{E,A,B \ge 0} \sum_{i} \rho_{\delta}\!\left(E + A N_i^{-\alpha} + B D_i^{-\beta} - L_i\right) \quad \Longleftrightarrow \quad \min_{\alpha,\beta &gt; 0} \sum_{i} \rho_{\delta}\!\left(\bigl[\mathbf{\Phi}(\alpha,\beta)\,\mathbf{c}^*(\alpha,\beta)\bigr]_i - L_i\right)$$
+        <p>通过密集 Cython 二维网格检索搭配包络定理 L-BFGS-B，<code>VPNLS</code> 免去了严格对齐 IsoFLOP 网格的限制，无偏还原真实参数，比 <code>apple/ml-scalefit</code> 提速 <strong>15.8×</strong>（<code>0.106s</code> vs <code>1.672s</code>，且 Huber 残差更低：<code>13.1</code> vs <code>13.4 × 10<sup>−6</sup></code>）<a class="cite" href="#ref-42">[42]</a>。</p>
+
+        <h3 id="delphi-moe-scaling">Delphi 300× 外推与 Dense→MoE 提速<a class="anchor" href="#delphi-moe-scaling" aria-hidden="true">#</a></h3>
+        <p>进军 535B MoE 之前，Will Held 先利用 <strong>Delphi</strong> 开源稠密缩放套件（Qwen 3 架构、<code>Nemotron-CC + StarCoderData + ProofPile 2</code>、WSD 衰减归零）排查“为什么小尺度看起来极漂亮的曲线一外推就失灵”<a class="cite" href="#ref-40">[40]</a>。第一版配方沿用 <code>Cautious AdamC</code>（$\eta = 0.33\sqrt{B}/H$、固定 <code>WD=0.1</code>），在 $3\times 10^{18}$–$3\times 10^{20}$ 七档 IsoFLOP 内平滑拟合，却在 $10^{22}$ 实测偏差 <code>2.5%</code>、在 $10^{23}$ 彻底发散——根因正是拉长 token 周期时放大 batch 顺带把未随 $T$ 衰减的学习率推过了爆炸阈值。</p>
+
+        <p>Delphi 第二版（<code>completed_adamh.py</code>）用三处关键修正重建了稳健迁移律：引入 Kaiyue Wen 设计的 <strong><code>AdamH</code></strong> 淘汰权重衰减并依靠球面约束实现跨宽度学习率稳态（免去 $\frac{1}{H}$ 缩放因子）；借鉴 <code>Complete(d)P</code> 补入实证校准的 $T^{-0.3}$ token 视界衰减项（后续也被 Ren 等人在 MuonH 上的 $T^{-0.320}$ 独立印证）；并用 Google Vizier 高斯过程联合定标参考点（$B_0=64$，$T_0=2.5\text{B}$，$\eta_0=0.00630$，$\eta_{0,\text{Adam}}=0.000656$，$\varepsilon_0=1.85\times 10^{-8}$）<a class="cite" href="#ref-40">[40]</a>：</p>
+        $$\begin{aligned}
+        \eta_{\text{proj}} &= \eta_0 \sqrt{\frac{B}{B_0}}\left(\frac{T_0}{T}\right)^{0.3}, & \eta_{\text{scalar}} &= \eta_{0,\text{Adam}}\sqrt{\frac{B\,T_0}{B_0\,T}} \\
+        \varepsilon &= \varepsilon_0\sqrt{\frac{B_0\,T}{B\,T_0}}, & \beta_2 &= \mathrm{clip}\!\left(0.9999^{B/B_0},\, 0.9,\, 0.9999\right)
+        \end{aligned}$$
+        <ul>
+            <li><strong>300× 跨度外推误差仅 0.2%：</strong>严格仅用 $3\times 10^{18}$–$3\times 10^{20}$ 七个 IsoFLOP 最优点（Paloma <code>3.586 → 2.883</code>）拟合出 $L_{\text{dense}}(C) = 1.65 + 117.8 \cdot C^{-0.0966}$，预注册外推盲测命中 $10^{21}$（实测 <code>2.759</code>，<code>+0.5%</code>）、$10^{22}$（<code>2.532</code>，<code>+0.2%</code>）直至 $10^{23}$ FLOPs（25B / 600B tok：<code>2.355</code>，<strong><code>+0.2%</code></strong>）；三组随机种子波动仅 <code>0.1%</code>，比 Bootstrap 95% 置信区间（<code>±0.5% → ±4%</code>）窄十倍<a class="cite" href="#ref-40">[40]</a>。</li>
+            <li><strong>连续软指标与过训成本量化：</strong>对 MMLU 正确选项对数概率、HumanEval/GSM8K 参考 BPB 先拟合算力幂律，再借外部 Llama/Qwen/OLMo 检查点拟合 Sigmoid 投影，成功预判 $10^{23}$ 下游涌现得分（MMLU <code>~60%</code>、HumanEval <code>19%</code>、GSM8K <code>27%</code>）。此外外推偏离最优配比的损耗揭示：稠密模型 <code>10×</code> 过训要付出约 <strong>~6× 等效算力税</strong>，而 MoE 同比例过训仅约 <strong>~2×</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-40">[40]</a>。</li>
+            <li><strong>Dense → Marin MoE V1（6.7× 理论 / 3.6× 实测）：</strong>切换为 64 选 4 稀疏 MoE（最佳 token/激活参数比 <code>62:1</code>），在 $10^{18}$–$3\times 10^{20}$ 拟合 $L_{\text{MoE-V1}}(C) = 1.6 + 95.18 \cdot C^{-0.0941}$：命中 $10^{21}$（预测 <code>2.598</code> vs <code>2.599</code>）与 $10^{23}$（<code>129B-A16B</code> / 1T tok：预测 <code>2.252</code> vs 实测 <strong><code>2.234</code></strong>，低 <code>0.8%</code>），在 $10^{23}$ FLOPs 录得 <code>6.7×</code> 算力（<code>3.6×</code> 墙钟）提速<a class="cite" href="#ref-37">[37]</a>。</li>
+            <li><strong>四项微结构叠加再快一倍（+2.1× 理论 / ~1.8× 实测）：</strong>在 MoE V1 基础上依次叠加 <code>64 → 256</code> 专家（<code>1.4×/1.3×</code>）、<code>MuonH</code>（<code>1.3×/1.25×</code>）、PKO + 50% Partial RoPE（<code>1.2×/1.2×</code>）和 <code>2.5</code> Sigmoid 重归一（<code>1.04×</code>），推动各预算 IsoFLOP 谷底向“更少激活参数、更多训练 token”整体右移，并在 $3\times 10^{19}$ FLOPs 再省一半算力<a class="cite" href="#ref-37">[37]</a>：</li>
+        </ul>
+
+        <figure>
+            <img src="../fig-scaling-dense-moe.webp" width="1560" height="1978" alt="上方对比 Delphi 稠密 Scaling Law 与 Marin MoE V1 在 1e18 到 1e23 的表现，算力效率从 4.0× 扩展至 6.7×（3.6× 实测）；下方四组 IsoFLOP 碗状曲线显示叠加四项改进后最优点整体向更多 token 偏移，再获 ~2.1× 提速。" loading="lazy">
+            <figcaption>图 6：上：Delphi 稠密基线（$1.65 + 117.8\cdot C^{-0.0966}$）与 Marin MoE V1 实测对比，$10^{23}$ FLOPs 时达成 <code>6.7×</code> 理论（<code>3.6×</code> 实测）提速；下：四项叠加升级令 IsoFLOP 最优谷底系统性右移至更多 token 与更少激活参数，再省 <code>~2.1×</code> 算力。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-37">[37]</a>。</figcaption>
+        </figure>
+
+        <h3 id="hparam-lr-transfer">超参数迁移与 MoeHeuristic 学习率律<a class="anchor" href="#hparam-lr-transfer" aria-hidden="true">#</a></h3>
+        <p>为杜绝“默认 LR 偏袒基线或新结构”造成的伪收益，Marin 在 19 个 <code>(D, T)</code> 网格单元（<code>d512–d1280</code>，层数按 $D$ 等比放大）逐格扫描并做对数二次拟合求 BPB 最优 LR，再在全对数空间联合回归公式 $\eta^*(T, D, B)$<a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-37">[37]</a>。乘入尺度修正 $D^{-c}$ 后，所有模型宽度完美坍缩到同一条 $\eta^*\cdot D^{-c} \propto T^b$ 幂律直线上：</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Marin 学习率拟合版本</th><th>基础学习率律（$\text{lr}_{\text{adam}}$）</th><th>适用优化器与拟合精度说明</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>MoE V1（<code>#4225</code>）</strong></td><td>$1.680 \cdot T^{-0.2815} \cdot D^{-0.3721} \cdot \sqrt{B_{\text{seq}}}$</td><td><code>AdamH</code>；19 格联合回归 $R^2=0.994$（固定 <code>bs=32</code> 下为 $9.50\cdot T^{-0.281}\cdot D^{-0.372}$）<a class="cite" href="#ref-37">[37]</a></td></tr>
+                <tr><td><strong>May Recipe（<code>#5951</code>）</strong></td><td>$0.06602 \cdot T^{-0.395} \cdot D^{-0.150} \cdot \sqrt{B_{\text{tok}}}$</td><td>早期 <code>MuonH</code> 拟合；宽度衰减指数较缓（$-0.150$），token 衰减更陡<a class="cite" href="#ref-17">[17]</a></td></tr>
+                <tr><td><strong>Hero <code>MoeHeuristic</code>（<code>#7856/#8003</code>）</strong></td><td>$0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}$</td><td><code>MuonH</code>（$\frac{13}{3}\text{lr}_{\text{adam}}$）；$R^2=0.978$，由 <code>seq=8192</code> 系数 $\frac{34.35}{\frac{13}{3}\sqrt{8192}}$ 折算<a class="cite" href="#ref-17">[17]</a></td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        $$\text{lr}_{\text{adam}} = 0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}, \qquad \text{lr}_{\text{muonh}} = \frac{13}{3}\text{lr}_{\text{adam}}$$
+        $$\epsilon = 9.676\times 10^{-18} \sqrt{\frac{T}{B_{\text{tok}}}}, \qquad \beta_2 = \mathrm{clip}\!\left(0.999^{B_{\text{tok}}/131{,}072},\ 0.95,\ 0.9999\right)$$
+        <p>配方固定 <code>beta1 = 0.90</code>，1% 线性 warmup 至零梯度裁剪（<code>max_grad_norm</code> 关闭），随后线性退火至峰值 <code>5%</code>。由于 Hero 各档位的步内 token 数在 <code>4.19M</code>–<code>46.14M</code>（远超基准 <code>131,072</code>），$\beta_2$ 从 <code>d1024</code> 起全部自动钳位在下限 <code>0.95</code><a class="cite" href="#ref-17">[17]</a>。</p>
+
+        <figure>
+            <img src="../fig-lr-formula-fit.webp" width="1560" height="555" alt="Marin 19 格学习率联合回归图（R^2 = 0.994）：左图分宽度展示最优 LR 随 tokens 下降趋势，中图乘以 dim^0.372 后全部尺度重合于单条 tokens^-0.281 直线，右图显示预测与实测最优 LR 紧密贴合对角线。" loading="lazy">
+            <figcaption>图 7：19 格超参回归验证（<code>MoE V1</code>，$R^2=0.994$）：把各宽度最优 LR 乘以 $D^{0.372}$ 后（中图），<code>d512–d1280</code> 全数对齐到同一直线，确保将 <code>MoeHeuristic</code>（$R^2=0.978$）外推至 535B 时无宽度漂移。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-37">[37]</a>。</figcaption>
+        </figure>
+
+        <h3 id="scaling-ladder-lr">五阶 Scaling Ladder 与 535B 实测<a class="anchor" href="#scaling-ladder-lr" aria-hidden="true">#</a></h3>
+        <p>与其花 10 天去跑一档 $3\times 10^{23}$ FLOPs 中间模型，Mochi 团队选择把算力投资在 <strong>2 天跑完、仅占 Hero 总算力 ~1%</strong> 的五阶弱缩放梯子（<code>launch_scaling_ladder.py</code>，<code>#8435</code>）<a class="cite" href="#ref-14">[14]</a><a class="cite" href="#ref-18">[18]</a>，提前完成四项关键风控：（1）把新配方预测线与过往 TPU 定律交叉比对以排查配方/数据暗病；（2）锁定尺度演进动力学——证实梯度范数在前 <code>40%</code> 持续抬升后再回落、EP 丢包从 <code>2.6% → 3.2% → 3.4%</code> 缓慢爬坡；（3）每 5% 进度持续外推预测终点；（4）为 Hero 运行期异常提供同源对照参照系。</p>
+
+        <p>鉴于 MoE 最优点约在每激活参数 60 tokens（对 535B-A23B 对应 ~1.4T tokens，故 18T tokens 属 <code>~13×</code> 过训、效率损耗约 <code>~2×</code>）<a class="cite" href="#ref-2">[2]</a>，五阶梯子统一锁死 <strong><code>TOKENS_PER_ACTIVE_PARAM = 791</code></strong>，并将全局 batch 按健康机柜线性放大（<code>1,024 × racks</code> 条 4K 序列），让 <code>d2048</code> 恰好以与 Hero 完全一致的 <code>46.14M</code> tok/step 和 11 机柜通信负载作为桥梁，跨越 $300\times$ 算力鸿沟外推预测 $2.7\times 10^{24}$ FLOPs 终点：</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>梯子档位</th><th>机柜（卡）</th><th>Batch（Tok）</th><th>步数 / Tokens</th><th>激活 / 总参数</th><th>FLOPs</th><th>Adam / MuonH LR</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>d768</code> (8L)</td><td>1 (64)</td><td>1,024 (4.19M)</td><td>11,420 / 48B</td><td>61M / 1.6B</td><td>$5.5\times 10^{19}$</td><td><code>3.65e-3</code><br><code>1.58e-2</code></td></tr>
+                <tr><td><code>d1024</code> (12L)</td><td>2 (128)</td><td>2,048 (8.39M)</td><td>15,276 / 128B</td><td>162M / 4.0B</td><td>$2.7\times 10^{20}$</td><td><code>3.33e-3</code><br><code>1.44e-2</code></td></tr>
+                <tr><td><code>d1536</code> (16L)</td><td>6 (384)</td><td>6,144 (25.17M)</td><td>15,128 / 381B</td><td>481M / 11.5B</td><td>$1.8\times 10^{21}$</td><td><code>3.44e-3</code><br><code>1.49e-2</code></td></tr>
+                <tr><td><code>d2048</code> (22L)</td><td>11 (704)</td><td>11,264 (46.14M)</td><td>20,072 / 926B</td><td>1.2B / 27.7B</td><td>$9.2\times 10^{21}$</td><td><code>3.10e-3</code><br><code>1.34e-2</code></td></tr>
+                <tr><td><strong><code>d6144</code> (48L)</strong></td><td>11 (704)</td><td>11,264 (46.14M)</td><td>390,251* / <span class="best">18T</span></td><td class="best">22.8B / 535B</td><td class="best">$2.7\times 10^{24}$</td><td><code>7.60e-4</code><br><code>3.29e-3</code></td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p>*<code>d768</code> 档 $\beta_2=0.9685$、自 <code>d1024</code> 起均钳位至 <code>0.95</code>；<code>d2048</code> 跑至 81% 遇到硬件故障停止（尾部评测点为曲线外推）；Hero（<code>d6144</code>）于 2026 年 11 月 5 日跑完主线 390,251 步（~18.1T tokens），随即追加 262K 扩展至步数 ~393,491。</p>
+
+        <figure>
+            <img src="../fig-scaling-ladder.webp" width="1440" height="622" alt="左图：四个小尺度梯子档位的训练交叉熵及 80% 数据配比切换点；右图：Dropless Paloma macro-loss 对 535B Hero 终点的 2.039 预测曲线。" loading="lazy">
+            <figcaption>图 8：五阶 Scaling Ladder：各档位逐帧训练 loss（左）与每 5% 进度按 $L = 1.5 + A\cdot C^{-\alpha}$ 外推预测 Hero 终点的 dropless Paloma macro-loss（右，终值 <code>2.039</code>；<code>d2048</code> 于 81% 硬件故障中止后空心点为外推）。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>。</figcaption>
+        </figure>
+
+        <p>横向对比扣除 <code>lm_head</code> 计算后的三代 Marin 幂律（对齐至 Hero 算力 $2.6\times 10^{24}$ FLOPs），即便 Mochi 带有约 13× 过训且从 TPU 迁至 GB200，预测终值仍以 <code>2.039 (2.04)</code> 反超计算最优的 May TPU 配方（<code>2.05</code>）及 100× 过训的 Snowball 定律（<code>2.07</code>）<a class="cite" href="#ref-2">[2]</a>：</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Marin 缩放定律对照（扣除 <code>lm_head</code>）</th><th>拟合公式 $L(C) = E + A\cdot C^{-\alpha}$</th><th>过训倍数</th><th>$2.6\times 10^{24}$ FLOPs 预测</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Hero Ladder（<code>4K</code>，GB200）</strong></td><td>$1.5 + 84.8 \cdot C^{-0.0900}$</td><td>~13×（791 tok/act）</td><td class="best">2.04 (2.039)</td></tr>
+                <tr><td>May Recipe（<code>4K</code>，TPU）</td><td>$1.6 + 88.3 \cdot C^{-0.0941}$</td><td>计算最优（~1×）</td><td>2.05</td></tr>
+                <tr><td>Snowball <code>67B-A2B</code>（<code>8K</code>，TPU）</td><td>$1.4 + 84.7 \cdot C^{-0.0862}$</td><td>~100×</td><td>2.07</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <figure>
+            <img src="../fig-scaling-ladder-results.webp" width="1560" height="1691" alt="上图：Hero 五阶梯子幂律（2.04）与 May 计算最优配方（2.05）、67B-A2B Snowball（2.07）横向对比；下图：535B-A23B 18T 全程无平滑交叉熵与四阶小尺度梯子按进度叠加对照，清晰展示 80% 处梯子 Phase-2 混洗 A 小幅上翘而 Hero 修正配比 B 顺利下挫。" loading="lazy">
+            <figcaption>图 9：上：Hero 梯子拟合定律在 $2.6\times 10^{24}$ FLOPs 领先前两代 TPU 定律，排除了跨平台数值退化；下：18T Hero 全程交叉熵与四档梯子按进度叠放——梯子在 80% 暴露旧配比 A 短暂反弹后，Hero 换用修订版配比 B 顺利下沉，且统一 4K dropless 评测终值 <code>1.982</code> 超越预注册 <code>2.039</code> 预测（细节见<a href="#paloma-dropless-scaling">第 9.1 节</a>）。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>。</figcaption>
+        </figure>
+
         <h2 id="pretraining">535B 预训练与系统工程<a class="anchor" href="#pretraining" aria-hidden="true">#</a></h2>
-        <p>将 535B 模型推过 704 张 GB200 与 18T tokens 的核心战役在于通信拓扑贴合、数值归约防错，以及仅耗 1% 算力的 5 阶 Scaling Ladder 预演。</p>
+        <p>由五阶 Scaling Ladder 提前锁死超参和外推轨道后，将 Mochi 真正推过 704 张 GB200 与 18T tokens 的现场主战场落在 NVL72 通信内核、SPMD 分片数值稳定性与持续 MFU 压榨上。</p>
 
         <h3 id="gb200-ep64-transport">Pooled-Wave 与 Ragged EP<a class="anchor" href="#gb200-ep64-transport" aria-hidden="true">#</a></h3>
         <p>每台健康 NVL72 机柜提供 64 张 B200（16 节点 × 4 卡，$11.6\text{ TiB}$ HBM）与 <code>900 GB/s</code> 机柜内 NVLink，而跨机柜 InfiniBand 带宽骤降至 <code>50 GB/s</code>（18× 断崖）<a class="cite" href="#ref-6">[6]</a>。Mochi 将 384 个路由专家锁定于<strong>机柜内 EP=64</strong>（每卡 6 专家：$\text{GPU}(e)=\lfloor e/6\rfloor$、$\text{local}(e)=e\bmod 6$），Shared Experts 与非专家参数做机柜内 FSDP，跨机柜用 <strong>DP=11</strong>，构成全球每步 $46{,}137{,}344$ tokens（每卡 $65{,}536$ tokens、$524{,}288$ 次 top-8 assignment）<a class="cite" href="#ref-6">[6]</a>。</p>
@@ -425,14 +541,14 @@ def moe_forward_latent_qb(self, x_flat):
 
         <figure>
             <img src="../fig-ep-protocol.webp" width="1516" height="1581" alt="Destination-Pooled Static-Wave All-to-All 协议公式图解：发端共享池构建、内联 local_id 表头、收端按专家 round-robin compact、batched MLP 逆向回传与三波流式执行。" loading="lazy">
-            <figcaption>图 6：Destination-Pooled Static-Wave All-to-All 四步协议（<code>CF=1.15</code> 对应每波 <code>3,141</code> 发送槽位与 <code>33,497</code> 接收专家行上限），溢出直接丢弃无重试队列。来源：Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>。</figcaption>
+            <figcaption>图 10：Destination-Pooled Static-Wave All-to-All 四步协议（<code>CF=1.15</code> 对应每波 <code>3,141</code> 发送槽位与 <code>33,497</code> 接收专家行上限），溢出直接丢弃无重试队列。来源：Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>。</figcaption>
         </figure>
 
         <p><code>#8062</code> 的五项极端消融已证明即便 4K→65K 序列骤增将丢包逼高至 37%，无丢包评测仍仅与 FSDP 差 <code>0.008</code>。Hero 前 21% 赛程以 <code>21.5%</code> MFU / <code>3.4%</code> 丢包平稳开局；第 <strong>82,000 步</strong>起热切换至 Matt Wittmann 攻克的设备端 <strong>Ragged All-to-All</strong>，丢包归零（<code>0.01%</code> @4K / <code>0.03%</code> @65K），再经 Padding Routing 与 SM100 FA4 优化将 MFU 推至 <strong>23% → ~30%</strong><a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-38">[38]</a>：</p>
 
         <figure>
             <img src="../fig-ep-metrics.webp" width="1636" height="991" alt="Mochi 生产监控六面板：展示 82k 步切换 Ragged All-to-All 后总丢包与发送丢包归零、吞吐与 MFU 阶梯跃升至接近 30%，以及全程稳定的 router 熵。" loading="lazy">
-            <figcaption>图 7：Hero 生产态监控面板——step 82k 热切 Ragged All-to-All 后丢包率骤降至零，吞吐与 MFU 稳步攀至 <code>23% → ~30%</code>，同时路由熵平稳收敛。来源：Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>。</figcaption>
+            <figcaption>图 11：Hero 生产态监控面板——step 82k 热切 Ragged All-to-All 后丢包率骤降至零，吞吐与 MFU 稳步攀至 <code>23% → ~30%</code>，同时路由熵平稳收敛。来源：Rafal Wojdyla, Open Athena (2026) <a class="cite" href="#ref-6">[6]</a>。</figcaption>
         </figure>
 
         <h3 id="muonh-optimizer">MuonH 分组与数值稳定性<a class="anchor" href="#muonh-optimizer" aria-hidden="true">#</a></h3>
@@ -468,34 +584,11 @@ def _scale_invariant_2d(p, u, lr):
     new_p_norm = jnp.sqrt(jnp.sum(jnp.square(new_p.astype(jnp.float32))))
     return new_p / jnp.maximum(new_p_norm, 1e-10) * p_norm - p</code></pre>
 
-        <h3 id="scaling-ladder-lr">Scaling Ladder 与学习率律<a class="anchor" href="#scaling-ladder-lr" aria-hidden="true">#</a></h3>
-        <p>借助 19 组小尺度网格扫描拟合出高置信度规律 <code>MoeHeuristic</code>（$R^2=0.978$，<code>#7856/#8003</code>），仅用 2 天耗时、~1% Hero 总算力在固定<strong>每激活参数 791 tokens</strong>与恒定单柜密度（<code>1024 × racks</code>）的五阶梯子上校准预测线，也靠梯子先验证明“前 40% 进度梯度范数持续上升属正常动力学”避免 Hero 误干预<a class="cite" href="#ref-14">[14]</a><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-18">[18]</a>：</p>
-        $$\text{lr}_{\text{adam}} = 0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}, \qquad \text{lr}_{\text{muonh}} = \frac{13}{3}\text{lr}_{\text{adam}}, \qquad \epsilon = 9.676\times 10^{-18} \sqrt{\frac{T}{B_{\text{tok}}}}$$
-
-        <div class="table-wrap">
-        <table>
-            <thead>
-                <tr><th>梯子档位（<code>D / L</code>）</th><th>GB200 机柜（卡）</th><th>Batch（序列）</th><th>步数</th><th>Tokens</th><th>激活 / 总参数</th><th>训练 FLOPs</th></tr>
-            </thead>
-            <tbody>
-                <tr><td><code>d768</code> (<code>8L</code>)</td><td>1 (64)</td><td>1,024</td><td>11,420</td><td>48B</td><td>61M / 1.6B</td><td>$5.5\times 10^{19}$</td></tr>
-                <tr><td><code>d1024</code> (<code>12L</code>)</td><td>2 (128)</td><td>2,048</td><td>15,276</td><td>128B</td><td>162M / 4.0B</td><td>$2.7\times 10^{20}$</td></tr>
-                <tr><td><code>d1536</code> (<code>16L</code>)</td><td>6 (384)</td><td>6,144</td><td>15,128</td><td>381B</td><td>481M / 11.5B</td><td>$1.8\times 10^{21}$</td></tr>
-                <tr><td><code>d2048</code> (<code>22L</code>)</td><td>11 (704)</td><td>11,264</td><td>20,072</td><td>926B</td><td>1.2B / 27.7B</td><td>$9.2\times 10^{21}$</td></tr>
-                <tr><td><strong><code>d6144</code>（<code>48L</code>, Hero）</strong></td><td>11 (704)</td><td>11,264</td><td>390,251*</td><td class="best">18T</td><td class="best">22.8B / 535.3B</td><td class="best">$2.7\times 10^{24}$</td></tr>
-            </tbody>
-        </table>
-        </div>
-        <p>*Mochi 于 2026 年 11 月 5 日跑完主线 390,251 步（~18.1T tokens），随即追加超期 262K 扩展至步数 ~393,491。</p>
-
-        <figure>
-            <img src="../fig-scaling-ladder.webp" width="1440" height="622" alt="左图：四个小尺度梯子档位的训练交叉熵及 80% 数据配比切换点；右图：Dropless Paloma macro-loss 对 535B Hero 终点的 2.039 预测曲线。" loading="lazy">
-            <figcaption>图 8：五阶 Scaling Ladder：各档位逐帧训练 loss（左）与按 $L = 1.5 + A\cdot C^{-\alpha}$ 外推预测 Hero 终点的 dropless Paloma macro-loss（右，<code>d2048</code> 于 81% 硬件故障中止后空心点为拟合外推）。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>。</figcaption>
-        </figure>
+        <p>依靠机柜内 EP64/Ragged All-to-All、三分组 Hyperball 优化与每小时本地滚动存档，Mochi 在 2026 年 11 月 5 日前跑完 390,251 步主训练（~18.1T tokens）全程无一次 loss 尖刺，随后转入超期 262K 扩展阶段：</p>
 
         <figure>
             <img src="../fig-hero-loss.webp" width="1440" height="600" alt="Marin 535B-A23B 完整 18T 预训练每步交叉熵，虚线标出 Ragged All-to-All、数据混洗、Phase 2 退火及 16K/65K 扩窗时刻。" loading="lazy">
-            <figcaption>图 9：Mochi 全程 18T tokens 逐帧训练交叉熵，零尖刺平滑跨过 Ragged All-to-All 切换、Phase-2 Cooldown 与 4K → 16K → 65K 上下文扩展。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>。</figcaption>
+            <figcaption>图 12：Mochi 全程 18T tokens 逐帧训练交叉熵，零尖刺平滑跨过 Ragged All-to-All 切换、Phase-2 Cooldown 与 4K → 16K → 65K 上下文扩展。来源：Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>。</figcaption>
         </figure>
 
         <h2 id="mid-training">Mid-Training 与 262K 扩窗<a class="anchor" href="#mid-training" aria-hidden="true">#</a></h2>
@@ -508,7 +601,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-mochi-checkpoints.webp" width="1636" height="1014" alt="Mochi 全程 18.2T 训练交叉熵及末尾 262K 放大图，圆圈标出公开发布的 57 个预训练与长上下文 checkpoint。" loading="lazy">
-            <figcaption>图 10：Mochi 18.2T tokens 全程交叉熵与 17T–18.2T 局部放大图，圆点逐一标记 4K、16K、65K 及 262K 阶段公开发布的 57 个 checkpoint。来源：David Hall, Open Athena (2026) <a class="cite" href="#ref-5">[5]</a>。</figcaption>
+            <figcaption>图 13：Mochi 18.2T tokens 全程交叉熵与 17T–18.2T 局部放大图，圆点逐一标记 4K、16K、65K 及 262K 阶段公开发布的 57 个 checkpoint。来源：David Hall, Open Athena (2026) <a class="cite" href="#ref-5">[5]</a>。</figcaption>
         </figure>
 
         <h3 id="long-context-262k">渐进扩窗与 QK 温度缩放<a class="anchor" href="#long-context-262k" aria-hidden="true">#</a></h3>
@@ -531,7 +624,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-snowball-dag.webp" width="1041" height="1600" alt="Snowball v0.1 的 14 节点后训练血统 DAG，展示从 67B 预训练与 262K 扩展经 Datakit SFT Sep 21（47.1%）、FTPO、Antidoom RLVR1（58.3%）与 DARE-TIES 融合最终发布 68.4% 胜率模型的路径。" loading="lazy">
-            <figcaption>图 11：Snowball v0.1 全套 14 节点开源后训练 DAG，清晰串联 SFT、FTPO、RLVR 与 DARE-TIES 模型融合，各节点标注 23 项基准对战胜率。来源：Ben Feuer, Open Athena (2026) <a class="cite" href="#ref-8">[8]</a>。</figcaption>
+            <figcaption>图 14：Snowball v0.1 全套 14 节点开源后训练 DAG，清晰串联 SFT、FTPO、RLVR 与 DARE-TIES 模型融合，各节点标注 23 项基准对战胜率。来源：Ben Feuer, Open Athena (2026) <a class="cite" href="#ref-8">[8]</a>。</figcaption>
         </figure>
 
         <h3 id="relay-sft">领域 SFT 与 Relay SFT<a class="anchor" href="#relay-sft" aria-hidden="true">#</a></h3>
@@ -558,7 +651,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-relay-sft.webp" width="1720" height="1366" alt="官方 Relay SFT 图示：上方对比纯教师 SFT 与 Relay SFT 的 S（无损学生前缀）、R（单轮教师修复）与 T（接管续写）时间线；下方统计 14.69M 训练 token 中有 93% 位于 09-21 真实出错状态内。" loading="lazy">
-            <figcaption>图 12：Relay SFT 机制与监督分布原图。上：学生回合 <code>S</code> 仅保留为无损上下文，单轮修复 <code>R</code> 与交接后 <code>T</code> 回合计算梯度；下：<code>93%</code> 的 <code>14.69M</code> 监督 token 直接精准覆盖 Snowball <code>09-21</code> 的预算超限（<code>54%</code>）、单轮修复（<code>27%</code>）与过早宣称完成（<code>8%</code>）现场。来源：Donghyun Lee（<a class="cite" href="#ref-11">[11]</a>、<a class="cite" href="#ref-13">[13]</a>）。</figcaption>
+            <figcaption>图 15：Relay SFT 机制与监督分布原图。上：学生回合 <code>S</code> 仅保留为无损上下文，单轮修复 <code>R</code> 与交接后 <code>T</code> 回合计算梯度；下：<code>93%</code> 的 <code>14.69M</code> 监督 token 直接精准覆盖 Snowball <code>09-21</code> 的预算超限（<code>54%</code>）、单轮修复（<code>27%</code>）与过早宣称完成（<code>8%</code>）现场。来源：Donghyun Lee（<a class="cite" href="#ref-11">[11]</a>、<a class="cite" href="#ref-13">[13]</a>）。</figcaption>
         </figure>
 
         <h3 id="plateau-dropping">Plateau Dropping 与工程踩坑<a class="anchor" href="#plateau-dropping" aria-hidden="true">#</a></h3>
@@ -572,7 +665,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-plateau-dropping.webp" width="1448" height="777" alt="Plateau Dropping 在 10 轮 SWE 训练（760 步）中的 token 分类占比堆叠柱状图：第 760 步时 56% 因学会跳过、约 5% 因卡住跳过，仅 38% 仍在更新。" loading="lazy">
-            <figcaption>图 13：Plateau Dropping 在 10 轮 SWE 训练（760 步）期间被跳过与活跃训练的 token 占比变化：末尾 56% 归入“已学会跳过”，约 5% 为“卡死跳过”，38% 留在核心学习区。来源：Varma, Lee, and Dimakis (2026) <a class="cite" href="#ref-12">[12]</a>。</figcaption>
+            <figcaption>图 16：Plateau Dropping 在 10 轮 SWE 训练（760 步）期间被跳过与活跃训练的 token 占比变化：末尾 56% 归入“已学会跳过”，约 5% 为“卡死跳过”，38% 留在核心学习区。来源：Varma, Lee, and Dimakis (2026) <a class="cite" href="#ref-12">[12]</a>。</figcaption>
         </figure>
 
         <div class="table-wrap">
@@ -623,7 +716,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-rl-debugging.webp" width="1600" height="1511" alt="上图：关闭 top-p/k 滤波、采用全分布采样后消除 40 步内的 50% 熵坍缩；下图：修复 TITO 与概率对齐后新训练栈在第 24 步在熟悉与新仓库均反超旧栈约 10 个百分点。" loading="lazy">
-            <figcaption>图 14：RL 训练栈排雷前后对照。上：改用全分布采样彻底抹平此前导致输出熵腰斩的 IS 偏差；下：引入 TITO 等五项修复后，新栈在第 24 步分别冲上 <code>60.0%</code> 与 <code>59.5%</code>。来源：Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>。</figcaption>
+            <figcaption>图 17：RL 训练栈排雷前后对照。上：改用全分布采样彻底抹平此前导致输出熵腰斩的 IS 偏差；下：引入 TITO 等五项修复后，新栈在第 24 步分别冲上 <code>60.0%</code> 与 <code>59.5%</code>。来源：Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>。</figcaption>
         </figure>
 
         <h3 id="specdec-prompt-rl">EAGLE-3 加速与 Prompt RL<a class="anchor" href="#specdec-prompt-rl" aria-hidden="true">#</a></h3>
@@ -651,7 +744,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-sft-rl-stages.webp" width="1440" height="757" alt="分组柱状图对比 Snowball 09-21、Direct RL、CalibForge SFT、CalibForge + Kimi SFT 与 Relay SFT 在 RL 第 0、30、60 步于 TB2.1、SWE-bench 和 TBLite 的 pass@1 走势。" loading="lazy">
-            <figcaption>图 15：不同 SFT 路线在 0、30、60 步 GRPO 推进下的三榜演进：<code>CalibForge + Kimi SFT + 60 RL</code> 领跑 SWE（<code>50.5%</code>）与 TB2.1（<code>23.9%</code>），<code>Direct RL</code> 在 TBLite 守住最高分（<code>45.1%</code>）。来源：Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>。</figcaption>
+            <figcaption>图 18：不同 SFT 路线在 0、30、60 步 GRPO 推进下的三榜演进：<code>CalibForge + Kimi SFT + 60 RL</code> 领跑 SWE（<code>50.5%</code>）与 TB2.1（<code>23.9%</code>），<code>Direct RL</code> 在 TBLite 守住最高分（<code>45.1%</code>）。来源：Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>。</figcaption>
         </figure>
 
         <ul>
@@ -670,7 +763,7 @@ def _scale_invariant_2d(p, u, lr):
 
         <figure>
             <img src="../fig-eval-forecast-cd.webp" width="1600" height="1999" alt="上图：Mochi 4K 重评 dropless Paloma 曲线全程贴合并于后程拉穿 2.039 预测线降至 1.982；下图：Snowball v0.1 在 26 项基准政策下的 Nemenyi 临界差对比图（8.13 vs gpt-oss-20b 8.93）。" loading="lazy">
-            <figcaption>图 16：上：Mochi 按统一 4K 口径重测的 dropless Paloma 实测轨迹（<code>1.982</code>）超越 <code>2.039</code> 预注册预测（<code>#8435</code>）；下：Snowball v0.1 在 26 项基准上的 Nemenyi 临界差排位（无算力控制均排名 <code>8.13</code> 胜 <code>gpt-oss-20b</code> <code>8.93</code>；控制 FLOPs 后升至第一 <code>5.18</code>）。来源：Larry Dial（<a class="cite" href="#ref-2">[2]</a>）与 Ben Feuer（<a class="cite" href="#ref-8">[8]</a>）。</figcaption>
+            <figcaption>图 19：上：Mochi 按统一 4K 口径重测的 dropless Paloma 实测轨迹（<code>1.982</code>）超越 <code>2.039</code> 预注册预测（<code>#8435</code>）；下：Snowball v0.1 在 26 项基准上的 Nemenyi 临界差排位（无算力控制均排名 <code>8.13</code> 胜 <code>gpt-oss-20b</code> <code>8.93</code>；控制 FLOPs 后升至第一 <code>5.18</code>）。来源：Larry Dial（<a class="cite" href="#ref-2">[2]</a>）与 Ben Feuer（<a class="cite" href="#ref-8">[8]</a>）。</figcaption>
         </figure>
 
         <h3 id="mfu-eval-policy">MFU 口径与 26 项基准规范<a class="anchor" href="#mfu-eval-policy" aria-hidden="true">#</a></h3>
@@ -738,6 +831,9 @@ def _scale_invariant_2d(p, u, lr):
             <li id="ref-37" lang="en" data-brief="Hero 之前的四尺度预训练提速长文：由稠密跃升至 MoE V1 (6.7× / 3.6×)，并依次叠加上 256 专家、MuonH、PKO 与 2.5 Sigmoid 重归一（再获 2.1×）。"><a href="https://openathena.ai/blog/pretraining-speedup/" target="_blank" rel="noopener">Improving Our LLM Pre-Training Efficiency</a>. Larry Dial, Open Athena, June 3, 2026.</li>
             <li id="ref-38" lang="en" data-brief="Mochi 535B-A23B 启动说明：详述从 1 人实验室跃迁到 Open Athena 10 人团队的过程、Iris 自动恢复以及 Ragged All-to-All / Mixture-of-Kittens / vLLM 贡献分工。"><a href="https://openathena.ai/blog/marin-535b-launch-note/" target="_blank" rel="noopener">Marin 535B-A23B Launch Note</a>. David Hall, Open Athena, September 3, 2026.</li>
             <li id="ref-39" lang="en" data-brief="历经五个月在可抢占 TPU 上从零构建异步 RL 管线的实战复盘：Arrow Flight BF16 权重传输、tpu-inference #1386 top-k 贪心漏洞修复与 Iris 500 步续训。"><a href="https://marin.community/blog/2026/05/21/async-rl-from-scratch/" target="_blank" rel="noopener">Async RL from Scratch on TPUs</a>. Ahmed et al., Marin Community, May 21, 2026.</li>
+            <li id="ref-40" lang="en" data-brief="Marin 开源稠密 Scaling Suite 论文长文（Delphi，3e18–1e23 FLOPs）：以 AdamH + T^-0.3 时域修正与 Vizier 调参实现 300× 外推 0.2% 精度，并用软指标+观测定律预报 MMLU/HumanEval/GSM8K 涌现。"><a href="https://openathena.ai/blog/delphi/" target="_blank" rel="noopener">Scaling Laws That Extrapolate 300× past the Fit</a>. Will Held, Open Athena, May 11, 2026.</li>
+            <li id="ref-41" lang="en" data-brief="揭示 Chinchilla Approach 2 抛物线顶点拟合的非对称泰勒偏差（在 Llama 3 IsoFLOP 上引发 ~6.5% 算力错配），并提出基于变量投影的直接拟合方案。"><a href="https://openathena.ai/blog/problems-with-chinchilla-approach-2/" target="_blank" rel="noopener">Problems with Chinchilla Approach 2</a>. Eric Czech, Open Athena, March 27, 2026.</li>
+            <li id="ref-42" lang="en" data-brief="Open Athena 开源变量投影缩放律求解库（VPNLS）：把五维 Chinchilla 回归降维到二维指数面搜索，比 ml-scalefit 快 15.8× 且 Huber 残差更低。"><a href="https://github.com/Open-Athena/vpnls" target="_blank" rel="noopener">VPNLS: Variable Projection with Nonlinear Least Squares for Scaling Laws</a>. Eric Czech et al., Open Athena, 2026 (arXiv:2603.22339).</li>
         </ol>
     </div>
 
