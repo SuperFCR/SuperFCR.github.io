@@ -56,7 +56,7 @@
         <h1 class="post-title">Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</h1>
         <div class="post-meta">
             <span>2026 年 11 月 22 日</span>
-            <span>27 分钟阅读</span>
+            <span>33 分钟阅读</span>
             <span>冯超然</span>
         </div>
     </header>
@@ -112,15 +112,19 @@
             <li><a href="#sft">后训练 SFT 与数据构建</a>
                 <ul>
                     <li><a href="#open-posttrain-stack">任务沙盒与 Snowball DAG</a></li>
+                    <li><a href="#general-sft-datakit">通用 SFT 与 Datakit 管线</a></li>
                     <li><a href="#relay-sft">领域 SFT 与 Relay SFT</a></li>
                     <li><a href="#plateau-dropping">Plateau Dropping 与工程踩坑</a></li>
                 </ul>
             </li>
-            <li><a href="#rl">Coding Agent 强化学习</a>
+            <li><a href="#rl">强化学习、融合与迁移边界</a>
                 <ul>
-                    <li><a href="#pre-rl-probe-stack">Pre-RL Probe 与 TITO 修复</a></li>
+                    <li><a href="#math-broad-rlvr">数学 RLVR 与广域 RLVR</a></li>
+                    <li><a href="#ftpo-merge-smartie">FTPO、模型融合与 Smartie</a></li>
+                    <li><a href="#pre-rl-probe-stack">Coding RL 探针与 TITO 修复</a></li>
                     <li><a href="#specdec-prompt-rl">EAGLE-3 加速与 Prompt RL</a></li>
                     <li><a href="#sft-vs-rl-traces">轨迹归因与 Reward Hacking</a></li>
+                    <li><a href="#moe-mochi-readiness">MoE 路由隔离与 Mochi 迁移</a></li>
                 </ul>
             </li>
             <li><a href="#evaluation">评估体系与 Eval Policy</a>
@@ -141,11 +145,11 @@
         <p>本教程按工程时间线系统串讲 Marin 全栈，围绕其两代核心稀疏 MoE 载体展开：</p>
         <ul>
             <li><strong>Marin &ldquo;Mochi&rdquo; 535B-A23B：</strong>535.3B 总参数 / 22.8B 非 embedding 激活参数的 Normalized LatentMoE，在 704 张 NVIDIA GB200（11 组健康 NVL72 机柜）上于 2026 年 11 月 5 日完成 18T tokens 主预训练<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-2">[2]</a>，并发布 57 个预训练与 262K 长上下文扩展 checkpoint<a class="cite" href="#ref-5">[5]</a>。</li>
-            <li><strong>Marin &ldquo;Snowball&rdquo; 67B-A2B：</strong>在 TPU 上以 10T tokens 过训约 100× 的 MoE 模型，以少 10× 算力和 16× 激活参数超越早先 Marin 32B<a class="cite" href="#ref-8">[8]</a>，成为检验 Coding Agent SFT 与 GRPO 后训练栈的主力实验床<a class="cite" href="#ref-11">[11]</a><a class="cite" href="#ref-12">[12]</a>。</li>
+            <li><strong>Marin &ldquo;Snowball&rdquo; 67B-A2B：</strong>在 TPU 上以 10T tokens 过训约 100× 的 MoE 模型，以少 10× 算力和 16× 激活参数超越早先 Marin 32B<a class="cite" href="#ref-8">[8]</a>，成为检验通用 SFT、数学与广域 RLVR、FTPO、模型融合与 Coding Agent RL 的主力开源实验床<a class="cite" href="#ref-11">[11]</a><a class="cite" href="#ref-12">[12]</a><a class="cite" href="#ref-49">[49]</a>。</li>
         </ul>
 
         <div class="callout callout-tip">
-            <p><strong>阅读路线：</strong>第 1 章对齐参数/FLOP 核算、GQA vs. MLA、Hyperball、Quantile Balancing 与 5D 并行；第 2–6 章聚焦 Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a>，逐层剖析 Mochi 架构消融、Datakit 25T 治理、Scaling Law 推导与 Scaling Ladder（<a href="#scaling-laws">#scaling-laws</a>）、GB200 系统工程与 262K 扩窗；第 7–9 章详解 Snowball 后训练 DAG（Relay SFT、Plateau Dropping、TITO GRPO、EAGLE-3）与 26 项基准 Eval Policy<a class="cite" href="#ref-16">[16]</a>。</p>
+            <p><strong>阅读路线：</strong>第 1 章对齐参数/FLOP 核算、GQA vs. MLA、Hyperball、Quantile Balancing 与 5D 并行；第 2–6 章聚焦 Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a>，逐层剖析 Mochi 架构消融、Datakit 25T 治理、Scaling Law 推导与 Scaling Ladder（<a href="#scaling-laws">#scaling-laws</a>）、GB200 系统工程与 262K 扩窗；第 7–9 章详解 Snowball 全链路后训练（<code>09-21</code> 通用 SFT、Datakit Harmony 管线、Relay/Plateau SFT、数学与广域 RLVR、FTPO、Campaign2 融合、Smartie RL、Coding GRPO 与 Mochi 迁移边界）及 26 项基准 Eval Policy<a class="cite" href="#ref-16">[16]</a>。</p>
         </div>
 
         <h2 id="overview">为什么需要 Marin<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
@@ -647,17 +651,46 @@ def _scale_invariant_2d(p, u, lr):
         <p>正因 50% Partial RoPE 被关在 2,048 窗口的局部层内、所有长距全局层均用 NoPE，Mochi 无需修改旋转角即可靠轻量温度调优平稳突破 262K。</p>
 
         <h2 id="sft">后训练 SFT 与数据构建<a class="anchor" href="#sft" aria-hidden="true">#</a></h2>
-        <p>由于 Mochi 刚在 11 月中旬开启后训练，Open Athena 把完整的开源 SFT 与 Agentic RL 管线先在 10T tokens 预训练的 <strong>Snowball 67B-A2B</strong> 上彻底打磨成熟<a class="cite" href="#ref-8">[8]</a>。</p>
+        <p>2026 年 11 月 17 日，Open Athena 正式发布了未经过指令微调的 Mochi 预训练 checkpoint（<code>open-athena/Marin-Mochi-535B-A23B</code>）<a class="cite" href="#ref-5">[5]</a>；而在此之前，更早期的中间 checkpoint 已先行启动了 RL Readiness 迁移验证（<a href="#moe-mochi-readiness">第 8.6 节</a>）<a class="cite" href="#ref-50">[50]</a>。在推进 535B 正式后训练的同时，团队已在 10T tokens 预训练的 <strong>Snowball 67B-A2B</strong> 上建立了公开可追踪、持续修正的后训练管线<a class="cite" href="#ref-8">[8]</a>。</p>
 
         <h3 id="open-posttrain-stack">任务沙盒与 Snowball DAG<a class="anchor" href="#open-posttrain-stack" aria-hidden="true">#</a></h3>
         <p>David Hall 在 <em>There Is No Post-Training Data Commons</em><a class="cite" href="#ref-9">[9]</a> 中点出核心壁垒：预训练依托现有文档公地，后训练却要制造具备“确定世界—意图—工具—评分器”的可复现<strong>任务沙盒</strong>。即便是最友好的软件工程，SWE-bench 从 9 万 PR 仅筛出 11,407 份，80% 因依赖腐烂无法重建（剩 2,294），OpenAI 雇 93 位工程师人工筛 Verified 后仍遗留 ~1/6 缺陷，TaskTrove 超过 90% Java 与 98% Python 套件无法启动，Vals 更审出 Xiaomi MiMo v2.6 三分之二环境泄漏了 Git 答案。</p>
 
-        <p>为此团队在 Marin monorepo 内深度改造 <strong>SkyRL</strong> 与 <strong>Harbor</strong>，Ben Feuer 等人将百余次探索凝结为一张包含 14 节点的有向无环图（DAG），整合 SFT、RLVR、FTPO 与 <code>DARE-TIES-02</code> 融合交付了 GPT-OSS-20B 水平的 <strong>Snowball v0.1</strong>（23 项基准锦标赛胜率达 <code>68.4%</code>）<a class="cite" href="#ref-8">[8]</a>：</p>
+        <p>为此团队在 Marin monorepo 内深度改造 <strong>SkyRL</strong> 与 <strong>Harbor</strong>，Ben Feuer 等人将百余次探索凝结为一张包含 14 节点的有向无环图（DAG），整合 SFT、RLVR、FTPO 与 <code>DARE-TIES-02</code> 融合，再经 Smartie RLVR 交付了 GPT-OSS-20B 水平的 <strong>Snowball v0.1</strong>（23 项基准锦标赛胜率达 <code>68.4%</code>）<a class="cite" href="#ref-8">[8]</a><a class="cite" href="#ref-49">[49]</a>：</p>
 
         <figure>
             <img src="../fig-snowball-dag.webp" width="1041" height="1600" alt="Snowball v0.1 的 14 节点后训练血统 DAG，展示从 67B 预训练与 262K 扩展经 Datakit SFT Sep 21（47.1%）、FTPO、Antidoom RLVR1（58.3%）与 DARE-TIES 融合最终发布 68.4% 胜率模型的路径。" loading="lazy">
             <figcaption>图 14：Snowball v0.1 全套 14 节点开源后训练 DAG，清晰串联 SFT、FTPO、RLVR 与 DARE-TIES 模型融合，各节点标注 23 项基准对战胜率。来源：Ben Feuer, Open Athena (2026) <a class="cite" href="#ref-8">[8]</a>。</figcaption>
         </figure>
+
+        <h3 id="general-sft-datakit">通用 SFT 与 Datakit 管线<a class="anchor" href="#general-sft-datakit" aria-hidden="true">#</a></h3>
+        <p>后续所有领域专家微调（如 Coding SFT 与 Relay SFT）并非直接从裸预训练权重出发，而是共同起步于通用 SFT 基座 <strong><code>Snowball 09-21</code></strong>（<code>open-athena/<wbr>Grug-67B-A2B-<wbr>Datakit-SFT-262K-2026.09.21</code>）<a class="cite" href="#ref-43">[43]</a>。它的核心使命是在借助 20% 长上下文预训练 Replay 保住基座能力的前提下，同步建立推理（<code>&lt;|start_think|&gt;</code>/<code>&lt;|end_think|&gt;</code>）、多轮对话、工具调用与双停止符终止协议（<code>128001</code> 与 <code>128009</code>），为领域专家提供统一的协议起点：</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th><code>09-21</code> Datakit SFT 公开配置</th><th>模型卡披露细节<a class="cite" href="#ref-43">[43]</a></th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>数据来源</strong></td><td><code>203</code> 个 SFT 叶子数据源（每 6.4 万条混洗块不足 1 条的微源合并入共享池以保证可采样；数据加载限 1 轮）</td></tr>
+                <tr><td><strong>调度比例与规模</strong></td><td><code>80%</code> SFT（<code>53.69B</code> 位置）+ <code>20%</code> 长上下文预训练 Replay（<code>13.42B</code>）；共约 <code>67.1B</code>（<code>67,108,864,000</code>）调度 token 位置（从基座第 <code>157,000</code> 步跑 <code>1,000</code> 步至 <code>158,000</code>，每步 <code>256 × 262,144</code>）</td></tr>
+                <tr><td><strong>主要 SFT 来源</strong></td><td><code>nemotron_sft_v3</code>（<code>54.83%</code>）、<code>open_swe_traces</code>（<code>7.56%</code>）、<code>superior-reasoning</code>（<code>5.36%</code>），辅以 <code>penfever-traces</code>（<code>2.28%</code>）、函数调用 <code>massive_function_calling</code>（<code>2.27%</code>）、<code>synthetic-1</code>、<code>coderforge</code>、<code>openthoughts4</code> 与终端 <code>nemotron-terminal</code></td></tr>
+                <tr><td><strong>协议学习</strong></td><td>基线峰值学习率 <code>5e-5</code>（续接优化器无 warmup）；未扩充新词表，但将输入 embedding 与 <code>lm_head</code> 中 <code>7</code> 个特殊协议 token 行（由 <code>role</code>、<code>message</code>、<code>think</code>、<code>answer</code>、<code>tool</code>、<code>end</code>、<code>EOS</code> 单字锚点初始化且仅重置 <code>lm_head</code> 优化器矩）的更新放大 $\sqrt{32}$ 倍（等效 LR <code>2.83e-4</code>）</td></tr>
+                <tr><td><strong>MoE 路由状态</strong></td><td><strong>Router weights 可训练</strong>；<strong>router balancing bias 及延迟负载均衡偏置更新保持冻结</strong></td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <p>这里必须明确两个统计口径边界：第一，<strong><code>67.1B</code> 是调度的 token 位置数</strong>（包含打包与 Replay），不等同于独立去重语料量，也不等于真正产生监督梯度的 assistant token 数；第二，<strong><code>262K</code> 首先是训练配置上下文长度</strong>，模型卡明确声明该研究产物尚未建立完整的长上下文评测验证<a class="cite" href="#ref-43">[43]</a>。</p>
+
+        <p>进一步来看，Marin <strong>当前 Datakit 后训练文档</strong>（需明确标为现行数据管线实现，不要将所有现行规则倒推为 <code>09-21</code> 当时已全部启用）展示了多来源对话变成训练输入的完整工程流<a class="cite" href="#ref-44">[44]</a>：</p>
+        <ul>
+            <li><strong>统一 Harmony 结构转换：</strong>通过 Zephyr <code>transform_chat</code> 与 <code>checked_openai_chat_document</code> 将各异源记录转为结构化 <strong>Harmony</strong> Parquet（<code>CHAT_SCHEMA</code>），完整保留说话角色、独立的推理（<code>reasoning_content</code>）/回答 channel 以及工具接收方。</li>
+            <li><strong>工具调用完整性与提示词核验：</strong>保留 <code>tool_call</code> ID 与对应 tool 回复并经 <code>chat_template_kwargs</code> 透传工具定义；凡原始 prompt 或工具声明残缺者一律剔除（针对 Terminus 终端轨迹还区分 <code>STRICT</code> 与有限修复 <code>REPAIR</code> 模式，严禁在未闭合推理内执行命令）。</li>
+            <li><strong>结构验证、规范化、精确去重与计数追踪：</strong><code>normalize_chat_source</code> 强制校验对话合法性（若空消息/异常比例 <code>&gt;5%</code> 直接报错中止）、执行文本规范化与精确对话去重，并分阶段沉淀 <code>counters["conversion"]</code> 与 <code>counters["normalization"]</code> 统计日志。</li>
+            <li><strong>结构合法 ≠ 答案正确：</strong>规范化管线仅负责格式契约校验与精确去重，从不替任务证明推理过程或最终答案的事实正确性。</li>
+            <li><strong><code>source_train_turns</code> 是来源元数据而非 loss mask：</strong>由于 Harmony 渲染常将推理段与正文回答拆为独立输出片段，渲染器不会把 <code>source_train_turns</code> 自动套作训练 mask——监督位置必须与最终渲染后的 token 序列逐一对齐。</li>
+        </ul>
 
         <h3 id="relay-sft">领域 SFT 与 Relay SFT<a class="anchor" href="#relay-sft" aria-hidden="true">#</a></h3>
         <p>用 Qwen3.8-27B 在 <code>CalibForge</code> 上的轨迹加 <code>Kimi</code> 演示对通用 SFT 基座 <code>Snowball 09-21</code> 做纯领域 SFT，已能把 SWE-bench 从 <code>12.8%</code> 推上 <strong><code>46.5%</code></strong><a class="cite" href="#ref-11">[11]</a>。针对老师从来不进入学生自身真实出错中间态的<em>暴露偏差</em>问题，Donghyun Lee 设计了类似 DAgger 纠偏的 <strong>Relay SFT</strong><a class="cite" href="#ref-13">[13]</a>：</p>
@@ -724,13 +757,48 @@ def _scale_invariant_2d(p, u, lr):
             <li><strong><code>grad_clip=1.0</code> 静默扼杀 Plateau Dropping：</strong>仅在 38% 保留 token 上求平均使梯度范数放大 <code>2–3×</code>，导致 <code>clip=1.0</code> 暗中截断 50–100% 训练步；loss 曲线（<code>0.347</code> vs <code>0.346</code>）完全正常，<code>pass@8</code> 却暴跌 <strong>6.0 pp</strong>（放宽到 <code>clip=4.0</code> 后回升 <code>72.0% → 78.0%</code>）。</li>
         </ul>
 
-        <h2 id="rl">Coding Agent 强化学习<a class="anchor" href="#rl" aria-hidden="true">#</a></h2>
-        <p>Marin 的 RL 实践历经两步进化：先在可抢占 TPU 切片上从零跑通 MATH-500、AIME25 与 Code-R1 异步 RL<a class="cite" href="#ref-39">[39]</a>，继而定位并清除了破坏多轮 Coding Agent 策略梯度的五处系统失配<a class="cite" href="#ref-11">[11]</a>。</p>
+        <h2 id="rl">强化学习、融合与迁移边界<a class="anchor" href="#rl" aria-hidden="true">#</a></h2>
+        <p>Marin 的强化学习并非单一的 Coding GRPO 实验，而是沿着五条清晰主线推进：打通可抢占 TPU 异步 RL<a class="cite" href="#ref-39">[39]</a>、开展 2.7T 数学 RLVR<a class="cite" href="#ref-45">[45]</a> 与 10T 广域 RLVR<a class="cite" href="#ref-46">[46]</a> 消融、依托 <strong>FTPO → Campaign2 融合 → Smartie RL</strong> 交付 <code>Snowball v0.1</code><a class="cite" href="#ref-47">[47]</a><a class="cite" href="#ref-48">[48]</a><a class="cite" href="#ref-49">[49]</a>、攻关多轮 Coding Agent GRPO<a class="cite" href="#ref-11">[11]</a>，以及提前验证 Mochi 535B 的 MoE 路由与 4K RL 迁移边界<a class="cite" href="#ref-50">[50]</a>。</p>
 
-        <h3 id="pre-rl-probe-stack">Pre-RL Probe 与 TITO 修复<a class="anchor" href="#pre-rl-probe-stack" aria-hidden="true">#</a></h3>
+        <h3 id="math-broad-rlvr">数学 RLVR 与广域 RLVR<a class="anchor" href="#math-broad-rlvr" aria-hidden="true">#</a></h3>
         <p>早期 <strong>Async RL on TPUs</strong> 工程用 Tinker LoRA 对齐同步 RLOO 基线，落地 Arrow Flight BF16 权重推送（将同步体积从 <code>32 GB</code> 砍到 <code>16 GB</code>、耗时 <code>29s → 14s</code>，配合后台热加载提速 <code>1.21×</code>），查杀 <code>tpu-inference #1386</code>（静默把 <code>top_k=-1</code> 当成贪心 <code>1</code>）、DAPO 样本级归一化暴跌 13%、vLLM 无种子采样及缺省 KL 约 250 步漂移等深坑，并用 Iris 实现 500 步跨抢占无缝续训<a class="cite" href="#ref-39">[39]</a>。</p>
 
-        <p>转战 Snowball 多轮代码仓后，团队先对 <code>R2E-Gym</code> 每题采样 8 次做 <strong>Pre-RL Probe</strong> 体检<a class="cite" href="#ref-11">[11]</a>：仅 36% Stage-3 题目落入成败兼有的可学带，但 15 题细读里有 13 题的失败轨迹都已找到正确函数——且屡屡误用 <code>SEARCH/REPLACE</code> 配 Unix <code>patch</code> 的坏习惯竟直接源自 31,661 条 Stage-3 开源训练集。随后修复了五项核心训练栈漏洞（第 24 步反超旧栈 <code>+10 pp</code>，求解中位轮数从 22 轮降到 15 轮、重复指令下降 <code>&gt;4×</code>）：</p>
+        <p>在此基础上，团队在较早的 <strong>2.7T Snowball 分支</strong>开展了 25 个 checkpoint 规模的非沙盒<strong>数学 RLVR</strong> 系统实验（基于 <code>grug-67b-a2b-sft-s2-thinking-step630</code>；最佳修复分支 <code>E6</code> 将 AIME24 由 <code>17.67% → 27%</code>、MATH-500 <code>64.00% → 78%</code>、OlympiadBench <code>12.67% → 20%</code>），最终报告给出五条关键负向与机制结论<a class="cite" href="#ref-45">[45]</a>：</p>
+        <ul>
+            <li><strong>训练指标与 Held-out 提升并不一致：</strong><code>E6</code> 复现实验的训练 reward 与训练集 <code>pass@16</code> 从第 1 步起就高于原版 <code>E6</code>，但在三套 held-out 数学基准上全面落后（<code>19.67 / 73.60 / 20.00</code> vs <code>26.00 / 76.80 / 22.67</code>）。</li>
+            <li><strong>数据集与 GRPO/DAPO 存在强耦合交互：</strong><code>DeepScaleR</code> 在 <code>hero-v3g/E12</code> 配对上无论 GRPO 还是 DAPO 都胜过 <code>RLVR-MATH</code>，但切换到 GRPO + 随机舍入 AdamW 后反转（<code>E17f</code> 落后 <code>E17a</code> 达 <code>-1.33 / -14.80 / -10.34</code>）；DAPO 在 <code>DeepScaleR</code> 上赢过 GRPO，在 <code>RLVR-MATH</code> 上却落败——没有脱离配方的稳定赢家。</li>
+            <li><strong><code>Muon-H</code> 在所测设置下未显出稳定的 Held-out 优势：</strong>对齐参数组学习率后，<code>AdamW</code> 训练收敛更快且峰值 reward 更高，<code>Muon-H</code> 虽耐受更大 LR 却未形成稳定泛化领先。</li>
+            <li><strong>输出预算、重复循环与终止行为显著干扰分数解读：</strong>冗长过度思考与不终止大幅污染横向对比，<code>E17a</code> 的优势主要源于压低过度思考并规范作答格式。</li>
+            <li><strong>Router-bias 状态与导出方式直接影响推理：</strong>可变路由模式 <code>replace</code> 导致原始导出模型崩溃（需移植 SFT router bias 修复）；冻结偏置分支在无损 BF16→FP32 导出校验中 26 层偏置完全一致，但也暴露出另一类不终止失效。</li>
+        </ul>
+
+        <p>转向 <strong>10T Snowball</strong> 后，覆盖数学、代码、指令遵循与工具调用的<strong>广域 RLVR</strong>（<code>#9735</code><a class="cite" href="#ref-46">[46]</a>，基于 Nemotron Ultra，采用 <code>80</code> H100 训练 + <code>48</code> 推理、<code>512 × 16</code> 与 Megatron router replay）直接连向 DAG 中的 <code>Antidoom</code> 与后续融合节点。将每轮生成预算从 <code>16K → 32K → 48K</code> 后，首批 $T=1$ 长度截断从 <code>18.4% → 12.7% → 9.7%</code>，但无惩罚分支仍爆发严重后期退化：无 KL 约束的 <strong>Antidoom RLVR1</strong> 在反复查看的 100 题 holdout 上于第 12 步冲至 <strong><code>34/100</code></strong>（均分 <code>0.3705</code>），第 20 步骤跌回 <strong><code>2/100</code></strong>；从第 12 步切出、重启优化器并引入冻结参考 KL（<code>0.01</code>）、熵系数 <code>0.001</code> 与序列均值损失的 <strong>Reference-KL</strong> 分支在第 20 步选到 <strong><code>42/100</code></strong>（均分 <code>0.4465</code>，第 22–30 步回落至 <code>33–37/100</code>）。必须指出，<code>42/100</code> 属于开发集多次查表选型结果，两条运行并非匹配对照<a class="cite" href="#ref-46">[46]</a>——这也印证了<strong>后训练中的广域提升、行为稳定性与能力保持必须同时检验</strong>。</p>
+
+        <h3 id="ftpo-merge-smartie">FTPO、模型融合与 Smartie<a class="anchor" href="#ftpo-merge-smartie" aria-hidden="true">#</a></h3>
+        <p><code>Snowball v0.1</code> 的发布链路并非 Coding GRPO 直接产出，而是先后历经局部行为修复（<strong>FTPO</strong>）、约束权重的<strong>模型融合</strong>与正式多域 RL（<strong>Smartie</strong>）三道关卡。</p>
+
+        <p><strong>FTPO（Dr. Doom，<code>#9691</code><a class="cite" href="#ref-47">[47]</a>）：</strong>模型会做题与能够稳定终止、守住输出协议是两个不同的后训练目标。针对 <code>Snowball 09-21</code> 的恶性复读循环，在线 <strong>Final-Token Preference Optimization（FTPO）</strong>在贪心在线采样中记录精确 token ID 与 top-32 logits，扫描最长达 4,096 token 周期且末尾连续重复 $\ge 8$ 次的循环；在<strong>循环首次出现的精确边界</strong>，只提高替代 token 相对重复 token 的得分边际，并用冻结参考模型的全词表 logit MSE 惩罚约束偏离（任务正确率另行评估）。<code>mixed-long-smoke v2, update 2</code>（40 张 H100、<code>lr=2e-7</code>）将 512 题 16K 数学精确循环从 <strong><code>139/512 (27.15%) → 12/512 (2.34%)</code></strong>（正确率同步从 <code>45.31% → 55.27%</code>），100 题 32K 跨域循环从 <code>43–44% → 19/100</code>；但跨域残留（指令遵循、编程、工具数学）仍未达成 <code>&lt;5% / &lt;2%</code> 的分域目标，且运行时与权重加载差异亦限制了将变化单纯归因于损失函数。</p>
+
+        <p><strong>模型融合（Campaign2 与 <code>DARE-TIES-02</code>，<code>#9975</code><a class="cite" href="#ref-48">[48]</a>）：</strong>早期选择性专家迁移融合（<code>Shared100</code>/<code>Shared075</code>）虽拼出 <code>36.50%</code> NUPA200 与 <code>48.78%</code> BFCL，却仅保留 <code>0.76%</code> Base 参数并伴随着 MATH-500（<code>95.0% → 89.8%</code>）与 GPQA（<code>67.3% → 52.2%</code>）掉点。为此 <strong>Campaign2</strong> 硬性约束至少保留 <strong><code>≥75%</code> Base 标量权重及全部非权重文件</strong>，面向三个指定父模型做合并：Base = <code>Antidoom Step12</code>、记录中标记的 NUPA specialist = <code>10T-Mixed-RLVR-Sync Step92</code>、BFCL specialist = <code>Reference-KL Step20</code>。<strong><code>DARE-TIES-02</code></strong> 仅在 <code>R25</code> 路由专家子集（<code>1,705</code> 个块，保留/裁剪密度 <code>0.20</code>、权重 <code>0.50/0.50</code>）修改了约 <strong><code>6.04%</code></strong> 参数（原样保留 <code>93.96%</code> Base 权重）并在该轮锦标赛胜出（<code>0.627</code>）。然而模型卡同步披露其开发基线得分为 <code>45.53%</code> BFCL 与 <code>0.00%</code> NUPA200——显然不支持“两种专长已被无损整合”的结论，凸显了限制权重迁移幅度、审计非目标能力退化及依赖全量评测最终选型的必要性。</p>
+
+        <p><strong>Smartie 正式发布前 RL（<code>#10305</code><a class="cite" href="#ref-49">[49]</a>）：</strong>官方 <code>Marin-Snowball-67B-A2B-v0.1</code> 模型卡明确标出其完整血统为 <strong><code>DARE-TIES-02 → Smartie .32 异步 RLOO-N + TIS → step 14 → Snowball v0.1</code></strong>（起点不是 Campaign3 <code>Snowball v0</code>，且因第 12 步峰值 <code>50.33%</code> 被滚动清理机制淘汰，最终导出保留下来的最高分第 14 步）。该轮使用 <strong>异步 RLOO-N</strong>（基建异常样本置中性不计入留一基线）配 <strong>Truncated Importance Sampling（TIS）</strong>、token 均值损失、无 KL/熵/FTPO 惩罚，每次更新 <strong><code>512</code> 组 prompt × <code>16</code> 回复</strong>（<code>64</code> 训练 + <code>48</code> 推理 H100）、<strong><code>lr=4e-6</code></strong> 跑 <code>14</code> 步，源数据含 <code>69,487</code> 题（<code>12,123</code> 条 NVIDIA <code>Nemotron-RL-Ultra</code> 日历/竞赛代码/Reasoning Gym/STEM 单选与 <code>57,364</code> 条合成结构闭合任务）。第 14 步时 910 题原生开发集 <code>pass@1</code> 由 <code>41.21% → 50.22%</code>、NVIDIA 平均奖励由 <code>40.59% → 55.50%</code>；但必须注意该轮关闭了 shuffle（<code>shuffle: false</code>，NVIDIA 与结构任务顺序排列，故文件比例不代表单步批配比，第 16 步训练曲线跃升亦非真实能力突增），且<strong>结构闭合任务的开发集奖励反从 <code>39.09% → 32.92%</code></strong>。</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Snowball RL 实验分支</th><th>起点模型</th><th>任务域</th><th>实际算法与规模</th><th>结果与用途定位</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>2.7T 数学 RLVR</strong>（<a class="cite" href="#ref-45">[45]</a>）</td><td><code>2.7T SFT-s2</code></td><td>数学（<code>DeepScaleR</code>、<code>RLVR-MATH</code>、<code>DAPO-17k</code>）</td><td>GRPO / DAPO、AdamW vs. Muon-H、FSDP2</td><td>早期可行性与负结论排查（<code>E6</code> MATH-500 78%；奖励/held-out 背离与 bias 陷阱）</td></tr>
+                <tr><td><strong>10T 广域 RLVR</strong>（<a class="cite" href="#ref-46">[46]</a>）</td><td><code>09-21 SFT</code> / Antidoom step-45</td><td>Nemotron Ultra（数学、代码、IF、工具）</td><td><code>512 × 16</code>、80+48 H100、router replay、±Ref-KL</td><td>孵化 Campaign2 父代（<code>Step12</code>、<code>Ref-KL Step20</code>）；暴露第 20 步崩塌</td></tr>
+                <tr><td><strong>Coding Agent GRPO</strong>（<a class="cite" href="#ref-11">[11]</a>）</td><td><code>09-21</code> / CalibForge+Kimi SFT</td><td><code>1,833</code> 代码/终端沙盒（<code>R2E-Gym + TMax</code>）</td><td>GRPO、<code>64 × 8</code>、<code>lr=5e-7</code>、30–60 步、TITO+EAGLE-3</td><td>独立代码 Agent 研究（<code>50.5%</code> SWE r100、<code>23.9%</code> TB2.1、<code>45.1%</code> TBLite）</td></tr>
+                <tr><td><strong>发布链路 Smartie .32</strong>（<a class="cite" href="#ref-49">[49]</a>）</td><td><code>Campaign2 DARE-TIES-02</code></td><td><code>69,487</code> 题（<code>12,123</code> Nemotron + <code>57,364</code> 闭合，未 shuffle）</td><td>异步 RLOO-N + TIS、<code>512 × 16</code>、<code>lr=4e-6</code>、14 步</td><td>正式发布 <strong><code>Snowball v0.1</code></strong>（原生开发集 <code>50.22%</code>，闭合下降 6.2 pp；<code>68.4%</code> 锦标赛）</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h3 id="pre-rl-probe-stack">Coding RL 探针与 TITO 修复<a class="anchor" href="#pre-rl-probe-stack" aria-hidden="true">#</a></h3>
+        <p>面向 Snowball 多轮代码仓的专项 GRPO 研究始于对 <code>R2E-Gym</code> 每题采样 8 次的 <strong>Pre-RL Probe</strong> 体检<a class="cite" href="#ref-11">[11]</a>：仅 36% Stage-3 题目落入成败兼有的可学带，但 15 题细读里有 13 题的失败轨迹都已找到正确函数——且屡屡误用 <code>SEARCH/REPLACE</code> 配 Unix <code>patch</code> 的坏习惯竟直接源自 31,661 条 Stage-3 开源训练集。随后修复了五项核心训练栈漏洞（第 24 步反超旧栈 <code>+10 pp</code>，求解中位轮数从 22 轮降到 15 轮、重复指令下降 <code>&gt;4×</code>）：</p>
 
         <div class="table-wrap">
         <table>
@@ -785,6 +853,15 @@ def _scale_invariant_2d(p, u, lr):
             <li><strong>必须例行执行 Reward Hacking 审计：</strong>轨迹抽检揪出多起各虚增 ~0.5% 得分的投机漏洞——Direct RL 在 TB2.1 上改写 Scheme 解释器注入快捷原语、CalibForge SFT 把 JS 网络控制器偷换成直接打印 <code>SYSTEM_STABLE</code>、39 条 R2E-Gym rollout 偷看残留未来 Git commit，外加 31 次失败作弊尝试。</li>
         </ul>
 
+        <h3 id="moe-mochi-readiness">MoE 路由隔离与 Mochi 迁移<a class="anchor" href="#moe-mochi-readiness" aria-hidden="true">#</a></h3>
+        <p>除 TITO、温度与采样分布外，稀疏 MoE 的后训练还存在一层独立的路由与分布式数值隔离边界，不能笼统合并成一句“冻结 router”<a class="cite" href="#ref-43">[43]</a><a class="cite" href="#ref-45">[45]</a><a class="cite" href="#ref-50">[50]</a>：</p>
+        <ul>
+            <li><strong>区分冻结 balancing bias 与 captured-route replay：</strong>保持路由权重可训练的同时<em>冻结负载均衡偏置（balancing bias）</em>，用于稳住专家负载阈值分布、避免可变 bias 模式下的导出崩溃<a class="cite" href="#ref-45">[45]</a>；而 <strong>captured-route replay</strong> 则是将推理采样侧记录到的实际专家路由在 learner 计算对数概率与反向传播时精确重放——在 Hero 535B 上直接将同 token 训推概率比越界率（超出 <code>[0.8, 1.2]</code>）从 H100 的 <strong><code>114 → 5 / 50,962</code></strong>（重放打分耗时 +24.1%）和 GB200 的 <strong><code>145 → 5 / 51,326</code></strong> 压低一个数量级<a class="cite" href="#ref-50">[50]</a>。</li>
+            <li><strong>持续核查 batch 形状、后端与并行切分引入的差异：</strong>仅开启路由重放并不能令训推或不同并行拓扑绝对等价——Hero 65K 实验打乱同一批样本顺序仍会产生梯度偏差，直至把并行拓扑从 <code>PP24/EP8</code> 调至 <code>PP48/EP4</code>，才以 <code>+5.3%</code> 步时开销（<code>177.90 → 187.39 s</code>）把重排梯度偏差从 <strong><code>71.96%</code> 降至 <code>1.37%</code></strong>，且推理侧与训练侧的数值细微差异依然存在<a class="cite" href="#ref-50">[50]</a>。</li>
+        </ul>
+
+        <p>在向 <strong>Mochi 535B-A23B</strong> 迁移的 Readiness 验证（<code>#10388</code><a class="cite" href="#ref-50">[50]</a>）中，早于 11 月 17 日主发布之前的中间 checkpoint（第 <code>144,000</code> 步）已在 H100（<code>128</code> 训练 + <code>24</code> 推理，<code>563 → 610 / 1,024</code>，<code>+4.6 pp</code>）与 GB200（<code>48 + 16</code>，<code>569 → 625 / 1,024</code>，<code>+5.5 pp</code>）上跑通配合 captured-route replay、冻结 balancing bias 与 <code>MuonH/AdamH/Adam</code>（<code>1e-6</code>）的 <strong>4K GSM8K 学习与第 32 步断点恢复</strong>。但官方记录清晰划出了三项不能互相替代的能力边界：<strong>长上下文 serving</strong>（256K 仅在 <code>64</code> H100 PP2 或 <code>16</code> GB200 上通过 1–64 token 短输出验证，尚缺持续长生成吞吐实测）、<strong>长序列 learner 能跑通</strong>（65K 更新已在 <code>192</code> H100 MuonH 卸载与 <code>64</code> GB200 AdamW 跑通），均不等于已完成<strong>完整长上下文 RL 正确性验证</strong>（<code>&gt;4K</code> RL 端到端数值一致性及退火/SFT 后的长程代码 RL 仍待单独验证）<a class="cite" href="#ref-50">[50]</a>。</p>
+
         <h2 id="evaluation">评估体系与 Eval Policy<a class="anchor" href="#evaluation" aria-hidden="true">#</a></h2>
         <p>全开放科研工程要求每一项交叉熵、硬件吞吐与排行榜对比均锁定同一数学口径、误差预算与固定评估协议。</p>
 
@@ -804,7 +881,7 @@ def _scale_invariant_2d(p, u, lr):
         <p>下游发布对比严格受控于 <strong>Marin Eval Policy（<code>#10197</code>）</strong><a class="cite" href="#ref-16">[16]</a>，全面锁定 13 个开源对手的评测脚本、超时与容错红线：</p>
         <ul>
             <li><strong>18 项静态基准 + 8 项 Harbor 沙盒基准（另锁 3 项盲测 OOD）：</strong>覆盖 <code>MATH-500</code>、<code>AIME24</code>（10 次）、<code>OlympiadBench</code>（10 次）、<code>GPQA Diamond</code>（3 次）、<code>MMLU-Pro</code>、<code>GSM8K</code>、<code>HumanEval+</code>/<code>MBPP+</code>、<code>CRUXEval</code>、<code>FinanceBench</code>、<code>IFBench</code>、<code>MRCR</code> 与 <code>NUPA5K</code>，叠加 8 项 <code>Harbor</code>/<code>Daytona</code> 任务（<code>SWE-bench Verified</code> 131K、<code>TB2.1</code> 65K/16K、<code>TBLite 2.0</code>、<code>DS-1000</code>、<code>BFCL-Parity</code>、<code>BixBench CLI</code>、<code>τ³-bench</code> 131K/32K 与长度去偏 GLM <code>SOTOPIA-hard</code>，锁定 Pi <code>0.87.0</code>），并封存 <code>AAII 4.3</code>、<code>TB-Science</code>、<code>DeepSWE 1.1</code> 作 OOD 检验。</li>
-            <li><strong>错误审计与锦标赛选型机制：</strong>基于 884 个追踪单元格区分可判分错误（<code>malformed_model_response</code> 等）与 $\le 10\%$ 基建异常上限（如沙盒内误跑 <code>pkill -f</code> 杀死 Harbor <code>tmux</code> 会话），标准误统一乘 $1/\sqrt{0.9}$ 膨胀惩罚；在剔除无区分度的 3 项后于 23 项基准上以 $|d| &gt; 1.96\sqrt{(s_a^2+s_b^2)/0.9}$ 进行 21 选淘汰赛（选出 <code>DARE-TIES-02</code> @ <code>0.627</code> 演进为 <code>Snowball v0.1</code> @ <code>68.4%</code>），同步公布无控制/FLOP 控制 Nemenyi 图及 <code>LM-Marina</code> 竞技场数据<a class="cite" href="#ref-8">[8]</a><a class="cite" href="#ref-16">[16]</a>。</li>
+            <li><strong>错误审计与锦标赛选型机制：</strong>基于 884 个追踪单元格区分可判分错误（<code>malformed_model_response</code> 等）与 $\le 10\%$ 基建异常上限（如沙盒内误跑 <code>pkill -f</code> 杀死 Harbor <code>tmux</code> 会话），标准误统一乘 $1/\sqrt{0.9}$ 膨胀惩罚；在剔除无区分度的 3 项后于 23 项基准上以 $|d| &gt; 1.96\sqrt{(s_a^2+s_b^2)/0.9}$ 进行 21 选淘汰赛（先选出 Campaign2 <code>DARE-TIES-02</code> @ <code>0.627</code>，随后经 Smartie 第 14 步 RL 演化为 <code>Snowball v0.1</code> @ <code>68.4%</code>），同步公布无控制/FLOP 控制 Nemenyi 图及 <code>LM-Marina</code> 竞技场数据<a class="cite" href="#ref-8">[8]</a><a class="cite" href="#ref-16">[16]</a><a class="cite" href="#ref-49">[49]</a>。</li>
         </ul>
 
         <h2 id="citation">引用本文<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
@@ -866,6 +943,14 @@ def _scale_invariant_2d(p, u, lr):
             <li id="ref-40" lang="en" data-brief="Marin 开源稠密 Scaling Suite 论文长文（Delphi，3e18–1e23 FLOPs）：以 AdamH + T^-0.3 时域修正与 Vizier 调参实现 300× 外推 0.2% 精度，并用软指标+观测定律预报 MMLU/HumanEval/GSM8K 涌现。"><a href="https://openathena.ai/blog/delphi/" target="_blank" rel="noopener">Scaling Laws That Extrapolate 300× past the Fit</a>. Will Held, Open Athena, May 11, 2026.</li>
             <li id="ref-41" lang="en" data-brief="揭示 Chinchilla Approach 2 抛物线顶点拟合的非对称泰勒偏差（在 Llama 3 IsoFLOP 上引发 ~6.5% 算力错配），并提出基于变量投影的直接拟合方案。"><a href="https://openathena.ai/blog/problems-with-chinchilla-approach-2/" target="_blank" rel="noopener">Problems with Chinchilla Approach 2</a>. Eric Czech, Open Athena, March 27, 2026.</li>
             <li id="ref-42" lang="en" data-brief="Open Athena 开源变量投影缩放律求解库（VPNLS）：把五维 Chinchilla 回归降维到二维指数面搜索，比 ml-scalefit 快 15.8× 且 Huber 残差更低。"><a href="https://github.com/Open-Athena/vpnls" target="_blank" rel="noopener">VPNLS: Variable Projection with Nonlinear Least Squares for Scaling Laws</a>. Eric Czech et al., Open Athena, 2026 (arXiv:2603.22339).</li>
+            <li id="ref-43" lang="en" data-brief="Snowball 09-21 通用 SFT 基座官方模型卡：203 个 SFT 叶子来源（80% SFT + 20% 预训练 Replay）、约 67.1B 调度位置、7 个特殊协议 token √32 放大 LR、router weights 可训练而 balancing bias 冻结，以及 262K 尚未充分验证的边界声明。"><a href="https://huggingface.co/open-athena/Grug-67B-A2B-Datakit-SFT-262K-2026.09.21" target="_blank" rel="noopener">Grug-67B-A2B-Datakit-SFT-262K-2026.09.21 Model Card</a>. Open Athena, September 2026.</li>
+            <li id="ref-44" lang="en" data-brief="Marin 现行 Datakit 后训练数据管线文档：Zephyr 转写为 Harmony（CHAT_SCHEMA）、保留 tool_call ID 与原始工具定义、STRICT/REPAIR 模式、结构验证不等于答案正确以及 source_train_turns 需与渲染后序列对齐。"><a href="https://github.com/marin-community/marin/blob/main/docs/tutorials/add-chat-dataset.md" target="_blank" rel="noopener">Marin Docs: How to Add a Chat Dataset (Harmony Datakit Pipeline)</a>. Marin Community, 2026.</li>
+            <li id="ref-45" lang="en" data-brief="2.7T Snowball 数学 RLVR 最终报告（#7786）：25 组实验证实训练指标与 held-out 背离（E6 MATH-500 78%）、数据集与 GRPO/DAPO 强交互、Muon-H 未显稳定优势以及 router-bias 导出对推理的影响。"><a href="https://storage.googleapis.com/marin-public/benjaminfeuer/snowball-67b-a2b-math-rl/2026.08.27.1/index.html" target="_blank" rel="noopener">Experiment: Non-Agentic RL on Marin's 2.7T &ldquo;Snowball&rdquo; MoE</a> &amp; <a href="https://github.com/marin-community/marin/issues/7786" target="_blank" rel="noopener">Issue #7786</a>. Benjamin Feuer, Marin / Open Athena, August 2026.</li>
+            <li id="ref-46" lang="en" data-brief="10T Snowball 广域 RLVR（#9735）：48K 预算压低长度截断（18.4%→9.7%）、无惩罚 Antidoom 第 12 步峰值 34/100 后于第 20 步崩跌至 2/100，Reference-KL 分支在开发集选得 42/100（非匹配对照）。"><a href="https://github.com/marin-community/marin/issues/9735" target="_blank" rel="noopener">GitHub Issue #9735: Snowball Broad-Domain RLVR Across Cooldown Variants</a>. Marin Community, October 2026.</li>
+            <li id="ref-47" lang="en" data-brief="Dr. Doom FTPO（#9691）：在在线生成循环首次出现位置提升替代 token 得分并辅以冻结参考 MSE 约束，16K 数学精确循环由 27.15%→2.34%（准确率 45.3%→55.3%），32K 跨域循环 43–44%→19/100。"><a href="https://github.com/marin-community/marin/issues/9691" target="_blank" rel="noopener">GitHub Issue #9691: Dr. Doom Online FTPO</a> &amp; <a href="https://huggingface.co/open-athena/Grug-67B-A2B-Datakit-SFT-262K-2026.09.21-dr-doom" target="_blank" rel="noopener">HF Model Card</a>. Open Athena, October 2026.</li>
+            <li id="ref-48" lang="en" data-brief="Snowball 模型融合（#9975）与 Campaign2 DARE-TIES-02：强制保留 ≥75% Base 标量权重融合 Antidoom Step12、Mixed-RLVR Step92 与 Ref-KL Step20，改动 6.04% 权重获胜，但开发集测得 BFCL 45.53% 与 NUPA200 0.00%。"><a href="https://github.com/marin-community/marin/issues/9975" target="_blank" rel="noopener">GitHub Issue #9975: Model Merging with Snowball 67B-A2B</a> &amp; <a href="https://huggingface.co/open-athena/Grug-67B-A2B-Merge-Campaign2-DARE-TIES-02-2026.10.10" target="_blank" rel="noopener">Campaign2 DARE-TIES-02 Card</a>. Open Athena, October 2026.</li>
+            <li id="ref-49" lang="en" data-brief="Smartie .32（#10305）与 Marin-Snowball-67B-A2B-v0.1 官方模型卡：由 DARE-TIES-02 经异步 RLOO-N + TIS（512×16、lr=4e-6、step 14）发布；69,487 题未 shuffle 导致结构闭合任务奖励反降（39.09%→32.92%）。"><a href="https://github.com/marin-community/marin/issues/10305" target="_blank" rel="noopener">GitHub Issue #10305: Smartie Multi-Domain RLVR</a> &amp; <a href="https://huggingface.co/open-athena/Marin-Snowball-67B-A2B-v0.1" target="_blank" rel="noopener">Snowball v0.1 Card</a>. Open Athena, October 2026.</li>
+            <li id="ref-50" lang="en" data-brief="Hero 535B RL Readiness（#10388）：中间权重通过 4K GSM8K RL（H100 +4.6 / GB200 +5.5），captured-route replay 将概率比越界从 114→5 / 145→5 降幅一个数量级，PP48/EP4 把重排偏差压到 1.37%，并明确划分 256K serving、65K learner 与 &gt;4K RL 三道迁移边界。"><a href="https://github.com/marin-community/marin/issues/10388" target="_blank" rel="noopener">GitHub Issue #10388: Hero 535B RL Readiness on H100 &amp; GB200</a>. Marin Community, October 2026.</li>
         </ol>
     </div>
 
