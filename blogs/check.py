@@ -38,6 +38,21 @@ VERSIONED = ('blog.css', 'blog-theme.js', 'blog-list.js', 'blog-post.js')
 COVER_SIZE = (880, 495)
 KB = 1024
 
+BAD_ZH_TERMS = (
+    '数学 RLVR', '广域 RLVR', '通用 SFT', '领域 SFT', '模型融合 RL',
+    '循环 Transformer', '非嵌入参数', '排他自注意力', '算术强度',
+    '留一配置群', '封闭域', '奖励黑客',
+)
+BAD_ZH_HYPE = (
+    '惊艳', '一举拉穿', '腰斩', '恶性膨胀', '暗雷', '排雷', '深坑',
+    '砸到', '完胜', '稳步攀', '彻底根治', '全量公开', '断崖式',
+)
+INLINE_ISSUE_RE = re.compile(r'(?<![&\w="])#\d{3,6}\b')
+NUMERIC_CODE_RE = re.compile(
+    r'^[~<>±+\-]?\d[\d.,]*(?:%|[KMBT]|×|\s*pp|\s*nats|\s*B/tok)'
+    r'(?:\s*[→↔–-]\s*[~<>±+\-]?\d[\d.,]*(?:%|[KMBT]|×|\s*pp)?)?$'
+)
+
 errors, warnings = [], []
 
 
@@ -381,6 +396,29 @@ def check_article(page, slug, lang, has_zh):
     m_line = re.search(r'[A-Za-z0-9_/-]+\.py#L\d+', prose_no_refs)
     if m_line:
         warn(page, f'avoid code-line reference "{m_line.group(0)}" as prose subject; cite via [N] and keep paths in References')
+
+    if lang == 'zh':
+        term_hits = [t for t in BAD_ZH_TERMS if t in prose_no_refs]
+        if term_hits:
+            warn(page, f'avoid half-translated/machine-translated terms ({", ".join(term_hits)}); keep standard English ML terms')
+        hype_hits = [h for h in BAD_ZH_HYPE if h in prose_no_refs]
+        if hype_hits:
+            warn(page, f'avoid hyped/AI-style phrasing ({", ".join(hype_hits)}); keep a calm technical-notes tone')
+
+    issue_hits = list(dict.fromkeys(m.group(0) for m in INLINE_ISSUE_RE.finditer(prose_no_refs)))
+    if issue_hits:
+        warn(page, f'avoid inline issue numbers ({", ".join(issue_hits[:5])}); cite via [N] and keep issue links in References')
+
+    num_code_hits = []
+    for code in content.find_all('code'):
+        if any(a.tag == 'pre' or a is refs_ol for a in code.ancestors()):
+            continue
+        txt = clean(code.text())
+        if NUMERIC_CODE_RE.fullmatch(txt):
+            num_code_hits.append(txt)
+    num_code_hits = list(dict.fromkeys(num_code_hits))
+    if num_code_hits:
+        warn(page, f'avoid <code> around plain numbers/metrics ({", ".join(num_code_hits[:5])}); reserve <code> for code symbols/configs')
 
     tags = dom.find('ul', cls='post-tags')
     info['tags'] = [clean(li.text()) for li in tags.find_all('li')] if tags else []
