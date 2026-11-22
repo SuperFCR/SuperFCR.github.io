@@ -10,11 +10,19 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const button = document.getElementById('theme-toggle');
-        if (!button) return;
-        button.addEventListener('click', () => {
-            const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-            root.dataset.theme = next;
-            try { localStorage.setItem(KEY, next); } catch (error) { /* storage blocked */ }
-        });
+        if (button) {
+            button.addEventListener('click', () => {
+                const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+                root.dataset.theme = next;
+                try { localStorage.setItem(KEY, next); } catch (error) { /* storage blocked */ }
+            });
+        }
+
+        const header = document.querySelector('body > header');
+        if (header) {
+            const syncHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+            syncHeader();
+            window.addEventListener('scroll', syncHeader, { passive: true });
+        }
     });
 })();
