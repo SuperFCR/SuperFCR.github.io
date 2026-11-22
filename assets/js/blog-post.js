@@ -70,14 +70,15 @@
 
     let currentId = '';
     const updateScrollState = () => {
+        const headerH = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
         if (progressEl && content) {
             const rect = content.getBoundingClientRect();
             const total = Math.max(1, content.offsetHeight - window.innerHeight * 0.65);
-            const passed = Math.min(total, Math.max(0, -rect.top + 48));
+            const passed = Math.min(total, Math.max(0, -rect.top + headerH + 24));
             progressEl.style.width = `${(passed / total) * 100}%`;
         }
         if (sections.length) {
-            const offset = 72;
+            const offset = headerH + 40;
             let active = sections[0];
             for (const s of sections) {
                 if (s.el.getBoundingClientRect().top <= offset) active = s;
@@ -454,12 +455,13 @@
             const ch = card.offsetHeight;
             const gap = 8;
             const pad = 12;
+            const topPad = (header ? Math.ceil(header.getBoundingClientRect().height) : 0) + pad;
 
             let top = rect.bottom + gap;
-            if (top + ch > window.innerHeight - pad && rect.top - gap - ch >= pad) {
+            if (top + ch > window.innerHeight - pad && rect.top - gap - ch >= topPad) {
                 top = rect.top - gap - ch;
             } else {
-                top = Math.min(Math.max(pad, top), Math.max(pad, window.innerHeight - ch - pad));
+                top = Math.min(Math.max(topPad, top), Math.max(topPad, window.innerHeight - ch - pad));
             }
             const left = Math.min(
                 Math.max(pad, window.innerWidth - cw - pad),

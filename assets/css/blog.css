@@ -14,12 +14,14 @@
 :root {
     --container: 1020px;
     --gutter: 28px;
+    --header-h: 60px;
     --radius: 6px;
     --serif: Georgia, 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'STSong', serif;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
     --mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
     --bg: #faf9f6;
+    --header-bg: rgba(250, 249, 246, 0.90);
     --surface: #f3f1ec;
     --surface-hover: #ebe8e1;
     --border: #e5e2da;
@@ -39,6 +41,7 @@
 
 :root[data-theme="dark"] {
     --bg: #141416;
+    --header-bg: rgba(20, 20, 22, 0.90);
     --surface: #1c1c20;
     --surface-hover: #242429;
     --border: #27272d;
@@ -74,9 +77,9 @@ a { color: inherit; text-decoration: none; }
 [hidden] { display: none !important; }
 button, input { font: inherit; }
 
-/* ---------- reading progress (fixed 2px ink hairline at very top) ---------- */
+/* ---------- reading progress (2px ink hairline at top of sticky header) ---------- */
 .read-progress {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     z-index: 60;
@@ -87,9 +90,17 @@ button, input { font: inherit; }
     transition: width 0.08s linear;
 }
 
-/* ---------- header (flat editorial masthead bar) ---------- */
+/* ---------- header (sticky frosted editorial masthead bar) ---------- */
 body > header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    background: var(--header-bg);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
     border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .nav {
@@ -98,7 +109,7 @@ body > header {
     justify-content: space-between;
     gap: 16px;
     max-width: calc(var(--container) + var(--gutter) * 2);
-    height: 60px;
+    height: var(--header-h);
     margin: 0 auto;
     padding: 0 var(--gutter);
 }
@@ -611,8 +622,8 @@ body > header {
         grid-column: 2;
         grid-row: 2 / 4;
         position: sticky;
-        top: 32px;
-        max-height: calc(100vh - 64px);
+        top: calc(var(--header-h) + 24px);
+        max-height: calc(100vh - var(--header-h) - 48px);
         overflow-y: auto;
         margin: 0;
         padding: 2px 0;
@@ -687,7 +698,7 @@ html[lang="en"] .post-content { line-height: 1.76; }
 .post-content h2, .post-content h3 {
     position: relative;
     color: var(--heading);
-    scroll-margin-top: 28px;
+    scroll-margin-top: calc(var(--header-h) + 24px);
 }
 .post-content h2 {
     margin: 2.2em 0 0.7em;
@@ -859,7 +870,7 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
     padding: 3px 6px;
     margin-left: -6px;
     border-radius: 4px;
-    scroll-margin-top: 76px;
+    scroll-margin-top: calc(var(--header-h) + 20px);
     transition: background-color 0.35s ease, color 0.35s ease;
 }
 .references li.is-highlighted {
@@ -1154,8 +1165,7 @@ a.cite-card-title:hover {
 }
 
 @media (max-width: 768px) {
-    :root { --gutter: 18px; }
-    .nav { height: 54px; }
+    :root { --gutter: 18px; --header-h: 54px; }
     .logo > a { font-size: 1.04rem; gap: 7px; }
     .nav-mark { width: 18px; height: 18px; }
     .nav-right { gap: 12px; }
