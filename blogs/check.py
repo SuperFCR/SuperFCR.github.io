@@ -372,6 +372,16 @@ def check_article(page, slug, lang, has_zh):
     info['has_cites'] = bool(cites)
     info['ref_count'] = len(ref_items)
 
+    # prose hygiene: no raw Markdown backticks outside <pre>/<code>, and no file.py#L123 line refs in prose
+    prose_raw = ''.join(text_without(content, {'pre', 'code', 'script', 'style'}))
+    if '`' in prose_raw:
+        err(page, 'prose contains stray Markdown backtick "`"; use <code>...</code> instead')
+
+    prose_no_refs = ''.join(text_without(content, {'pre', 'script', 'style'}, skip_node=lambda n: n is refs_ol))
+    m_line = re.search(r'[A-Za-z0-9_/-]+\.py#L\d+', prose_no_refs)
+    if m_line:
+        warn(page, f'avoid code-line reference "{m_line.group(0)}" as prose subject; cite via [N] and keep paths in References')
+
     tags = dom.find('ul', cls='post-tags')
     info['tags'] = [clean(li.text()) for li in tags.find_all('li')] if tags else []
     if not info['tags']:
@@ -379,12 +389,12 @@ def check_article(page, slug, lang, has_zh):
     return info
 
 
-def text_without(node, skip):
+def text_without(node, skip, skip_node=None):
     for c in node.children:
         if isinstance(c, str):
             yield c
-        elif c.tag not in skip:
-            yield from text_without(c, skip)
+        elif c.tag not in skip and not (skip_node and skip_node(c)):
+            yield from text_without(c, skip, skip_node)
 
 
 def parse_date(s, lang):
