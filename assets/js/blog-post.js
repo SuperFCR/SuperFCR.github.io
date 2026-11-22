@@ -218,6 +218,42 @@
         });
     }
 
+    // Glue trailing punctuation onto short inline math/code (+ adjacent citations) to avoid orphaned line-start marks
+    if (content) {
+        const trailPunctRe = /^([。，；：！？）、.,;:!?)\]]+)/;
+        for (const el of content.querySelectorAll('.katex, code')) {
+            if (el.closest('.katex-display, pre, .nowrap-tail')) continue;
+            let anchor = el;
+            while (
+                anchor.parentNode &&
+                anchor.parentNode.nodeType === 1 &&
+                anchor.parentNode !== content &&
+                !anchor.nextSibling &&
+                !anchor.previousSibling &&
+                anchor.parentNode.matches('span:not([class]), a, strong, em')
+            ) {
+                anchor = anchor.parentNode;
+            }
+            let tailEnd = anchor;
+            while (tailEnd.nextSibling && tailEnd.nextSibling.nodeType === 1 && tailEnd.nextSibling.matches('a.cite')) {
+                tailEnd = tailEnd.nextSibling;
+            }
+            const next = tailEnd.nextSibling;
+            if (next && next.nodeType === 3) {
+                const m = next.nodeValue.match(trailPunctRe);
+                if (m && el.getBoundingClientRect().width < 320) {
+                    const rest = next.splitText(m[1].length);
+                    const wrap = document.createElement('span');
+                    wrap.className = 'nowrap-tail';
+                    anchor.parentNode.insertBefore(wrap, anchor);
+                    while (wrap.nextSibling && wrap.nextSibling !== rest) {
+                        wrap.appendChild(wrap.nextSibling);
+                    }
+                }
+            }
+        }
+    }
+
     // 9. Inline citation hover cards & direct source access
     const citeLinks = content
         ? Array.from(content.querySelectorAll('a.cite[href^="#ref-"]'))

@@ -875,10 +875,12 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
     position: relative;
     top: -0.36em;
     vertical-align: baseline;
-    line-height: 1.25;
-    display: inline-block;
+    line-height: 1;
+    display: inline;
+    white-space: nowrap;
+    overflow-wrap: normal;
     margin: 0 0 0 0.08em;
-    padding: 0 0.14em;
+    padding: 0.08em 0.14em;
     font-family: var(--mono);
     font-size: 0.72em;
     font-weight: 500;
@@ -897,6 +899,9 @@ html[lang="zh-CN"] .post-content blockquote { font-style: normal; }
 }
 .post-content a.cite:focus-visible {
     box-shadow: 0 0 0 2px var(--primary-soft);
+}
+.post-content .nowrap-tail {
+    white-space: nowrap;
 }
 
 .cite-card {
