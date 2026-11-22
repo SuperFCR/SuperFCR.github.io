@@ -222,7 +222,12 @@
                 </tbody>
             </table>
         </div>
-        <p>Pure 16-bit training fails for two concrete reasons<a class="cite" href="#ref-11">[11]</a>. First, <strong>rounding error</strong>: in $[2^{-3}, 2^{-2}]$, <code>FP16</code>'s fixed step spacing is $2^{-13}$, so adding gradient $2^{-14}$ to weight $2^{-3}$ rounds straight back to $2^{-3}$, silently dropping the update (and <code>BF16</code>'s coarser 7-bit mantissa needs <code>FP32</code> master copies even more). Second, <strong>gradient underflow</strong>: in late training, roughly <strong>67% of activation gradients</strong> fall below $2^{-24}$ (the <code>FP16</code> positive limit) and vanish to zero—fixed by scaling loss by $S$ before backprop. Since <code>BF16</code> keeps <code>FP32</code>'s 8-bit exponent ("get into the right range first, then worry about precision"), it skips dynamic loss scaling<a class="cite" href="#ref-11">[11]</a>. Meanwhile, small sensitivity-critical tensors such as LayerNorm/BatchNorm parameters and the scalar loss remain in <code>FP32</code> throughout.</p>
+        <p>Pure 16-bit training fails for two concrete numerical reasons<a class="cite" href="#ref-11">[11]</a>:</p>
+        <ul>
+            <li><strong>Rounding error:</strong> in $[2^{-3}, 2^{-2}]$, <code>FP16</code>'s fixed step spacing is $2^{-13}$, so adding gradient $2^{-14}$ to weight $2^{-3}$ rounds straight back to $2^{-3}$, silently dropping the update (and <code>BF16</code>'s coarser 7-bit mantissa needs <code>FP32</code> master copies even more).</li>
+            <li><strong>Gradient underflow:</strong> in late training, roughly <strong>67% of activation gradients</strong> fall below $2^{-24}$ (the <code>FP16</code> minimum normal positive limit) and vanish to zero—fixed by scaling loss by $S$ before backprop. Because <code>BF16</code> keeps <code>FP32</code>'s 8-bit exponent ("get into the right range first, then worry about precision"), it avoids underflow and skips dynamic loss scaling<a class="cite" href="#ref-11">[11]</a>.</li>
+        </ul>
+        <p>Meanwhile, small sensitivity-critical tensors such as LayerNorm/BatchNorm parameters and the scalar loss remain in <code>FP32</code> throughout.</p>
         <p>Three low-level mechanics in Megatron's <code>Float16OptimizerWithFloat16Params</code> explain how distributed mixed precision works in code<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-11">[11]</a>:</p>
         <ul>
             <li><strong><code>main_grad</code> does NOT mean "FP32 gradients":</strong> Under Megatron's local DDP (<code>DDP_impl == "local"</code>, <code>params_have_main_grad=True</code>), parameters of the same <code>dtype</code> share a contiguous <code>MemoryBuffer</code> (accessed via <code>tensor.main_grad</code> instead of fragmented <code>tensor.grad</code>) so <code>all_reduce</code> runs in contiguous blocks. In <code>FP16</code> runs, <code>main_grad</code> is still <code>FP16</code> and is only cast via <code>.float()</code> inside <code>_copy_model_grads_to_main_grads()</code>.</li>
@@ -405,7 +410,13 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         </figure>
 
         <div class="callout callout-tip">
-            <p><strong>One-line rule:</strong> Ask what the next op lacks—full tensor $\implies$ <code>AllGather</code>; full sum from $\{U_X\}$ $\implies$ <code>AllReduce</code>; sharded slice of a sum $\implies$ <code>ReduceScatter</code>; resharding across dimensions or routing MoE tokens $\implies$ <code>All-to-All</code>.</p>
+            <p><strong>One-line rule:</strong> Ask what the next op lacks:</p>
+            <ul>
+                <li>Full tensor from disjoint shards $\implies$ <code>AllGather</code></li>
+                <li>Full replicated sum from partial buffers $\{U_X\}$ $\implies$ <code>AllReduce</code></li>
+                <li>Sharded slice of a sum from $\{U_X\}$ $\implies$ <code>ReduceScatter</code></li>
+                <li>Resharding across axes or routing MoE tokens $\implies$ <code>All-to-All</code></li>
+            </ul>
         </div>
 
         <h3 id="comm-cost">Ring Cost &amp; Duality<a class="anchor" href="#comm-cost" aria-hidden="true">#</a></h3>
@@ -444,8 +455,10 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
 
         <h3 id="dp-ddp">DP and DDP<a class="anchor" href="#dp-ddp" aria-hidden="true">#</a></h3>
         <p>Pure Data Parallelism runs Case 1 forward (sharded batch $B_{\text{DP}}$) and Case 3 backward on weight gradients $dW = X[B_{\text{DP}}, D]^\top \cdot dY[B_{\text{DP}}, F]$, contracting along $B_{\text{DP}}$ to produce $\{U_{\text{DP}}\}$.</p>
-        <p>Under the classic Parameter Server <strong>DP</strong> model<a class="cite" href="#ref-8">[8]</a>, $N$ compute <code>Workers</code> push local gradients to a single <code>Server</code> (often <code>GPU 0</code> on a single node) and pull back averaged updates. Total cluster traffic is $N\Phi\text{ (Server)} + N\Phi\text{ (Workers)} = 2N\Phi$, so the Server scales linearly in $N$ and saturates its NIC across nodes (while multi-Server setups shard gradients across servers). To keep Workers busy during sync, PS frameworks also use <strong>asynchronous bounded-delay updates</strong> (letting a Worker advance iter 11 on stale weights while iter 10 syncs, enforcing e.g. iter 10–11 applied before iter 12 under 1-bounded delay), trading slower SGD convergence for utilization.</p>
-        <p><strong>DDP</strong> eliminates the central Server using <strong>Ring-AllReduce</strong><a class="cite" href="#ref-8">[8]</a>: each GPU slices its <strong>gradients</strong> (not input batch) into $N$ chunks of $\Phi/N$ and runs $N-1$ hops of <code>ReduceScatter</code> ($(N-1)\frac{\Phi}{N}$ send/GPU) followed by $N-1$ hops of <code>AllGather</code> ($(N-1)\frac{\Phi}{N}$ send/GPU). Total cluster bytes remain $2N\Phi$, yet per-GPU send volume drops to a constant $2\frac{N-1}{N}\Phi \approx \mathbf{2\Phi}$ spread evenly across ranks. In PyTorch DDP, a C++ <code>Reducer</code> packs parameters in reverse topological order into ~25 MB buckets so NCCL fires asynchronous ring reductions behind ongoing backward passes.</p>
+        <p>Under the classic Parameter Server <strong>DP</strong> model<a class="cite" href="#ref-8">[8]</a>, $N$ compute <code>Workers</code> push local gradients to a single <code>Server</code> (often <code>GPU 0</code> on a single node) and pull back averaged updates. Total cluster traffic is $N\Phi\text{ (Server)} + N\Phi\text{ (Workers)} = 2N\Phi$, so the Server scales linearly in $N$ and saturates its NIC across nodes (though multi-Server setups shard parameters across servers).</p>
+        <p>To keep Workers busy while the Server syncs, PS frameworks also support <strong>asynchronous bounded-delay updates</strong>—letting a Worker advance iter 11 on stale weights while iter 10 syncs (e.g., enforcing iter 10–11 applied before iter 12 under 1-bounded delay), trading slower SGD convergence for hardware utilization.</p>
+        <p><strong>DDP</strong> eliminates the central Server using <strong>Ring-AllReduce</strong><a class="cite" href="#ref-8">[8]</a>: each GPU slices its <strong>gradients</strong> (not input batch) into $N$ chunks of $\Phi/N$ and runs $N-1$ hops of <code>ReduceScatter</code> ($(N-1)\frac{\Phi}{N}$ send/GPU) followed by $N-1$ hops of <code>AllGather</code> ($(N-1)\frac{\Phi}{N}$ send/GPU), fixing per-GPU send volume at a rank-independent $2\frac{N-1}{N}\Phi \approx \mathbf{2\Phi}$.</p>
+        <p>In PyTorch DDP, one process per GPU avoids Python's GIL while a C++ <code>Reducer</code> packs parameters in reverse topological order into ~25 MB buckets so NCCL overlaps asynchronous ring reductions behind ongoing backward passes.</p>
 
         <h3 id="zero-fsdp">ZeRO and FSDP<a class="anchor" href="#zero-fsdp" aria-hidden="true">#</a></h3>
         <p>DDP balances bandwidth yet keeps $N$ redundant $16\Phi$ copies of model states and repeats identical Adam updates on every card. DeepSpeed ZeRO<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a> (and PyTorch FSDP) shards optimizer states ($P_{os}$), gradients ($P_g$), and parameters ($P_p$) across $N_d$ DP ranks ("consume and discard, re-gather when needed"):</p>
@@ -493,8 +506,20 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                 </tbody>
             </table>
         </div>
-        <p><strong>ZeRO-1 $3\Phi$ vs. $2\Phi$ traffic &amp; memory snapshot insights</strong><a class="cite" href="#ref-9">[9]</a>: conceptually the ZeRO paper computes Stage-1 traffic as full-grad <code>AllReduce</code> ($2\Phi$) + <code>AllGather(W)</code> ($\Phi$) = $3\Phi$, whereas modern DeepSpeed/FSDP swaps <code>AllReduce(G)</code> for <code>ReduceScatter(G)</code> ($\Phi$) to stay at $2\Phi$—though keeping full gradients in Stage 1 still saves $m-1$ sync steps under $m$-step gradient accumulation. PyTorch Memory Snapshots of ZeRO-1 also show two practical traits<a class="cite" href="#ref-9">[9]</a>: <code>FP16</code> weights update in-place via <code>fp16._copy_(fp32)</code>, and Adam $m,v$ tensors are lazily allocated only on the first non-overflow step.</p>
-        <p>ZeRO is best summarized as <strong>"model-parallel in form, data-parallel in substance"</strong><a class="cite" href="#ref-9">[9]</a>: even Stage 3 processes disjoint micro-batches with reconstructed full layer weights (dropping peer shards right after each layer). Complementing this, ZeRO-R<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a> targets residual memory—$P_a$ partitions activations replicated across <strong>TP</strong> ranks (pure DP activations are already batch-split), $C_B$ batches small cross-GPU slices to keep bandwidth saturated at bounded buffer cost, and $M_D$ defragments HBM—while <strong>ZeRO-Offload / ZeRO-Infinity</strong> keeps compute-heavy FWD/BWD on GPUs and offloads low-FLOP <code>FP32</code> updates to CPU RAM<a class="cite" href="#ref-9">[9]</a>.</p>
+        <p><strong>ZeRO-1 $3\Phi$ vs. $2\Phi$ traffic &amp; gradient accumulation</strong><a class="cite" href="#ref-9">[9]</a>: conceptually the ZeRO paper counts Stage-1 traffic as full-grad <code>AllReduce</code> ($2\Phi$) + <code>AllGather(W)</code> ($\Phi$) = $3\Phi$, whereas modern implementations swap <code>AllReduce(G)</code> for <code>ReduceScatter(G)</code> ($\Phi$) to stay at $2\Phi$. Still, keeping full gradients in Stage 1 saves $m-1$ sync steps under $m$-step gradient accumulation compared with Stage 2.</p>
+        <p>PyTorch Memory Snapshots on 2 GPUs reveal two more ZeRO-1 implementation details<a class="cite" href="#ref-9">[9]</a>:</p>
+        <ul>
+            <li><strong>In-place <code>FP16</code> weight refresh:</strong> updated weights write directly via <code>fp16._copy_(fp32)</code>, reusing persistent GPU buffers.</li>
+            <li><strong>Lazy Adam state allocation:</strong> momentum $m, v$ tensors are allocated only on the first clean step without <code>NaN/inf</code> overflow.</li>
+        </ul>
+        <p>ZeRO is best summarized as <strong>"model-parallel in form, data-parallel in substance"</strong><a class="cite" href="#ref-9">[9]</a>: even Stage 3 processes disjoint micro-batches with transiently gathered full layer weights (freeing peer shards immediately after each layer).</p>
+        <p>Alongside model states, <strong>ZeRO-R</strong> targets residual memory from three angles<a class="cite" href="#ref-4">[4]</a><a class="cite" href="#ref-9">[9]</a>:</p>
+        <ul>
+            <li><strong>$P_a$ (partitioned activations):</strong> shards activations replicated across <strong>TP</strong> ranks (pure DP activations are already batch-split).</li>
+            <li><strong>$C_B$ (constant-size buffers):</strong> batches small cross-GPU slices up to a fixed buffer cap to keep interconnect bandwidth saturated.</li>
+            <li><strong>$M_D$ (memory defragmentation):</strong> consolidates fragmented HBM left behind by mixed short- and long-lived tensors.</li>
+        </ul>
+        <p>When HBM remains tight, <strong>ZeRO-Offload / ZeRO-Infinity</strong> keeps compute-heavy forward/backward passes on GPUs while offloading large, low-FLOP <code>FP32</code> master weights and optimizer steps to CPU RAM<a class="cite" href="#ref-9">[9]</a>.</p>
 
         <figure class="anim-fig" data-anim="ddp-vs-fsdp">
             <figcaption>Fig. 6. Side-by-side step lifecycle of DDP vs. ZeRO-3 / FSDP alongside the $16\Phi \to 2\Phi$ per-GPU HBM reduction at $N=8$.</figcaption>
@@ -503,7 +528,11 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
         <h2 id="tensor-parallel">Tensor Parallelism<a class="anchor" href="#tensor-parallel" aria-hidden="true">#</a></h2>
 
         <h3 id="tp-design">MLP, Attention &amp; Vocab<a class="anchor" href="#tp-design" aria-hidden="true">#</a></h3>
-        <p>ZeRO reduces static state, not intra-layer activations. <strong>Tensor Parallelism (TP)</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a> splits each linear matmul $Y = XW$ ($X:[b,s,h], W:[h,h']$): a <strong>row-split</strong> on $W$ forces a matching column-split on $X$, sums partial outputs via $g$ in forward, and copies/concats gradients via $f$ in backward; a <strong>column-split</strong> replicates $X$, concats $[Y_1,Y_2]$, and relies on $f$ in backward to <code>AllReduce</code> $\partial\mathcal{L}/\partial X|_1 + \partial\mathcal{L}/\partial X|_2$.</p>
+        <p>ZeRO reduces static state, not intra-layer activations. <strong>Tensor Parallelism (TP)</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a> splits each linear matmul $Y = XW$ ($X:[b,s,h], W:[h,h']$) in one of two ways:</p>
+        <ul>
+            <li><strong>Row-split (along $h$):</strong> forces a matching column-split on $X$, sums partial outputs via $g$ in forward, and replicates/concatenates input gradients via $f$ in backward.</li>
+            <li><strong>Column-split (along $h'$):</strong> replicates $X$, concatenates output slices $[Y_1,Y_2]$, and relies on $f$ in backward to <code>AllReduce</code> $\partial\mathcal{L}/\partial X|_1 + \partial\mathcal{L}/\partial X|_2$.</li>
+        </ul>
         <p>Megatron-LM pairs <strong>Column-Parallel</strong> then <strong>Row-Parallel</strong> linears so nonlinearities and softmax run with zero communication<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>:</p>
         <ul>
             <li><strong>MLP:</strong> Column-split $A = [A_0, A_1]$ and row-split $B = \begin{bmatrix} B_0 \\ B_1 \end{bmatrix}$. Because $\text{GeLU}(Y_1+Y_2) \neq \text{GeLU}(Y_1)+\text{GeLU}(Y_2)$ whereas $\text{GeLU}([Y_1,Y_2]) = [\text{GeLU}(Y_1),\text{GeLU}(Y_2)]$, column-splitting $A$ avoids syncing before GeLU and uses only 1 forward + 1 backward <code>AllReduce</code> ($4bsh$ total): $$Z = \text{AllReduce}\!\left(\sum_i \text{GeLU}(X A_i)\, B_i\right)$$</li>
@@ -516,7 +545,12 @@ A = jnp.zeros((2048, 8192), dtype=jnp.bfloat16, device=P('Y', None))</code></pre
                 \end{aligned}$$
             </li>
         </ul>
-        <p><strong>Why intra-node TP + inter-node DP &amp; 512-GPU scaling</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>: Per-layer traffic compares TP's $8bsh$ vs. DP's $2h^2$ (effectively $[b\cdot s]$ vs. $[h]$, both $\sim 10^5$, TP slightly higher). The <strong>decisive reason</strong> is backward blocking: DP fires gradient <code>AllReduce</code> asynchronously while earlier layers keep differentiating, whereas TP stalls every layer until <code>AllReduce</code> returns $\partial\mathcal{L}/\partial X$. Across 32× DGX-2H nodes (512× V100-32GB) training GPT-2 (1.2B→8.3B), pure TP scales at 100%→95%→82%→77% (1→8 GPUs, stopping at 8/16 GPUs per node due to activation HBM); pairing $\text{TP}=8 \times \text{DP}=64$ reaches 15,100 TFLOPs vs. $39 \times 512 = 19{,}968\text{ TFLOPs}$ ideal—<strong>76% weak scaling efficiency</strong>.</p>
+        <p><strong>Why keep TP intra-node and push DP inter-node?</strong> Two factors drive the topology choice<a class="cite" href="#ref-10">[10]</a>:</p>
+        <ul>
+            <li><strong>Per-layer volume:</strong> TP sends $8bsh$ vs. DP's $2h^2$—canceling $h$ compares $[b\cdot s]$ against $[h]$ (both $\sim 10^5$, with TP typically larger at long sequence lengths).</li>
+            <li><strong>The decisive bottleneck—backward blocking:</strong> DP launches gradient <code>AllReduce</code> asynchronously while earlier layers keep differentiating, whereas TP stalls every single layer until <code>AllReduce</code> returns $\partial\mathcal{L}/\partial X$.</li>
+        </ul>
+        <p>Across 32× DGX-2H nodes (512× V100-32GB) training GPT-2 (1.2B→8.3B)<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-10">[10]</a>, pure TP scales at 100%→95%→82%→77% from 1 to 8 GPUs (capping at 8/16 GPUs per node due to activation HBM), while pairing intra-node $\text{TP}=8$ with inter-node $\text{DP}=64$ reaches 15,100 TFLOPs out of $39 \times 512 = 19{,}968\text{ TFLOPs}$ ideal—<strong>76% weak scaling efficiency</strong>.</p>
 
         <h3 id="tp-internals">Megatron Internals<a class="anchor" href="#tp-internals" aria-hidden="true">#</a></h3>
         <p>Three low-level mechanics inside Megatron's <code>mpu</code> (<code>parallel_state</code>) module keep 3D parallelism fast and numerically identical to single-GPU training<a class="cite" href="#ref-2">[2]</a>:</p>
@@ -612,7 +646,12 @@ hidden_states = self.hidden_dropout(output)</code></pre>
         $$r_{\text{GPipe}} = \frac{P - 1}{M + P - 1}$$
         <p>Taking $M \ge 4P$ drops bubble time below $16\%$.</p>
         <p>Stashing full intermediate activations for all $M$ micro-batches in flight would still blow HBM, so GPipe pairs scheduling with <strong>activation checkpointing (re-materialization)</strong><a class="cite" href="#ref-5">[5]</a>: forward stores only stage boundary tensors and recomputes internal layers on the backward pass, trading ~33% extra FLOPs for peak memory $\mathcal{O}\!\left(N + \frac{L}{P}\cdot\frac{N}{M}\right)$.</p>
-        <p>Even with recomputation, GPipe holds all $M$ micro-batches at Stage 0 until every forward completes, coupling memory to $\mathcal{O}(M)$. <strong>1F1B</strong> alternates one forward step and one backward step as soon as the pipeline fills, locking peak buffered micro-batches at $\mathcal{O}(P)$ while keeping identical bubble ratio. <strong>Interleaved 1F1B</strong> assigns $v$ non-contiguous layer chunks per GPU to cut the bubble to $\frac{P-1}{vM + P - 1}$ in exchange for $v\times$ tiny P2P transfers. Notice first and last stages carry Embeddings and vocab heads, so fewer Transformer layers are normally placed at both ends.</p>
+        <p>Even with recomputation, GPipe holds all $M$ micro-batches at Stage 0 until every forward pass completes, coupling memory to $\mathcal{O}(M)$. Pipelining schedules break that coupling:</p>
+        <ul>
+            <li><strong>1F1B:</strong> alternates one forward step and one backward step as soon as the pipeline fills, locking peak buffered micro-batches at $\mathcal{O}(P)$ while keeping the same bubble ratio.</li>
+            <li><strong>Interleaved 1F1B:</strong> assigns $v$ non-contiguous layer chunks per GPU to shrink the bubble to $\frac{P-1}{vM + P - 1}$ in exchange for $v\times$ tiny P2P transfers.</li>
+        </ul>
+        <p>Because first and last stages also carry Embeddings and output heads, practical setups place fewer Transformer layers at both ends to balance stage compute and memory.</p>
 
         <figure class="anim-fig" data-anim="pp-schedule">
             <figcaption>Fig. 9. Timeline sweep at $P=4, M=8$ comparing Naive, GPipe, 1F1B, and Interleaved ($v=2$) alongside Stage 0 live buffered activation count.</figcaption>

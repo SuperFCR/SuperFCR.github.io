@@ -109,7 +109,12 @@
         <p>A naive <code>scrollTop</code> ratio fails almost immediately when translating between languages: Chinese prose is typically much more compact vertically than English, while technical explanations or expanded footnotes can run longer. Even if both panes start together, they drift apart by half a screen mid-article.</p>
 
         <h3 id="anchors">Segmentation and Deterministic Keys<a class="anchor" href="#anchors" aria-hidden="true">#</a></h3>
-        <p>Both panes run identical segmentation code (<code>shared/segment.js</code>) that walks the DOM and classifies translation units into three kinds: block <code>element</code> nodes containing only inline content (<code>p</code>, <code>li</code>, <code>h1</code>–<code>h6</code>, <code>td</code>, or text-only <code>div</code>s), inline <code>run</code> slices sitting directly alongside sibling blocks inside mixed containers (such as Hacker News comments) measured with DOM <code>Range</code> without mutating nodes, and non-translated <code>mark</code> anchors (<code>pre</code>, <code>video</code>, <code>canvas</code>) that share identical height across panes.</p>
+        <p>Both panes run identical segmentation code (<code>shared/segment.js</code>) that walks the DOM and classifies translation units into three kinds:</p>
+        <ul>
+            <li><strong>Block <code>element</code> nodes:</strong> block containers holding only inline content (<code>p</code>, <code>li</code>, <code>h1</code>–<code>h6</code>, <code>td</code>, or text-only <code>div</code>s).</li>
+            <li><strong>Inline <code>run</code> slices:</strong> bare text runs sitting alongside sibling blocks inside mixed containers (such as Hacker News comments), measured via DOM <code>Range</code> without mutating nodes.</li>
+            <li><strong>Non-translated <code>mark</code> anchors:</strong> height-matched structural landmarks (<code>pre</code>, <code>video</code>, <code>canvas</code>) that stay identical across panes.</li>
+        </ul>
         <p>Non-content nodes (<code>script</code>, <code>style</code>, <code>code</code>, <code>pre</code>, <code>textarea</code>, <code>svg</code>, <code>[translate=no]</code>, <code>.notranslate</code>, <code>contenteditable</code>) are skipped. Each unit receives a deterministic key computed from its normalized source text plus occurrence index on the page:</p>
 <pre><code>key = hash(normalizedSourceText) + "." + occurrenceIndex</code></pre>
         <p>Because the right pane translates in place and stores unit state exclusively in a <code>WeakMap</code> rather than writing attributes onto page nodes, its unit keys stay identical to the original left pane after translation finishes.</p>
@@ -129,7 +134,14 @@ target     t' = q * (H' - vh') / H'</code></pre>
         <p>Solving for <code>t'</code> guarantees that both panes hit top and bottom simultaneously while keeping the paragraph under your gaze aligned at every intermediate scroll position.</p>
 
         <h3 id="driver">Scroll-Cause Classification and Oscillation Control<a class="anchor" href="#driver" aria-hidden="true">#</a></h3>
-        <p>Because programmatic scrolling fires <code>scroll</code> events too, naive two-way listeners quickly ping-pong. Each pane classifies every scroll event by priority before reporting: <code>prog</code> (matches the last target sent by <code>shell.js</code>, checked first so recently active panes cannot steal leadership back), <code>user</code> (wheel, keyboard, touch, or pointer input within 700&nbsp;ms; only takes control if its input timestamp is newer than the current driver), <code>layout</code> (DOM resize or translation insertion within 700&nbsp;ms; the follower snaps back to alignment while the driver stays put), and <code>other</code> (such as in-page anchor jumps). On documentation sites or SPAs where <code>window</code> does not scroll, <code>pane.js</code> picks the scrollable <code>overflow-y: auto|scroll</code> container holding the most translatable prose, using area only to break ties—so split Markdown-plus-preview editors pick the preview pane rather than a larger code editor.</p>
+        <p>Because programmatic scrolling fires <code>scroll</code> events too, naive two-way listeners quickly ping-pong. Each pane classifies every scroll event in priority order before reporting:</p>
+        <ol>
+            <li><strong><code>prog</code>:</strong> matches the last target sent by <code>shell.js</code>—checked first so a recently active pane cannot echo back and steal leadership.</li>
+            <li><strong><code>user</code>:</strong> wheel, keyboard, touch, or pointer input within 700&nbsp;ms; takes control only if its input timestamp is newer than the current driver.</li>
+            <li><strong><code>layout</code>:</strong> DOM resize or translation insertion within 700&nbsp;ms; keeps the driver stationary while the follower re-snaps to alignment.</li>
+            <li><strong><code>other</code>:</strong> structural jumps such as in-page hash navigation.</li>
+        </ol>
+        <p>On documentation sites or SPAs where <code>window</code> itself does not scroll, <code>pane.js</code> selects the scrollable <code>overflow-y: auto|scroll</code> container holding the most translatable prose—breaking ties by viewport area so split Markdown-plus-preview editors track the preview pane rather than a larger code editor.</p>
 
         <h2 id="pipeline">Preserving Formatting and Streaming Translations<a class="anchor" href="#pipeline" aria-hidden="true">#</a></h2>
         <p>Pages rely heavily on inline links, bold emphasis, inline code, and citation footnotes. Stripping them produces walls of plain text; asking an LLM to emit raw HTML invites broken tags and lost event handlers. Duet-Translator instead serializes inline DOM trees into compact numbered placeholders:</p>
@@ -149,7 +161,14 @@ target     t' = q * (H' - vh') / H'</code></pre>
             <li><strong>Playwright reading scenarios (<code>bench.mjs</code> &amp; <code>compare.mjs</code>).</strong> Drives five realistic reading patterns against frozen <code>extension/</code> snapshots via <code>EXT_DIR</code>: <em>slow read</em> (12 &times; 0.4-screen steps, 3.5&nbsp;s dwell), <em>revisit</em> (warm profile reopened in a new tab), <em>fast skim</em> (flick to bottom, stop, flick back), <em>forum thread</em> (150 nested comments with heavy duplicate <code>reply</code>/<code>share</code> strings), and later <em>jump reading</em> (A &rarr; B &rarr; C rapid skips).</li>
             <li><strong>120-day cache eviction replay (<code>cache-policy.mjs</code>).</strong> Simulates 25 sites &times; 40 shared navigation strings, 60 cross-site strings, 40 visits/day, 30% revisits, and periodic 6,000–15,000-segment whole-page flushes.</li>
         </ul>
-        <p>Alongside the harness, the scheduling and caching core was tightened into the live architecture: a fixed system prompt placed at message index 0 (with page title moved to the tail) to maximize provider prefix-cache hits, a <code>max_tokens</code> runaway-loop cap (persisting parameter fallbacks in <code>chrome.storage.session</code> across 30&nbsp;s MV3 worker recycles), optional per-engine <code>contextTokens</code> pre-flight batch splitting for small self-hosted models, a two-tier 4,000-entry memory LRU + 64&nbsp;MB / 90-day IndexedDB cache with SHA-1 namespace keys, and a live green usage/cost meter in the top bar.</p>
+        <p>Alongside the harness, the scheduling and caching core was tightened into the live architecture:</p>
+        <ul>
+            <li><strong>Prefix-cache-friendly prompt layout:</strong> a fixed system prompt sits at message index 0 (with page title pushed to the tail) to maximize provider prefix-cache hits.</li>
+            <li><strong>Runaway-loop guard:</strong> a <code>max_tokens</code> ceiling prevents infinite generation loops, persisting parameter fallbacks in <code>chrome.storage.session</code> across 30&nbsp;s MV3 worker recycles.</li>
+            <li><strong>Pre-flight batch sizing:</strong> optional per-engine <code>contextTokens</code> limits split batches before dispatch for smaller self-hosted models.</li>
+            <li><strong>Two-tier local caching:</strong> a 4,000-entry memory LRU backed by a 64&nbsp;MB / 90-day IndexedDB store keyed by SHA-1 namespaces.</li>
+            <li><strong>Live telemetry:</strong> a green token/cost meter embedded directly in the top bar.</li>
+        </ul>
 
         <h3 id="rsi-rounds">Six Rounds of Hypothesize, Measure, Keep, and Revert<a class="anchor" href="#rsi-rounds" aria-hidden="true">#</a></h3>
         <p>Each round was diffed against the frozen baseline commit (<code>10f056a</code>). Regressions and dead ends were surfaced by the harness and reverted rather than papered over:</p>

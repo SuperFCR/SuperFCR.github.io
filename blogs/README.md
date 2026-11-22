@@ -99,8 +99,13 @@ assets/imgs/favicon.png       # 由 logo.svg 生成的 192px PNG，主页和 blo
 - 两个版本的日期、类型、章节 `id` 和 `post-tags` 必须一致。
 - 顶部导航、面包屑、页脚和文末的主题词标签在两个版本里都保持英文；只有标题上方的类型徽章随语言切换（如 `Deep Dive` / `深入探索`）。
 - 中文版中的英文片段（参考文献、BibTeX、英文引用格式）加 `lang="en"`。
-- 中文版中，论文原题、模型/方法名以及业内通用的核心英文术语（如 `Looped Transformer`、`Looped MoE`、`Flow Matching`、`GRPO`、`BPTT`、`Attention Sink` 等）直接保留英文，不要生硬直译（避免出现「循环 Transformer」这类违和译名）。
+- 中文版中，论文原题、模型/方法名以及业内通用的核心英文术语（如 `Looped Transformer`、`Looped MoE`、`Flow Matching`、`GRPO`、`BPTT`、`Attention Sink`、`Logit-lens / Tuned-lens`、`Self-Modulating Attention / XSA`、`Scaling Law`、`Input Injection` 等）直接保留英文或按英文习惯与中文自然混排（如 `非 embedding 参数`），禁止生硬直译（避免「循环 Transformer」「非嵌入参数」「排他自注意力」「透镜」「算术强度」「留一配置群」「封闭域」等机翻腔词）。
 - 引用格式（Cited as 和 BibTeX）两个版本都用英文标题和英文版网址。
+
+### 段落与排版
+
+- **并列要点必须换行/列点**：正文中出现 `（1）…；（2）…；（3）…`、`第一…第二…`、`其一…其二…`、`First, ... Second, ...` 或 3 项及以上并列结论/机制时，不要用分号硬塞进单个 `<p>` 段落，改为简短引导句配 `<ul>` 或 `<ol>` 列表；`.callout` 框内同理适用。
+- **控制单段与单条长度**：叙事段落一般不超过 3–4 句（中文约 150–250 字以内），同一条 `<li>` 避免同时硬塞两篇独立论文或两个完整机制；有明显转折或两组不同实验时另起新段。
 
 ## 可用组件
 
