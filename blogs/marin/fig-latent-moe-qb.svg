@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="600" viewBox="0 0 1400 600">
+  <rect width="1400" height="600" rx="16" fill="#ffffff"/>
+  <text x="700" y="40" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#141923">Normalized LatentMoE &amp; Raw-Logit Histogram Quantile Balancing</text>
+  <text x="700" y="68" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" fill="#5b6270">Decoupling routing score space (D=6144), expert transport/compute space (d_l=3072), and load balancing</text>
+  <defs>
+    <marker id="ab" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,1 L9,5 L0,9 Z" fill="#1f4e79"/></marker>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,1 L9,5 L0,9 Z" fill="#b4532a"/></marker>
+    <marker id="ag" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,1 L9,5 L0,9 Z" fill="#1b6b5a"/></marker>
+  </defs>
+
+  <!-- LEFT PANEL -->
+  <rect x="24" y="92" width="684" height="484" rx="14" fill="#f8fafd" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="24" y="92" width="684" height="46" rx="14" fill="#1f4e79"/>
+  <rect x="24" y="122" width="684" height="16" fill="#1f4e79"/>
+  <text x="366" y="122" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">A. Normalized LatentMoE Dataflow (D=6144 → d_l=3072)</text>
+
+  <!-- Input -->
+  <rect x="196" y="152" width="340" height="46" rx="10" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+  <text x="366" y="181" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#141923">x_in [B, S, 6144] (GatedNorm)</text>
+
+  <!-- 3 branches -->
+  <path d="M 240 198 L 124 226" fill="none" stroke="#1f4e79" stroke-width="2.5" marker-end="url(#ab)"/>
+  <path d="M 366 198 L 366 226" fill="none" stroke="#b4532a" stroke-width="2.5" marker-end="url(#ar)"/>
+  <path d="M 492 198 L 606 226" fill="none" stroke="#1b6b5a" stroke-width="2.5" marker-end="url(#ag)"/>
+
+  <!-- Branch 1: Router -->
+  <rect x="38" y="232" width="174" height="142" rx="10" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+  <text x="125" y="260" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1f4e79">FP32 Router</text>
+  <text x="125" y="286" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">Reads full D=6144</text>
+  <text x="125" y="312" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">Top-8 of 384 (+bias)</text>
+  <text x="125" y="340" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#1f4e79">Sigmoid Σ = 2.5</text>
+
+  <!-- Branch 2: Latent Path -->
+  <rect x="228" y="232" width="276" height="44" rx="8" fill="#ffffff" stroke="#b4532a" stroke-width="2"/>
+  <text x="366" y="260" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#141923">W_down: 6144 → 3072</text>
+  <line x1="366" y1="276" x2="366" y2="294" stroke="#b4532a" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <rect x="228" y="298" width="276" height="58" rx="8" fill="#b4532a"/>
+  <text x="366" y="323" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#ffffff">Learnable RMSNorm(3072)</text>
+  <text x="366" y="345" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#fef3c7">Fixes 0.25× init → 1.25× eff.</text>
+  <line x1="366" y1="356" x2="366" y2="374" stroke="#b4532a" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <rect x="228" y="378" width="276" height="58" rx="8" fill="#faece5" stroke="#b4532a" stroke-width="2"/>
+  <text x="366" y="403" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#b4532a">EP64 + 8/384 SwiGLU</text>
+  <text x="366" y="425" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">2× less A2A · Square 3072×3072</text>
+  <line x1="366" y1="436" x2="366" y2="454" stroke="#b4532a" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <rect x="228" y="458" width="276" height="54" rx="8" fill="#ffffff" stroke="#b4532a" stroke-width="2"/>
+  <text x="366" y="481" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#141923">Weighted Σ → W_up</text>
+  <text x="366" y="502" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#475569">Expand 3072 → 6144 once</text>
+
+  <!-- Router weight arrow -->
+  <path d="M 125 374 L 125 485 L 222 485" fill="none" stroke="#1f4e79" stroke-width="2.5" marker-end="url(#ab)"/>
+  <text x="172" y="473" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#1f4e79">g_e</text>
+
+  <!-- Branch 3: Shared Experts -->
+  <rect x="520" y="232" width="174" height="202" rx="10" fill="#e2f3ee" stroke="#1b6b5a" stroke-width="2"/>
+  <text x="607" y="264" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1b6b5a">2 Shared Experts</text>
+  <text x="607" y="294" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#141923">Local full-width</text>
+  <text x="607" y="320" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#141923">6144 → 3072 → 6144</text>
+  <text x="607" y="350" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">Zero EP comm.</text>
+  <text x="607" y="388" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#1b6b5a">1/3 active MLP</text>
+  <path d="M 607 434 L 607 485 L 510 485" fill="none" stroke="#1b6b5a" stroke-width="2.5" marker-end="url(#ag)"/>
+
+  <text x="366" y="548" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#1f4e79">Add routed + shared → SConv (kernel=4, boundary-masked) → Residual</text>
+
+  <!-- RIGHT PANEL -->
+  <rect x="724" y="92" width="652" height="484" rx="14" fill="#fdfaf6" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="724" y="92" width="652" height="46" rx="14" fill="#b4532a"/>
+  <rect x="724" y="122" width="652" height="16" fill="#b4532a"/>
+  <text x="1050" y="122" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">B. Histogram Top-k Quantile Balancing (No Aux Loss)</text>
+
+  <!-- QB Step 1 -->
+  <rect x="744" y="154" width="612" height="90" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="762" y="182" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1f4e79">Step 1 · Token Threshold &amp; Margin Matrix</text>
+  <text x="762" y="209" font-family="Inter, sans-serif" font-size="15.5" fill="#141923">top_k(s + b, K+1) → α_t = (s_t + b)_{(K+1)} per token</text>
+  <text x="762" y="232" font-family="Inter, sans-serif" font-size="15" fill="#475569">Margin matrix:  m_{t,e} = s_{t,e} − α_t   (raw logit minus threshold)</text>
+
+  <line x1="1050" y1="244" x2="1050" y2="266" stroke="#b4532a" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <!-- QB Step 2 -->
+  <rect x="744" y="270" width="612" height="118" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="762" y="298" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#b4532a">Step 2 · Live-Range 10,000-Bin Histogram Quantile</text>
+  <text x="762" y="325" font-family="Inter, sans-serif" font-size="15.5" fill="#141923">Global bounds: [lo, hi] = [pmin(m), pmax(m)]   (stop_gradient)</text>
+  <text x="762" y="350" font-family="Inter, sans-serif" font-size="15.5" fill="#141923">Local jnp.bincount(10,000) → int psum → cumsum from top</text>
+  <text x="762" y="375" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#1b6b5a">Target rank = N_tok · K / E  ⇒  read β_e at (1 − K/E) quantile</text>
+
+  <line x1="1050" y1="388" x2="1050" y2="410" stroke="#1b6b5a" stroke-width="2.5" marker-end="url(#ag)"/>
+
+  <!-- QB Step 3 -->
+  <rect x="744" y="414" width="612" height="140" rx="10" fill="#e2f3ee" stroke="#1b6b5a" stroke-width="2"/>
+  <text x="762" y="444" font-family="Inter, sans-serif" font-size="17" font-weight="700" fill="#1b6b5a">Step 3 · Next-Step Bias Update (b_{t+1} = −β_e)</text>
+  <text x="762" y="472" font-family="Inter, sans-serif" font-size="15.5" fill="#141923">✓ Zero tunable hyperparameters &amp; GPU-count independent</text>
+  <text x="762" y="498" font-family="Inter, sans-serif" font-size="15.5" fill="#141923">✓ Raw-logit QB: ~2.0% drops, entropy 4.848 / 4.852 (d768)</text>
+  <text x="762" y="524" font-family="Inter, sans-serif" font-size="15" fill="#475569">   vs. Post-Sigmoid (K3-style): 3.4–4.9% drops, entropy 4.786–4.821</text>
+</svg>

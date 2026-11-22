@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="540" viewBox="0 0 1400 540">
+  <rect width="1400" height="540" rx="16" fill="#ffffff"/>
+  <text x="700" y="42" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#141923">Marin End-to-End Open Development Pipeline (Mochi 535B-A23B &amp; Snowball 67B-A2B)</text>
+  <text x="700" y="70" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" fill="#5b6270">Unified JAX / Levanter / Grug / SkyRL / Harbor stack from raw open corpora to verified agentic policies</text>
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1f4e79"/>
+    </marker>
+    <marker id="arrLoop" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1b6b5a"/>
+    </marker>
+  </defs>
+
+  <!-- Stage 1: Datakit -->
+  <rect x="24" y="102" width="250" height="308" rx="14" fill="#f4f8fc" stroke="#1f4e79" stroke-width="2"/>
+  <rect x="24" y="102" width="250" height="50" rx="14" fill="#1f4e79"/>
+  <rect x="24" y="136" width="250" height="16" fill="#1f4e79"/>
+  <text x="149" y="134" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">1. Datakit</text>
+  <rect x="38" y="168" width="222" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="149" y="191" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1f4e79">152 Sources · 25.25T</text>
+  <text x="149" y="213" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#475569">18.71B docs · Parquet</text>
+  <rect x="38" y="232" width="222" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="149" y="255" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1f4e79">Dedup &amp; Decontam</text>
+  <text x="149" y="277" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#475569">5-gram LSH · 13-gram</text>
+  <rect x="38" y="296" width="222" height="98" rx="8" fill="#e8f0f8" stroke="#93c5fd"/>
+  <text x="149" y="321" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#141923">40×5 Harrier Mix</text>
+  <text x="149" y="346" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">200 cells · 23.11T pool</text>
+  <text x="149" y="372" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" font-weight="600" fill="#1f4e79">1,000+ proxy runs</text>
+
+  <line x1="274" y1="256" x2="296" y2="256" stroke="#1f4e79" stroke-width="3" marker-end="url(#arr)"/>
+
+  <!-- Stage 2: Pre-Train -->
+  <rect x="300" y="102" width="252" height="308" rx="14" fill="#fdf8f5" stroke="#b4532a" stroke-width="2"/>
+  <rect x="300" y="102" width="252" height="50" rx="14" fill="#b4532a"/>
+  <rect x="300" y="136" width="252" height="16" fill="#b4532a"/>
+  <text x="426" y="134" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">2. Pre-Train (535B)</text>
+  <rect x="314" y="168" width="224" height="54" rx="8" fill="#ffffff" stroke="#e2d5cc"/>
+  <text x="426" y="191" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#b4532a">5-Rung Ladder</text>
+  <text x="426" y="213" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#475569">d768–d6144 · 791 tok/act</text>
+  <rect x="314" y="232" width="224" height="54" rx="8" fill="#ffffff" stroke="#e2d5cc"/>
+  <text x="426" y="255" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#b4532a">Normalized LatentMoE</text>
+  <text x="426" y="277" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#475569">8/384 + 2S · QB · XSA · SConv</text>
+  <rect x="314" y="296" width="224" height="98" rx="8" fill="#faece5" stroke="#e5b39c"/>
+  <text x="426" y="321" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#141923">704 GB200 · 18T</text>
+  <text x="426" y="346" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#334155">DP11×EP64 · Pooled→Ragged</text>
+  <text x="426" y="372" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" font-weight="600" fill="#b4532a">MuonH / AdamH / Adam</text>
+
+  <line x1="552" y1="256" x2="574" y2="256" stroke="#1f4e79" stroke-width="3" marker-end="url(#arr)"/>
+
+  <!-- Stage 3: Mid-Train -->
+  <rect x="578" y="102" width="248" height="308" rx="14" fill="#f7f5fc" stroke="#5b4690" stroke-width="2"/>
+  <rect x="578" y="102" width="248" height="50" rx="14" fill="#5b4690"/>
+  <rect x="578" y="136" width="248" height="16" fill="#5b4690"/>
+  <text x="702" y="134" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">3. Mid-Train</text>
+  <rect x="592" y="168" width="220" height="54" rx="8" fill="#ffffff" stroke="#d5cde6"/>
+  <text x="702" y="191" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#5b4690">80% Cooldown</text>
+  <text x="702" y="213" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#475569">Harrier Phase-2 · Linear 5%</text>
+  <rect x="592" y="232" width="220" height="54" rx="8" fill="#ffffff" stroke="#d5cde6"/>
+  <text x="702" y="255" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#5b4690">Context 4K → 262K</text>
+  <text x="702" y="277" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#475569">4K→16K→65K · +262K stage</text>
+  <rect x="592" y="296" width="220" height="98" rx="8" fill="#efeafd" stroke="#c0b2e2"/>
+  <text x="702" y="321" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#141923">QK Rescale &amp; Avg</text>
+  <text x="702" y="346" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">1.3 → 1.66 → log² scale</text>
+  <text x="702" y="372" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#5b4690">57 HF checkpoints released</text>
+
+  <line x1="826" y1="256" x2="848" y2="256" stroke="#1f4e79" stroke-width="3" marker-end="url(#arr)"/>
+
+  <!-- Stage 4: SFT -->
+  <rect x="852" y="102" width="250" height="308" rx="14" fill="#f3faf7" stroke="#1b6b5a" stroke-width="2"/>
+  <rect x="852" y="102" width="250" height="50" rx="14" fill="#1b6b5a"/>
+  <rect x="852" y="136" width="250" height="16" fill="#1b6b5a"/>
+  <text x="977" y="134" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">4. Agentic SFT</text>
+  <rect x="866" y="168" width="222" height="54" rx="8" fill="#ffffff" stroke="#bfe0d7"/>
+  <text x="977" y="191" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1b6b5a">General → Domain</text>
+  <text x="977" y="213" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#475569">Snowball 67B · CalibForge</text>
+  <rect x="866" y="232" width="222" height="54" rx="8" fill="#ffffff" stroke="#bfe0d7"/>
+  <text x="977" y="255" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1b6b5a">Relay SFT</text>
+  <text x="977" y="277" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#475569">Qwen takeover · 64→74% ep</text>
+  <rect x="866" y="296" width="222" height="98" rx="8" fill="#e2f3ee" stroke="#8dcab9"/>
+  <text x="977" y="321" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#141923">Plateau Dropping</text>
+  <text x="977" y="346" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#334155">δ&lt;0.1 drops 62% tok · clip 4</text>
+  <text x="977" y="372" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" font-weight="600" fill="#1b6b5a">77.5% pass@8 · 1.19 nats</text>
+
+  <line x1="1102" y1="256" x2="1124" y2="256" stroke="#1f4e79" stroke-width="3" marker-end="url(#arr)"/>
+
+  <!-- Stage 5: RL -->
+  <rect x="1128" y="102" width="248" height="308" rx="14" fill="#f3f8fc" stroke="#1f4e79" stroke-width="2"/>
+  <rect x="1128" y="102" width="248" height="50" rx="14" fill="#1f4e79"/>
+  <rect x="1128" y="136" width="248" height="16" fill="#1f4e79"/>
+  <text x="1252" y="134" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">5. Agentic RL</text>
+  <rect x="1142" y="168" width="220" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="1252" y="191" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1f4e79">Pre-RL Probe</text>
+  <text x="1252" y="213" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#475569">1,833-task GRPO band</text>
+  <rect x="1142" y="232" width="220" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="1252" y="255" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#1f4e79">TITO + Full-Dist</text>
+  <text x="1252" y="277" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" fill="#475569">Harbor ID fix &amp; no-filter GRPO</text>
+  <rect x="1142" y="296" width="220" height="98" rx="8" fill="#e8f0f8" stroke="#93c5fd"/>
+  <text x="1252" y="321" text-anchor="middle" font-family="Inter, sans-serif" font-size="16.5" font-weight="700" fill="#141923">EAGLE-3 · 1.42× RL</text>
+  <text x="1252" y="346" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#334155">50.5% SWE · 23.9% TB2.1</text>
+  <text x="1252" y="372" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#1f4e79">45.1% TBLite (Direct RL)</text>
+
+  <!-- Connectors to Stage 6 Eval -->
+  <line x1="426" y1="410" x2="426" y2="438" stroke="#1b6b5a" stroke-width="2.5" marker-end="url(#arrLoop)"/>
+  <line x1="702" y1="410" x2="702" y2="438" stroke="#1b6b5a" stroke-width="2.5" marker-end="url(#arrLoop)"/>
+  <line x1="1252" y1="410" x2="1252" y2="438" stroke="#1b6b5a" stroke-width="2.5" marker-end="url(#arrLoop)"/>
+  <rect x="24" y="446" width="1352" height="72" rx="14" fill="#141923"/>
+  <text x="700" y="476" text-anchor="middle" font-family="Inter, sans-serif" font-size="19" font-weight="700" fill="#ffffff">6. Evaluation, Telemetry &amp; Open Verification (Paloma + Eval Policy #10197 + mtracker)</text>
+  <text x="700" y="502" text-anchor="middle" font-family="Inter, sans-serif" font-size="17" fill="#dbeafe">Dropless Paloma (Mochi 1.982 @ 4K vs 2.039 forecast) · MFU Telemetry (21.5% → 30%) · 18 Non-Agentic + 8 Harbor Agentic Evals</text>
+</svg>

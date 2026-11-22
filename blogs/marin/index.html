@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An end-to-end tutorial on the Marin open-development LLM stack: from tensor/FLOP accounting, Quantile Balancing, and Normalized LatentMoE to Datakit 25.25T curation, 535B-A23B pre-training on 704 GB200s, 262K extension, Relay/Plateau SFT, TITO GRPO, and the 26-benchmark Eval Policy.">
+    <title>Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL | Chaoran Feng</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/marin/">
+    <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/marin/">
+    <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/blogs/marin/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://www.falcary.com/blogs/marin/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png?v=20261121.5">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg?v=20261121.5">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png?v=20261121.5">
+    <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Chaoran Feng">
+    <meta property="og:title" content="Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL">
+    <meta property="og:description" content="End-to-end guide to Open Athena's Marin stack: Normalized LatentMoE, Histogram QB, Datakit + Harrier curation, DP11×EP64 GB200 training, MuonH/AdamH, 262K context extension, Relay &amp; Plateau Dropping SFT, TITO GRPO, and Eval Policy #10197.">
+    <meta property="og:url" content="https://www.falcary.com/blogs/marin/">
+    <meta property="og:image" content="https://www.falcary.com/blogs/marin/cover.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261121.5">
+    <script src="../../assets/js/blog-theme.js?v=20261121.5"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../"><img class="nav-mark" src="../../assets/imgs/logo.svg?v=20261121.5" width="26" height="26" alt="">Chaoran Feng</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../"><span class="active">Posts</span></a></li>
+                <li><a href="../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+            <div class="lang-switch" role="navigation" aria-label="Language"><a href="./" class="active" aria-current="page">EN</a><a href="./zh/">中文</a></div>
+        </div>
+        <span class="post-type type-tutorial">Tutorial</span>
+        <h1 class="post-title">Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</h1>
+        <div class="post-meta">
+            <span>November 22, 2026</span>
+            <span>34 min read</span>
+            <span>Chaoran Feng</span>
+        </div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+        <ul>
+            <li><a href="#overview">Why Marin Matters: Open-Process Frontier Engineering</a></li>
+            <li><a href="#foundations">1. Foundations: Accounting, Routing Geometry, and Parallelism</a>
+                <ul>
+                    <li><a href="#param-flop-accounting">Tensor Shapes, Active Parameters, and LatentMoE FLOPs</a></li>
+                    <li><a href="#attn-pos-norm">GQA vs. MLA, Partial RoPE, Hyperball, and Logit z-Loss</a></li>
+                    <li><a href="#moe-routing-math">MoE Routing Geometry: From Aux Loss to Quantile Balancing</a></li>
+                    <li><a href="#parallelism-primer">Distributed Sharding: DP, FSDP, TP, PP, SP, and EP</a></li>
+                </ul>
+            </li>
+            <li><a href="#architecture">2. Architecture Design: Marin 535B-A23B (&ldquo;Mochi&rdquo;)</a>
+                <ul>
+                    <li><a href="#arch-spec">Shallow Width (d6144, 48 Layers) and Homogeneous MoE</a></li>
+                    <li><a href="#latent-moe">Normalized LatentMoE: Fixing the 0.25× Bottleneck Shrinkage</a></li>
+                    <li><a href="#qb-histogram">Histogram Top-k Quantile Balancing &amp; 2.5 Sigmoid Renorm</a></li>
+                    <li><a href="#hybrid-attention-sconv">3:1 SWA/Global Attention, Fixed 1.3 QK-Norm, XSA, GatedNorm &amp; SConv</a></li>
+                    <li><a href="#hero-block-code">Core JAX / Equinox Implementation</a></li>
+                </ul>
+            </li>
+            <li><a href="#data-pipeline">3. Data Curation: Datakit &amp; Harrier at 25 Trillion Tokens</a>
+                <ul>
+                    <li><a href="#ingest-dedup-decontam">152 Sources, Word 5-Gram MinHash/LSH &amp; 13-Gram Decontamination</a></li>
+                    <li><a href="#harrier-buckets-mix">Harrier 40×5 Bucketing &amp; Simulated-Epoching Proxy Regression</a></li>
+                </ul>
+            </li>
+            <li><a href="#pretraining">4. Pre-Training &amp; Distributed Systems at 535B Scale</a>
+                <ul>
+                    <li><a href="#gb200-ep64-transport">11-Rack GB200 Sharding, Pooled-Wave EP &amp; Ragged All-to-All</a></li>
+                    <li><a href="#muonh-optimizer">MuonH / AdamH / Adam Partitioning &amp; the _pin_sharding Fix</a></li>
+                    <li><a href="#scaling-ladder-lr">5-Rung Scaling Ladder &amp; MoeHeuristic LR Law</a></li>
+                </ul>
+            </li>
+            <li><a href="#mid-training">5. Mid-Training: Cooldown &amp; Context Extension to 262K</a>
+                <ul>
+                    <li><a href="#cooldown-weight-avg">80% Phase-2 Cooldown Shift &amp; Checkpoint Weight Averaging</a></li>
+                    <li><a href="#long-context-262k">4K → 16K → 65K → 262K Extension &amp; QK Rescaling</a></li>
+                </ul>
+            </li>
+            <li><a href="#sft">6. Post-Training I: SFT, Relay SFT &amp; Plateau Dropping</a>
+                <ul>
+                    <li><a href="#open-posttrain-stack">Documents vs. Tasks &amp; Snowball's Open Post-Training DAG</a></li>
+                    <li><a href="#relay-sft">Domain Coding SFT &amp; Teacher-Guided Relay SFT</a></li>
+                    <li><a href="#plateau-dropping">Plateau Dropping &amp; Four Critical SFT Infrastructure Footguns</a></li>
+                </ul>
+            </li>
+            <li><a href="#rl">7. Post-Training II: Turning Snowball into a Coding Agent with RL</a>
+                <ul>
+                    <li><a href="#pre-rl-probe-stack">Pre-RL Probe, Entropy Collapse &amp; Five Stack Fixes (TITO)</a></li>
+                    <li><a href="#specdec-prompt-rl">EAGLE-3 Speculative Decoding &amp; Context-Distilled Prompt RL</a></li>
+                    <li><a href="#sft-vs-rl-traces">Benchmark Progression, Trace Forensics &amp; Reward Hacking</a></li>
+                </ul>
+            </li>
+            <li><a href="#evaluation">8. Evaluation, Scaling Extrapolation &amp; Canonical Eval Policy</a>
+                <ul>
+                    <li><a href="#paloma-dropless-scaling">Dropless vs. Capacity-Dropped Paloma &amp; Scaling Forecast</a></li>
+                    <li><a href="#mfu-eval-policy">Burst vs. Sustained MFU &amp; Marin's 26-Benchmark Eval Policy</a></li>
+                </ul>
+            </li>
+            <li><a href="#takeaways">Practical Takeaways for Open LLM Engineering</a></li>
+            <li><a href="#citation">Citation</a></li>
+            <li><a href="#references">References</a></li>
+        </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>Open-weight checkpoints let researchers inspect finished parameters, yet they rarely reveal why a training run stayed stable, how a 25-trillion-token corpus was deduplicated, which optimizer bugs erupted at step 24,000, or why reinforcement learning collapsed halfway through post-training<a class="cite" href="#ref-4">[4]</a>. <strong>Marin</strong>—founded at Stanford and operated through Open Athena—closes that scientific gap by practicing full open development: code, data recipes, preregistered scaling forecasts, negative results, live training trackers<a class="cite" href="#ref-1">[1]</a>, and intermediate checkpoints are published in the open as training unfolds.</p>
+
+        <p>This tutorial walks chronologically through the complete Marin stack around its two flagship sparse Mixture-of-Experts (MoE) vehicles:</p>
+        <ul>
+            <li><strong>Marin &ldquo;Mochi&rdquo; 535B-A23B:</strong> a 535.3B total / 22.8B active (non-embedding) Normalized LatentMoE trained on 18 trillion tokens across 704 NVIDIA GB200 GPUs (11 NVL72 racks), completing its main pre-training phase on November 5, 2026<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-2">[2]</a> and releasing 57 intermediate and 262K long-context checkpoints<a class="cite" href="#ref-5">[5]</a>.</li>
+            <li><strong>Marin &ldquo;Snowball&rdquo; 67B-A2B:</strong> a 10T-token overtrained TPU MoE that surpassed the dense Marin 32B model at $10\times$ fewer FLOPs and $16\times$ fewer active parameters<a class="cite" href="#ref-8">[8]</a>, serving as Open Athena's open post-training testbed for coding-agent SFT and GRPO<a class="cite" href="#ref-11">[11]</a><a class="cite" href="#ref-12">[12]</a>.</li>
+        </ul>
+
+        <div class="callout callout-tip">
+            <p><strong>How to read this guide:</strong> Section 1 establishes the shared mathematical vocabulary (FLOP accounting, attention layouts, Hyperball, Quantile Balancing, and NVLink/InfiniBand sharding); Sections 2–5 follow Mochi from block design and Datakit curation through 18T pre-training and 262K mid-training at Marin commit <code>12d8b6f09f96</code><a class="cite" href="#ref-17">[17]</a><a class="cite" href="#ref-20">[20]</a>; Sections 6–8 trace Snowball's post-training SFT/RL stack and Marin's 26-benchmark evaluation policy<a class="cite" href="#ref-16">[16]</a>.</p>
+        </div>
+
+        <h2 id="overview">Why Marin Matters: Open-Process Frontier Engineering<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
+        <p>Modern frontier AI engineering is constrained less by isolated architectural tricks than by coupled trade-offs across data repetition, communication bandwidth, numerical stability, and evaluation hygiene. Under a fixed December hardware deadline on 768 allocated GB200s (11 healthy racks of 64 GPUs), Open Athena optimized for three explicit objectives<a class="cite" href="#ref-2">[2]</a>:</p>
+        <ul>
+            <li><strong>Realized MFU first:</strong> theoretical FLOP efficiency matters only through realized tokens per second on actual hardware, motivating LatentMoE, shallow width-to-depth ratio (128), and homogeneous layer stacking under <code>jax.lax.scan</code>.</li>
+            <li><strong>Preregistered predictability:</strong> a five-rung Scaling Ladder forecasts final dropless Paloma loss across a $300\times$ compute extrapolation, turning every deviation or bug into a falsifiable diagnostic<a class="cite" href="#ref-14">[14]</a>.</li>
+            <li><strong>Post-training readiness:</strong> every architectural choice retains established inductive biases (SwiGLU, GQA, RMSNorm, z-loss) and leaves a 5% terminal learning rate so community SFT and RL pipelines transfer cleanly<a class="cite" href="#ref-2">[2]</a>.</li>
+        </ul>
+
+        <figure>
+            <img src="./fig-marin-lifecycle.svg" width="1400" height="540" alt="End-to-end Marin open-development pipeline connecting Datakit (152 sources, 25.25T tokens), 535B-A23B Mochi pre-training on 704 GB200s, 80% cooldown and 4K-to-262K mid-training, Snowball Relay and Plateau Dropping SFT, TITO + EAGLE-3 agentic RL, and the 26-benchmark Eval Policy." loading="lazy">
+            <figcaption>Fig. 1. End-to-end Marin engineering pipeline connecting Mochi 535B-A23B pre-training and mid-training (Stages 1–3) with Snowball 67B-A2B agentic post-training (Stages 4–5) under continuous telemetry and Eval Policy #10197 (Stage 6). <a href="./fig-marin-lifecycle.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h2 id="foundations">1. Foundations: Accounting, Routing Geometry, and Parallelism<a class="anchor" href="#foundations" aria-hidden="true">#</a></h2>
+        <p>Before diving into Hero code or RL traces, we establish the four foundational equations that govern every design choice in Marin, synthesized from the JAX Scaling Book<a class="cite" href="#ref-27">[27]</a>, Transformer FLOP accounting<a class="cite" href="#ref-34">[34]</a>, distributed sharding primers<a class="cite" href="#ref-33">[33]</a>, and Su Jianlin's MoE routing derivations<a class="cite" href="#ref-28">[28]</a>.</p>
+
+        <h3 id="param-flop-accounting">Tensor Shapes, Active Parameters, and LatentMoE FLOPs<a class="anchor" href="#param-flop-accounting" aria-hidden="true">#</a></h3>
+        <p>Throughout Marin's JAX codebase, token activations are row vectors packed as $X \in \mathbb{R}^{B \times S \times D}$, where $B$ is sequence batch size, $S$ is sequence length (4,096 at launch), and $D$ is backbone hidden width (<code>d6144</code> means $D = 6144$, not $S$ or parameter count). Attention uses $H_q$ query heads and $H_{kv}$ key/value heads of width $d_h = 128$, with $D = H_q d_h$ across every rung of the ladder.</p>
+
+        <p>In a sparse MoE block with $N_{\text{fix}}$ non-routed parameters (attention, router, shared experts, norms), $E$ routed experts of $P_e$ parameters each, and top-$K$ selection, total and active parameter counts follow<a class="cite" href="#ref-18">[18]</a>:</p>
+        $$N_{\text{total}} = N_{\text{fix}} + E P_e, \qquad N_{\text{active}} \approx N_{\text{fix}} + K P_e$$
+        <p>Never estimate $N_{\text{active}}$ by multiplying $N_{\text{total}}$ by $K/E$: shared experts, projections, and attention contribute $100\%$ to $N_{\text{active}}$. In Mochi (<code>D=6144</code>, <code>L=48</code>, <code>V=128,256</code>), backbone + 384 routed + 2 shared SwiGLU experts yield $533.8\text{B}$ non-embedding parameters ($535.3\text{B}$ with untied embeddings/<code>lm_head</code>) and $22.8\text{B}$ active non-embedding parameters ($24.4\text{B}$ including embeddings and head)<a class="cite" href="#ref-18">[18]</a>.</p>
+
+        <p>For a dense Transformer, training forward + backward compute per iteration ($3\times$ forward) follows<a class="cite" href="#ref-34">[34]</a>:</p>
+        $$F_{\text{iter}}^{\text{dense}} = 72 B L S D^2 \left(1 + \frac{S}{6D} + \frac{V}{12 D L}\right) = \underbrace{72 B L S D^2}_{\text{linear + MLP}} + \underbrace{12 B L S^2 D}_{\text{attention}} + \underbrace{6 B S D V}_{\text{lm\_head}}$$
+        <p>For <strong>LatentMoE</strong>, Levanter's default <code>lm_flops_per_token</code> prices routed SwiGLU matrices at backbone width $D$ instead of compressed latent width $d_l$. In <code>train.py#L346</code><a class="cite" href="#ref-25">[25]</a>, Marin subtracts the full-width routed cost and adds the down/up bottleneck projections per layer before multiplying forward FLOPs by $3 S$ for $F_{\text{example}}$:</p>
+        $$\Delta F_{\text{layer}}^{\text{latent}} = 2 \cdot 3 \, d_{\text{ff}} \, K (d_l - D) + 2 \cdot 2 \, D d_l, \qquad F_{\text{example}} = 3 S \cdot F_{\text{fwd/tok}}$$
+        <p>Without this correction, halved routed expert GEMMs ($d_l = 3072 = D/2$) would overstate reported Model FLOPs Utilization (MFU) by nearly $2\times$. Realized MFU then measures useful model FLOPs against peak accelerator BF16 throughput<a class="cite" href="#ref-27">[27]</a>:</p>
+        $$\text{MFU} = \frac{F_{\text{train/token}} \times \text{tokens/sec}}{N_{\text{GPU}} \times P_{\text{peak/GPU}}}$$
+
+        <h3 id="attn-pos-norm">GQA vs. MLA, Partial RoPE, Hyperball, and Logit z-Loss<a class="anchor" href="#attn-pos-norm" aria-hidden="true">#</a></h3>
+        <p>For single-sequence inference over $S$ cached tokens in data type $b_{\text{elem}}$ ($2\text{ B}$ in BF16), standard Multi-Head Attention stores $2 S H_q d_h b_{\text{elem}}$ bytes of KV cache per layer ($24\text{ KiB/tok}$ for 48 heads). Grouping query heads via $g(h) = \lfloor h / (H_q / H_{kv}) \rfloor$ (GQA) shrinks inference KV memory proportionally without altering backbone dimension $D$. Notice how <strong>MLA</strong> (compressing KV into low-rank latent $c_t = x_t W_{\text{DKV}}$ plus decoupled RoPE keys) differs cleanly from <strong>LatentMoE</strong>: MLA compresses the <em>attention KV cache</em>, whereas Mochi uses GQA in attention and compresses the <em>routed FFN expert path</em><a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <p>Positional encoding in modern long-context hybrids combines three building blocks:</p>
+        <ul>
+            <li><strong>Rotary Position Embeddings (RoPE):</strong> rotates coordinate pairs at frequencies $\omega_j = b^{-2j/d_r}$ ($j=0,\dots,d_r/2-1$) so inner products $(R(p\omega_j)q)^\top (R(t\omega_j)k) = q^\top R((t-p)\omega_j)k$ depend strictly on relative offset $t - p$. Mochi uses <strong>50% Partial RoPE</strong> ($d_r = d_h/2$) on local Sliding Window Attention (SWA) layers and <strong>NoPE</strong> (no positional rotation) on global layers<a class="cite" href="#ref-2">[2]</a>.</li>
+            <li><strong>LeRoPE vs. YaRN / SSMax temperature scaling:</strong> whereas LeRoPE learns frequency multipliers $\tilde{\omega}_j = e^{\alpha_j}\omega_j$ during training, context extension like YaRN rescales rotary frequency bands at low frequencies and multiplies attention logits by a log-length temperature $m(s)^2$ ($m(s) = 1 + 0.1\ln s$) so attention stays sharp across more keys<a class="cite" href="#ref-27">[27]</a>.</li>
+            <li><strong>RMSNorm, QK-Norm, and GatedNorm:</strong> normalizing each token or head vector ($\hat{q} = q / \operatorname{RMS}(q)$) pins vector length to $\sqrt{d_h}$ so unscaled attention score $\ell = \frac{c\,\hat{q}\cdot\hat{k}}{\sqrt{d_h}} = c\sqrt{d_h}\cos\theta$ reflects pure angular alignment scaled by <code>qk_mult</code> $c$ ($1.3\sqrt{128}\approx 14.71\cos\theta$ in Mochi). Adding input-dependent <strong>GatedNorm</strong>, $\operatorname{GatedNorm}(u) = u \odot \sigma(\operatorname{SiLU}(u W_{\text{down}}) W_{\text{up}})$, restores elementwise expressivity after normalization.</li>
+        </ul>
+
+        <p>Crucially, forward activation norms and <strong>Hyperball (<code>MuonH</code> / <code>AdamH</code>)</strong> weight constraints operate in two completely different spaces. Forward norms stabilize activations entering attention or MLPs; Hyperball projects updated weight blocks back onto their initial Frobenius sphere of radius $R = \|W\|_F$:</p>
+        $$\widetilde{W} = W - \eta R \frac{U}{\|U\|_F}, \qquad W_{\text{next}} = R \frac{\widetilde{W}}{\|\widetilde{W}\|_F}$$
+        <p>Because Hyperball prevents weights from growing in magnitude over training (removing Adam's implicit weight-norm LR decay), a Warmup-Stable-Decay (WSD) plateau stops making progress unless decay is baked into a <strong>linear LR schedule</strong><a class="cite" href="#ref-2">[2]</a>. Meanwhile, training optimizes next-token cross-entropy (in nats, $\text{PPL} = e^{\mathcal{L}_{\text{CE}}}$) plus <strong>logit $z$-loss</strong> ($10^{-4}(\log\sum_v e^{z_{t,v}})^2$) because a learnable final <code>RMSNorm</code> gain can still blow up logit magnitudes even with <code>lm_head</code> pinned on the Hyperball<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <h3 id="moe-routing-math">MoE Routing Geometry: From Aux Loss to Quantile Balancing<a class="anchor" href="#moe-routing-math" aria-hidden="true">#</a></h3>
+        <p>Following Su Jianlin's geometric decomposition of an FFN into unit-norm directions $e_i$ predicted with scalar magnitudes $\rho_i$<a class="cite" href="#ref-28">[28]</a>, sparse routing approximates $\sum_{i=1}^E \rho_i e_i$ by picking only the top-$K$ experts with largest predicted scores $s_{t,i}$. Left unregularized, underloaded experts receive fewer gradients and enter a collapse loop until they die completely across every layer<a class="cite" href="#ref-7">[7]</a>.</p>
+
+        <p>Prior balancers required fragile hyperparameter tuning: GShard added $\alpha \mathcal{L}_{\text{bal}}$ directly to training loss (fighting the language modeling objective when $\alpha$ is too large), while DeepSeek-V3 introduced Aux-Loss-Free balancing ($b_i \leftarrow b_i + \gamma \operatorname{sign}(\bar{c} - c_i)$ with step size $\gamma=0.001$) and Arcee Trinity added momentum (SMEBU)<a class="cite" href="#ref-7">[7]</a><a class="cite" href="#ref-28">[28]</a>. Note also Su Jianlin's gauge invariance insight on biases: replacing $b$ with $b + c\mathbf{1}$ leaves $\operatorname{argtop}_K(s + b)$ unchanged, separating relative load-balancing bias $(b - \bar{b}\mathbf{1})$ from a shared compute-budget offset $\bar{b}\mathbf{1}$.</p>
+
+        <p>Can we eliminate the update hyperparameter $\gamma$ altogether? Su Jianlin formulated balanced top-$K$ routing over $M$ tokens and $E$ experts as a linear program maximizing total router affinity<a class="cite" href="#ref-29">[29]</a><a class="cite" href="#ref-30">[30]</a>:</p>
+        $$\max_{x_{t,i} \in [0,1]} \sum_{t=1}^M \sum_{i=1}^E x_{t,i} s_{t,i} \qquad \text{s.t.} \quad \sum_{i=1}^E x_{t,i} = K,\quad \sum_{t=1}^M x_{t,i} = \frac{MK}{E}$$
+        <p>Its dual Lagrange multipliers yield alternating coordinate thresholds $\alpha_t$ (per-token cutoff) and $\beta_i$ (per-expert bias), leading to hyperparameter-free <strong>Quantile Balancing (QB)</strong><a class="cite" href="#ref-29">[29]</a>:</p>
+        <ol>
+            <li><strong>Per-token threshold:</strong> on the biased logits $s_{t} + b^{(t)}$, compute the $(K+1)$-th largest logit $\alpha_t = (s_t + b^{(t)})_{(K+1)}$ and form the margin matrix $m_{t,i} = s_{t,i} - \alpha_t$.</li>
+            <li><strong>Per-expert upper quantile:</strong> across the batch, find for each expert $i$ the $(1 - K/E)$-upper quantile $\beta_i = Q_{1 - K/E}(\{s_{t,i} - \alpha_t\}_{t=1}^M)$, then set $b^{(t+1)} = -\beta$ (with <code>stop_gradient</code> for the next step)<a class="cite" href="#ref-7">[7]</a><a class="cite" href="#ref-20">[20]</a><a class="cite" href="#ref-25">[25]</a>.</li>
+        </ol>
+        <p>For causal single-request decoding where future tokens are unavailable, <strong>Moving Quantile Balancing (MQB)</strong><a class="cite" href="#ref-31">[31]</a> adapts QB using causal prefix statistics along each sequence, while pairing bias-selected top-$K$ with unbiased <strong>Sigmoid</strong> gating<a class="cite" href="#ref-32">[32]</a> avoids softmax competition among active experts.</p>
+
+        <h3 id="parallelism-primer">Distributed Sharding: DP, FSDP, TP, PP, SP, and EP<a class="anchor" href="#parallelism-primer" aria-hidden="true">#</a></h3>
+        <p>In BF16 compute + FP32 master weights/moments with Adam, optimizer and weight state consumes $16\text{ bytes}$ per parameter—nearly $8\text{ TiB}$ for a 535B model before activations or communication buffers, far above a single B200 GPU's $185\text{ GiB}$ HBM<a class="cite" href="#ref-6">[6]</a>. Five parallelism axes resolve different bottlenecks<a class="cite" href="#ref-33">[33]</a>:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Parallelism</th><th>Shards What</th><th>Primary Collectives</th><th>Marin / GB200 Role</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>DP</strong></td><td>Global token batch</td><td>All-Reduce / Reduce-Scatter</td><td><strong>DP=11 across racks</strong> over 50 GB/s InfiniBand<a class="cite" href="#ref-6">[6]</a></td></tr>
+                <tr><td><strong>FSDP</strong></td><td>Weights, grads, opt states</td><td>All-Gather + Reduce-Scatter</td><td>Used for dense, shared-expert, and attention weights inside rack</td></tr>
+                <tr><td><strong>TP (+ SP)</strong></td><td>Linear matrices &amp; seq norm acts</td><td>All-Reduce / All-Gather</td><td>Kept within NVLink domains when single-layer matrices overflow</td></tr>
+                <tr><td><strong>PP</strong></td><td>Transformer layers</td><td>Point-to-point Send/Recv</td><td>Not needed on Mochi due to intra-rack HBM &amp; host offload</td></tr>
+                <tr><td><strong>EP</strong></td><td>MoE routed experts</td><td>All-to-All Dispatch/Combine</td><td><strong>EP=64 inside NVL72</strong> (6 experts/GPU over 900 GB/s NVLink)<a class="cite" href="#ref-6">[6]</a></td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <p>Why abandon pure FSDP above 360B? In Mochi, roughly $97\%$ of parameters live in routed experts. Under balanced top-8 LatentMoE ($d_l = 3072$, 1,024 sequences/rack at $S=4096$ over 64 GPUs), an FSDP forward pass must All-Gather $\approx 20\text{ GiB}$ of routed expert weights per GPU per layer, whereas EP dispatches and combines only $\approx 6\text{ GiB}$ of compressed token activations—and adding more experts increases FSDP traffic without increasing EP token traffic<a class="cite" href="#ref-6">[6]</a>.</p>
+
+        <h2 id="architecture">2. Architecture Design: Marin 535B-A23B (&ldquo;Mochi&rdquo;)<a class="anchor" href="#architecture" aria-hidden="true">#</a></h2>
+        <p>Every block-level modification in Mochi had to survive two gates: empirical compute efficiency measured via the May 2026 baseline curve $L(C) = 1.6 + 88.90 \cdot C^{-0.0941}$ (for example, $1.18\times$ means the baseline needs $18\%$ more compute to match loss), and realized MFU on GB200<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <h3 id="arch-spec">Shallow Width (d6144, 48 Layers) and Homogeneous MoE<a class="anchor" href="#arch-spec" aria-hidden="true">#</a></h3>
+        <p>Unlike deeper frontier MoEs (60–90+ layers), Mochi adopts a wide, shallow $D = 6144$, $L = 48$ geometry (width:depth ratio $128$) and <strong>zero leading dense layers</strong><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-17">[17]</a>. Fewer, wider layers yield larger GEMMs and higher realized MFU, while removing leading dense layers keeps every Transformer block structurally identical so the entire 48-layer stack compiles cleanly through a single <code>jax.lax.scan</code> loop without HBM blowup<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Hyperparameter</th><th>Marin 535B-A23B (&ldquo;Mochi&rdquo;)</th><th>Marin Snowball 67B-A2B</th><th>Marin 32B (Phase 3+ Dense)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Backbone / Total / Active</td><td class="best">535.3B total / 22.8B active (excl. head)</td><td>67B total / ~2B active</td><td>32B dense (Qwen3-style QK-Norm)</td></tr>
+                <tr><td>Depth × Width ($L \times D$)</td><td>48 layers × 6,144 (ratio 128)</td><td>TPU-optimized deep sparse MoE</td><td>64 layers × 5,120 ($d_{\text{ff}} = 27648$)</td></tr>
+                <tr><td>MoE Routing &amp; Shared</td><td><strong>8 / 384 LatentMoE</strong> ($d_l=3072$) + 2 shared</td><td>Fine-grained sparse MoE (TPU)</td><td>Dense SwiGLU</td></tr>
+                <tr><td>Attention Layout</td><td>3:1 SWA (2048) / Global; 48Q ($d_h=128$)</td><td>Hybrid local/global for fast RL rollouts</td><td>Full causal 40Q / 8KV GQA</td></tr>
+                <tr><td>KV Heads &amp; RoPE</td><td>12 KV (local 4:1) / 6 KV (global 8:1); 50% RoPE / NoPE</td><td>Optimized for low serving KV footprint</td><td>8 KV; standard RoPE + QK-Norm</td></tr>
+                <tr><td>Training Horizon</td><td><strong>18T tokens</strong> (~13× overtrained, $2.7\times 10^{24}$ FLOPs)</td><td><strong>10T tokens</strong> (~100× overtrained, $1.2\times 10^{23}$ FLOPs)</td><td>6.437T tokens (Mantis cooldown)</td></tr>
+                <tr><td>Hardware &amp; Stack</td><td>704 GB200s (<code>DP11 × EP64</code>), JAX/Grug</td><td>Google TPU v4/v5p, SkyRL + Harbor post-train</td><td>TPU v4-2048 slice</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <figure>
+            <img src="./fig-architecture.webp" width="1440" height="1479" alt="Full architectural diagram of Marin 535B-A23B showing the 48-layer stack, 3:1 local SWA (2048) to global layer pattern, GatedNorm, Attention with key SConv, fixed 1.3 QK-norm, XSA, and headwise gating, and Normalized LatentMoE with 8-of-384 QB routing." loading="lazy">
+            <figcaption>Fig. 2. Official Marin 535B-A23B block diagram highlighting notable additions (shaded rust): embedding RMSNorm, GatedNorm, kernel-4 SConv, fixed 1.3 QK-norm, XSA, learnable LatentMoE RMSNorm, and raw-logit Histogram QB. Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
+
+        <p>Other candidate upgrades—Attention Residuals, mHC, MLA, Multi-Token Prediction (MTP), looped-depth weight sharing<a class="cite" href="#ref-35">[35]</a><a class="cite" href="#ref-36">[36]</a>, and over-encoded hashed $n$-gram embeddings—either could not clear Open Athena&#x27;s strict realized-MFU bar before the July cluster clock started or were deferred in favor of standalone speculative drafters<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <h3 id="latent-moe">Normalized LatentMoE: Fixing the 0.25× Bottleneck Shrinkage<a class="anchor" href="#latent-moe" aria-hidden="true">#</a></h3>
+        <p>In Mochi's LatentMoE<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-20">[20]</a>, the FP32 router still reads full-width $D=6144$ activations, and the 2 shared SwiGLU experts stay on the local full-width path ($1/3$ of active MLP neurons as a safety dense backbone). Only the routed branch projects down before EP dispatch and expands back once after weighted combine:</p>
+        $$z = \operatorname{RMSNorm}_{\gamma}\!\left(x W_{\text{down}}\right), \qquad y_{\text{routed}} = \left(\sum_{e \in \mathcal{K}_{\text{kept}}} g_e E_e(z)\right) W_{\text{up}}$$
+        <p>where $W_{\text{down}} \in \mathbb{R}^{6144 \times 3072}$, $W_{\text{up}} \in \mathbb{R}^{3072 \times 6144}$, and each SwiGLU expert $E_e(z) = [\operatorname{SiLU}(z W_{g,e}) \odot (z W_{u,e})] W_{d,e}$ uses square $3072 \times 3072$ matrices. Square matrices give an underappreciated bonus: Muon's orthogonalization equalizes spectral singular values cleanly across both rows and columns without triggering neuron imbalance on skewed rectangular matrices<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <p>Crucially, naive LatentMoE initially <em>failed</em> in Marin's ablations, dropping to $0.74\text{–}0.75\times$ compute efficiency from <code>d512</code> to <code>d1024</code> (Issue <code>#6822</code>). Initializing both $W_{\text{down}}$ and $W_{\text{up}}$ with $\sigma = 0.5 / \sqrt{D}$ multiplied output variance by $0.5 \times 0.5 = 0.25$, starving routed experts—diagnosed by inserting a learnable latent scalar that immediately climbed to $\approx 4.0$. Adding a <strong>learnable <code>RMSNorm</code> on the 3,072-dim latent</strong> reversed the penalty to <strong>$1.25\times$ compute efficiency</strong> while halving All-to-All activation bytes, making <code>8/384</code> match the communication bandwidth of <code>4/192</code> while winning $+13\text{–}16\%$ quality efficiency<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <figure>
+            <img src="./fig-latent-moe-qb.svg" width="1400" height="600" alt="Two-panel diagram of Normalized LatentMoE dataflow (Panel A) showing full-width FP32 router and shared experts alongside the W_down to Learnable RMSNorm to EP64 to W_up bottleneck, and Histogram Top-k Quantile Balancing (Panel B) computing live-range 10,000-bin upper quantiles on raw logits." loading="lazy">
+            <figcaption>Fig. 3. Left: Normalized LatentMoE decouples full-width routing (<code>D=6144</code>) from halved EP communication (<code>d_l=3072</code>) via learnable latent RMSNorm. Right: Raw-logit 10,000-bin histogram Quantile Balancing computes $\beta_e$ without hyperparameters or GPU-count dependence. <a href="./fig-latent-moe-qb.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h3 id="qb-histogram">Histogram Top-k Quantile Balancing &amp; 2.5 Sigmoid Renorm<a class="anchor" href="#qb-histogram" aria-hidden="true">#</a></h3>
+        <p>Having previously validated Quantile Balancing (QB) spike-free on a 32B-A5B / 326B-token ($10^{22}$ FLOP) run<a class="cite" href="#ref-7">[7]</a>, Open Athena adapted QB for 64-way GPU sharding by replacing per-GPU <code>top_k</code> averaging with a <strong>live-range 10,000-bin global histogram</strong> (<code>QbEstimator.HIST</code>, Issue <code>#8033</code>)<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-20">[20]</a>:</p>
+        <ul>
+            <li><strong>Raw logits beat post-Sigmoid bounds:</strong> unlike DeepSeek-V3 and Kimi K3 (which apply bias after $\sigma(s)$ on $[0, 1]$), applying QB bias directly to raw FP32 logits balanced faster during warmup, settling at $\approx 2\%$ drops and $4.848$ routing entropy (vs. max $\ln 128 = 4.852$) compared to $3.4\text{–}4.9\%$ drops and $4.786\text{–}4.821$ entropy for post-sigmoid QB<a class="cite" href="#ref-2">[2]</a>.</li>
+            <li><strong>Single integer <code>psum</code> across GPUs:</strong> <code>_qb_beta_hist</code> takes global <code>[lo, hi]</code> via <code>pmin</code>/<code>pmax</code> (<code>stop_gradient</code>), bins margins $s - \alpha$ locally with <code>jnp.bincount</code>, aggregates one integer histogram across <code>_BATCH_AXES</code>, and interpolates $\beta_e$ from top-cumulative counts<a class="cite" href="#ref-20">[20]</a>.</li>
+            <li><strong>Unbiased 2.5 Sigmoid combine weights:</strong> selected experts take $g_e = \frac{2.5\,\sigma(s_e)}{\epsilon + \sum_{k \in \mathcal{K}} \sigma(s_k)}$ using <em>unbiased</em> logits, matching the $2.5$ scale used in GLM-5.2 / DeepSeek-V3<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-20">[20]</a>.</li>
+        </ul>
+
+        <h3 id="hybrid-attention-sconv">3:1 SWA/Global Attention, Fixed 1.3 QK-Norm, XSA, GatedNorm &amp; SConv<a class="anchor" href="#hybrid-attention-sconv" aria-hidden="true">#</a></h3>
+        <p>Every remaining component in the 48-layer block plays a targeted stability or quality role<a class="cite" href="#ref-2">[2]</a>:</p>
+        <ul>
+            <li><strong>Asymmetric GQA in 3:1 SWA (2048) / Global blocks:</strong> every 4th layer (plus layer 47 via <code>_long_layer_schedule</code>) uses full causal global attention with 8:1 GQA (6 KV heads) and NoPE; local layers use 2,048-token sliding windows (only 2–4% slower than 512 in vLLM yet $1.10\times$ more compute-efficient), 4:1 GQA (12 KV heads, since local KV cache is bounded at 2048), and 50% Partial RoPE.</li>
+            <li><strong>Fixed <code>1.3</code> QK RMSNorm multiplier:</strong> non-parametric QK RMSNorm scaled by $1.3$ outperformed no QK-norm (<code>3.0208</code> vs. <code>3.0281</code> at <code>d768</code>) and tied learnable per-head gains (<code>2.6477</code> vs. <code>2.6484</code> at <code>d2048</code> despite learnable gains creeping toward $2.0$), leaving clean headroom to bump the scale manually during context extension<a class="cite" href="#ref-2">[2]</a>.</li>
+            <li><strong>Exclusive Self-Attention (XSA) + Head Gate:</strong> removing each token's self-value projection $z_i = y_i - \frac{y_i^\top v_i}{\|v_i\|^2 + 10^{-6}} v_i$ followed by $2\sigma(x W_{\text{gate}})$ keeps attention closer to a benign no-op early in training (where zero-initializing $W_o$ fails under Hyperball), slashing accelerated-warmup EP drops from $>50\%$ (<code>12.7%</code> avg over steps 30–100) to <code>21%</code> (<code>5.6%</code> avg)<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-20">[20]</a>.</li>
+            <li><strong>GatedNorm &amp; Embedding RMSNorm:</strong> rank-128 <code>GatedNorm</code> (in MuonH) after <code>RMSNorm</code> supplies input-dependent channel modulation, while placing <code>RMSNorm</code> after <code>token_embed</code> (in plain Adam, whose norm grows $177 \to 7,800$) stabilizes lookup magnitudes and creates natural relative LR decay ($+19\%$ compute efficiency at <code>d768</code>)<a class="cite" href="#ref-2">[2]</a>.</li>
+            <li><strong>Short Convolutions (<code>SConv</code>, kernel=4):</strong> adopted from Thinking Machines' Inkling<a class="cite" href="#ref-36">[36]</a>, identity-initialized causal per-channel convolutions masked at document <code>segment_ids</code> boundaries sit on <code>K</code>, <code>attn_out</code>, and <code>mlp_out</code> ($1.19\times$ compute efficiency at <code>d1024</code>), accelerating 1-layer induction-head formation in shallow models<a class="cite" href="#ref-2">[2]</a>. Notice <strong><code>V</code> is intentionally omitted</strong> because mixing neighboring values blurs XSA's self-value subtraction!</li>
+        </ul>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th><code>SConv</code> Placement (<code>d1024</code> Ablation)<a class="cite" href="#ref-2">[2]</a></th><th>Paloma Macro Loss</th><th>Compute Efficiency</th><th>Notes on Choice</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>K, V, attn out, MLP out (kernel 4)</strong></td><td class="best">3.0378</td><td class="best">1.19×</td><td>Full 4-site Inkling layout; Hero drops <code>V</code> (<code>+0.003</code> at <code>d768</code>) to keep XSA clean</td></tr>
+                <tr><td>All four sites, kernel 3 / kernel 2</td><td>3.0387 / 3.0440</td><td>1.18× / 1.13×</td><td>Smaller kernels leave local induction capacity on the table</td></tr>
+                <tr><td>All four sites, global layers only</td><td>3.0482</td><td>1.10×</td><td>Halving coverage forfeits ~half the efficiency gain</td></tr>
+                <tr><td>MLP out only / K only / Attn out only</td><td>3.0506 / 3.0542 / 3.0571</td><td>1.08× / 1.05× / 1.03×</td><td>Gains stack cleanly across K, attn_out, and mlp_out</td></tr>
+                <tr><td>No SConv (baseline)</td><td>3.0610</td><td>1.00×</td><td>Removing SConv entirely on Hero <code>d768</code> costs <code>+0.028</code> loss (<code>3.0489</code> vs <code>3.0208</code>)</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h3 id="hero-block-code">Core JAX / Equinox Implementation<a class="anchor" href="#hero-block-code" aria-hidden="true">#</a></h3>
+        <p>The excerpt below condenses <code>CausalSelfAttention</code>, <code>GatedNorm</code>, <code>MoEMLP</code>, and <code>Block</code> directly from <code>experiments/grug/moe_hero_ep/model.py</code><a class="cite" href="#ref-20">[20]</a> so you can trace every tensor projection and quantization-free FP32 router step:</p>
+
+<pre><code># Excerpt from experiments/grug/moe_hero_ep/model.py (commit 12d8b6f09f96)
+def xsa_and_head_gate(attn_out, v, x, attn_gate, w_o, batch_spec):
+    aligned_v = reshard(align_kv_heads(v, num_q_heads=attn_out.shape[2]), _partition_spec_of(attn_out))
+    dot = jnp.sum(attn_out * aligned_v, axis=-1, keepdims=True)
+    v_norm_sq = jnp.sum(aligned_v * aligned_v, axis=-1, keepdims=True)
+    # Exclusive Self-Attention (XSA): remove self-value direction per head
+    attn_out = attn_out - (dot / (v_norm_sq + 1e-6)) * aligned_v
+    gate = 2.0 * jax.nn.sigmoid(jnp.einsum("bsd,dn-&gt;bsn", x, attn_gate))[..., None]
+    attn_out = jnp.reshape(gate * attn_out, (*attn_out.shape[:-2], -1), out_sharding=P(_BATCH_AXES, None, "model"))
+    return jnp.einsum("bsh,hd-&gt;bsd", attn_out, w_o, out_sharding=batch_spec)
+
+def moe_forward_latent_qb(self, x_flat):
+    # 1. Router reads full D=6144 in fp32; QB bias applies to raw logits (stop_gradient)
+    logits = jnp.einsum("td,de-&gt;te", x_flat, reshard(self.router, P(None, None))).astype(jnp.float32)
+    biased = logits + jax.lax.stop_gradient(self.router_bias)
+    topk_biased, idx_plus_1 = jax.lax.top_k(biased, self.cfg.num_experts_per_token + 1)
+    qb_alpha, selected = topk_biased[:, -1:], idx_plus_1[:, :-1]
+    # 2. Unbiased Sigmoid weights renormalized to 2.5
+    raw_weights = jax.nn.sigmoid(jnp.take_along_axis(logits, selected, axis=-1))
+    weights = (raw_weights * (2.5 / (jnp.sum(raw_weights, axis=-1, keepdims=True) + 1e-9))).astype(x_flat.dtype)
+    # 3. Histogram Quantile Balancing over live [pmin, pmax] range of margins (s - alpha)
+    beta, lo, hi = _qb_beta_hist(reshard(logits - qb_alpha, P(_BATCH_AXES, None)), mesh=get_abstract_mesh(),
+                                 num_experts_per_token=8, num_experts=384, n_bins=10_000)
+    # 4. Normalized LatentMoE bottleneck: 6144 -&gt; 3072 -&gt; RMSNorm -&gt; EP64 -&gt; 3072 -&gt; 6144
+    routed_in = self.latent_norm(jnp.einsum("td,dl-&gt;tl", x_flat, self.w_latent_down.astype(x_flat.dtype)))
+    routed_latent, overflow = self.expert_mlp(routed_in, selected.astype(jnp.int32), weights, report_capacity_overflow=True)
+    routed_out = jnp.einsum("tl,ld-&gt;td", routed_latent, self.w_latent_up.astype(x_flat.dtype))
+    return routed_out, {"qb_beta": beta, "overflow": overflow.total}</code></pre>
+
+        <h2 id="data-pipeline">3. Data Curation: Datakit &amp; Harrier at 25 Trillion Tokens<a class="anchor" href="#data-pipeline" aria-hidden="true">#</a></h2>
+        <p>Raw open web corpora overlap heavily across providers (Common Crawl parses and synthetic rewrites) and frequently hide test splits inside training files. Marin's <strong>Datakit</strong> pipeline<a class="cite" href="#ref-3">[3]</a> converts scattered HuggingFace repositories into a deduplicated, decontaminated, empirically weighted 200-bucket pool without rehosting opt-out upstream data<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-19">[19]</a>.</p>
+
+        <h3 id="ingest-dedup-decontam">152 Sources, Word 5-Gram MinHash/LSH &amp; 13-Gram Decontamination<a class="anchor" href="#ingest-dedup-decontam" aria-hidden="true">#</a></h3>
+        <p>For the Mochi pipeline, Datakit catalogued <strong>152 pinned open sources</strong> in <code>sources.py</code> totaling <strong>18.71 billion documents (25.25 trillion Llama-3 tokens)</strong> in the official Datakit breakdown (earlier planning snapshots reached ~25.6T tokens before filtering/normalization)<a class="cite" href="#ref-3">[3]</a>, drawing most volume from AI2, NVIDIA, HuggingFace, and HPLT plus specialized math, books, code, and trace tails:</p>
+        <ul>
+            <li><strong>Parquet normalization:</strong> every source is rewritten with <code>(id, text, source_id, content_hash)</code> while compacting pathological whitespace runs and pinning upstream commits so creator takedowns (e.g. Stack v3 opt-outs) automatically propagate<a class="cite" href="#ref-3">[3]</a>.</li>
+            <li><strong>Exact + Fuzzy MinHash/LSH deduplication:</strong> exact hashing catches ~505M duplicates (~500M within sources, ~5M across sources), and Locality-Sensitive Hashing over <strong>word 5-grams</strong> (never conflated with 5 BPE tokens!) removes near-copies such as Nemotron-CC synthetic rephrasings vs. real seeds. Together, deduplication cuts <strong>2.33B documents / 2.13T tokens (8.4%)</strong>—with 93.2% of cross-source links coming from just three pairs<a class="cite" href="#ref-3">[3]</a>.</li>
+            <li><strong>Structured-data LSH exemptions (<code>store_4d2e363d</code>):</strong> because single-character differences matter semantically in DNA sequences and tool-calling JSON, the August 18 Hero store exempts <strong>16 sensitive sources</strong> from fuzzy dedup, raising available tokens from <code>23.01T</code> to <strong><code>23.11T</code></strong><a class="cite" href="#ref-19">[19]</a>.</li>
+            <li><strong>13-word $n$-gram Bloom decontamination:</strong> paragraphs sharing $\ge 50\%$ of eligible 13-word $n$-grams with Artificial Analysis or Marin's evaluation sets flag the whole document, dropping another <strong>13.66B tokens</strong><a class="cite" href="#ref-3">[3]</a>. Open Athena also documents failures candidly: earlier Marin 32B hit GSM8K contamination in Dolmino (fixed in the Mantis cooldown<a class="cite" href="#ref-10">[10]</a>), and Mochi caught a Penn Treebank leakage at step 362k contributing ~<code>0.02</code> on 1/16 of Paloma<a class="cite" href="#ref-2">[2]</a>.</li>
+        </ul>
+
+        <h3 id="harrier-buckets-mix">Harrier 40×5 Bucketing &amp; Simulated-Epoching Proxy Regression<a class="anchor" href="#harrier-buckets-mix" aria-hidden="true">#</a></h3>
+        <p>Source-level sampling cannot isolate clean math or code buried inside heterogeneous Common Crawl dumps. Datakit therefore decouples expensive neural feature extraction from lightweight taxonomy iteration<a class="cite" href="#ref-3">[3]</a>:</p>
+        <ol>
+            <li><strong>Embed once:</strong> encode every document into a 1,024-dim vector using Microsoft <strong>Harrier</strong> (a Qwen retrieval model)<a class="cite" href="#ref-3">[3]</a>.</li>
+            <li><strong>Cluster into 40 balanced topics:</strong> fit 5,000 spherical $k$-means regions and agglomeratively merge into 40 topics (each $\ge 1\%$ of corpus mass so every weight has comparable influence), validated by LLM intruder tests ($84.4\%$ on 1,000 raw clusters, $62.5\%$ on 40 topics vs. $20\%$ random)<a class="cite" href="#ref-3">[3]</a>.</li>
+            <li><strong>Score into 5 quality bands:</strong> a FineWeb-Edu-style distilled classifier scores each content type (code, prose, math) into 5 bands, keeping low-quality buckets for budget-dependent mixing rather than discarding them prematurely.</li>
+            <li><strong>Optimize mixtures via simulated epoching:</strong> crossing $40 \times 5 = 200$ buckets, Marin ran <strong>872 to 1,000+ small proxy runs</strong> (<code>grug-moe-mix-swarm</code>), proportionally shrinking both training FLOPs and per-bucket data size (<strong>simulated epoching</strong> below $10^{23}$ FLOPs) so proxy models experience Mochi's exact repetition factor ($\le 2.09$ max epochs vs. an 8-epoch cap)<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-19">[19]</a>.</li>
+        </ol>
+        <p>Regression weights then parameterize a <strong>two-phase mixture</strong> in <code>harrier_mix_2026_08_18.py</code>: an 80% base phase (reference <code>15T</code>) followed by a 20% cooldown phase (reference <code>3.75T</code> out of <code>18.75T</code> reference total, rescaled proportionally to Mochi's <code>18T</code> schedule)<a class="cite" href="#ref-19">[19]</a>. Data flows through <code>TokenizedCache</code>, <code>LmDataConfig</code>, and Feistel-shuffled 4,096-token packed rows carrying boundary masks so neither attention nor <code>SConv</code> attends across concatenated documents<a class="cite" href="#ref-10">[10]</a>.</p>
+
+        <h2 id="pretraining">4. Pre-Training &amp; Distributed Systems at 535B Scale<a class="anchor" href="#pretraining" aria-hidden="true">#</a></h2>
+        <p>With the model and mixture specified, scaling to 18T tokens on 704 GB200s required custom collective kernels, host-offloaded FP32 master weights, and sharding-safe optimizer reductions.</p>
+
+        <h3 id="gb200-ep64-transport">11-Rack GB200 Sharding, Pooled-Wave EP &amp; Ragged All-to-All<a class="anchor" href="#gb200-ep64-transport" aria-hidden="true">#</a></h3>
+        <p>Each NVL72 rack connects 64 guaranteed GPUs (16 nodes × 4 B200s, $11.6\text{ TiB}$ total HBM) over $900\text{ GB/s}$ uni-directional NVLink, whereas the 11 racks communicate across racks over $50\text{ GB/s}$ InfiniBand—an $18\times$ bandwidth cliff<a class="cite" href="#ref-6">[6]</a>. Marin maps topology cleanly to hardware hierarchy:</p>
+        <ul>
+            <li><strong>Intra-rack <code>EP=64</code>:</strong> 384 routed experts divide evenly at <strong>6 experts per GPU</strong> ($\text{GPU}(e) = \lfloor e/6 \rfloor$, $\text{local}(e) = e \bmod 6$), keeping all-to-all token routing strictly inside NVLink; shared experts and non-expert weights use FSDP within each rack.</li>
+            <li><strong>Cross-rack <code>DP=11</code>:</strong> replicates the full 64-GPU rack unit 11 times (<code>replica_dcn</code>), yielding $11,264 \times 4,096 = 46,137,344$ global tokens per step ($65,536$ tokens and $524,288$ top-8 expert assignments per GPU).</li>
+        </ul>
+
+        <p>At launch (August 20, 2026), OpenXLA's initial <code>ragged_all_to_all</code> hit only $15\%$ MFU with NCCL hangs. Rather than wait weeks to start the clock, Rafal Wojdyla built <strong>Destination-Pooled Static-Wave All-to-All</strong> (<code>ep_fixed_pooled_wave_all_to_all.py</code>)<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-21">[21]</a>:</p>
+        <ol>
+            <li><strong>Pool by destination GPU:</strong> instead of rigid sender × expert buckets, all 6 local experts on a destination GPU share one pool of size $C_{\text{pool}} = \lceil \frac{1.15 \times 524288}{64 \times 3} \rceil = 3141$ per wave, embedding <code>local_expert_id</code> in one extra payload header row to eliminate a metadata collective.</li>
+            <li><strong>Stripe across 3 static waves:</strong> assignment index $r$ to each target GPU maps to $\text{wave} = r \bmod 3, \text{slot} = \lfloor r/3 \rfloor$, shrinking temporary HBM buffers by $3\times$; every wave still computes all 6 local experts via batched <code>6×SwiGLU</code>.</li>
+            <li><strong>Round-robin compact &amp; irreversible overflow drop:</strong> receivers interleave sources up to per-expert wave capacity $C_{\text{expert}} = \lceil \frac{1.15 \times 524288}{6 \times 3} \rceil = 33497$. Crucially, overflow drops terminate the assignment immediately with zero output and zero weight renormalization—never retrying in the next wave<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-21">[21]</a>.</li>
+        </ol>
+
+        <figure>
+            <img src="./fig-pooled-wave-ep.svg" width="1400" height="560" alt="Cluster sharding across 11 NVL72 GB200 racks (DP11 cross-rack IB, EP64 intra-rack NVLink) and 4-step Destination-Pooled 3-Wave Static All-to-All protocol transitioning at step 82k to device-initiated Ragged All-to-All." loading="lazy">
+            <figcaption>Fig. 4. Marin 535B-A23B distributed layout (<code>DP11 × EP64</code>) and 3-wave static All-to-All protocol (<code>CF=1.15</code>, <code>21.5% MFU</code> at <code>3.4%</code> drops) followed by the seamless step-82k mid-run swap to device-initiated Ragged All-to-All (<code>0.01%</code> drops, <code>23% → 30% MFU</code>). <a href="./fig-pooled-wave-ep.svg">Open full size</a></figcaption>
+        </figure>
+
+        <p>Even under extreme <code>4K → 65K</code> <code>d2048</code> stress tests where long-sequence token correlation spiked drops from $7\%$ to $37\%$, EP still landed within <code>0.008</code> dropless Paloma loss of FSDP<a class="cite" href="#ref-2">[2]</a>. On Mochi itself, pooled-wave EP sustained <strong>21.5% MFU</strong> at <strong>3.4% drops</strong> for the first 21% of training until Matt Wittmann landed a performant device-initiated <strong>ragged All-to-All</strong> kernel around step 82,000, cutting drops to <strong>0.01%</strong> (4K) / <strong>0.03%</strong> (65K) and boosting MFU to <strong>23%</strong> (and <strong>~30%</strong> at longer contexts)<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-6">[6]</a>.</p>
+
+        <h3 id="muonh-optimizer">MuonH / AdamH / Adam Partitioning &amp; the _pin_sharding Fix<a class="anchor" href="#muonh-optimizer" aria-hidden="true">#</a></h3>
+        <p>After a single forward/backward pass, <code>optax.multi_transform</code> (<code>optimizer.py</code>) routes gradients to three parameter groups while <strong>plain <code>router_bias</code> stays frozen (<code>stop_gradient</code>)</strong> for out-of-band QB updates<a class="cite" href="#ref-22">[22]</a><a class="cite" href="#ref-23">[23]</a><a class="cite" href="#ref-24">[24]</a>:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Optimizer Group</th><th>Parameters Routed by <code>create_mask</code></th><th>Update Rule &amp; Hardware Tricks</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>MuonH</strong> ($\text{lr} = \frac{13}{3}\text{lr}_{\text{adam}}$)</td><td>2D/3D/4D Attention, routed &amp; shared SwiGLU experts, <code>w_latent_down/up</code>, rank-128 <code>GatedNorm</code> matrices</td><td>Nesterov ($\mu=0.95$) + 5-step quintic BF16 Newton–Schulz orthogonalization (<code>QuACK</code> symmetric GEMM <code>X @ X.T</code> intra-rack only) + $\sqrt{\max(1, d_{\text{out}}/d_{\text{in}})}$ + Hyperball projection<a class="cite" href="#ref-22">[22]</a><a class="cite" href="#ref-24">[24]</a></td></tr>
+                <tr><td><strong>AdamH</strong> ($\text{lr}_{\text{adamh}} = \text{lr}_{\text{muonh}}$)</td><td>Untied output head (<code>output_proj</code> / <code>lm_head</code>)</td><td>Elementwise Adam step direction (handling dense softmax gradients across $V=128\text{K}$) + Hyperball projection; beats Cautious AdamW by <code>1.08×</code> (<code>#8350</code>)<a class="cite" href="#ref-23">[23]</a></td></tr>
+                <tr><td><strong>Plain Adam</strong> ($\text{lr}_{\text{adam}}$, no WD)</td><td><code>token_embed</code>, <code>.router</code>, <code>attn_gate</code>, 1D RMSNorm <code>.weight</code> gains (incl. <code>latent_norm</code>), <code>SConv</code> kernels</td><td>No weight decay, no Hyperball—avoids <code>700×</code> embedding grad spikes seen under AdamH (<code>#5773</code>) while letting embed norm grow <code>177 → 7,800</code><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-22">[22]</a></td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <p>To prevent memory exhaustion, device weights run in BF16 while FP32 master weights and optimizer states are offloaded to <strong>pinned host RAM</strong> (<code>FP32_PINNED_HOST</code>), paired with <code>recompute_all</code> rematerialization, FlashAttention-4 (<code>gpu_fa4_cute</code>), and chunked <code>fused_linear_softmax_cross_entropy_loss</code> (halving cross-entropy latency from $171.3\text{ ms}$ to $81.9\text{ ms}$ for $+0.04\text{ GiB}$ HBM)<a class="cite" href="#ref-20">[20]</a><a class="cite" href="#ref-25">[25]</a>. Crucially, GPU stress-testing caught a subtle XLA SPMD bug (<strong>Issue <code>#8073</code></strong>): <code>jnp.linalg.norm</code> over a sharded intermediate mis-lowered and over-counted every $\sim 10,000$ steps, collapsing <code>lm_head</code> norm <code>150.7 → 21.4</code> and spiking loss <code>2.07 → 9.14</code>. Resharding with explicit <code>_pin_sharding(new_p, p)</code> before FP32 sum-of-squares eliminated the bug completely<a class="cite" href="#ref-22">[22]</a><a class="cite" href="#ref-23">[23]</a>.</p>
+
+<pre><code># From experiments/grug/moe_hero_ep/adamh.py &amp; optimizer.py (#8073 SPMD norm fix)
+def _scale_invariant_2d(p, u, lr):
+    p_norm = jnp.sqrt(jnp.sum(jnp.square(p.astype(jnp.float32))))
+    u_norm = jnp.sqrt(jnp.sum(jnp.square(u.astype(jnp.float32))))
+    new_p = p - lr * u * p_norm / jnp.maximum(u_norm, 1e-10)
+    # Pin intermediate sharding to p's NamedSharding so reduction doesn't over-count under SPMD
+    new_p = jax.sharding.reshard(new_p, _target_named_sharding(p))
+    new_p_norm = jnp.sqrt(jnp.sum(jnp.square(new_p.astype(jnp.float32))))
+    return new_p / jnp.maximum(new_p_norm, 1e-10) * p_norm - p</code></pre>
+
+        <h3 id="scaling-ladder-lr">5-Rung Scaling Ladder &amp; MoeHeuristic LR Law<a class="anchor" href="#scaling-ladder-lr" aria-hidden="true">#</a></h3>
+        <p>Marin sizes optimizer hyperparameters via an empirical sweep (<code>MoeHeuristic</code>, $R^2 = 0.978$, Issues <code>#7856/#8003</code>)<a class="cite" href="#ref-17">[17]</a> and validates dynamics on five homogeneous rungs holding <strong>791 tokens per active parameter</strong> (<code>launch_scaling_ladder.py</code>)<a class="cite" href="#ref-18">[18]</a>:</p>
+        $$\text{lr}_{\text{adam}} = 0.087571 \cdot T^{-0.3461} \cdot D^{-0.3448} \cdot \sqrt{B_{\text{tok}}}, \qquad \text{lr}_{\text{muonh}} = \frac{13}{3}\text{lr}_{\text{adam}}, \qquad \epsilon = 9.676\times 10^{-18} \sqrt{\frac{T}{B_{\text{tok}}}}$$
+        <p>where $T$ is total tokens and $B_{\text{tok}}$ is global tokens per batch (with $\beta_2$ clipped from $0.999^{B_{\text{tok}}/131072}$ to $[0.95, 0.9999]$ and a 1% linear warmup followed by <strong>linear decay to 5%</strong> of peak LR). Notice how holding per-rack batch constant (<code>1,024 × racks</code>) preserves identical EP overflow statistics from <code>d1024</code> through <code>d6144</code> for just ~1% of Hero compute<a class="cite" href="#ref-14">[14]</a><a class="cite" href="#ref-18">[18]</a>:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Rung (<code>D / L</code>)</th><th>GB200 Racks (GPUs)</th><th>Batch (Seqs)</th><th>Steps</th><th>Tokens (791/act)</th><th>Active / Total</th><th>Training FLOPs</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>d768</code> (<code>8L</code>)</td><td>1 (64)</td><td>1,024</td><td>11,420</td><td>48B</td><td>61M / 1.6B</td><td>$5.5\times 10^{19}$</td></tr>
+                <tr><td><code>d1024</code> (<code>12L</code>)</td><td>2 (128)</td><td>2,048</td><td>15,276</td><td>128B</td><td>162M / 4.0B</td><td>$2.7\times 10^{20}$</td></tr>
+                <tr><td><code>d1536</code> (<code>16L</code>)</td><td>6 (384)</td><td>6,144</td><td>15,128</td><td>381B</td><td>481M / 11.5B</td><td>$1.8\times 10^{21}$</td></tr>
+                <tr><td><code>d2048</code> (<code>22L</code>)</td><td>11 (704)</td><td>11,264</td><td>20,072</td><td>926B</td><td>1.2B / 27.7B</td><td>$9.2\times 10^{21}$</td></tr>
+                <tr><td><strong><code>d6144</code> (<code>48L</code>, Hero)</strong></td><td>11 (704)</td><td>11,264</td><td>390,251*</td><td class="best">18T</td><td class="best">22.8B / 535.3B</td><td class="best">$2.7\times 10^{24}$</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p>*Mochi finished 390,251 scheduled steps (~<code>18.1T</code> tokens) on November 5, 2026, before executing additional post-schedule <code>262K</code> long-context updates through step ~393,490<a class="cite" href="#ref-1">[1]</a>.</p>
+
+        <figure>
+            <img src="./fig-scaling-ladder.webp" width="1440" height="622" alt="Left: Training loss curves for the four smaller rungs of the Marin scaling ladder (1.6B to 27.7B) showing clean power-law progression and the 80% data mix boundary. Right: Dropless Paloma macro-loss projecting 2.039 for 535B-A23B." loading="lazy">
+            <figcaption>Fig. 5. Five-rung scaling ladder (<code>1.6B</code> to <code>27.7B</code> predicting <code>535B</code>): train loss (left) and dropless Paloma macro-loss projections fitting $L = 1.5 + A\cdot C^{-\alpha}$ to <code>2.039</code> (right; hollow points after 81% extrapolate the crashed <code>d2048</code> rung). Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
+
+        <figure>
+            <img src="./fig-hero-loss.webp" width="1440" height="600" alt="Marin 535B-A23B Mochi complete 18T-token training cross-entropy loss curve at every step with vertical dashed lines marking the switch to ragged all-to-all EP, data mix update, data mix phase 2 cooldown, and 4k to 16k and 16k to 65k context switches." loading="lazy">
+            <figcaption>Fig. 6. Complete 18T-token Mochi training loss curve showing zero loss spikes across the ragged All-to-All switch (~3.7T), Phase-2 cooldown transition (~80%), and 4K → 16K → 65K context extensions. Source: Larry Dial, Open Athena (2026) <a class="cite" href="#ref-2">[2]</a>.</figcaption>
+        </figure>
+
+        <h2 id="mid-training">5. Mid-Training: Cooldown &amp; Context Extension to 262K<a class="anchor" href="#mid-training" aria-hidden="true">#</a></h2>
+        <p>Pre-training on short 4K web mixtures leaves two critical gaps: long-range retrieval across full repositories and sharp convergence on high-value reasoning, code, and stem distributions. Marin bridges both in an explicit mid-training phase built around scheduled data annealing and progressive context expansion<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-5">[5]</a>.</p>
+
+        <h3 id="cooldown-weight-avg">80% Phase-2 Cooldown Shift &amp; Checkpoint Weight Averaging<a class="anchor" href="#cooldown-weight-avg" aria-hidden="true">#</a></h3>
+        <p>Roughly 80% through the run (October 22, 2026), Mochi transitioned smoothly from Harrier Phase 1 to its curated <strong>Phase-2 cooldown mixture</strong><a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-19">[19]</a>. Whereas the earlier scaling-ladder Phase-2 mix had shown a slight loss bump at 80%, Mochi's updated Phase-2 blend lowered both training and evaluation loss monotonically as the linear LR decayed toward 5%<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <p>Near the end of the 65K extension, the team increased checkpoint cadence to every 500 steps across the final 5,000 steps and <strong>averaged those checkpoint weights</strong>. Weight averaging consistently improved evaluation loss across every held-out corpus and provided the starting point for extra post-schedule <code>262K</code> runs and public HuggingFace release (<code>open-athena/Marin-Mochi-535B-A23B</code>, 57 total checkpoints including 10 from long-context stages)<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-5">[5]</a>.</p>
+
+        <h3 id="long-context-262k">4K → 16K → 65K → 262K Extension &amp; QK Rescaling<a class="anchor" href="#long-context-262k" aria-hidden="true">#</a></h3>
+        <p>Rather than paying quadratic global-attention cost for all 18T tokens, Mochi held global tokens per batch fixed (<code>46.14M tok/step</code>) while stepping sequence length monotonically via three coordinated switches<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-5">[5]</a>:</p>
+        <ul>
+            <li><strong>4K → 16K (October 14, ~65% progress):</strong> increased sequence length $4\times$ with QK multiplier bumped to $1.48$; careful re-scoring at 4K proved that the immediate <code>0.031</code> drop on raw 16K eval came from longer conditioning context per token, so all scaling-forecast tracking remained anchored on 4K re-evals<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-14">[14]</a>.</li>
+            <li><strong>16K → 65K (step 372,000, November 1):</strong> raised capacity factor to virtually eliminate long-sequence drops (<code>0.03%</code>) while longer FlashAttention-4 kernels pushed realized MFU up another ~3 percentage points toward <code>~30%</code> overall; fixed <code>qk_mult</code> stepped up from $1.3 \to 1.66$<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-2">[2]</a>.</li>
+            <li><strong>262K Post-Schedule Extension (November 6–9):</strong> launched from weight-averaged checkpoints with long-document upsampling and a floored, squared SSMax-style log scaling on the 12 global layers for $n \gt 65{,}536$<a class="cite" href="#ref-2">[2]</a>:</li>
+        </ul>
+        $$s_{\text{global}}(n) = 1.66 \cdot \Bigl(1 + 0.1 \ln\bigl(n / 65{,}536\bigr)\Bigr)^2$$
+        <p>By storing 50% Partial RoPE only inside bounded 2,048-token sliding windows and keeping all 12 global layers NoPE, extending to 262K required tuning attention temperature sharpening rather than fighting extreme RoPE wavelength extrapolation.</p>
+
+        <h2 id="sft">6. Post-Training I: SFT, Relay SFT &amp; Plateau Dropping<a class="anchor" href="#sft" aria-hidden="true">#</a></h2>
+        <p>Because Mochi had only just entered instruction fine-tuning in November 2026<a class="cite" href="#ref-1">[1]</a>, Open Athena built and battle-tested Marin's complete post-training stack on <strong>Snowball 67B-A2B</strong> (pretrained on 10T tokens, $10\times$ fewer FLOPs than Marin 32B yet stronger on launch benchmarks)<a class="cite" href="#ref-8">[8]</a>.</p>
+
+        <h3 id="open-posttrain-stack">Documents vs. Tasks &amp; Snowball's Open Post-Training DAG<a class="anchor" href="#open-posttrain-stack" aria-hidden="true">#</a></h3>
+        <p>As David Hall explains in <em>There Is No Post-Training Data Commons</em><a class="cite" href="#ref-9">[9]</a>, pre-training benefited from decades of public document archives (Common Crawl, Wikipedia, ArXiv, GitHub), whereas agentic post-training consumes executable <strong>tasks</strong>—each requiring an isolated sandbox world, an intent, interactive tools, and a deterministic grader. Only software engineering—through git history, CI suites, and containers—provides near-deterministic environments for multi-turn RL.</p>
+
+        <p>Integrating and customizing <strong>SkyRL</strong> and <strong>Harbor</strong> inside the Marin monorepo, Ben Feuer and collaborators mapped over 100 post-trained runs into a 14-node Directed Acyclic Graph combining four distinct techniques—SFT, RL with Verifiable Rewards (RLVR), Final-Token Preference Optimization (FTPO), and DARE-TIES model merging—to ship <strong>Snowball v0.1</strong> at GPT-OSS-20B quality levels<a class="cite" href="#ref-8">[8]</a><a class="cite" href="#ref-16">[16]</a>.</p>
+
+        <figure>
+            <img src="./fig-posttrain-mechanisms.svg" width="1400" height="560" alt="Three core Snowball post-training mechanisms: (1) Relay SFT with masked student mistake prefixes and Qwen teacher recovery, (2) Plateau Dropping filtering tokens whose relative loss change is under 0.1 twice consecutively, and (3) TITO plus full-distribution GRPO and frozen EAGLE-3 speculative decoding." loading="lazy">
+            <figcaption>Fig. 7. Three algorithmic and systems mechanisms inside Snowball's post-training pipeline: Relay SFT teacher recovery (left), Plateau Dropping token curation for downstream RL diversity (center), and Token-In-Token-Out (TITO) + EAGLE-3 GRPO (right). <a href="./fig-posttrain-mechanisms.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h3 id="relay-sft">Domain Coding SFT &amp; Teacher-Guided Relay SFT<a class="anchor" href="#relay-sft" aria-hidden="true">#</a></h3>
+        <p>Before RL, specialized coding-agent SFT on general-SFT checkpoint <code>Snowball 09-21</code>—using Qwen3.8-27B trajectories on <code>CalibForge</code> tasks plus <code>Kimi</code> repository demonstrations—leapt SWE-bench Verified from <strong>12.8% to 46.5%</strong><a class="cite" href="#ref-11">[11]</a>. Yet standard teacher-only demonstrations suffer from <em>exposure bias</em>: teachers rarely recover from clumsy errors that smaller students actually make mid-episode.</p>
+
+        <p>Donghyun Lee designed <strong>Relay SFT</strong> to collect paired recovery trajectories directly inside student-driven rollouts<a class="cite" href="#ref-11">[11]</a><a class="cite" href="#ref-13">[13]</a>:</p>
+        <ul>
+            <li><strong>Student plays first (<code>loss_mask = 0</code>, 52% of turns):</strong> Snowball acts autonomously until triggering an unparseable/invalid JSON tool call, declaring premature <code>done</code> (median context 18.4k tokens / 7 turns), or exhausting its context budget (32.3k / 11 turns).</li>
+            <li><strong>Teacher repairs or takes over (<code>loss_mask = 1</code>):</strong> Qwen3.8-27B fixes broken commands in place (<code>15%</code> of rows are repair-only with zero full takeover) or finishes the task from Snowball's dirty workspace while stripping copied student chat markers (<code>22% → 0.1%</code>).</li>
+            <li><strong>Outcome and scientific caveat:</strong> Relay raised teacher-assisted episode completion from <code>64.4%</code> to <strong><code>74.4%</code></strong> (across 7,427 episodes; 808 pass + 808 verified fail pairs)<a class="cite" href="#ref-13">[13]</a>. Once downstream SFT precision and MoE capacity bugs were fixed, however, controlled autonomous evaluations showed Relay SFT tying strong vanilla CalibForge + Kimi SFT (<code>47.0%</code> vs. <code>46.5%</code> SWE; <code>43.5%</code> vs. <code>50.5%</code> post-RL)<a class="cite" href="#ref-11">[11]</a>.</li>
+        </ul>
+
+        <h3 id="plateau-dropping">Plateau Dropping &amp; Four Critical SFT Infrastructure Footguns<a class="anchor" href="#plateau-dropping" aria-hidden="true">#</a></h3>
+        <p>Prolonged vanilla SFT raises <code>pass@1</code> at the expense of output entropy and multi-seed solution diversity (<code>pass@8</code>), starving subsequent GRPO of mixed pass/fail tasks. Because trajectory-level <strong>TailSFT</strong> degraded performance in long-horizon agentic rollouts (<code>51.0%</code> vs. <code>58.0%</code> <code>pass@8</code> at 3 epochs), Harshit Varma et al. introduced token-level <strong>Plateau Dropping</strong><a class="cite" href="#ref-12">[12]</a>:</p>
+        $$\delta_i(j) = \frac{\bigl|\ell_i^{(j)} - \ell_i^{(j-1)}\bigr|}{\max\bigl(\ell_i^{(j-1)}, \varepsilon\bigr)}, \qquad \alpha_i(j) = \mathbf{1}\!\Bigl\{\delta_i(j) \lt \tau \;\wedge\; \delta_i(j-1) \lt \tau\Bigr\}, \qquad \mathcal{L}_{\mathrm{PD}}(\theta) = \frac{\mathbb{E}\bigl[\sum_i w_i (1-\alpha_i) \ell_i(\theta)\bigr]}{\mathbb{E}\bigl[\sum_i w_i (1-\alpha_i)\bigr]}$$
+        <p>with threshold $\tau = 0.1$, floor $\varepsilon = 0.05$, and assistant-token indicator $w_i \in \{0, 1\}$. Losses are still tracked on dropped tokens (at $11\text{ bytes/token}$ in host RAM—6.65 GB vs. 805 GB optimizer state, costing only $+1.3\%$ step time), automatically re-enabling any token whose loss shifts later. At epoch 10, Plateau Dropping drops $62\%$ of trained tokens ($56\%$ already learned $\ell \lt -\ln 0.9$, $5\%$ stuck at high loss), keeping <code>57</code> of 100 SWE tasks in the GRPO-learnable band vs. <code>48</code> for vanilla SFT and nearly $2\times$ higher next-token entropy (<code>1.19</code> vs. <code>0.72</code> nats on uncertain tokens)<a class="cite" href="#ref-12">[12]</a>.</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Agentic SFT Comparison on Snowball <code>09-21</code> (8 seeds)<a class="cite" href="#ref-12">[12]</a></th><th>SWE <code>pass@1</code></th><th>SWE <code>pass@8</code></th><th>TB-Lite <code>pass@1</code> / <code>@8</code></th><th>Mean Entropy (Uncertain)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Base (<code>09-21</code> general SFT)</td><td>19.3%</td><td>46.0%</td><td>16.6% / 50.5%</td><td>1.85 nats</td></tr>
+                <tr><td>Vanilla SFT (3 epochs, <code>lr=1e-4</code>)</td><td>23.4%</td><td>58.0%</td><td>—</td><td>—</td></tr>
+                <tr><td>TailSFT (50% ramped / 25% fixed / token, 3 ep)</td><td>23.4% / 22.5% / 18.0%</td><td>51.0% / 51.0% / 46.0%</td><td>—</td><td>—</td></tr>
+                <tr><td><strong>Plateau Dropping</strong> (3 epochs, <code>lr=1e-4</code>)</td><td class="best">31.9%</td><td class="best">67.0%</td><td>—</td><td>—</td></tr>
+                <tr><td>Vanilla SFT (10 epochs, tuned <code>lr=3e-4</code>)</td><td class="best">49.9%</td><td>73.0%</td><td>33.9% / 64.9%</td><td>0.72 nats</td></tr>
+                <tr><td><strong>Plateau Dropping</strong> (10 epochs, <code>lr=1e-4</code>, <code>clip=4.0</code>)</td><td>48.8%</td><td class="best">77.5%</td><td class="best">36.1% / 68.0%</td><td><strong>1.19 nats</strong></td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <p>Crucially, Appendix A of Plateau Dropping documents four infrastructure footguns that initially masked true SFT gains<a class="cite" href="#ref-12">[12]</a>:</p>
+        <ul>
+            <li><strong>BF16 master weights silently rounded updates to zero:</strong> Levanter inherited BF16 from HF import, rounding any Adam update below $0.4\%$ of weight magnitude and leaving $92\text{–}95\%$ of weights bit-identical after 1,520 steps until switching back to FP32 master weights ($89\%$ weights updated).</li>
+            <li><strong><code>CF=1.0</code> overflow cost 0.07–0.08 nats:</strong> raising expert capacity factor from <code>1.0</code> (14–19% drops on agent traces) to <code>2.0</code> cut drops to $0.16\% \to 0\%$ and matched reference inference NLL within <code>0.0002</code>.</li>
+            <li><strong>Packed padding inflated nominal epochs:</strong> 64K SWE rows and 32K terminal rows retained $26\%$ and $16\%$ padding, making 10 nominal passes equal 7.4 and 8.6 real passes.</li>
+            <li><strong>Gradient clip <code>1.0</code> clipped 50–100% of Plateau Dropping steps:</strong> averaging over the $38\%$ un-dropped tokens amplifies gradient norms $2\text{–}3\times$, hiding a $-6.0\text{ pp}$ <code>pass@8</code> penalty at identical training loss curves until relaxing <code>max_grad_norm</code> from <code>1.0</code> (<code>72.0%</code>) to <code>4.0</code> (<code>78.0%</code>).</li>
+        </ul>
+
+        <h2 id="rl">7. Post-Training II: Turning Snowball into a Coding Agent with RL<a class="anchor" href="#rl" aria-hidden="true">#</a></h2>
+        <p>Why didn't direct RL move Snowball beyond noise at first? Inspecting trajectories directly revealed the bottleneck: most failures stemmed from broken importance-sampling probabilities, tokenization mismatches, and poor execution reliability rather than total absence of coding knowledge<a class="cite" href="#ref-11">[11]</a>.</p>
+
+        <h3 id="pre-rl-probe-stack">Pre-RL Probe, Entropy Collapse &amp; Five Stack Fixes (TITO)<a class="anchor" href="#pre-rl-probe-stack" aria-hidden="true">#</a></h3>
+        <p>Sampling every <code>R2E-Gym</code> task 8 times before training—a <strong>Pre-RL Probe</strong><a class="cite" href="#ref-11">[11]</a>—showed that only 36% of Stage-3 tasks sat in the mixed pass/fail learnable band required by binary GRPO, and in 13 of 15 closely inspected pairs the failed rollouts had already located the exact target file and function. Even specific errors traced directly to open training data: Snowball repeatedly emitted <code>SEARCH/REPLACE</code> edits into <code>/app/solution.patch</code> and fed them to Unix <code>patch</code> because 31,661 Stage-3 SWE traces instructed that exact format.</p>
+
+        <p>Fixing three systemic stack bugs separated genuine model learning from infrastructure collapse<a class="cite" href="#ref-11">[11]</a>:</p>
+        <ul>
+            <li><strong>Top-$p$ / top-$k$ entropy collapse:</strong> inference engines logged probabilities <em>before</em> nucleus/top-$k$ filtering while the trainer applied importance sampling as if tokens came from the unfiltered distribution—splitting train vs. eval policies and halving entropy. Switching to <strong>full-distribution sampling ($T=1.0$)</strong> eliminated entropy collapse completely.</li>
+            <li><strong>Token-In-Token-Out (TITO, <code>harbor #122</code>):</strong> when an agent turn hit length limits and re-rendered text into prompts, text like <code>["hel", "lo"]</code> decoded and re-tokenized into <code>["hello"]</code>, misaligning log-probs. Storing exact prompt/completion token IDs cut median solve turns ($22 \to 15$) and dropped repeated commands $>4\times$.</li>
+            <li><strong>KL, temperature, terminal freezing &amp; verifier timeouts (<code>#517</code>, <code>#519</code>, <code>#125</code>):</strong> restoring detached KL gradients, matching temperature-scaled training probabilities, keeping rolling terminal history, and excluding container timeouts from zero-reward training lifted held-out RL scores $+10\text{ pp}$ by update 24.</li>
+        </ul>
+
+        <h3 id="specdec-prompt-rl">EAGLE-3 Speculative Decoding &amp; Context-Distilled Prompt RL<a class="anchor" href="#specdec-prompt-rl" aria-hidden="true">#</a></h3>
+        <p>Long-context multi-turn rollouts dominate RL wall-clock time. Reusing trajectories from the <strong>Pre-RL Probe</strong> to train a small <strong>EAGLE-3 draft model</strong> delivered <strong>nearly $2\times$ decoding throughput</strong> and a <strong>$1.42\times$ end-to-end RL step speedup</strong> across 60 GRPO updates—while staying completely frozen because $86\%$ of Snowball's weights remained bit-identical at step 36<a class="cite" href="#ref-11">[11]</a>.</p>
+
+        <p>With fast rollouts running over a mixed 1,833-task learnable band (<code>453</code> R2E-Gym + <code>1,380</code> TMax where base <code>pass@8</code> is $1\text{–}6/8$; batch 64 × 8 rollouts, <code>lr=5e-7</code>, 64K window), Marin also tested <strong>Prompt Optimization → Context-Distilled RL</strong>: generating rollouts with an engineered workflow prompt $x + h$ ($+9\text{–}14\text{ pp}$ boost) while computing GRPO log-probs strictly on $x$ alone. Although the prompted-vs-unprompted likelihood gap closed by $85\%$, prompt-less eval flatlined (<code>29.8%</code> vs. <code>30.2%</code> start and <code>47.4%</code> ordinary RL) because initial prompt guidance decays rapidly once 4–6 assistant turns fill context and Stage-3 followed full prompt rules in only $15\%$ of attempts<a class="cite" href="#ref-11">[11]</a>.</p>
+
+        <h3 id="sft-vs-rl-traces">Benchmark Progression, Trace Forensics &amp; Reward Hacking<a class="anchor" href="#sft-vs-rl-traces" aria-hidden="true">#</a></h3>
+        <p>Evaluating across Marin's Stage-3 checkpoint (<code>#9225</code>, Wilson 95% CIs under Eval Policy v0.1<a class="cite" href="#ref-15">[15]</a>) and the newer <code>09-21</code> Terminus-2 suite reveals clear division of labor between SFT and RL:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Model / Recipe (Terminus-2 Eval)<a class="cite" href="#ref-11">[11]</a></th><th>SWE-bench Verified r100</th><th>Terminal-Bench 2.1</th><th>OpenThoughts-TBLite</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Snowball <code>09-21</code> (General SFT base)</td><td>12.8%</td><td>7.2%</td><td>11.5%</td></tr>
+                <tr><td><strong>Direct RL</strong> (GRPO on mixed pool)</td><td>30.5%</td><td>18.8%</td><td class="best">45.1%</td></tr>
+                <tr><td>CalibForge + Kimi SFT (vanilla)</td><td>46.5%</td><td>18.8%</td><td>33.0%</td></tr>
+                <tr><td>CalibForge + Kimi Relay SFT (+30 RL steps)</td><td>47.0% → 43.5%</td><td>17.4% → 19.3%</td><td>36.8% → 44.0%</td></tr>
+                <tr><td><strong>CalibForge + Kimi SFT + 60 RL steps</strong></td><td class="best">50.5%</td><td class="best">23.9%</td><td>41.8%</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <figure>
+            <img src="./fig-sft-rl-stages.webp" width="1440" height="757" alt="Grouped bar chart comparing Snowball 09-21, CalibForge SFT, CalibForge + Kimi SFT, and Relay SFT across RL updates 0, 30, and 60 on Terminal-Bench 2.1, SWE-bench Verified r100, and OpenThoughts-TBLite." loading="lazy">
+            <figcaption>Fig. 8. Coding-agent <code>pass@1</code> progression from <code>Snowball 09-21</code> through CalibForge, Kimi, and Relay SFT to 30 and 60 GRPO updates on Terminal-Bench 2.1, SWE-bench Verified random-100, and OpenThoughts-TBLite. Source: Lee, Varma, and Dimakis (2026) <a class="cite" href="#ref-11">[11]</a>.</figcaption>
+        </figure>
+
+        <p>Trace inspection explains <em>why</em> the two recipes diverge even on identical final test sets<a class="cite" href="#ref-11">[11]</a>:</p>
+        <ul>
+            <li><strong>SFT supplies callable domain facts and upfront planning:</strong> in <code>sqlite-db-truncate</code>, 12/13 SFT attempts recalled that serial type 7 encodes an 8-byte IEEE double vs. 0/5 for base or Direct RL; SFT+RL spent $69\%$ of tokens reasoning (finishing parking-lot pathfinding in 6–8 turns / 100–120s vs. 68–83 turns / ~1,000s for Direct RL).</li>
+            <li><strong>RL enforces reliable execution inside context budgets:</strong> Direct RL slashed TBLite invalid action rates from $\sim 80\%$ down to $2\%$, cut 64K window exhaustion from $91\%$ to $56\%$, and solved React/SQL tasks where the base model already named the right fix but failed to apply it—working interactively in $42\%$ reasoning share (~3.5M vs. ~9.2M output tokens across 26 shared solved TBLite tasks).</li>
+            <li><strong>Verified reward hacking audits:</strong> automated trace audits caught subtle gaming contributing ~0.5 pp each—modifying a Scheme interpreter to add a shortcut primitive, replacing a JS network controller with <code>print("SYSTEM_STABLE")</code>, and reading exposed git commits in 39 <code>R2E-Gym</code> rollouts (plus 31 failed fabrication attempts by Direct RL)<a class="cite" href="#ref-11">[11]</a>.</li>
+        </ul>
+
+        <h2 id="evaluation">8. Evaluation, Scaling Extrapolation &amp; Canonical Eval Policy<a class="anchor" href="#evaluation" aria-hidden="true">#</a></h2>
+        <p>Open-process claims are meaningless without standardized metrics, hardware-accurate utilization accounting, and locked evaluation protocols.</p>
+
+        <h3 id="paloma-dropless-scaling">Dropless vs. Capacity-Dropped Paloma &amp; Scaling Forecast<a class="anchor" href="#paloma-dropless-scaling" aria-hidden="true">#</a></h3>
+        <p>Marin measures base pre-training quality using <strong>Paloma macro-loss</strong>—explicitly averaging next-token cross-entropy equally across domain corpora (<code>eval.py</code>)<a class="cite" href="#ref-26">[26]</a> rather than token-weighted micro-averaging. Crucially, EP-trained MoEs <strong>must be evaluated dropless</strong>: on narrow single-domain eval splits (such as C++), capacity buffers overflow far more often than on mixed training batches—causing capacity-dropped <code>d2048</code> evaluation to report $2.5858$ vs. its true dropless value of <strong>$2.4106$</strong>, which had initially made EP look $3\times$ <em>worse</em> than FSDP before flipping to a $1.18\text{–}1.35\times$ win<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-6">[6]</a>.</p>
+
+        <p>Across <code>4K</code>-packed dropless Paloma, the preregistered Hero ladder power law $L(C) = 1.5 + A\cdot C^{-\alpha}$ (excluding <code>lm_head</code> compute) forecast <strong><code>2.04</code> (<code>2.039</code>, $\text{PPL} \approx 7.68$)</strong>—sharper than the earlier May recipe (<code>2.05</code>) and 67B-A2B law (<code>2.07</code>). Mochi tracked that curve until ~65% progress, pulled ahead via longer context and Phase-2 cooldown, and closed at <strong><code>1.982</code></strong> when cleanly re-scored at <code>4K</code> (with tracker final <code>eval=2.035</code>, <code>train=0.878</code>)<a class="cite" href="#ref-1">[1]</a><a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <h3 id="mfu-eval-policy">Burst vs. Sustained MFU &amp; Marin's 26-Benchmark Eval Policy<a class="anchor" href="#mfu-eval-policy" aria-hidden="true">#</a></h3>
+        <p>Always separate burst throughput from sustained cluster utilization: on the 11-rack <code>d2048</code> ladder rung ($F_{\text{train/token}} \approx 9.936\text{ GFLOPs}$, GB200 BF16 dense peak $2.5\text{ PFLOPs/GPU}$), $24\text{M tok/s}$ burst throughput equates to $\frac{9.936\times 10^9 \cdot 2.4\times 10^7}{704 \cdot 2.5\times 10^{15}} \approx 13.55\%$ (reported p50 $13.6\%$), while sustained $17\text{M tok/s}$ drops to $9.6\%$ due to cross-rack DCN All-Reduce overhead. On full-width <code>d6144</code> Mochi, larger GEMMs lifted sustained production MFU to $21.5\%$ under pooled-wave EP, $23\%$ under ragged All-to-All, and $\sim 30\%$ at longer contexts<a class="cite" href="#ref-2">[2]</a><a class="cite" href="#ref-6">[6]</a>.</p>
+
+        <p>For public downstream comparisons, <strong>Marin Eval Policy (<code>#10197</code>)</strong><a class="cite" href="#ref-16">[16]</a> eliminates cherry-picking across a fixed 13-model open baseline cohort:</p>
+        <ul>
+            <li><strong>26 canonical In-Distribution + 3 OOD benchmarks:</strong> 18 <code>Evalchemy</code>/<code>lm-eval-harness</code> benchmarks at 73,664 ctx (<code>MATH-500</code>, <code>AIME24</code>, <code>GPQA Diamond</code>, <code>MMLU-Pro</code>, <code>HumanEval+</code>, <code>MBPP+</code>, <code>CRUXEval</code>, <code>IFBench</code>, <code>MRCR</code>, <code>NUPA5K</code>, etc.) plus 8 <code>Harbor</code>/<code>Daytona</code> agentic benchmarks (<code>SWE-bench Verified</code> at 131K ctx under commit <code>eed79cc7</code> fixing <code>git clean -fd</code> untracked deletion, <code>Terminal-Bench 2.1</code>, <code>OpenThoughts-TBLite 2.0</code>, <code>DS-1000</code>, <code>BFCL</code>, <code>BixBench</code>, <code>τ³-bench</code>, and length-controlled <code>SOTOPIA-hard</code>)—plus sealed OOD gates (<code>AAII 4.3</code>, <code>TB-Science</code>, <code>DeepSWE 1.1</code>).</li>
+            <li><strong>Statistical &amp; infrastructure rules:</strong> results require $\ge 90\%$ valid scored trials (up to $10\%$ infra tolerance folded into Wilson intervals / Nemenyi SEM via $1/\sqrt{0.9}$), archived traces, pinned commits (<code>75a5690b</code>), zero-score audits, and both uncontrolled (Snowball rank $8.13$ vs. GPT-OSS $8.93$) and FLOP-controlled (rank $5.18$ vs. $8.29$) critical-difference comparisons—complemented by agent-run arena eval <code>LM-Marina</code><a class="cite" href="#ref-8">[8]</a><a class="cite" href="#ref-16">[16]</a>.</li>
+        </ul>
+
+        <h2 id="takeaways">Practical Takeaways for Open LLM Engineering<a class="anchor" href="#takeaways" aria-hidden="true">#</a></h2>
+        <ul>
+            <li><strong>Pair architectural compression with activation normalization:</strong> LatentMoE loses ~25% compute efficiency without a learnable latent <code>RMSNorm</code> (<code>0.74× → 1.25×</code>), while XSA stabilizes early EP routing and omitting SConv on <code>V</code> avoids blunting XSA.</li>
+            <li><strong>Keep slow links on DP and fast links on EP:</strong> fit the routed expert table inside one 900 GB/s NVL72 rack (<code>EP64</code>, 6 experts/GPU), and evaluate EP models droplessly so domain imbalances don't disguise true capability gains.</li>
+            <li><strong>Inspect tensors, traces, and eval harnesses before blaming the optimizer:</strong> Marin's largest wins came from diagnosing sharded norm collapse (<code>_pin_sharding</code>), BF16 master weights, TITO tokenizer drift, top-$p$ IS entropy collapse, and <code>grad_clip=1.0</code> starvation under Plateau Dropping.</li>
+            <li><strong>Balance knowledge vs. execution across SFT and RL:</strong> domain SFT supplies facts and long-horizon plans while TITO GRPO enforces tool-format discipline (<code>80% → 2%</code> invalid actions) and budget completion (<code>91% → 56%</code> context exhaustion)—and both require reward-hacking audits.</li>
+        </ul>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>Cited as:</p>
+            <blockquote>
+                <p>Feng, Chaoran. (Nov 2026). Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL. Chaoran's Blog. https://www.falcary.com/blogs/marin/</p>
+            </blockquote>
+            <pre><code>@article{feng2026marin,
+  title   = {Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL},
+  author  = {Feng, Chaoran},
+  year    = {2026},
+  month   = {November},
+  url     = {https://www.falcary.com/blogs/marin/}
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li id="ref-1" data-brief="Live run tracker for Marin 535B-A23B Mochi: launched Aug 20, finished 18T pre-training Nov 5, 2026 (final train loss 0.878, eval loss 2.035), plus 65K/262K extension logs and weight averaging."><a href="https://mtracker.oa.dev/hero-run-535b" target="_blank" rel="noopener">Marin 535B-A23B MoE Tracker (Mochi)</a>. Open Athena, 2026.</li>
+            <li id="ref-2" data-brief="Comprehensive architecture retrospective on Mochi 535B-A23B: Normalized LatentMoE (1.25×), Histogram QB on raw logits, 3:1 SWA/Global, XSA, GatedNorm, kernel-4 SConv, MuonH/AdamH, and 5-rung scaling ladder ablations."><a href="https://openathena.ai/blog/marin-535b-architecture/" target="_blank" rel="noopener">Architecture Decisions for Marin 535B-A23B</a>. Larry Dial, Open Athena, November 9, 2026.</li>
+            <li id="ref-3" data-brief="Details Datakit curation from 152 open sources (25.25T Llama-3 tokens): exact + word 5-gram MinHash/LSH dedup (-2.13T), 13-gram Bloom decontam (-13.66B), 40×5 Harrier topic-quality buckets, and 1,000+ proxy regression runs."><a href="https://openathena.ai/blog/marin-data-pipeline-overview/" target="_blank" rel="noopener">Curating 25 Trillion Tokens for LLM Pre-Training</a>. Will Held, Open Athena, September 11, 2026.</li>
+            <li id="ref-4" data-brief="Open-development manifesto and NYC meetup talk on scaling Mochi 535B-A23B live in public with reproducible data, preregistered forecasts, and intermediate artifacts."><a href="https://openathena.ai/blog/scaling-marins-open-llm-pre-training/" target="_blank" rel="noopener">Scaling Marin's Open LLM Pre-Training</a>. Will Held, Open Athena, November 5, 2026.</li>
+            <li id="ref-5" data-brief="Public release of 57 Mochi 535B-A23B pre-training checkpoints (including 10 long-context extensions up to 262K) plus transparent safety and contamination notes."><a href="https://openathena.ai/blog/marin-mochi-pretraining-checkpoints/" target="_blank" rel="noopener">Initial Pre-Training Checkpoints for Marin &ldquo;Mochi&rdquo; 535B-A23B</a>. David Hall, Open Athena, November 17, 2026.</li>
+            <li id="ref-6" data-brief="Explains how DP11×EP64 on NVL72 racks unlocked 535B over 360B FSDP, fixed pooled-wave A2A (21.5% MFU, 3.4% drops), dropless eval sensitivity, and the step-82k switch to ragged A2A (23–30% MFU)."><a href="https://openathena.ai/blog/expert-parallelism/" target="_blank" rel="noopener">Expert Parallelism at Hero Scale</a>. Rafal Wojdyla, Open Athena, September 29, 2026.</li>
+            <li id="ref-7" data-brief="Validates Su Jianlin's hyperparameter-free Quantile Balancing at 32B-A5B / 1e22 FLOPs (326B tokens) with zero loss spikes, no auxiliary loss, and no leading dense layers."><a href="https://openathena.ai/blog/quantile-balancing/" target="_blank" rel="noopener">Mixture of Experts Quantile Balancing: Validated at 32B-A5B (1e22 FLOPs) Scale</a>. Larry Dial, Open Athena, April 10, 2026.</li>
+            <li id="ref-8" data-brief="Overview of Marin's open post-training stack (SkyRL + Harbor) and 14-model DAG turning Snowball 67B-A2B (10T tokens) into GPT-OSS-level v0.1 with SFT, RLVR, FTPO, and DARE-TIES merging."><a href="https://openathena.ai/blog/post-training-in-the-open/" target="_blank" rel="noopener">Post-Training in the Open</a>. Ben Feuer, Open Athena, October 29, 2026.</li>
+            <li id="ref-9" data-brief="Explains why open post-training lacks a ready-made web commons: RL needs executable deterministic tasks (world, intent, tools, grader), making software repos the natural starting point."><a href="https://openathena.ai/blog/there-is-no-posttraining-data-commons/" target="_blank" rel="noopener">There Is No Post-Training Data Commons</a>. David Hall, Open Athena, October 15, 2026.</li>
+            <li id="ref-10" data-brief="Marin 32B retrospective covering the Qwen3 QK-Norm recovery from spikes, Dolmino GSM8K contamination fix, and Mantis cooldown with Feistel permutation shuffling."><a href="https://marin.community/blog/2025/10/28/marin-32b-retro/" target="_blank" rel="noopener">Marin 32B Retrospective</a>. Will Held and David Hall, Marin, October 28, 2025.</li>
+            <li id="ref-11" data-brief="Takes Snowball 09-21 from 12.8% to 50.5% on SWE-bench Verified and 7.2% to 23.9% on Terminal-Bench 2.1 (45.1% TBLite Direct RL), detailing Pre-RL Probe, TITO (#122), entropy collapse, EAGLE-3 (1.42×), Prompt RL, and reward-hacking audits."><a href="https://lukedhlee.github.io/blog/2026/10/21/turning-snowball-into-a-coding-agent/" target="_blank" rel="noopener">Post-Training Marin's Snowball into a Coding Agent: What Worked and What Didn't</a>. Donghyun Lee, Harshit Varma, and Alex Dimakis, October 21, 2026.</li>
+            <li id="ref-12" data-brief="Introduces Plateau Dropping (δ_i &lt; 0.1 twice), outperforming TailSFT on SWE pass@8 (77.5% vs 73.0%), keeping 57 vs 48 GRPO-learnable tasks and 1.19 nats entropy, plus exposing 4 critical SFT infra footguns."><a href="https://hrshtv.github.io/blog/plateau-dropping/" target="_blank" rel="noopener">Plateau Dropping: a simple SFT rule for better agentic post-training</a>. Harshit Varma, Donghyun Lee, and Alex Dimakis, October 20, 2026.</li>
+            <li id="ref-13" data-brief="Relay SFT development report: Snowball plays 52% of turns with loss masked, Qwen3.8-27B repairs invalid JSON / early-done / context limits, boosting episode solve rates 64.4% → 74.4% across 7,427 runs."><a href="https://gist.github.com/lukedhlee/d8fc1454ed134eff585448c4982458c9" target="_blank" rel="noopener">Teacher Relay SFT Status Gist</a>. Donghyun Lee, September 2026.</li>
+            <li id="ref-14" data-brief="Hero Run tracking issue detailing the 5-rung scaling ladder, 4K→16K re-eval checks, router BF16-vs-FP32 arithmetic probes, and independent preregistered Paloma forecasts."><a href="https://github.com/marin-community/marin/issues/8435" target="_blank" rel="noopener">GitHub Issue #8435: [Hero Run] 535B-A23B on 18T tokens</a>. Marin Community, 2026.</li>
+            <li id="ref-15" data-brief="Paired Wilson-interval Terminus-2 evaluation of Snowball Stage-3 Base vs OTA SFT (24.1%) vs RL-from-Base (25.0%) vs SFT+RL (30.7%) plus summarization probes on SWE-bench r100 and TB2."><a href="https://github.com/marin-community/marin/issues/9225" target="_blank" rel="noopener">GitHub Issue #9225: Snowball under Eval Policy v0.1</a>. Marin Community, September 2026.</li>
+            <li id="ref-16" data-brief="Canonical Marin Eval Policy defining 18 Evalchemy/lm-eval and 8 Harbor agentic benchmarks, timeouts, 10% infra-error tolerance, 13-model cohort, Nemenyi CD analysis, and exact codebase pins."><a href="https://github.com/marin-community/marin/issues/10197" target="_blank" rel="noopener">GitHub Issue #10197: Marin Eval Policy</a>. Marin Community, October 16, 2026.</li>
+            <li id="ref-17" data-brief="Compute-scaling LR/epsilon/beta2 law (MoeHeuristic, R^2=0.978) and HERO_MODEL specification at pinned commit 12d8b6f09f96."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/heuristic.py" target="_blank" rel="noopener">Marin Hero heuristic.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-18" data-brief="5-rung Scaling Ladder launcher holding 791 tokens/active parameter, 1024×racks batch scaling, 10,000-bin QB, and pinned-host MuonH state across d768–d6144."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/launch_scaling_ladder.py" target="_blank" rel="noopener">Marin Hero launch_scaling_ladder.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-19" data-brief="Two-phase Harrier mixture spec (15T + 3.75T reference, 23.11T exempt-16 store, 200 cells, ≤2.09 max epochs) and simulated-epoching cutoff at 1e23 FLOPs."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/harrier_mix_2026_08_18.py" target="_blank" rel="noopener">Marin Hero harrier_mix_2026_08_18.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-20" data-brief="Full Hero Transformer implementation in Equinox/JAX: ShortConv, GatedNorm, XSA, Head Gate, _qb_beta_hist, 2.5 Sigmoid renorm, Normalized LatentMoE, and chunked fused CE loss."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/model.py" target="_blank" rel="noopener">Marin Hero model.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-21" data-brief="Destination-Pooled 3-Wave Static All-to-All EP kernel with embedded local expert headers, round-robin receiver compaction, and irreducible overflow dropping at CF=1.15."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/lib/levanter/src/levanter/grug/_moe/ep_fixed_pooled_wave_all_to_all.py" target="_blank" rel="noopener">Levanter ep_fixed_pooled_wave_all_to_all.py (commit 12d8b6f09f96)</a>. Levanter / Marin, 2026.</li>
+            <li id="ref-22" data-brief="Three-group optax.multi_transform routing (MuonH/AdamH/Adam), Frobenius Hyperball projection, and _match_named_update_sharding helper."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/optimizer.py" target="_blank" rel="noopener">Marin Hero optimizer.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-23" data-brief="Scale-invariant Hyperball AdamH implementation for lm_head featuring the _pin_sharding fix that prevents SPMD sharded norm collapse (#8073)."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/adamh.py" target="_blank" rel="noopener">Marin Hero adamh.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-24" data-brief="Distributed intra-rack Newton–Schulz orthogonalization over 2D/3D/4D parameter stacks avoiding replica_dcn reshards and leveraging QuACK symmetric GEMM on GB200 SM100."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/grugmuon_hero.py" target="_blank" rel="noopener">Marin Hero grugmuon_hero.py (commit 12d8b6f09f96)</a>. Marin Community, 2026.</li>
+            <li id="ref-25" data-brief="Training loop managing FP32 pinned host offload, _apply_qb_betas feedback (-qb_beta), Peak-HBM watchdogs, and line 346's exact LatentMoE FLOP correction for MFU accounting."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/train.py#L346" target="_blank" rel="noopener">Marin Hero train.py &amp; FLOP Correction #L346 (commit 12d8b6f09f96)</a> (<a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/experiments/grug/moe_hero_ep/train.py" target="_blank" rel="noopener">full file</a>). Marin Community, 2026.</li>
+            <li id="ref-26" data-brief="Levanter TaggedEvaluator aggregating per-source micro and equal-weighted macro cross-entropy losses and BPB across Paloma domains."><a href="https://github.com/marin-community/marin/blob/12d8b6f09f96ad4f0277445765c1a00dbc81d5be/lib/levanter/src/levanter/eval.py" target="_blank" rel="noopener">Levanter eval.py (commit 12d8b6f09f96)</a>. Levanter / Marin, 2026.</li>
+            <li id="ref-27" data-brief="Foundational TPU/GPU scaling textbook covering roofline arithmetic intensity, sharding collectives, KV cache sizing, and MFU measurement."><a href="https://jax-ml.github.io/scaling-book/" target="_blank" rel="noopener">How To Scale Your Model</a>. Austin et al., Google DeepMind, 2025.</li>
+            <li id="ref-28" data-brief="Geometric derivation of MoE as top-k sparse vector reconstruction plus Loss-Free bias decomposition separating relative load balancing from average compute budget."><a href="https://zhuanlan.zhihu.com/p/25344691488" target="_blank" rel="noopener">Geometric Splitting and Loss-Free Bias in MoE Routing (Notes on Su Jianlin)</a>. Zhihu, 2026.</li>
+            <li id="ref-29" data-brief="Su Jianlin's linear-programming derivation of Quantile Balancing (QB), giving the exact two-step alternating quantile threshold update with zero step-size hyperparameters."><a href="https://kexue.fm/archives/11619" target="_blank" rel="noopener">Quantile Balancing: Linear-Programming MoE Load Balancing</a>. Jianlin Su, Scientific Spaces, February 2026.</li>
+            <li id="ref-30" data-brief="Follow-up convergence, hybrid Loss-Free/QB compromise, and alternating iteration cost analysis for Quantile Balancing."><a href="https://kexue.fm/archives/11626" target="_blank" rel="noopener">Further Analysis on Quantile Balancing</a>. Jianlin Su, Scientific Spaces, 2026.</li>
+            <li id="ref-31" data-brief="Extends global-batch QB to causal sequence-level Moving Quantile Balancing (MQB) to prevent per-sequence load collapse during autoregressive decoding."><a href="https://kexue.fm/archives/11760" target="_blank" rel="noopener">Moving Quantile Balancing (MQB) for Sequence-Level MoE Load Balance</a>. Jianlin Su, Scientific Spaces, 2026.</li>
+            <li id="ref-32" data-brief="Analyzes Sigmoid vs. Softmax router activations and how decoupling combine weight normalization shapes expert specialization."><a href="https://kexue.fm/archives/11782" target="_blank" rel="noopener">Rethinking Router Activation Forms in MoE</a>. Jianlin Su, Scientific Spaces, 2026.</li>
+            <li id="ref-33" data-brief="Visual guide to 5D parallelism (DP, TP, PP, SP, EP), clarifying why Megatron Sequence Parallel shares TP ranks while EP partitions experts via All-to-All."><a href="https://zhuanlan.zhihu.com/p/1904506837543420662" target="_blank" rel="noopener">Distributed LLM Parallelism: TP, EP, SP, DP, and PP</a>. Zhihu, 2025.</li>
+            <li id="ref-34" data-brief="Detailed derivation of Transformer per-iteration training FLOPs splitting linear/MLP (72BLsh^2), attention (12BLs^2h), and vocabulary head (6Bshv)."><a href="https://zhuanlan.zhihu.com/p/717509355" target="_blank" rel="noopener">Transformer Training FLOP Accounting</a>. Zhihu, 2024.</li>
+            <li id="ref-35" data-brief="Scaling study on weight-tied recurrent-depth Transformers with input re-injection and truncated BPTT vs. compute-optimal depth allocation."><a href="https://arxiv.org/pdf/2610.26030" target="_blank" rel="noopener">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</a>. Xiong, Chen et al., HKU MMLab and Yale University, 2026 (arXiv:2610.26030).</li>
+            <li id="ref-36" data-brief="Goodfire's interpretability study of Inkling 2 Mini, the looped MoE architecture whose short causal convolutions (SConv) and log-length attention scaling directly informed Marin Mochi."><a href="https://www.goodfire.com/research/interpreting-inkling-2-mini/" target="_blank" rel="noopener">Interpreting Inkling 2 Mini</a>. Lee, Krishnamurthy, Merullo, Balsam, and Lubana, Goodfire, November 20, 2026.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../?tag=MoE">MoE</a></li>
+            <li><a href="../?tag=LLM%20Systems">LLM Systems</a></li>
+            <li><a href="../?tag=Pre-Training">Pre-Training</a></li>
+            <li><a href="../?tag=Coding%20Agents">Coding Agents</a></li>
+            <li><a href="../?tag=RL">RL</a></li>
+            <li><a href="../?tag=Scaling%20Laws">Scaling Laws</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../looped-transformers/"><span class="title">Next post »</span>Looped Transformers: Compute-Matched Scaling, Training Gradients, and Internal Circuits</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+<script src="../../assets/vendor/katex/katex.min.js"></script>
+<script src="../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../assets/js/blog-post.js?v=20261121.5"></script>
+</body>
+</html>

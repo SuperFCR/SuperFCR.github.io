@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
+  <rect width="1400" height="560" rx="16" fill="#ffffff"/>
+  <text x="700" y="40" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="24" font-weight="700" fill="#141923">11-Rack GB200 Sharding &amp; Destination-Pooled 3-Wave EP Transport</text>
+  <text x="700" y="68" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" fill="#5b6270">Keeping EP traffic inside 900 GB/s NVL72 domains (EP64) while replicating only across 50 GB/s InfiniBand (DP11)</text>
+  <defs>
+    <marker id="arB" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,1 L9,5 L0,9 Z" fill="#1f4e79"/></marker>
+    <marker id="arR" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,1 L9,5 L0,9 Z" fill="#b4532a"/></marker>
+    <marker id="arT" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,1 L9,5 L0,9 Z" fill="#1b6b5a"/></marker>
+  </defs>
+
+  <!-- Top Cluster Topology Banner -->
+  <rect x="28" y="92" width="1344" height="106" rx="14" fill="#f4f8fc" stroke="#1f4e79" stroke-width="2"/>
+  <rect x="44" y="108" width="424" height="74" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="256" y="138" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1f4e79">704 GB200s = DP11 × EP64</text>
+  <text x="256" y="166" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" fill="#334155">11 racks × 64 GPUs · 384 experts = 6 / GPU</text>
+
+  <rect x="486" y="108" width="424" height="74" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="698" y="138" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#b4532a">Interconnect Asymmetry (18×)</text>
+  <text x="698" y="166" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" fill="#334155">NVLink 900 GB/s (EP64) vs IB 50 GB/s (DP11)</text>
+
+  <rect x="928" y="108" width="428" height="74" rx="10" fill="#e2f3ee" stroke="#1b6b5a" stroke-width="1.5"/>
+  <text x="1142" y="138" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b6b5a">Batch &amp; Payload Savings</text>
+  <text x="1142" y="166" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" fill="#141923">46.14M tok/step · 6 GiB EP vs 20 GiB FSDP/layer</text>
+
+  <!-- Middle 4-Step Pooled Wave Mechanics -->
+  <rect x="28" y="218" width="308" height="206" rx="12" fill="#fdfaf6" stroke="#b4532a" stroke-width="2"/>
+  <text x="182" y="248" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#b4532a">1. Destination Pools</text>
+  <text x="182" y="278" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" font-weight="600" fill="#141923">[64 dest, 3141, 3072] + hdr</text>
+  <text x="182" y="306" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">4,096 pools/rack (6 exp share)</text>
+  <text x="182" y="334" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">wave = r mod 3, slot = ⌊r/3⌋</text>
+  <text x="182" y="366" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#b4532a">Header packs local_id 0..5</text>
+  <text x="182" y="394" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#64748b">Overflow dropped (CF=1.15)</text>
+
+  <line x1="336" y1="321" x2="366" y2="321" stroke="#b4532a" stroke-width="3" marker-end="url(#arR)"/>
+
+  <rect x="372" y="218" width="308" height="206" rx="12" fill="#f8fafd" stroke="#1f4e79" stroke-width="2"/>
+  <text x="526" y="248" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1f4e79">2. Static All-to-All (3 Waves)</text>
+  <text x="526" y="278" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" font-weight="600" fill="#141923">Fixed BF16 Tensor Shapes</text>
+  <text x="526" y="306" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">524,288 assigns/GPU ÷ 3 waves</text>
+  <text x="526" y="334" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">Each wave serves all 6 experts</text>
+  <text x="526" y="366" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#1f4e79">1/3 buffer HBM per wave</text>
+  <text x="526" y="394" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#64748b">No extra metadata collective</text>
+
+  <line x1="680" y1="321" x2="710" y2="321" stroke="#1f4e79" stroke-width="3" marker-end="url(#arB)"/>
+
+  <rect x="716" y="218" width="308" height="206" rx="12" fill="#f8fafd" stroke="#1f4e79" stroke-width="2"/>
+  <text x="870" y="248" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1f4e79">3. Receiver Compact</text>
+  <text x="870" y="278" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" font-weight="600" fill="#141923">[6 exp, 33497, 3072]</text>
+  <text x="870" y="306" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">Reads local expert header</text>
+  <text x="870" y="334" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">Round-robin sender intake</text>
+  <text x="870" y="366" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#b4532a">Rows &gt; 33,497 dropped</text>
+  <text x="870" y="394" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#64748b">No retry · zero weight renorm</text>
+
+  <line x1="1024" y1="321" x2="1054" y2="321" stroke="#1b6b5a" stroke-width="3" marker-end="url(#arT)"/>
+
+  <rect x="1060" y="218" width="312" height="206" rx="12" fill="#f3faf7" stroke="#1b6b5a" stroke-width="2"/>
+  <text x="1216" y="248" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b6b5a">4. 6×SwiGLU + Combine</text>
+  <text x="1216" y="278" text-anchor="middle" font-family="Inter, sans-serif" font-size="15.5" font-weight="600" fill="#141923">Batched 6-Expert GEMM</text>
+  <text x="1216" y="306" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">Reverse static All-to-All</text>
+  <text x="1216" y="334" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#334155">g_e weighted scatter-add</text>
+  <text x="1216" y="366" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" font-weight="700" fill="#1b6b5a">FP32 wave accumulator</text>
+  <text x="1216" y="394" text-anchor="middle" font-family="Inter, sans-serif" font-size="14.5" fill="#64748b">Matches dropless eval at inf.</text>
+
+  <!-- Bottom Hero Production Transition -->
+  <rect x="28" y="446" width="630" height="86" rx="12" fill="#faece5" stroke="#b4532a" stroke-width="2"/>
+  <text x="343" y="480" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#b4532a">Steps 0 → 82k (~21%): Fixed Pooled-Wave EP</text>
+  <text x="343" y="510" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#141923">21.5% sustained MFU · ~3.4% assignment drops · zero spikes</text>
+
+  <line x1="658" y1="489" x2="736" y2="489" stroke="#1b6b5a" stroke-width="3.5" marker-end="url(#arT)"/>
+
+  <rect x="742" y="446" width="630" height="86" rx="12" fill="#e2f3ee" stroke="#1b6b5a" stroke-width="2"/>
+  <text x="1057" y="480" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#1b6b5a">Step 82k → 393k: Mid-Run Ragged All-to-All Switch</text>
+  <text x="1057" y="510" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" fill="#141923">Drops → 0.01% (4K) / 0.03% (65K) · MFU rises 23% → 30%</text>
+</svg>
