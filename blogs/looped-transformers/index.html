@@ -56,7 +56,7 @@
         <h1 class="post-title">Looped Transformers: Compute-Matched Scaling, Training Gradients, and Internal Circuits</h1>
         <div class="post-meta">
             <span>November 21, 2026</span>
-            <span>26 min read</span>
+            <span>30 min read</span>
             <span>Chaoran Feng</span>
         </div>
     </header>
@@ -65,7 +65,11 @@
         <summary>Table of Contents</summary>
         <div class="inner">
         <ul>
-            <li><a href="#overview">Five Architectures at a Glance</a></li>
+            <li><a href="#overview">Five Architectures at a Glance</a>
+                <ul>
+                    <li><a href="#vanilla-to-looped">From Vanilla Transformer</a></li>
+                </ul>
+            </li>
             <li><a href="#smelt">SMELT: Compute-Matched MoE</a>
                 <ul>
                     <li><a href="#smelt-recipe">FLOPs, Params &amp; KV Parity</a></li>
@@ -114,7 +118,24 @@
         </ul>
 
         <h2 id="overview">Five Architectures at a Glance<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
-        <p>The language-model designs keep entry and exit layers unshared while repeating a middle core under strict budget parity, gradient-horizon control, or cross-loop residual routing (Fig. 1). Visual generators embed weight-tied loops <em>inside</em> every iterative sampling or denoising step (Figs. 14 and 17), trading extra denoising steps for intra-step refinement and memory-wall hardware speedups.</p>
+
+        <h3 id="vanilla-to-looped">From Vanilla Transformer<a class="anchor" href="#vanilla-to-looped" aria-hidden="true">#</a></h3>
+        <p>The cleanest way to compare Looped Transformers is to start from a standard Pre-Norm Transformer layer. At layer $\ell$, Self-Attention exchanges information along the <strong>token sequence</strong> axis, FFN (or sparse MoE) transforms each token independently, and both outputs are added with fixed unit weight onto a single cumulative residual stream $\mathbf{h}_\ell$:</p>
+        $$\begin{aligned}
+        \mathbf{o}_{\text{attn}}^{(\ell)} &amp;= \operatorname{SelfAttn}_\ell\big(\operatorname{RMSNorm}(\mathbf{h}_\ell)\big), &amp; \mathbf{h}'_\ell &amp;= \mathbf{h}_\ell + \mathbf{o}_{\text{attn}}^{(\ell)}, \\
+        \mathbf{o}_{\text{ffn}}^{(\ell)} &amp;= \operatorname{FFN}_\ell\big(\operatorname{RMSNorm}(\mathbf{h}'_\ell)\big), &amp; \mathbf{h}_{\ell+1} &amp;= \mathbf{h}'_\ell + \mathbf{o}_{\text{ffn}}^{(\ell)}.
+        \end{aligned}$$
+        <p>Unrolled over depth, $\mathbf{h}_\ell = \mathbf{h}_0 + \sum_{k&lt;\ell}\big(\mathbf{o}_{\text{attn}}^{(k)} + \mathbf{o}_{\text{ffn}}^{(k)}\big)$ sums the embedding and every earlier sublayer equally. Feeding a shared middle block back into this vanilla update across multiple passes tends to inflate residual norms, overwrite local features, or starve earlier loops of gradient signal. Each of the five designs rewrites that core update differently:</p>
+        <ul>
+            <li><strong>SMELT (scaled cumulative residual):</strong> keeps one residual stream inside the repeated middle 50% layers, narrows width and adds MoE experts to hold budgets equal, and scales every looped sublayer write by $1/r$ ($1/2$ for two passes):
+            $$\mathbf{h}'_\ell = \mathbf{h}_\ell + \tfrac{1}{r}\,\mathbf{o}_{\text{attn}}^{(\ell)}, \qquad \mathbf{h}_{\ell+1} = \mathbf{h}'_\ell + \tfrac{1}{r}\,\mathbf{o}_{\text{MoE}}^{(\ell)}.$$</li>
+            <li><strong>Truncate or Not? (Prelude injection + RMSNorm):</strong> concatenates the initial Prelude state $\mathbf{s}_0$ with the previous loop output $\mathbf{s}_{t-1}$ before every pass through the shared core $\mathcal{R}$, followed by trailing RMSNorm:
+            $$\mathbf{s}_t = \operatorname{RMSNorm}\!\Big(\mathcal{R}\!\big(W_{\text{inj}}[\mathbf{s}_0;\,\mathbf{s}_{t-1}]\big)\Big).$$</li>
+            <li><strong>Inkling 2 Mini (Block AttnRes + Cross-Loop gating):</strong> replaces the single unweighted residual stream with per-block running sums $\mathbf{v}_i$; every sublayer runs a learned softmax Depth-wise Read over current-loop blocks plus (from loop $t \ge 2$) a gated Cross-Loop Read over the previous loop's core blocks (written out step by step in the Inkling 2 Mini section).</li>
+            <li><strong>ELT &amp; Looped-DiT (intra-step visual loops):</strong> nest weight tying inside every denoising or masked-sampling step. ELT repeats an $N$-layer block $L$ times as $F_{(N,L)}(\mathbf{x}) = g_\Theta^L(\mathbf{x})$ with prefix self-distillation, while Looped-DiT iterates middle MMDiT blocks $h^{(r)} = \mathcal{B}(h^{(r-1)})$ with Deep Supervision and orthogonal self-value projection $G_{i,h}^{\text{xsa}} = I - \hat{v}_{i,h}\hat{v}_{i,h}^\top$ inside looped attention heads.</li>
+        </ul>
+
+        <p>Across these five setups, the three language-model designs keep entry and exit layers unshared while repeating a middle core under strict budget parity, gradient-horizon control, or cross-loop residual routing (Fig. 1). The two visual generators embed weight-tied loops <em>inside</em> every iterative sampling or denoising step (Figs. 14 and 17), trading extra denoising steps for intra-step refinement and memory-wall hardware speedups.</p>
 
         <figure>
             <img src="./fig-architectures.svg" width="1400" height="720" alt="Side-by-side comparison of SMELT (MoE middle 50% repeated twice with matched budgets), Truncate or Not? (dense Prelude-Recurrent-Coda with input re-injection s0 and truncated BPTT wall), and Inkling 2 Mini (4-block MoE with 3-loop middle blocks, depth-wise attention, and cross-loop attention)." loading="lazy">
@@ -324,16 +345,26 @@
             <figcaption>Fig. 10. Overview of Inkling 2 Mini's 24-layer / 4-block architecture unrolled across three loops, separating intra-loop depth-wise attention residuals from inter-loop cross-loop attention. Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
         </figure>
 
-        <p>Architecturally, Inkling 2 Mini replaces the single cumulative residual stream with <strong>block-level Attention Residuals (AttnRes)</strong><a class="cite" href="#ref-8">[8]</a> plus a cross-loop channel. Each block $i$ tracks a running sum $\mathbf{v}_i$ of its 6 Attention + MoE writes ($\mathbf{v}_0$ is the normalized token embedding), and every sublayer input mixes two attention readers:</p>
+        <p>Architecturally, Inkling 2 Mini replaces the vanilla cumulative residual stream with <strong>block-level Attention Residuals (AttnRes)</strong><a class="cite" href="#ref-8">[8]</a> plus a <strong>Cross-Loop Attention</strong> channel. Tracing a single layer $\ell$ inside block $B_i$ on loop $t$ breaks the forward pass into four explicit steps:</p>
         <ul>
-            <li><strong>Depth-wise Attention:</strong> computes a softmax mixture $\mathbf{x} = \sum_j \alpha_j \hat{\mathbf{v}}_j$ over earlier blocks available within the current loop pass.</li>
-            <li><strong>Cross-Loop Attention:</strong> on loops $t \ge 2$, each layer's four sublayer inputs ($s \in \{Q, K, V, \text{MoE}\}$) use learned queries $\mathbf{u}_s$ over the <em>previous</em> loop's Blocks 2 and 3, gated through bottleneck $\mathbf{P}\in\mathbb{R}^{64\times 2d}$:</li>
+            <li><strong>Step 1 · Block Running Sum:</strong> instead of accumulating one global $\mathbf{h}_\ell$, the normalized embedding is stored as $\mathbf{v}_0 = \operatorname{RMSNorm}(\text{Emb})$ and each 6-layer block (B1–B4) maintains its own running sum initialized at zero. Before layer $\ell$, $\mathbf{v}_{i,\text{before }\ell}^{[t]}$ sums only the completed layers inside $B_i$ on the current loop; at the start of loop $t \ge 2$, the running sums for B2 and B3 reset to zero while the completed $\mathbf{v}_2^{[t-1]}, \mathbf{v}_3^{[t-1]}$ remain readable as previous-loop messages:
+            $$\mathbf{v}_{i,\text{before }\ell}^{[t]} = \sum_{k \in B_i,\, k &lt; \ell} \big(\mathbf{o}_{\text{attn}}^{(k,[t])} + \mathbf{o}_{\text{MoE}}^{(k,[t])}\big), \qquad \hat{\mathbf{v}}_j = \frac{\mathbf{v}_j}{\operatorname{RMS}(\mathbf{v}_j)}.$$</li>
+            <li><strong>Step 2 · Depth-wise Read (intra-loop, along blocks):</strong> at the same token position, each sublayer (Attention and MoE each own a learned query $\mathbf{q}_A, \mathbf{q}_M$) computes a softmax mixture over all currently available blocks $\mathcal{V}$ (e.g., Layer 16 reads $\mathbf{v}_0, \mathbf{v}_1, \mathbf{v}_2^{[t]}$, and partial $\mathbf{v}_{3,\text{before }16}^{[t]}$) to form the current-loop input $\mathbf{x}$:
+            $$\alpha_j = \operatorname{softmax}_j\!\left(\frac{\mathbf{q}^\top \hat{\mathbf{v}}_j}{\sqrt{d}}\right), \qquad \mathbf{x} = \operatorname{DRead}_{\mathbf{q}}(\mathcal{V}) = \sum_{\mathbf{v}_j \in \mathcal{V}} \alpha_j \hat{\mathbf{v}}_j.$$</li>
+            <li><strong>Step 3 · Cross-Loop Read &amp; gated fusion (loops $t \ge 2$):</strong> unlike standard Self-Attention where $W_Q, W_K, W_V$ project a single shared input, loops $t \ge 2$ assign four separate learned queries $\mathbf{u}_s$ ($s \in \{Q, K, V, \text{MoE}\}$) to read the <em>previous</em> loop's completed core blocks $\mathbf{v}_2^{[t-1]}, \mathbf{v}_3^{[t-1]}$, then blend each message with current-loop $\mathbf{x}$ ($\mathbf{x}_A^{[t]}$ for $Q/K/V$, updated $\mathbf{x}_M^{[t]}$ for MoE) through a 64-dim bottleneck gate:
+            $$\begin{aligned}
+            \beta_{j,s} &amp;= \operatorname{softmax}_{j\in\{2,3\}}\!\left(\frac{\mathbf{u}_s^\top \hat{\mathbf{v}}_j^{[t-1]}}{\sqrt{d}}\right), \qquad \mathbf{m}_s^{[t]} = \sum_{j\in\{2,3\}} \beta_{j,s}\,\hat{\mathbf{v}}_j^{[t-1]}, \\
+            \mathbf{z}_s &amp;= \mathbf{P}_s\big[\operatorname{RMSNorm}(\mathbf{x});\,\operatorname{RMSNorm}(\mathbf{m}_s^{[t]})\big], \\
+            \mathbf{x}'_s &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}_s\mathbf{z}_s)\big)}_{\boldsymbol{\kappa}_s}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}_s\mathbf{z}_s)}_{\boldsymbol{\gamma}_s}\odot\mathbf{m}_s^{[t]}.
+            \end{aligned}$$
+            Initializing $\boldsymbol{\gamma}_s$ to zero keeps early training identical to an unlooped model before gradually opening the cross-loop channel.</li>
+            <li><strong>Step 4 · Sublayer compute &amp; Running-Sum write-back:</strong> the three fused tensors $\mathbf{x}'_Q, \mathbf{x}'_K, \mathbf{x}'_V$ are RMSNorm-normalized and projected separately into $Q, K, V$ for standard token-to-token Self-Attention, whose output $\mathbf{o}_{\text{attn}}^{(\ell,[t])}$ is added to the current block running sum. MoE then runs a fresh Depth-wise Read on that updated running sum, fuses with $\mathbf{m}_{\text{MoE}}^{[t]}$, and writes $\mathbf{o}_{\text{MoE}}^{(\ell,[t])}$ back to the block sum:
+            $$\begin{aligned}
+            \mathbf{o}_{\text{attn}}^{(\ell,[t])} &amp;= \operatorname{SelfAttn}_\ell\big(\mathbf{x}'_Q,\,\mathbf{x}'_K,\,\mathbf{x}'_V\big), &amp; \mathbf{v}_{i,\text{mid}}^{[t]} &amp;= \mathbf{v}_{i,\text{before }\ell}^{[t]} + \mathbf{o}_{\text{attn}}^{(\ell,[t])}, \\
+            \mathbf{o}_{\text{MoE}}^{(\ell,[t])} &amp;= \operatorname{MoE}_\ell\big(\operatorname{RMSNorm}(\mathbf{x}'_{\text{MoE}})\big), &amp; \mathbf{v}_{i,\text{after }\ell}^{[t]} &amp;= \mathbf{v}_{i,\text{mid}}^{[t]} + \mathbf{o}_{\text{MoE}}^{(\ell,[t])}.
+            \end{aligned}$$</li>
         </ul>
-        $$\begin{aligned}
-        \mathbf{m}_s &amp;= \sum_{j\in\{2,3\}} \beta_j\,\hat{\mathbf{v}}_j^{[t-1]}, \qquad \mathbf{z} = \mathbf{P}\big[\text{RMSNorm}(\mathbf{x});\,\text{RMSNorm}(\mathbf{m}_s)\big], \\
-        \mathbf{x}' &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}\mathbf{z})\big)}_{\boldsymbol{\kappa}}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}\mathbf{z})}_{\boldsymbol{\gamma}}\odot\mathbf{m}_s.
-        \end{aligned}$$
-        <p>Initializing $\boldsymbol{\gamma}$ to zero keeps early training identical to an unlooped model before gradually opening the cross-loop channel.</p>
+        <p>Keeping the three reads distinct makes the dataflow transparent: <strong>Depth-wise Read</strong> mixes current-loop blocks at one token position, <strong>Cross-Loop Read</strong> reads previous-loop Blocks 2 and 3 at that same token, and only <strong>Self-Attention</strong> mixes information across tokens in the sequence.</p>
         <p>Every sublayer input decomposes linearly into weighted earlier writes $\mathbf{x}' = \sum_w \mathbf{c}_w$ with normalized attribution shares $s_w = (\mathbf{c}_w \cdot \mathbf{x}')/\|\mathbf{x}'\|^2$ summing to 1. Using this decomposition, Goodfire found a notable routing pattern: because <strong>Layer 13 on Loop 2</strong> already receives current-loop Block 2 ($\mathbf{v}_2^{[2]}$) via depth-wise attention, <strong>its cross-loop reader attends almost exclusively to Loop 1's Block 3 ($\mathbf{v}_3^{[1]}$)</strong>. That channel includes Layer 18, allowing Layer 13 to read directly from physically deeper layers.</p>
 
         <figure>

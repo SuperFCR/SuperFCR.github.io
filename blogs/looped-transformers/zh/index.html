@@ -65,7 +65,11 @@
         <summary>目录</summary>
         <div class="inner">
         <ul>
-            <li><a href="#overview">五种循环架构一览</a></li>
+            <li><a href="#overview">五种循环架构一览</a>
+                <ul>
+                    <li><a href="#vanilla-to-looped">从标准 Transformer 出发</a></li>
+                </ul>
+            </li>
             <li><a href="#smelt">SMELT：等算力 MoE 循环</a>
                 <ul>
                     <li><a href="#smelt-recipe">三项预算对齐配方</a></li>
@@ -114,7 +118,24 @@
         </ul>
 
         <h2 id="overview">五种循环架构一览<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
-        <p>语言模型三条路线（图 1）均保留非共享首尾层、只循环中间核心块，分别对应等预算 MoE Scaling、$(T, B)$ 梯度截断与 Cross-Loop Attention 路由。视觉生成两条路线（图 14 与图 17）则把权重共享循环嵌进<strong>每一步采样或去噪内部</strong>，在压缩参数量的同时，提供了比单纯增加去噪步数更有效的推理算力分配方式。</p>
+
+        <h3 id="vanilla-to-looped">从标准 Transformer 出发<a class="anchor" href="#vanilla-to-looped" aria-hidden="true">#</a></h3>
+        <p>理解各种 Looped Transformer 最直接的方式，是先看回标准 Pre-Norm Transformer 单层的计算流。在第 $\ell$ 层，Self-Attention 负责沿 <strong>token 序列维度</strong>交换上下文信息，FFN（或稀疏 MoE）做逐 token 变换，两个子层的输出再以固定系数 $1$ 累加到同一条 Residual Stream $\mathbf{h}_\ell$ 上：</p>
+        $$\begin{aligned}
+        \mathbf{o}_{\text{attn}}^{(\ell)} &amp;= \operatorname{SelfAttn}_\ell\big(\operatorname{RMSNorm}(\mathbf{h}_\ell)\big), &amp; \mathbf{h}'_\ell &amp;= \mathbf{h}_\ell + \mathbf{o}_{\text{attn}}^{(\ell)}, \\
+        \mathbf{o}_{\text{ffn}}^{(\ell)} &amp;= \operatorname{FFN}_\ell\big(\operatorname{RMSNorm}(\mathbf{h}'_\ell)\big), &amp; \mathbf{h}_{\ell+1} &amp;= \mathbf{h}'_\ell + \mathbf{o}_{\text{ffn}}^{(\ell)}.
+        \end{aligned}$$
+        <p>展开来看，$\mathbf{h}_\ell = \mathbf{h}_0 + \sum_{k&lt;\ell}\big(\mathbf{o}_{\text{attn}}^{(k)} + \mathbf{o}_{\text{ffn}}^{(k)}\big)$ 默认把 Embedding 和之前所有层的写入等权叠加。如果只是把中间几层权重简单套回这个公式连续跑多遍，同一套权重反复写入同一条残差流很容易造成范数膨胀或特征覆盖，且中间轮次的梯度供给与表示对齐都会出问题。下文五项工作本质上都是在重写这套残差与跨轮更新方程：</p>
+        <ul>
+            <li><strong>SMELT（缩放累加残差）：</strong>保留单条残差流，仅对循环区域内的每次子层写入乘以 $1/r$（两遍循环即 $1/2$），同时收窄宽度、增加 MoE 专家对齐预算：
+            $$\mathbf{h}'_\ell = \mathbf{h}_\ell + \tfrac{1}{r}\,\mathbf{o}_{\text{attn}}^{(\ell)}, \qquad \mathbf{h}_{\ell+1} = \mathbf{h}'_\ell + \tfrac{1}{r}\,\mathbf{o}_{\text{MoE}}^{(\ell)}.$$</li>
+            <li><strong>Truncate or Not?（Prelude 重注入 + RMSNorm）：</strong>每轮循环前把初始 Prelude 状态 $\mathbf{s}_0$ 与上一轮输出 $\mathbf{s}_{t-1}$ 拼接投影后再进共享核心 $\mathcal{R}$，末尾加 RMSNorm 稳住尺度：
+            $$\mathbf{s}_t = \operatorname{RMSNorm}\!\Big(\mathcal{R}\!\big(W_{\text{inj}}[\mathbf{s}_0;\,\mathbf{s}_{t-1}]\big)\Big).$$</li>
+            <li><strong>Inkling 2 Mini（Block AttnRes + Cross-Loop 门控）：</strong>放弃单条等权累加残差流，改为按 Block 维护各自清零的 Running Sum $\mathbf{v}_i$；每个子层先做沿深度维度的 Softmax 读取（Depth-wise Read），从第 2 轮起再叠加读取上一轮核心块的 Cross-Loop 门控消息（完整方程见下文 Inkling 2 Mini 一节）。</li>
+            <li><strong>ELT 与 Looped-DiT（步内视觉循环）：</strong>在每个扩散去噪或 Masked Generative 采样步内部嵌套循环。ELT 对 $N$ 层复合块连续应用 $L$ 遍，$F_{(N,L)}(\mathbf{x}) = g_\Theta^L(\mathbf{x})$，靠前缀自蒸馏对齐早期出口；Looped-DiT 将中间 MMDiT 块循环 $N$ 遍，$h^{(r)} = \mathcal{B}(h^{(r-1)})$，并用共享 Post-loop 做 Deep Supervision、在循环头内加入无参数正交投影 $G_{i,h}^{\text{xsa}} = I - \hat{v}_{i,h}\hat{v}_{i,h}^\top$ 抑制重复覆写。</li>
+        </ul>
+
+        <p>整体来看，语言模型三条路线（图 1）均保留非共享首尾层、只循环中间核心块，分别对应等预算 MoE Scaling、$(T, B)$ 梯度截断与 Cross-Loop Attention 路由；视觉生成两条路线（图 14 与图 17）则把权重共享循环嵌进<strong>每一步采样或去噪内部</strong>，在压缩参数量的同时，提供了比单纯增加去噪步数更有效的推理算力分配方式。</p>
 
         <figure>
             <img src="../fig-architectures.svg" width="1400" height="720" alt="三种语言模型 Looped Transformer 架构对比：SMELT（MoE 中间 50% 层循环两遍且三项预算对齐）、Truncate or Not?（稠密 Prelude-Recurrent-Coda 配合每轮 Input Injection s0 与 detach 截断墙）、Inkling 2 Mini（4 个 6 层块将中间两块循环三遍，并通过 Depth-wise Attention 与 Cross-Loop Attention 交互）。" loading="lazy">
@@ -324,16 +345,26 @@
             <figcaption>图 10：Inkling 2 Mini 的 24 层四块（Blocks 2–3 循环三遍）完整展开架构，区分同轮 Depth-wise Attention 残差（黑线）与上一轮 Cross-Loop Attention 融合模块（紫框）。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
         </figure>
 
-        <p>架构上最关键的改动，是用块级 <strong>Attention Residuals（AttnRes）</strong><a class="cite" href="#ref-8">[8]</a> 配合 <strong>Cross-Loop Attention</strong> 取代单条累加残差流。每个 Block 从零累加各自 6 层 Attention + MoE 的输出得到 $\mathbf{v}_i$（嵌入层记为 $\mathbf{v}_0$），每个子层输入则由两条路径融合而成：</p>
+        <p>架构上最关键的改动，是用块级 <strong>Attention Residuals（AttnRes）</strong><a class="cite" href="#ref-8">[8]</a> 配合 <strong>Cross-Loop Attention</strong> 取代标准 Transformer 的单条累加残差流。按时间顺序拆解单层（例如第 $t$ 轮中 Block $i$ 里的第 $\ell$ 层）的前向流程，总共包含四个步骤：</p>
         <ul>
-            <li><strong>Depth-wise Attention：</strong>单 token 进子层前，对当前循环前面各个块的输出做归一化加权，读取 $\mathbf{x}=\sum_j\alpha_j\hat{\mathbf{v}}_j$。</li>
-            <li><strong>Cross-Loop Attention：</strong>从第 2 轮起，每层用 4 组独立查询向量 $\mathbf{u}_{Q,K,V,\text{MoE}}$ 读取<strong>上一轮</strong>的 Block 2 和 Block 3 输出，再经 64 维瓶颈门控混合：</li>
+            <li><strong>Step 1 · Block Running Sum（块内独立累加）：</strong>不再维护贯穿全网的单一 $\mathbf{h}_\ell$，而是把 Embedding 记为 $\mathbf{v}_0 = \operatorname{RMSNorm}(\text{Emb})$，四个 6 层 Block（B1–B4）各自维护一份从零开始累加的 Running Sum。执行到当前 Block $B_i$ 第 $\ell$ 层前，它只包含本块已跑完各层的写入；每次进入新一轮循环 $t \ge 2$ 时，B2、B3 的 Running Sum 重新清零，而上一轮完整的 $\mathbf{v}_2^{[t-1]}, \mathbf{v}_3^{[t-1]}$ 保留作为跨轮消息源：
+            $$\mathbf{v}_{i,\text{before }\ell}^{[t]} = \sum_{k \in B_i,\, k &lt; \ell} \big(\mathbf{o}_{\text{attn}}^{(k,[t])} + \mathbf{o}_{\text{MoE}}^{(k,[t])}\big), \qquad \hat{\mathbf{v}}_j = \frac{\mathbf{v}_j}{\operatorname{RMS}(\mathbf{v}_j)}.$$</li>
+            <li><strong>Step 2 · Depth-wise Read（同轮按深度加权读取）：</strong>在同一个 token 位置上，当前子层（Attention 或 MoE 各有独立可学习查询向量 $\mathbf{q}_A, \mathbf{q}_M$）对本轮所有已可用块 $\mathcal{V}$（例如第 16 层读取 $\mathbf{v}_0, \mathbf{v}_1, \mathbf{v}_2^{[t]}$ 与当前的 $\mathbf{v}_{3,\text{before }16}^{[t]}$）做 Softmax 加权混合，形成当前轮输入 $\mathbf{x}$：
+            $$\alpha_j = \operatorname{softmax}_j\!\left(\frac{\mathbf{q}^\top \hat{\mathbf{v}}_j}{\sqrt{d}}\right), \qquad \mathbf{x} = \operatorname{DRead}_{\mathbf{q}}(\mathcal{V}) = \sum_{\mathbf{v}_j \in \mathcal{V}} \alpha_j \hat{\mathbf{v}}_j.$$</li>
+            <li><strong>Step 3 · Cross-Loop Read 与门控融合（第 $t \ge 2$ 轮起）：</strong>与普通 Transformer 把同一份输入送给 $W_Q, W_K, W_V$ 不同，从第 2 轮起，每层为 $Q, K, V, \text{MoE}$ 四条路径分别配置独立的查询向量 $\mathbf{u}_s$（$s \in \{Q, K, V, \text{MoE}\}$），去读<strong>上一轮</strong>完成的 $\mathbf{v}_2^{[t-1]}$ 和 $\mathbf{v}_3^{[t-1]}$，再通过 64 维瓶颈门控与当前轮 $\mathbf{x}$（Attention 三路共用 $\mathbf{x}_A^{[t]}$，MoE 使用更新后的 $\mathbf{x}_M^{[t]}$）逐维融合：
+            $$\begin{aligned}
+            \beta_{j,s} &amp;= \operatorname{softmax}_{j\in\{2,3\}}\!\left(\frac{\mathbf{u}_s^\top \hat{\mathbf{v}}_j^{[t-1]}}{\sqrt{d}}\right), \qquad \mathbf{m}_s^{[t]} = \sum_{j\in\{2,3\}} \beta_{j,s}\,\hat{\mathbf{v}}_j^{[t-1]}, \\
+            \mathbf{z}_s &amp;= \mathbf{P}_s\big[\operatorname{RMSNorm}(\mathbf{x});\,\operatorname{RMSNorm}(\mathbf{m}_s^{[t]})\big], \\
+            \mathbf{x}'_s &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}_s\mathbf{z}_s)\big)}_{\boldsymbol{\kappa}_s}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}_s\mathbf{z}_s)}_{\boldsymbol{\gamma}_s}\odot\mathbf{m}_s^{[t]}.
+            \end{aligned}$$
+            其中 $\boldsymbol{\gamma}_s$ 初始化为 $0$，保证训练初期行为与普通不循环模型一致，再平滑打开跨轮通道。</li>
+            <li><strong>Step 4 · 子层计算与写回 Running Sum：</strong>将三份融合输入各自经 RMSNorm 后投成 $Q, K, V$ 执行沿 token 序列的 Self-Attention，输出 $\mathbf{o}_{\text{attn}}^{(\ell,[t])}$ 写回当前 Block Running Sum；随后 MoE 子层重新做一次 Depth-wise Read 读到刚更新的 Running Sum，与 $\mathbf{m}_{\text{MoE}}^{[t]}$ 融合后再写回：
+            $$\begin{aligned}
+            \mathbf{o}_{\text{attn}}^{(\ell,[t])} &amp;= \operatorname{SelfAttn}_\ell\big(\mathbf{x}'_Q,\,\mathbf{x}'_K,\,\mathbf{x}'_V\big), &amp; \mathbf{v}_{i,\text{mid}}^{[t]} &amp;= \mathbf{v}_{i,\text{before }\ell}^{[t]} + \mathbf{o}_{\text{attn}}^{(\ell,[t])}, \\
+            \mathbf{o}_{\text{MoE}}^{(\ell,[t])} &amp;= \operatorname{MoE}_\ell\big(\operatorname{RMSNorm}(\mathbf{x}'_{\text{MoE}})\big), &amp; \mathbf{v}_{i,\text{after }\ell}^{[t]} &amp;= \mathbf{v}_{i,\text{mid}}^{[t]} + \mathbf{o}_{\text{MoE}}^{(\ell,[t])}.
+            \end{aligned}$$</li>
         </ul>
-        $$\begin{aligned}
-        \mathbf{m}_s &amp;= \sum_{j\in\{2,3\}} \beta_j\,\hat{\mathbf{v}}_j^{[t-1]}, \qquad \mathbf{z} = \mathbf{P}\big[\text{RMSNorm}(\mathbf{x});\,\text{RMSNorm}(\mathbf{m}_s)\big], \\
-        \mathbf{x}' &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}\mathbf{z})\big)}_{\boldsymbol{\kappa}}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}\mathbf{z})}_{\boldsymbol{\gamma}}\odot\mathbf{m}_s.
-        \end{aligned}$$
-        <p>其中增益 $\boldsymbol{\gamma}$ 初始化为 0，保证训练初期与普通不循环模型一致，再平滑打开跨轮通道。</p>
+        <p>把三种“读”区分开就会非常清晰：<strong>Depth-wise Read</strong> 是在同一 token 位置选择当前轮的哪些历史 Block，<strong>Cross-Loop Read</strong> 是在同一 token 位置选择上一轮的 B2/B3，只有随后的 <strong>Self-Attention</strong> 才跨 token 序列交换信息。</p>
         <p>整条路径可以拆成之前所有层输出 $\mathbf{o}_w$ 的线性加权和 $\mathbf{x}'=\sum_w \mathbf{c}_w$（投影份额 $s_w = (\mathbf{c}_w \cdot \mathbf{x}')/\|\mathbf{x}'\|^2$ 之和恒为 1）。Goodfire 按此分解发现了一个有意思的现象：<strong>第 2 轮第 13 层（Block 3 首层）本轮已通过 Depth-wise Attention 拿到 Block 2（$\mathbf{v}_2^{[2]}$），因此它的 Cross-Loop Attention 几乎全部转去读上一轮的 Block 3（$\mathbf{v}_3^{[1]}$）</strong>。这相当于让第 13 层直接读取了包含第 18 层在内的“物理层号在自己之后”的输出。</p>
 
         <figure>
