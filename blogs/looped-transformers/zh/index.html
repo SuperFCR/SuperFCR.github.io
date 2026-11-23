@@ -56,7 +56,7 @@
         <h1 class="post-title">Looped Transformer 深度解析：等算力 Scaling、梯度截断与内部信息流</h1>
         <div class="post-meta">
             <span>2026 年 11 月 21 日</span>
-            <span>15 分钟阅读</span>
+            <span>17 分钟阅读</span>
             <span>冯超然</span>
         </div>
     </header>
@@ -98,6 +98,7 @@
                     <li><a href="#ldt-scaling">循环深度、去噪步数与 CoT</a></li>
                 </ul>
             </li>
+            <li><a href="#reflections">几点思考</a></li>
             <li><a href="#citation">引用本文</a></li>
             <li><a href="#references">参考文献</a></li>
         </ul>
@@ -590,6 +591,14 @@
                 <li><strong>保证中间轮次的梯度供给：</strong>语言模型只在终点算 next-token loss，因此依赖完整 BPTT（$B=T$）；而视觉生成天然在每一轮都面对同一个去噪或重建目标，正好可以用 ILSD 前缀自蒸馏或共享 Post-loop Deep Supervision 直接对齐所有中间轮。</li>
             </ul>
         </div>
+
+        <h2 id="reflections">几点思考<a class="anchor" href="#reflections" aria-hidden="true">#</a></h2>
+        <p>把上面几篇论文和近期的模型落地合在一起看，我对 Looped Transformer 的实际价值目前仍持偏谨慎的态度：</p>
+        <ul>
+            <li><strong>前沿模型的实际体感增益还不明显：</strong>无论是业内报道引入循环深度设计的 GPT-6，还是最新采用两遍循环的 GLM-5.4，从实际交互体验看，这套结构带来的能力提升并没有论文里的 Scaling 曲线显得那么突出，甚至在部分场景下的使用体感偏别扭。把更多计算折进隐空间循环，基准分数的变化未必能直接转化为更顺手的真实体验。</li>
+            <li><strong>大规模验证仍不充分，且对 Infra 很不友好：</strong>现有公开的严格等算力 Scaling 研究大多停留在数十 B 参数量级，更大规模上从零预训练究竟能否稳定换出净收益，目前仍缺少充分验证（GLM-5.4 也是基于既有底座续训，而非从零起训）。工程上，循环结构与主流分布式 Infra 存在天然摩擦——循环段很难按常规方式做 Pipeline Parallelism 切分，激活存储、跨轮状态与 KV Cache 管理都更复杂，串行多跑几遍还会直接拉长单 token 解码时延，在云端大集群上性价比并不总是占优。</li>
+            <li><strong>更现实的落点是用端侧算力换模型体积：</strong>Looped Transformer 现阶段最明确的好处，反而是显存受限场景下的「以算换存」。像 Thinking Machines Lab 的 Inkling 2 Mini（约 20GB 权重塞进本地设备）以及视觉生成里的 ELT，当瓶颈卡在显存容量和内存带宽而不是总 FLOPs 时，用更小的静态参数体积配合端侧额外计算，是一条很实在的工程路径。</li>
+        </ul>
 
         <h2 id="citation">引用本文<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
         <div class="citation">

@@ -56,7 +56,7 @@
         <h1 class="post-title">Looped Transformers: Compute-Matched Scaling, Training Gradients, and Internal Circuits</h1>
         <div class="post-meta">
             <span>November 21, 2026</span>
-            <span>24 min read</span>
+            <span>26 min read</span>
             <span>Chaoran Feng</span>
         </div>
     </header>
@@ -98,6 +98,7 @@
                     <li><a href="#ldt-scaling">Loops vs. Steps &amp; Text CoT</a></li>
                 </ul>
             </li>
+            <li><a href="#reflections">Reflections</a></li>
             <li><a href="#citation">Citation</a></li>
             <li><a href="#references">References</a></li>
         </ul>
@@ -590,6 +591,14 @@
                 <li><strong>Gradient supply across intermediate loops:</strong> language models compute next-token loss only at the end and therefore require full BPTT ($B=T$). Visual generators share the same denoising or unmasking target at every loop, allowing ILSD prefix self-distillation or shared post-loop Deep Supervision to supervise every intermediate exit directly.</li>
             </ul>
         </div>
+
+        <h2 id="reflections">Reflections<a class="anchor" href="#reflections" aria-hidden="true">#</a></h2>
+        <p>Stepping back from the papers and looking at recent frontier releases, I remain cautious about how far Looped Transformers actually move the needle in practice:</p>
+        <ul>
+            <li><strong>Underwhelming real-world feel on flagship models:</strong> both GPT-6 (reported to use recurrent depth) and GLM-5.4 (which loops a shared block twice) have brought looping into frontier models, yet in hands-on use the capability gain feels far less dramatic than controlled scaling plots suggest. In some workflows, the architecture even makes day-to-day interaction feel noticeably clunkier rather than smoother, reminding us that benchmark gains from latent looping do not automatically translate into better user experience.</li>
+            <li><strong>Limited large-scale validation and real infra friction:</strong> public compute-matched scaling evidence still sits mostly in the tens-of-billions range, so whether from-scratch looping truly pays off at frontier scale remains largely unproven (GLM-5.4 itself adapted a pre-trained base rather than training looped from scratch). On the systems side, looping is awkward for modern distributed infra: repeated middle blocks complicate Pipeline Parallelism, raise activation-memory and KV Cache bookkeeping overhead, and add serial per-token latency during decoding.</li>
+            <li><strong>The clearest near-term niche is trading edge compute for model size:</strong> where Looped Transformers already make clear sense is memory-constrained local or single-device deployment. Just like Thinking Machines Lab's Inkling 2 Mini (fitting ~20GB of weights onto a laptop) or ELT reusing compact weights in on-chip SRAM, spending extra local compute to shrink static parameter footprint is a very practical trade-off when memory capacity and bandwidth are the real bottleneck.</li>
+        </ul>
 
         <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
         <div class="citation">
