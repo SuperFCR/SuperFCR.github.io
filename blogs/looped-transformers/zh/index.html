@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="系统梳理 SMELT、Truncate or Not?、Inkling 2 Mini、ELT 与 Looped-DiT 五项工作：从语言模型的等算力 MoE Scaling、(T, B) 反传博弈与 d2027 电路，到扩散与 Masked Generative 视觉生成中的 ILSD 自蒸馏、深度监督及 Self-Modulating Attention。">
+    <meta name="description" content="系统梳理 SMELT、Truncate or Not?、Inkling 2 Mini、ELT 与 Looped-DiT 五项工作：从语言模型的等算力 MoE Scaling、(T, B) 梯度截断与 d2027 路由电路，到扩散与 Masked Generative 视觉生成中的 ILSD 自蒸馏、Deep Supervision 及 Self-Modulating Attention。">
     <title>Looped Transformer 深度解析：等算力 Scaling、梯度截断与内部信息流 | 冯超然</title>
     <link rel="canonical" href="https://www.falcary.com/blogs/looped-transformers/zh/">
     <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/looped-transformers/">
@@ -16,7 +16,7 @@
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="冯超然">
     <meta property="og:title" content="Looped Transformer 深度解析：等算力 Scaling、梯度截断与内部信息流">
-    <meta property="og:description" content="串联 SMELT、Truncate or Not?、Inkling 2 Mini、ELT 与 Looped-DiT：解析等算力 MoE 循环、完整反传算力账、d2027 路由开关，以及视觉生成中的 ILSD 自蒸馏与深度监督循环机制。">
+    <meta property="og:description" content="串联 SMELT、Truncate or Not?、Inkling 2 Mini、ELT 与 Looped-DiT：解析等算力 MoE 循环、完整反传算力账、d2027 路由开关，以及视觉生成中的 ILSD 自蒸馏与 Deep Supervision 机制。">
     <meta property="og:url" content="https://www.falcary.com/blogs/looped-transformers/zh/">
     <meta property="og:image" content="https://www.falcary.com/blogs/looped-transformers/cover.webp">
     <meta name="twitter:card" content="summary_large_image">
@@ -56,7 +56,7 @@
         <h1 class="post-title">Looped Transformer 深度解析：等算力 Scaling、梯度截断与内部信息流</h1>
         <div class="post-meta">
             <span>2026 年 11 月 21 日</span>
-            <span>17 分钟阅读</span>
+            <span>15 分钟阅读</span>
             <span>冯超然</span>
         </div>
     </header>
@@ -65,40 +65,39 @@
         <summary>目录</summary>
         <div class="inner">
         <ul>
-            <li><a href="#overview">五种 Looped Transformer 架构一览</a></li>
+            <li><a href="#overview">五种循环架构一览</a></li>
             <li><a href="#smelt">SMELT：等算力 MoE 循环</a>
                 <ul>
-                    <li><a href="#smelt-recipe">三项预算同时对齐的配方</a></li>
-                    <li><a href="#smelt-scaling">Scaling Law 与超越 Loss 的下游收益</a></li>
-                    <li><a href="#smelt-mechanisms">第二遍循环到底在算什么</a></li>
+                    <li><a href="#smelt-recipe">三项预算对齐配方</a></li>
+                    <li><a href="#smelt-scaling">Scaling Law 与下游收益</a></li>
+                    <li><a href="#smelt-mechanisms">第二遍循环的内部机制</a></li>
                 </ul>
             </li>
-            <li><a href="#truncate-or-not">Truncate or Not?：梯度截断与训练算力账</a>
+            <li><a href="#truncate-or-not">Truncate or Not?：梯度截断</a>
                 <ul>
-                    <li><a href="#tbp-arch">Input Injection 与 (T, B) 算力核算</a></li>
-                    <li><a href="#tbp-law">有效参数 Scaling Law 与三类决策场景</a></li>
+                    <li><a href="#tbp-arch">Input Injection 与算力核算</a></li>
+                    <li><a href="#tbp-law">有效参数 Scaling Law</a></li>
                 </ul>
             </li>
-            <li><a href="#inkling">Inkling 2 Mini：生产级 Looped MoE 与内部电路</a>
+            <li><a href="#inkling">Inkling 2 Mini：架构与内部电路</a>
                 <ul>
-                    <li><a href="#inkling-arch">Attention Residuals 与跨循环数据流</a></li>
-                    <li><a href="#inkling-coord">权重打标与异常维度 d2027 开关</a></li>
-                    <li><a href="#inkling-decode">中间层解码、推理边界与可监控性</a></li>
+                    <li><a href="#inkling-arch">Attention Residuals 与跨轮流</a></li>
+                    <li><a href="#inkling-coord">权重打标与 d2027 开关</a></li>
+                    <li><a href="#inkling-decode">中间层解码与推理边界</a></li>
                 </ul>
             </li>
-            <li><a href="#elt">ELT：视觉生成的弹性循环与自蒸馏</a>
+            <li><a href="#elt">ELT：视觉生成弹性循环</a>
                 <ul>
-                    <li><a href="#elt-ilsd">ILSD 循环内自蒸馏与 Any-Time 弹性推理</a></li>
-                    <li><a href="#elt-scaling">4× 参数压缩、DiT 收敛加速与硬件吞吐</a></li>
+                    <li><a href="#elt-ilsd">ILSD 自蒸馏与 Any-Time 推理</a></li>
+                    <li><a href="#elt-scaling">参数压缩、收敛与硬件吞吐</a></li>
                 </ul>
             </li>
-            <li><a href="#looped-dit">Looped-DiT：文生图深度监督与 Self-Modulating Attention</a>
+            <li><a href="#looped-dit">Looped-DiT：文生图深度监督</a>
                 <ul>
-                    <li><a href="#ldt-arch">朴素 MMDiT 循环为何失效：深度监督与 XSA</a></li>
-                    <li><a href="#ldt-scaling">循环深度 vs. 去噪步数，以及与文本 CoT 的互补性</a></li>
+                    <li><a href="#ldt-arch">Deep Supervision 与 XSA</a></li>
+                    <li><a href="#ldt-scaling">循环深度、去噪步数与 CoT</a></li>
                 </ul>
             </li>
-            <li><a href="#takeaways">架构与训练启示</a></li>
             <li><a href="#citation">引用本文</a></li>
             <li><a href="#references">参考文献</a></li>
         </ul>
@@ -106,15 +105,15 @@
     </details>
 
     <div class="post-content">
-        <p>Looped Transformer 通过重复执行同一段共享层，把“执行深度”与“静态参数量”拆开<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>。过去很多评测只在相同静态参数量下做对比，无形中让循环模型多花了成倍的 FLOPs 和 KV cache，很难分辨收益究竟来自结构本身还是额外算力。</p>
-        <p>2026 年的五项核心工作分别在语言模型与视觉生成领域把这条技术链条拼完整了：</p>
+        <p>Looped Transformer 通过重复执行同一段共享层，把“执行深度”与“静态参数量”拆开<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>。过去很多评测只在相同静态参数量下做对比，无形中让循环模型多花了成倍的 FLOPs 和 KV Cache，很难分辨收益究竟来自结构本身还是额外算力。</p>
+        <p>2026 年的五项工作分别在语言模型与视觉生成上回答了这些问题：</p>
         <ul>
-            <li><strong>语言模型侧：</strong><strong>SMELT</strong><a class="cite" href="#ref-1">[1]</a> 在单 token FLOPs、总参数量和 KV cache 三项预算同时对齐时证明 MoE 循环依然净赚；<strong>Truncate or Not?</strong><a class="cite" href="#ref-2">[2]</a> 系统算清了有限算力下前向与反向循环次数的账；Thinking Machines Lab 开源的 <strong>Inkling 2 Mini</strong><a class="cite" href="#ref-3">[3]</a> 与 Goodfire 的可解释性追踪<a class="cite" href="#ref-4">[4]</a> 则揭示了双路 Attention Residuals（AttnRes）与内部路由电路。</li>
-            <li><strong>视觉生成侧：</strong>在扩散模型（DiT / MMDiT）与 Masked Generative 模型（MaskGIT / MAGVIT）中，<strong>ELT</strong><a class="cite" href="#ref-9">[9]</a> 借助前缀自蒸馏让每个采样步支持任意深度的 Any-Time 弹性推理；<strong>Looped-DiT</strong><a class="cite" href="#ref-10">[10]</a> 则用深度监督（Deep Supervision）与 Self-Modulating Attention（SMA / XSA）解决了文生图循环中的空间退化难题。</li>
+            <li><strong>语言模型侧：</strong><strong>SMELT</strong><a class="cite" href="#ref-1">[1]</a> 在单 token FLOPs、总参数量和 KV Cache 三项预算同时对齐时证明 MoE 循环仍有收益；<strong>Truncate or Not?</strong><a class="cite" href="#ref-2">[2]</a> 系统算清了有限算力下前向与反向循环次数的账；Thinking Machines Lab 开源的 <strong>Inkling 2 Mini</strong><a class="cite" href="#ref-3">[3]</a> 与 Goodfire 的可解释性分析<a class="cite" href="#ref-4">[4]</a> 展示了双路 Attention Residuals（AttnRes）与内部路由电路。</li>
+            <li><strong>视觉生成侧：</strong>在扩散模型（DiT / MMDiT）与 Masked Generative 模型（MaskGIT / MAGVIT）中，<strong>ELT</strong><a class="cite" href="#ref-9">[9]</a> 借助前缀自蒸馏让每个采样步支持任意深度的 Any-Time 弹性推理；<strong>Looped-DiT</strong><a class="cite" href="#ref-10">[10]</a> 则用 Deep Supervision 与 Self-Modulating Attention（SMA / XSA）解决了文生图循环中的空间退化问题。</li>
         </ul>
 
-        <h2 id="overview">五种 Looped Transformer 架构一览<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
-        <p>语言模型三条路线（图 1）均保留非共享首尾层、只循环中间核心块，分别攻克等预算 MoE 缩放、$(T, B)$ 梯度截断与跨循环注意力路由；视觉生成两条路线（见后文图 14 与图 17）则把权重共享循环嵌进<strong>每一步采样或去噪内部</strong>，既大幅砍掉参数量，又打开了超越增加去噪步数的隐式推理杠杆。</p>
+        <h2 id="overview">五种循环架构一览<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
+        <p>语言模型三条路线（图 1）均保留非共享首尾层、只循环中间核心块，分别对应等预算 MoE Scaling、$(T, B)$ 梯度截断与 Cross-Loop Attention 路由。视觉生成两条路线（图 14 与图 17）则把权重共享循环嵌进<strong>每一步采样或去噪内部</strong>，在压缩参数量的同时，提供了比单纯增加去噪步数更有效的推理算力分配方式。</p>
 
         <figure>
             <img src="../fig-architectures.svg" width="1400" height="720" alt="三种语言模型 Looped Transformer 架构对比：SMELT（MoE 中间 50% 层循环两遍且三项预算对齐）、Truncate or Not?（稠密 Prelude-Recurrent-Coda 配合每轮 Input Injection s0 与 detach 截断墙）、Inkling 2 Mini（4 个 6 层块将中间两块循环三遍，并通过 Depth-wise Attention 与 Cross-Loop Attention 交互）。" loading="lazy">
@@ -134,7 +133,7 @@
                 <tbody>
                     <tr>
                         <td><strong>SMELT</strong></td>
-                        <td>稀疏 MoE (GQA, top-8)；中间 50% 层循环 2 遍</td>
+                        <td>稀疏 MoE（GQA, top-8）；中间 50% 层循环 2 遍</td>
                         <td>$1/2$ 缩放累加残差；完整 BPTT 训练至 215B tok</td>
                         <td>等算力/参数/KV 下前沿省 <strong>6.8–18.0%</strong> 训练算力</td>
                     </tr>
@@ -146,8 +145,8 @@
                     </tr>
                     <tr>
                         <td><strong>Inkling 2 Mini</strong></td>
-                        <td>24 层混合 MoE (8/128)；Block 2–3 循环 3 遍（48 层）</td>
-                        <td>深度 + 跨循环 AttnRes ($\kappa\odot x + \gamma\odot m$)；NVFP4/MXFP8</td>
+                        <td>24 层混合 MoE（8/128）；Block 2–3 循环 3 遍（48 层）</td>
+                        <td>Depth-wise + Cross-Loop AttnRes（$\kappa\odot x + \gamma\odot m$）；NVFP4/MXFP8</td>
                         <td>&lt;100B 开源编码领先（DeepSWE 48.2%）；$d_{2027}$ 控跨轮</td>
                     </tr>
                     <tr>
@@ -158,9 +157,9 @@
                     </tr>
                     <tr>
                         <td><strong>Looped-DiT</strong></td>
-                        <td>像素空间 MMDiT（<code>[6,5,6]</code>, 260M）；中 5 块循环 $\times 4$（32L）</td>
-                        <td>深度监督（<code>Final+Mean</code>）+ 无参数 XSA</td>
-                        <td>均值 71.5 击败 <strong>6.5×</strong> 大模型；循环优于单纯加去噪步数</td>
+                        <td>像素空间 MMDiT（[6, 5, 6], 260M）；中 5 块循环 $\times 4$（32L）</td>
+                        <td>Deep Supervision（Final + Mean）+ 无参数 XSA</td>
+                        <td>均值 71.5 优于 <strong>6.5×</strong> 大模型；循环优于单纯加去噪步数</td>
                     </tr>
                 </tbody>
             </table>
@@ -168,54 +167,54 @@
 
         <h2 id="smelt">SMELT：等算力 MoE 循环<a class="anchor" href="#smelt" aria-hidden="true">#</a></h2>
 
-        <h3 id="smelt-recipe">三项预算同时对齐的配方<a class="anchor" href="#smelt-recipe" aria-hidden="true">#</a></h3>
-        <p>论文 <em lang="en">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</em><a class="cite" href="#ref-1">[1]</a> 直面一个核心难题：在常规 12 层模型里把中间 6 层重复跑两遍（实算 18 层），静态参数没变，但单 token FLOPs 和 KV cache 会直接涨一半。此前在稠密模型上做等 FLOPs（Iso-Depth）对比时，为了扣回算力必须砍掉独立参数，导致 $r$ 次循环只相当于 $r^{0.46}$ 份独立层的容量，最终输给不循环基线。<strong>SMELT</strong>（Sparse MoE Transformer, middle layers Loop Twice）用稀疏 MoE 的参数–算力解耦把三项预算一次对齐：</p>
+        <h3 id="smelt-recipe">三项预算对齐配方<a class="anchor" href="#smelt-recipe" aria-hidden="true">#</a></h3>
+        <p>论文 <em lang="en">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</em><a class="cite" href="#ref-1">[1]</a> 先处理了一个评测口径问题：在常规 12 层模型里把中间 6 层重复跑两遍（实算 18 层），静态参数没变，但单 token FLOPs 和 KV Cache 会直接涨一半。此前在稠密模型上做等 FLOPs（Iso-Depth）对比时，为了扣回算力必须砍掉独立参数，导致 $r$ 次循环只相当于 $r^{0.46}$ 份独立层的容量，最终输给不循环基线。<strong>SMELT</strong>（Sparse MoE Transformer, middle layers Loop Twice）借助稀疏 MoE 的参数–算力解耦把三项预算同时对齐：</p>
         <ul>
-            <li><strong>对齐单 token FLOPs（误差 &lt; 4%）：</strong>主动收窄隐层宽度 $H$（例如 200M、等效稀疏度 $S\approx 95\%$ 档把 $H$ 从 $1280$ 压到 $1056$），抵消多跑一遍中间层增加的计算，单 token 训练算力落在 $1.37\times 10^9$ 对基线 $1.33\times 10^9$（$+2.9\%$）。</li>
-            <li><strong>补回非 embedding 总参数量（误差 &lt; 1%）：</strong>变窄会缩水每个专家的参数，作者保持每层仍只激活 top-8，但把每层专家总数从 $192$ 提到 $288$，总参数精准回到 $3.89\text{B}$ 对 $3.87\text{B}$（$+0.4\%$）。</li>
-            <li><strong>对齐 KV cache（误差 &lt; 4%）并做残差缩放：</strong>通过减小 attention head 维度并提高 GQA 分组倍率把 KV 显存拉平；循环区域内的 Attention 和 MoE 残差更新均乘以 $1/r$（$1/2$），防止共享权重连续写入把残差流放大失稳。</li>
+            <li><strong>对齐单 token FLOPs（误差 &lt; 4%）：</strong>主动收窄隐层宽度 $H$ 来抵消多跑一遍中间层增加的计算。以 200M、等效稀疏度 $S\approx 95\%$ 档为例，$H$ 从 $1280$ 压到 $1056$，单 token 训练算力落在 $1.37\times 10^9$ 对基线 $1.33\times 10^9$（$+2.9\%$）。</li>
+            <li><strong>补回非 embedding 总参数量（误差 &lt; 1%）：</strong>变窄会缩水每个专家的参数，因此作者保持每层仍激活 top-8，但把每层专家总数从 $192$ 提到 $288$，总参数回到 $3.89\text{B}$ 对 $3.87\text{B}$（$+0.4\%$）。</li>
+            <li><strong>对齐 KV Cache（误差 &lt; 4%）并做残差缩放：</strong>通过减小 attention head 维度并提高 GQA 分组倍率把 KV 显存拉平；循环区域内的 Attention 和 MoE 残差更新均乘以 $1/r$（即 $1/2$），防止共享权重连续写入把残差流放大失稳。</li>
         </ul>
 
         <figure>
             <img src="../fig-smelt-arch.webp" width="1440" height="1166" alt="SMELT 原论文架构图：12 层堆叠中间 50% 层循环两遍，红色虚线表示收窄隐层宽度对齐 FLOPs，MoE FFN 内增加红色专家补足总参数，Attention 与 MoE 子层输出均乘以 1/2 缩放写入残差。" loading="lazy">
-            <figcaption>图 2：SMELT 原论文架构图——中间 50% 层循环两遍，同时收窄隐层宽度（红色虚线框）对齐 FLOPs、增补红色 MoE 专家恢复总参数，并对循环区 Attention/MoE 残差乘以 $1/2$。来源：Wang, Zhang 等，<em lang="en">SMELT</em><a class="cite" href="#ref-1">[1]</a>。</figcaption>
+            <figcaption>图 2：SMELT 原论文架构图：中间 50% 层循环两遍，同时收窄隐层宽度（红色虚线框）对齐 FLOPs、增补红色 MoE 专家恢复总参数，并对循环区 Attention/MoE 残差乘以 $1/2$。来源：Wang, Zhang 等，<em lang="en">SMELT</em><a class="cite" href="#ref-1">[1]</a>。</figcaption>
         </figure>
 
-        <p>在此对齐协议下，200M 上的三组消融锁死了配方：</p>
+        <p>在此对齐协议下，200M 上的三组消融确定了具体配置：</p>
         <ul>
             <li><strong>循环位置：</strong>只重复中间 50%（第 4–9 层）在 $S\approx 85\%$（$1.9257$ vs. $1.9322$）和 $S\approx 95\%$（$1.8517$ vs. $1.8601$）下均优于全栈循环。</li>
-            <li><strong>深宽比：</strong>循环模型的最佳有效深宽比大于基线（物理 12 层 / 实算 18 层赢下全部指标），得益于共享块能从多深度反向路径收集梯度。</li>
+            <li><strong>深宽比：</strong>循环模型能承受更大的有效深宽比。物理 12 层 / 实算 18 层在各项指标上表现最好，得益于共享块能从多深度反向路径收集梯度。</li>
             <li><strong>循环次数：</strong>算力受限下 <strong>$2\times$ 胜过 $3\times$ 和 $4\times$</strong>（验证 loss $1.9257$ vs. $1.9385 / 1.9360$），因为再增加遍数会把隐层宽度压得太细。</li>
         </ul>
 
-        <h3 id="smelt-scaling">Scaling Law 与超越 Loss 的下游收益<a class="anchor" href="#smelt-scaling" aria-hidden="true">#</a></h3>
-        <p>作者将该配方扩展到 $4 \times 4$ 实验网格（100M / 200M / 600M / 1.6B 四个激活规模，配 $S=0\%$ 稠密参照及 $S\approx 85\%, 95\%, 97\%$ 三档稀疏度，非 embedding 总参数量最高 53.9B，WSD 稳定–退火到 215B tokens），SMELT 在全部 16 个网格点上均低于基线。由 FLOPs 比值定义等效计算稀疏度 $N_{\text{act}}^{\text{eq}} = (F/F_0)N_0$、$S = 1 - N_{\text{act}}^{\text{eq}}/N$，分别拟合 Chinchilla 风格 MoE Scaling Law：</p>
+        <h3 id="smelt-scaling">Scaling Law 与下游收益<a class="anchor" href="#smelt-scaling" aria-hidden="true">#</a></h3>
+        <p>作者将该配方扩展到 $4 \times 4$ 实验网格，覆盖 100M / 200M / 600M / 1.6B 四个激活规模，配 $S=0\%$ 稠密参照及 $S\approx 85\%, 95\%, 97\%$ 三档稀疏度。整套实验的非 embedding 总参数量最高达 53.9B，经 WSD 稳定–退火至 215B tokens，SMELT 在全部 16 个网格点上的验证 loss 均低于基线。由 FLOPs 比值定义等效计算稀疏度 $N_{\text{act}}^{\text{eq}} = (F/F_0)N_0$、$S = 1 - N_{\text{act}}^{\text{eq}}/N$，分别拟合 Chinchilla 风格的 MoE Scaling Law：</p>
         $$\begin{aligned}
         \mathcal{L}(F, S, D) &amp;= E + \frac{A\,(1 - S)^b}{F^a} + \frac{K}{D^c}, \\
         \mathcal{L}^*(C, S) &amp;= E + f(A,K,a,b,c,S)\,C^{-\gamma}, \qquad \gamma = \frac{ac}{a+c}.
         \end{aligned}$$
-        <p>在稀疏主战场（$S \approx 85\text{–}97\%$），SMELT 的容量指数（$a = 0.3892$ vs. $0.3703$）与数据指数（$c = 0.7011$ vs. $0.6594$）同步提高，前沿斜率 $\gamma$ 提升 $+5.5\%$（$0.250$ vs. $0.237$）。按同验证 loss 反查算力，SMELT 在 $10^{20}$ FLOPs 节省 <strong>6.8–10.0% 训练算力</strong>，到 $10^{21}$ FLOPs 扩大到 <strong>14.7–18.0%</strong>（外推 $10^{22}$ 约 $19.6\text{–}23.5\%$），且最优单参数 token 配比（~56–91 TPP）几乎不用改动。</p>
+        <p>在稀疏主战场（$S \approx 85\text{–}97\%$），SMELT 的容量指数（$a = 0.3892$ vs. $0.3703$）与数据指数（$c = 0.7011$ vs. $0.6594$）同步提高，前沿斜率 $\gamma$ 提升 $+5.5\%$（$0.250$ vs. $0.237$）。按同验证 loss 反查算力，SMELT 在 $10^{20}$ FLOPs 节省 <strong>6.8–10.0% 训练算力</strong>，到 $10^{21}$ FLOPs 扩大到 <strong>14.7–18.0%</strong>（外推 $10^{22}$ 约 $19.6\text{–}23.5\%$），且最优单参数 token 配比（~56–91 TPP）几乎不变。</p>
 
         <figure>
-            <img src="../fig-smelt-scaling.webp" width="1480" height="787" alt="SMELT 双栏核心缩放结果：左图展示 S≈97% 下的计算最优损失前沿并在 10^21 FLOPs 局部放大 14.7% 算力增益；右图展示等预算下 SMELT 在 Knowledge、MMLU、Language、Commonsense、Reading 与 Symbolic 维度上的基准雷达图。" loading="lazy">
+            <img src="../fig-smelt-scaling.webp" width="1480" height="787" alt="SMELT 双栏核心 Scaling 结果：左图展示 S≈97% 下的计算最优损失前沿并在 10^21 FLOPs 局部放大 14.7% 算力增益；右图展示等预算下 SMELT 在 Knowledge、MMLU、Language、Commonsense、Reading 与 Symbolic 维度上的基准雷达图。" loading="lazy">
             <figcaption>图 3：SMELT 在 $S \approx 97\%$ 下的计算最优前沿（左，局部放大 $10^{21}$ FLOPs 处 $14.7\%$ 等效算力节省）与等预算五维评测雷达图（右）。来源：Wang, Zhang 等，<em lang="en">SMELT</em><a class="cite" href="#ref-1">[1]</a>。</figcaption>
         </figure>
 
-        <p>更有意思的是，下游指标涨幅比验证 loss 预测的还高：</p>
+        <p>除了验证 loss 下降，下游评测上的提升还超出了单纯由 loss 推算的幅度：</p>
         <ul>
-            <li><strong>配对胜率与 Sigmoid 正残差：</strong>96 对配对评估中，SMELT 在 DCLM Completion 赢 <strong>96/96</strong>、DCLM Core 赢 <strong>83/96</strong>、高于随机基线的 MMLU 赢 <strong>29/30</strong>；用基线数据拟合「loss → 得分」Sigmoid 曲线后，SMELT 的正残差随规模单调放大（1.6B 时 Completion 多降 $12.3\text{ millinats}$、Core 高 $+1.2\text{ pp}$，其中符号推理以 $+1.9\text{ pp}$ 反超阅读理解）。</li>
-            <li><strong>结构化领域收益最突出：</strong>按验证域拆分算力节省，结构化最强的 <strong>Code 高达 20.4%</strong>（其次 Finance $16.8\%$、Math/STEM $16.6\%$，Web 为 $14.8\%$）。</li>
-            <li><strong>长文本放大效应：</strong>对长样本（$512\text{–}4096$ vs. $32\text{–}256$ tokens）增益放大至 $1.52\times$，而单纯加参数或加专家的对照组几乎走平（$0.98\times$ 和 $0.88\times$）。</li>
-            <li><strong>少样本 ICL 与 Dyck 匹配：</strong>上下文学习示例一出现（$k\ge 1$），优势就从 $0.9\text{ pp}$ 拉大到 $1.9\text{ pp}$，32-shot Dyck 括号匹配达到 $29.8\%$ vs. $26.4\%$。</li>
+            <li><strong>配对胜率与 Sigmoid 正残差：</strong>96 对配对评估中，SMELT 在 DCLM Completion 赢 <strong>96/96</strong>、DCLM Core 赢 <strong>83/96</strong>、高于随机基线的 MMLU 赢 <strong>29/30</strong>。用基线数据拟合「loss → 得分」Sigmoid 曲线后，SMELT 的正残差随规模单调放大，1.6B 时 Completion 多降 $12.3\text{ millinats}$、Core 高 $+1.2\text{ pp}$，其中符号推理以 $+1.9\text{ pp}$ 超过阅读理解。</li>
+            <li><strong>结构化领域收益最突出：</strong>按验证域拆分算力节省，<strong>Code 达到 20.4%</strong>，其次是 Finance $16.8\%$ 与 Math/STEM $16.6\%$，Web 为 $14.8\%$。</li>
+            <li><strong>长文本放大效应：</strong>在长样本（$512\text{–}4096$ vs. $32\text{–}256$ tokens）上增益放大至 $1.52\times$，而单纯加参数或加专家的对照组基本走平（$0.98\times$ 和 $0.88\times$）。</li>
+            <li><strong>少样本 In-Context Learning（ICL）与 Dyck 匹配：</strong>给出示例后（$k\ge 1$），优势从 0-shot 的 $0.9\text{ pp}$ 拉大到 $1.9\text{ pp}$，32-shot Dyck 括号匹配达到 $29.8\%$ vs. $26.4\%$。</li>
         </ul>
 
         <figure>
             <img src="../fig-smelt-length-icl.webp" width="1440" height="407" alt="SMELT 超越 Loss 的三联实证图：(a) 按样本长度拆分的归一化增益曲线显示 SMELT 在 512-4096 长上下文持续抬升而加专家与加参数对照组持平；(b) 16 项少样本 ICL 任务平均准确率；(c) Dyck Languages 从 0-shot 到 32-shot 的准确率。" loading="lazy">
-            <figcaption>图 4：SMELT 超越验证 loss 的结构性收益：(a) 随样本长度单调放大的归一化增益（单纯加专家或加参数对照几乎走平），(b) 16 项少样本上下文学习平均准确率，(c) 最高 32-shot Dyck 括号匹配。来源：Wang, Zhang 等，<em lang="en">SMELT</em><a class="cite" href="#ref-1">[1]</a>。</figcaption>
+            <figcaption>图 4：SMELT 超越验证 loss 的结构性收益：(a) 随样本长度单调放大的归一化增益（单纯加专家或加参数对照几乎走平），(b) 16 项少样本 ICL 平均准确率，(c) 最高 32-shot Dyck 括号匹配。来源：Wang, Zhang 等，<em lang="en">SMELT</em><a class="cite" href="#ref-1">[1]</a>。</figcaption>
         </figure>
 
-        <h3 id="smelt-mechanisms">第二遍循环到底在算什么<a class="anchor" href="#smelt-mechanisms" aria-hidden="true">#</a></h3>
-        <p>在 1M 验证集上探测共享中间层两次经过时的内部变化，可以确认第二遍并非机械复读，而是沿着第一遍铺好的索引轨迹做深度加工与信息提纯：</p>
+        <h3 id="smelt-mechanisms">第二遍循环的内部机制<a class="anchor" href="#smelt-mechanisms" aria-hidden="true">#</a></h3>
+        <p>在 1M 验证集上探测共享中间层两次经过时的内部状态，可以看到第二遍并非简单复读，而是沿着第一遍建立的索引轨迹继续加工与提纯信息：</p>
 
         <figure>
             <img src="../fig-smelt-qkv.webp" width="1440" height="819" alt="SMELT 在 4 个规模（100M-1.6B）与 4 档稀疏度（0%-97%）网格上的两遍跨层余弦相似度热图：Pre-Q/K/V 输入 X（0.84-0.93）、Q（0.89-0.93）与 K（0.90-0.93）高度稳定，而 V（0.65-0.74）、上下文 PV（0.56-0.69）与输出 O（0.49-0.64）显著改写。" loading="lazy">
@@ -223,10 +222,10 @@
         </figure>
 
         <ul>
-            <li><strong>§6.1 专家路由“部分复用 + 部分换将”：</strong>高稀疏度 $S\approx 97\%$ 下，同一 token 两遍经过同一层 Router 时仍稳稳复用 <strong>2–3 个核心专家</strong>（远高于均匀随机 $8^2/504\approx 0.13$），同时把其余 5–6 个槽位路由给不同专家，在共享权重上走出差异化计算路径。</li>
-            <li><strong>§6.2 残差更新更强且方向一致：</strong>全部 16 个网格里，第二遍的 Attention 与 MoE 写入范数均放大至 <strong>1.2–3.5×</strong>（由于方向变化触发 RMSNorm 逐维缩放，送入子层的归一化输入本身已放大）；且同物理层跨两遍更新方向的余弦相似度达 $0.42\text{–}0.65$（均值 $0.56$，错层仅 $0.16$），说明是在<strong>强化细化</strong>而非推翻覆盖。</li>
-            <li><strong>§6.3 Q/K 稳定锁定坐标，V 重写读取内容：</strong>第二遍重算后，$Q, K$ 跨遍余弦仍达 $0.89\text{–}0.93$（甚至不低于输入 $X$ 的 $0.84\text{–}0.93$），离散 top-8 关注 token 重合度达 <strong>56–66%</strong>（同层异头对照仅 $28\text{–}34\%$）；而 $V$ 相似度跌到 $0.65\text{–}0.74$、输出 $O$ 进一步分化（$0.49\text{–}0.64$）——“看向哪里”基本保留，“从那里读什么”发生了实质更新。</li>
-            <li><strong>§6.4 压低 Attention Sink、转向示例答案：</strong>1.6B Dyck 任务中，关键 head 在 BOS 的 sink 权重从 <strong>60% 骤降到 2%</strong>，示例答案上的权重从 <strong>24% 飙升到 85%</strong>；在 1M 通用验证语料上，第二遍同样普遍削弱了各 head 的初始 token 聚集，甚至逆转了常规架构越往深层 sink 越重的趋势。</li>
+            <li><strong>专家路由部分复用与重路由：</strong>高稀疏度 $S\approx 97\%$ 下，同一 token 两遍经过同一层 Router 时会复用 <strong>2–3 个核心专家</strong>（远高于均匀随机的 $8^2/504\approx 0.13$），其余 5–6 个槽位则切换为不同专家，在共享权重上走出差异化计算路径。</li>
+            <li><strong>残差更新更强且方向一致：</strong>全部 16 个网格里，第二遍的 Attention 与 MoE 写入范数都放大至 <strong>1.2–3.5×</strong>（因为方向变化触发 RMSNorm 逐维缩放，送入子层的归一化输入本身已放大）。同时，同物理层跨两遍更新方向的余弦相似度达 $0.42\text{–}0.65$（均值 $0.56$，错层仅 $0.16$），说明是在原有方向上继续细化而非推翻覆盖。</li>
+            <li><strong>Q/K 保持索引、V 更新内容：</strong>第二遍重算后，$Q, K$ 跨遍余弦仍达 $0.89\text{–}0.93$，不低于输入 $X$ 的 $0.84\text{–}0.93$，离散 top-8 关注 token 重合度达 <strong>56–66%</strong>（同层异头对照仅 $28\text{–}34\%$）。相比之下，$V$ 相似度降到 $0.65\text{–}0.74$、输出 $O$ 进一步分化（$0.49\text{–}0.64$）——“看向哪里”基本保留，“从那里读什么”发生了实质更新。</li>
+            <li><strong>压低 Attention Sink、转向示例答案：</strong>1.6B Dyck 任务中，关键 head 在 BOS 的 sink 权重从 <strong>60% 降到 2%</strong>，示例答案上的权重从 <strong>24% 升至 85%</strong>。在 1M 通用验证语料上，第二遍同样普遍削弱了各 head 的初始 token 聚集，甚至逆转了常规架构越往深层 sink 越重的趋势。</li>
         </ul>
 
         <figure>
@@ -234,10 +233,10 @@
             <figcaption>图 6：通用验证语料上各循环物理层与注意力头的 Attention Sink 概率热图：相比第一遍（尤其是第 17–22 层高亮区），第二遍整体压低了初始 token 聚集。来源：Wang, Zhang 等，<em lang="en">SMELT</em><a class="cite" href="#ref-1">[1]</a>。</figcaption>
         </figure>
 
-        <h2 id="truncate-or-not">Truncate or Not?：梯度截断与训练算力账<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
+        <h2 id="truncate-or-not">Truncate or Not?：梯度截断<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
 
-        <h3 id="tbp-arch">Input Injection 与 (T, B) 算力核算<a class="anchor" href="#tbp-arch" aria-hidden="true">#</a></h3>
-        <p>论文 <em lang="en">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</em><a class="cite" href="#ref-2">[2]</a>（港大 MMLab 与耶鲁）在 FineWeb-Edu 上一口气跑了 <strong>592 次训练</strong>（$58\text{M}\text{–}919\text{M}$ 非 embedding 参数），专门回答训练循环模块时「该截断反传还是完整反传」。模型沿用 <em lang="en">Huginn</em><a class="cite" href="#ref-7">[7]</a> 风格的 <span lang="en">Prelude–Recurrent–Coda</span> 三段式结构（如 240M 为 $3/6/3$ 层，循环 4 遍共执行 $3+4\times 6+3=30$ 层）：</p>
+        <h3 id="tbp-arch">Input Injection 与算力核算<a class="anchor" href="#tbp-arch" aria-hidden="true">#</a></h3>
+        <p>论文 <em lang="en">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</em><a class="cite" href="#ref-2">[2]</a>（港大 MMLab 与耶鲁）在 FineWeb-Edu 上做了 <strong>592 组训练实验</strong>（$58\text{M}\text{–}919\text{M}$ 非 embedding 参数），专门回答训练循环模块时「该截断反传还是完整反传」。模型沿用 <em lang="en">Huginn</em><a class="cite" href="#ref-7">[7]</a> 风格的 <span lang="en">Prelude–Recurrent–Coda</span> 三段式结构（例如 240M 为 $3/6/3$ 层，循环 4 遍共执行 $3+4\times 6+3=30$ 层）：</p>
         $$s_0 = \mathcal{P}(x),\qquad s_t = \Phi_\theta(s_{t-1}; s_0) = \operatorname{RMSNorm}\!\Big(\mathcal{R}\!\big(W_{\text{inj}}[s_0;\,s_{t-1}]\big)\Big),\qquad p = \mathcal{C}(s_T).$$
 
         <figure>
@@ -245,22 +244,22 @@
             <figcaption>图 7：<em lang="en">Truncate or Not?</em> 原论文架构与算力核算图（以 $(T, B) = (4, 2)$ 为例）：(a) $s_{T-B}$ 处截断梯度与每轮 $s_0$ Input Injection 计算图，(b) 含 $W_{\text{inj}}[s_0; s_{t-1}]$、QK-norm 与 $\text{ReLU}^2$ 的共享循环块，(c) 各模块前后向 FLOP 账本 $6N_{\text{once}} + (2T+4B)N_{\text{rec}}$。来源：Xiong, Chen 等，<em lang="en">Truncate or Not?</em><a class="cite" href="#ref-2">[2]</a>。</figcaption>
         </figure>
 
-        <p>这一循环结构有三个关键机制：</p>
+        <p>这一循环结构有三个关键设计：</p>
         <ul>
-            <li><strong>每轮 Input Injection（重新注入 $s_0$）：</strong>拼接 $[s_0; s_{t-1}]$ 后用 $W_{\text{inj}}\in\mathbb{R}^{d\times 2d}$ 投回 $d$ 维（初始化为 $[I, 0]$，先吃初始输入再逐步学会融合上一轮状态），末尾 RMSNorm 稳住隐状态尺度。</li>
-            <li><strong>梯度截断 $(T, B)$：</strong>前向完整跑完 $T$ 轮，仅在第 $T-B$ 轮输出 $s_{T-B}$ 上做 <code>detach</code>，只有最后 $B$ 轮和 Coda 进计算图——<strong>但别漏掉旁路</strong>，Prelude 依然会通过最后 $B$ 轮对 $s_0$ 的注入收到梯度。</li>
+            <li><strong>每轮 Input Injection（重新注入 $s_0$）：</strong>拼接 $[s_0; s_{t-1}]$ 后用 $W_{\text{inj}}\in\mathbb{R}^{d\times 2d}$ 投回 $d$ 维，初始化为 $[I, 0]$ 让训练初期先依赖初始输入再逐步学会融合上一轮状态，末尾加 RMSNorm 稳住隐状态尺度。</li>
+            <li><strong>梯度截断 $(T, B)$：</strong>前向完整跑完 $T$ 轮，仅在第 $T-B$ 轮输出 $s_{T-B}$ 上做 <code>detach</code>，只有最后 $B$ 轮和 Coda 进入反传图。需要注意旁路梯度：Prelude 依然会通过最后 $B$ 轮对 $s_0$ 的注入收到梯度。</li>
             <li><strong>前反向算力对称性：</strong>按单轮前向约 $2N_{\text{rec}}$、反向约 $4N_{\text{rec}}$ FLOPs 估算，等效计算参数量 $N_{\text{comp}}$ 满足：</li>
         </ul>
         $$C \simeq 6 D \cdot N_{\text{comp}}, \qquad N_{\text{comp}} = N_{\text{once}} + \frac{T + 2B}{3} N_{\text{rec}}.$$
         <p>省 2 轮反向省出的 $8 N_{\text{rec}}$ 恰好够多跑 4 轮前向，因此 <strong>$(8, 2)$ 和 $(4, 4)$ 循环成本完全相等（同为 $24 N_{\text{rec}}$，$T+2B=12$）</strong>，$(4, 1)$ 与 $(2, 2)$ 也完全相等。从不动点理论看，截断 $B$ 步相当于只保留 Neumann 级数 $\sum_{k=0}^{B-1}(\mathcal{J}^\star)^k \partial_\theta\Phi^\star$ 的前 $B$ 项；当总轮数只有 $T=2\text{–}8$、隐状态离收敛不动点尚远时，丢掉前段梯度会在每一步积累偏差。</p>
 
-        <h3 id="tbp-law">有效参数 Scaling Law 与三类决策场景<a class="anchor" href="#tbp-law" aria-hidden="true">#</a></h3>
-        <p>用饱和型循环系数 $g(T, B)$ 放缩循环块的有效参数量（拟合 230 组配置 $R^2=0.9992$，样本内 RMSE $6.14\times 10^{-3}$ nats，留出（held-out）$(T, B)$ 配置的外推误差 $8.67\times 10^{-3}$，比无上限的幂律拟合少近一半误差）：</p>
+        <h3 id="tbp-law">有效参数 Scaling Law<a class="anchor" href="#tbp-law" aria-hidden="true">#</a></h3>
+        <p>作者用饱和型循环系数 $g(T, B)$ 放缩循环块的有效参数量。在 230 组配置上拟合 $R^2=0.9992$，样本内 RMSE 为 $6.14\times 10^{-3}$ nats，留出（held-out）$(T, B)$ 配置的外推误差为 $8.67\times 10^{-3}$，比无上限幂律拟合低近一半：</p>
         $$\begin{aligned}
         L &amp;= E + \left[A\left(\frac{N_{\text{eff}}}{N_0}\right)^{-\alpha} + H\left(\frac{D}{D_0}\right)^{-\beta}\right]^{\kappa}, \\
         N_{\text{eff}} &amp;= N_{\text{once}} + g(T,B) N_{\text{rec}}, \qquad g(T, B) = \exp\!\Big[c\,(1 - T^{-p}B^{-q})\Big].
         \end{aligned}$$
-        <p>全数据集拟合得到 $c \approx 1.112$、$p \approx 0.237$、$q \approx 1.022$（饱和上限 $e^c \approx 3.04$），关键在于 <strong>$q \gt 2p$ 且差距超过两倍</strong>。在等算力约束 $T+2B=S$ 下极小化 $T^{-p}B^{-q}$（引理 D.2）可以严格证明：只要 $q \ge 2p$，最优解永远压在边界 $T^* = B^* = S/3$——也就是说，用多余前向轮数换取完整反传的「反向每一轮」，比保留一堆无梯度前向更划算。</p>
+        <p>全数据集拟合得到 $c \approx 1.112$、$p \approx 0.237$、$q \approx 1.022$（饱和上限 $e^c \approx 3.04$），关键在于 <strong>$q \gt 2p$ 且差距超过两倍</strong>。在等算力约束 $T+2B=S$ 下极小化 $T^{-p}B^{-q}$（引理 D.2）可以直接证明：只要 $q \ge 2p$，最优解总落在边界 $T^* = B^* = S/3$。换句话说，与其把算力花在多跑几轮无梯度前向，不如把每一轮都纳入完整反传。</p>
 
         <figure>
             <img src="../fig-tbp-law-parts.webp" width="1440" height="503" alt="饱和型循环 Scaling Law 的三面板解剖：(a) 完整反传下的循环系数 g(T, T) 逐渐饱和至拟合上限约 3.04；(b) 随反传比例 B/T 下降，有效参数倍率被严重折扣；(c) 从 (1,1)=1.00 到 (8,8)=1.91 的整模型等效参数倍率。" loading="lazy">
@@ -278,13 +277,13 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>前向轮数固定</strong> ($T=8$)</td>
+                        <td><strong>前向轮数固定</strong>（$T=8$）</td>
                         <td class="best">截断至 $B^* = 2$</td>
                         <td>极小化单位算力效率 $\chi = N_{\text{comp}}/N_{\text{eff}}$，把省下算力分给 $1.51\times N,\,1.20\times D$，同 loss 省 <strong>33–35% FLOPs</strong></td>
                     </tr>
                     <tr>
                         <td><strong>前向轮数可调</strong>（同 $N, D$）</td>
-                        <td class="best">完整 BPTT ($B=T$)</td>
+                        <td class="best">完整 BPTT（$B=T$）</td>
                         <td>5 个规模下 $(4,4)$ 全胜 $(8,2)$（240M: $2.2642$ vs. $2.2778$ nats），前沿同 loss 省 <strong>8–14% 算力</strong></td>
                     </tr>
                     <tr>
@@ -307,13 +306,13 @@
         </figure>
 
         <div class="callout callout-tip">
-            <p><strong>把稠密（Truncate or Not?）和稀疏（SMELT）串起来看：</strong>表面上一个说「自由参数时别循环最好」，另一个说「MoE 循环能省 6.8–18.0% 算力」，其实两者根本不矛盾，甚至在核心结论上高度合拍——两项研究各自独立发现 <strong>「完整反传 + 循环 2 遍」是最优甜点</strong>。差别在于稠密模型绑定参数后，$g(2,2)\approx 1.910 \lt 2$ 无法释放多余算力去补参数；而 SMELT 靠稀疏 MoE 把变窄省出的权重空间变成更多专家，加上二次访问天然触发专家重路由，最终打破了稠密模型的收益上限。</p>
+            <p><strong>把稠密（Truncate or Not?）和稀疏（SMELT）串起来看：</strong>表面上一个说「自由参数时别循环最好」，另一个说「MoE 循环能省 6.8–18.0% 算力」，其实两者并不矛盾，反而在核心结论上一致——两项研究各自独立发现 <strong>「完整反传 + 循环 2 遍」是最优甜点</strong>。差别在于稠密模型绑定参数后，$g(2,2)\approx 1.910 \lt 2$ 无法释放多余算力去补参数；而 SMELT 靠稀疏 MoE 把变窄省出的权重空间变成更多专家，加上二次访问触发专家重路由，绕开了稠密模型的这一限制。</p>
         </div>
 
-        <h2 id="inkling">Inkling 2 Mini：生产级 Looped MoE 与内部电路<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
+        <h2 id="inkling">Inkling 2 Mini：架构与内部电路<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
 
-        <h3 id="inkling-arch">Attention Residuals 与跨循环数据流<a class="anchor" href="#inkling-arch" aria-hidden="true">#</a></h3>
-        <p>由 Thinking Machines Lab 发布（<em lang="en">Introducing Inkling 2 Mini</em><a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>）并由 Goodfire 进行可解释性剖析（<em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>）的 <strong>Inkling 2 Mini</strong>（Apache 2.0），把 Looped MoE 做成了本地笔记本（~20GB 原生 NVFP4/MXFP8 权重、1M 上下文）可跑的多模态推理模型：26.4B 总参数、3.4B 静态激活、跨 3 轮等效 5.4B 激活；24 个物理层（$d=2304$，训练中从 384 专家剪枝至 top-8 of 128 并经 1T token 蒸馏修复与 2.2T token RL）按每 6 层切分为 4 个 Block——Block 1（$1\text{–}6$ 层）和 Block 4（$19\text{–}24$ 层）各跑一遍，中间 Block 2、3（$7\text{–}18$ 层）循环 3 遍共执行 48 层。</p>
+        <h3 id="inkling-arch">Attention Residuals 与跨轮流<a class="anchor" href="#inkling-arch" aria-hidden="true">#</a></h3>
+        <p>由 Thinking Machines Lab 发布<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a>、Goodfire 进行可解释性剖析<a class="cite" href="#ref-4">[4]</a> 的 <strong>Inkling 2 Mini</strong>（Apache 2.0）是一款生产级 Looped MoE 多模态推理模型：总参数 26.4B、静态激活 3.4B、跨 3 轮等效激活 5.4B，原生 NVFP4/MXFP8 权重约 20GB、支持 1M 上下文。它的 24 个物理层（$d=2304$，训练中从 384 专家剪枝至 top-8 of 128，再经 1T token 蒸馏修复与 2.2T token RL）按每 6 层切分为 4 个 Block：Block 1（1–6 层）与 Block 4（19–24 层）各跑一遍，中间 Block 2、3（7–18 层）循环 3 遍，共执行 48 层。</p>
         <ul>
             <li><strong>循环位置消融：</strong>中间 12 层循环在 28 项评测中以 <strong>27/28</strong> 胜过尾部 12 层循环（等效算力增益 $1.51\text{–}1.91\times$ vs. $1.24\text{–}1.36\times$）。</li>
             <li><strong>长程推理对照：</strong>512k 长轨迹测试里，不循环对照版需要多花 <strong>$140\%$ 推理算力</strong>才能追平同等的验证 loss（训练算力仅省 $7.5\%$）。</li>
@@ -324,29 +323,29 @@
             <figcaption>图 10：Inkling 2 Mini 的 24 层四块（Blocks 2–3 循环三遍）完整展开架构，区分同轮 Depth-wise Attention 残差（黑线）与上一轮 Cross-Loop Attention 融合模块（紫框）。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
         </figure>
 
-        <p>架构上最核心的创新，是用块级 <strong>Attention Residuals（AttnRes）</strong><a class="cite" href="#ref-8">[8]</a> 加 <strong>Cross-Loop Attention（跨循环注意力）</strong>取代了单条累加残差流：每个 Block 从零累加各自 6 层 Attention + MoE 的输出得到 $\mathbf{v}_i$（嵌入层记为 $\mathbf{v}_0$），每个子层输入则经两条路径融合而成：</p>
+        <p>架构上最关键的改动，是用块级 <strong>Attention Residuals（AttnRes）</strong><a class="cite" href="#ref-8">[8]</a> 配合 <strong>Cross-Loop Attention</strong> 取代单条累加残差流。每个 Block 从零累加各自 6 层 Attention + MoE 的输出得到 $\mathbf{v}_i$（嵌入层记为 $\mathbf{v}_0$），每个子层输入则由两条路径融合而成：</p>
         <ul>
-            <li><strong>Depth-wise Attention（沿深度维度的注意力）：</strong>单 token 进子层前，先对当前循环前面各个块的输出做归一化加权，读取 $\mathbf{x}=\sum_j\alpha_j\hat{\mathbf{v}}_j$。</li>
-            <li><strong>Cross-Loop Attention（跨循环注意力）：</strong>从第 2 轮起，每层用 4 组独立查询向量 $\mathbf{u}_{Q,K,V,\text{MoE}}$ 读取<strong>上一轮</strong>的 Block 2 和 Block 3 输出，再经 64 维瓶颈门控混合：</li>
+            <li><strong>Depth-wise Attention：</strong>单 token 进子层前，对当前循环前面各个块的输出做归一化加权，读取 $\mathbf{x}=\sum_j\alpha_j\hat{\mathbf{v}}_j$。</li>
+            <li><strong>Cross-Loop Attention：</strong>从第 2 轮起，每层用 4 组独立查询向量 $\mathbf{u}_{Q,K,V,\text{MoE}}$ 读取<strong>上一轮</strong>的 Block 2 和 Block 3 输出，再经 64 维瓶颈门控混合：</li>
         </ul>
         $$\begin{aligned}
         \mathbf{m}_s &amp;= \sum_{j\in\{2,3\}} \beta_j\,\hat{\mathbf{v}}_j^{[t-1]}, \qquad \mathbf{z} = \mathbf{P}\big[\text{RMSNorm}(\mathbf{x});\,\text{RMSNorm}(\mathbf{m}_s)\big], \\
         \mathbf{x}' &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}\mathbf{z})\big)}_{\boldsymbol{\kappa}}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}\mathbf{z})}_{\boldsymbol{\gamma}}\odot\mathbf{m}_s.
         \end{aligned}$$
-        <p>其中增益 $\boldsymbol{\gamma}$ 初始化为 0，保证训练初期与普通不循环模型完全一致，再平滑打开跨轮通道。</p>
-        <p>由于整条路径可以精确拆成之前所有层输出 $\mathbf{o}_w$ 的线性加权和 $\mathbf{x}'=\sum_w \mathbf{c}_w$（投影份额 $s_w = (\mathbf{c}_w \cdot \mathbf{x}')/\|\mathbf{x}'\|^2$ 之和恒为 1），Goodfire 的信息流分解捕捉到一个反直觉现象：<strong>第 2 轮第 13 层（Block 3 首层）本轮已通过 Depth-wise Attention 拿到 Block 2（$\mathbf{v}_2^{[2]}$），于是 Cross-Loop Attention 几乎全部转去读上一轮的 Block 3（$\mathbf{v}_3^{[1]}$）</strong>——其中包含第 18 层的输出，等于在跨轮通道里直接读取了「物理层号在自己之后」的结果。</p>
+        <p>其中增益 $\boldsymbol{\gamma}$ 初始化为 0，保证训练初期与普通不循环模型一致，再平滑打开跨轮通道。</p>
+        <p>整条路径可以拆成之前所有层输出 $\mathbf{o}_w$ 的线性加权和 $\mathbf{x}'=\sum_w \mathbf{c}_w$（投影份额 $s_w = (\mathbf{c}_w \cdot \mathbf{x}')/\|\mathbf{x}'\|^2$ 之和恒为 1）。Goodfire 按此分解发现了一个有意思的现象：<strong>第 2 轮第 13 层（Block 3 首层）本轮已通过 Depth-wise Attention 拿到 Block 2（$\mathbf{v}_2^{[2]}$），因此它的 Cross-Loop Attention 几乎全部转去读上一轮的 Block 3（$\mathbf{v}_3^{[1]}$）</strong>。这相当于让第 13 层直接读取了包含第 18 层在内的“物理层号在自己之后”的输出。</p>
 
         <figure>
             <img src="../fig-inkling-dataflow.svg" width="1400" height="620" alt="Inkling 2 Mini 第 2 轮第 13 层的双路数据流拆解：Depth-wise Attention 读当前轮 v0/v1/v2[2]，Cross-Loop Attention 通过 4 组独立读取头对比上一轮 v2[1] 与 v3[1] 并经 64 维门控融合，底部展示第 18 层如何用 d2027 正负翻转控制跨轮信号。" loading="lazy">
             <figcaption>图 11：Inkling 2 Mini 第 2 轮第 13 层的双通道信息路由与物理第 18 层在三轮循环中的 $d_{2027}$ 极性翻转电路<a class="cite" href="#ref-4">[4]</a>。<a href="../fig-inkling-dataflow.svg">查看原图</a></figcaption>
         </figure>
 
-        <h3 id="inkling-coord">权重打标与异常维度 d2027 开关<a class="anchor" href="#inkling-coord" aria-hidden="true">#</a></h3>
-        <p>没有人为规定路由规则，模型怎么学会每一轮该去读哪一块？Goodfire 在 13,233 个 FineWeb token 上从权重和激活两头挖出了具体回路：</p>
+        <h3 id="inkling-coord">权重打标与 d2027 开关<a class="anchor" href="#inkling-coord" aria-hidden="true">#</a></h3>
+        <p>没有人为规定路由规则，模型怎么学会每一轮该读哪一块？Goodfire 在 13,233 个 FineWeb token 上从权重和激活两个层面定位到了具体机制：</p>
         <ul>
-            <li><strong>块末层的权重“打标（Tagging）”：</strong>扫描全部 24 层 $3{,}538{,}944$ 条 MoE down-projection 写入向量与 $104$ 个 Block Reader 查询向量，在绝对余弦最高的 3,490 对（$|\cos| \ge 0.30$，前 $0.001\%$）里，几乎全挤在每块最后一层——层 6/12/18 集中写给 Block 4 的 Depth-wise Reader，而跨循环写入高度集中在 Block 3 末层（层 18）并精准对准下一轮 Block 3 首层（层 13）。</li>
-            <li><strong>超级异常维度 $d_{2027}$ 独扛半壁江山：</strong>RMS 归一化后向量平方范数恒为 $d=2304$（均摊每维贡献 $0.043\%$），但单单第 2027 维均值就飙到 $+32.4$，<strong>一维独占 46% 的总平方范数</strong>。由于 $\beta_3 = \sigma(s_3 - s_2) = \sigma\!\big(\frac{1}{\sqrt{2304}}\sum_i u_i(\hat{v}_{3,i}-\hat{v}_{2,i})\big)$，在 Loop 2 第 13 层仅凭 $d_{2027}$ 一维就分别解释了 Block 3 相对 Block 2 logit 差值的 <strong>17% ($Q$)、19% ($V$)、11% ($K$) 和 6% (MoE)</strong>（前 5 异常维合计占 60%/62%/32%/30%）。</li>
-            <li><strong>同一层权重的三轮“过河拆桥”开关：</strong>最震撼的是，同样一套层 18 权重，在 Loop 1 和 Loop 2 结尾往 $d_{2027}$ 狠狠写入<strong>大正值</strong>（给下一轮发信号读取 Block 3），到了最后一遍 Loop 3 结尾，因为后面没有循环了、马上进 Block 4 解码，层 18 竟在同一维度上写出大幅<strong>负尖峰</strong>主动清零标志位！</li>
+            <li><strong>块末层的权重打标（Tagging）：</strong>扫描全部 24 层共 $3{,}538{,}944$ 条 MoE down-projection 写入向量与 $104$ 个 Block Reader 查询向量，绝对余弦最高的 3,490 对（$|\cos| \ge 0.30$，前 $0.001\%$）几乎都集中在每个 Block 的最后一层。层 6、12、18 集中写给 Block 4 的 Depth-wise Reader，而跨循环写入集中在 Block 3 末层（层 18）并指向下一轮 Block 3 首层（层 13）。</li>
+            <li><strong>高幅值异常维度 $d_{2027}$：</strong>RMS 归一化后向量平方范数恒为 $d=2304$（均摊到每维仅占 $0.043\%$），但第 2027 维均值达到 $+32.4$，<strong>单维占去 46% 的总平方范数</strong>。因为 $\beta_3 = \sigma(s_3 - s_2) = \sigma\!\big(\frac{1}{\sqrt{2304}}\sum_i u_i(\hat{v}_{3,i}-\hat{v}_{2,i})\big)$，在 Loop 2 第 13 层仅凭 $d_{2027}$ 一维就分别解释了 Block 3 相对 Block 2 logit 差值的 <strong>17%（$Q$）、19%（$V$）、11%（$K$）和 6%（MoE）</strong>；前 5 个异常维合计占 60% / 62% / 32% / 30%。</li>
+            <li><strong>同一层权重跨轮次翻转极性：</strong>同样一套第 18 层权重，在 Loop 1 和 Loop 2 结尾会往 $d_{2027}$ 写入大幅<strong>正值</strong>，标明下一轮应读取 Block 3；到了最后一遍 Loop 3 结尾，因为后续将直接进入 Block 4 解码而不再循环，第 18 层在同一维度上转而写出大幅<strong>负值</strong>，主动清空这一路由标记。</li>
         </ul>
 
         <figure>
@@ -354,25 +353,25 @@
             <figcaption>图 12：Inkling 2 Mini 各层 Attention 与 MoE 对第 2027 维的平均写入强度：物理第 18 层在前两轮写出强正峰打标 Block 3，在最后一轮反手写负清空信号。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
         </figure>
 
-        <h3 id="inkling-decode">中间层解码、推理边界与可监控性<a class="anchor" href="#inkling-decode" aria-hidden="true">#</a></h3>
-        <p>Goodfire 在 1,250 篇 FineWeb 文档上对比了几种中间表征解码方法：直接套最终 unembedding 的 <strong>Logit-lens</strong> 只有在每轮接近第 18 层结尾时才像点样；而用仿射对齐的 <strong>Tuned-lens</strong> 或直接拿原模型 Block 4（Coda）跨序列推理中间隐状态的 <strong>Coda-lens</strong>，哪怕在很早的循环轮次就能以高 top-50 命中率和概率质量还原最终答案。说明模型即便把大量推理折进了循环隐空间，中间计算依然保持可解码结构。</p>
+        <h3 id="inkling-decode">中间层解码与推理边界<a class="anchor" href="#inkling-decode" aria-hidden="true">#</a></h3>
+        <p>Goodfire 在 1,250 篇 FineWeb 文档上对比了几种中间表征解码方法。直接套用最终 unembedding 的 <strong>Logit-lens</strong> 只有在每轮接近第 18 层结尾时才有较高准确率；而使用仿射对齐的 <strong>Tuned-lens</strong>，或直接拿原模型 Block 4（Coda）跨序列解码中间隐状态的 <strong>Coda-lens</strong>，在较早的循环轮次就能以高 top-50 命中率和概率质量还原最终答案。这说明即使模型把大量计算折进了循环隐空间，中间状态仍保留了可解码结构。</p>
 
         <figure>
             <img src="../fig-inkling-lenses.webp" width="1600" height="1102" alt="Goodfire 原图：Logit lens、Tuned lens、Jacobian lens 与 Coda lens 在 Inkling 2 Mini 全部层及三轮循环中的 top-50 包含率与概率质量曲线。" loading="lazy">
             <figcaption>图 13：1,250 篇 FineWeb 文档上四种中间层解码方法（Logit-lens / Tuned-lens / Jacobian-lens / Coda-lens）跨三轮循环的表现对比。来源：Goodfire <em lang="en">Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>。</figcaption>
         </figure>
 
-        <p>结合 Inkling 2 Mini（DeepSWE v1.1 达 $48.2\%$、Vals Index v2.2 达 $46.5\%$、DGX Spark 上每瓦智能得分（intelligence/watt）$0.703$ 显著领先 Qwen3.6-35B-A3B 的 $0.430$）和可调循环研究版 <code>TML-d24-varloop-research</code>，Thinking Machines 还把循环的推理收益与 CoT 安全监控边界拆得很清楚：</p>
+        <p>在评测基准上，Inkling 2 Mini 在 DeepSWE v1.1 达到 $48.2\%$、Vals Index v2.2 达到 $46.5\%$，DGX Spark 上每瓦智能得分（intelligence/watt）为 $0.703$，高于 Qwen3.6-35B-A3B 的 $0.430$。结合可调循环研究版 <code>TML-d24-<wbr>varloop-research</code>，Thinking Machines 也界定了增加循环次数的能力边界与 CoT 监控风险：</p>
         <ul>
-            <li><strong>循环加推理不加死记知识：</strong>在不写 CoT 的 Think Fast 评测中，随循环从 1 次增至 3 次，50% 可靠率对应的时间跨度（50%-reliability horizon）从 $16\text{ s}$ 提到 $37\text{ s}$，并在训练未见过的 10 次循环上稳定维持（$40\text{ s}$）；纯多跳串行任务 N-Hop Lookup 直到 10 次循环仍在提分。但闭卷事实问答（closed-book QA，如 SimpleQA Verified、AA-Omniscience）几乎不随循环增长——知识存储上限依然卡在 $26.4\text{B}$ 权重容量，靠高频工具与搜索能力（BrowseComp $79.0\%$、DeepSearchQA $85.3\%$）补足。</li>
-            <li><strong>思考链变短了，却没有“隐身”：</strong>在各循环遍数都答对的 GPQA Diamond 题目上，循环增加让思考 token 砍掉一半多，省下的主要是「wait / actually / hmm」式自我回溯与反复试错，平均句长与英文词典可读率几乎不变；模型操控 CoT 规避检查的能力也极低（$\le 0.1\%$），在完整监督下的 LinuxArena 恶意隐藏率保持 $0.3\text{–}1.3\%$（官方同时提示，针对更多循环遍数专项 RL 的大模型仍需持续监控）。</li>
+            <li><strong>循环提升推理，不增加静态知识：</strong>在不写 CoT 的 Think Fast 评测中，随循环从 1 次增至 3 次，50%-reliability horizon 从 $16\text{ s}$ 提到 $37\text{ s}$，在训练未见过的 10 次循环上仍维持在 $40\text{ s}$；纯多跳串行任务 N-Hop Lookup 直到 10 次循环仍在提分。但闭卷事实问答（SimpleQA Verified、AA-Omniscience）几乎不随循环增长——知识容量仍受限于 26.4B 权重，需要靠工具与搜索能力（BrowseComp $79.0\%$、DeepSearchQA $85.3\%$）补足。</li>
+            <li><strong>CoT 变短，但并未隐蔽化：</strong>在各循环遍数都答对的 GPQA Diamond 题目上，循环增加让思考 token 减少一半以上，省下的主要是「wait / actually / hmm」这类回溯与试错，平均句长和词典词占比几乎不变（见下表）。模型主动操控 CoT 规避检查的能力也很低（$\le 0.1\%$），完整监督下的 LinuxArena 恶意隐藏率为 $0.3\text{–}1.3\%$；官方同时提示，针对更多循环遍数做专项 RL 的更大模型仍需持续监控。</li>
         </ul>
 
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>GPQA Diamond 已解题思维链指标</th>
+                        <th>GPQA Diamond 已解题 CoT 指标</th>
                         <th>1 Pass</th>
                         <th>3 Passes</th>
                         <th>5 Passes</th>
@@ -407,36 +406,36 @@
             </table>
         </div>
 
-        <h2 id="elt">ELT：视觉生成的弹性循环与自蒸馏<a class="anchor" href="#elt" aria-hidden="true">#</a></h2>
+        <h2 id="elt">ELT：视觉生成弹性循环<a class="anchor" href="#elt" aria-hidden="true">#</a></h2>
 
-        <h3 id="elt-ilsd">ILSD 循环内自蒸馏与 Any-Time 弹性推理<a class="anchor" href="#elt-ilsd" aria-hidden="true">#</a></h3>
-        <p>不同于自回归语言模型每步只生成一个 token，扩散模型（DiT<a class="cite" href="#ref-9">[9]</a>）与 Masked Generative 模型（MaskGIT/MAGVIT）本身就有外层的 $K$ 步采样/去噪循环。ECCV 2026 论文 <em lang="en">ELT: Elastic Looped Transformers for Visual Generation</em> 在<strong>每一步采样内部</strong>又嵌套了一条正交的权重共享循环：把由 $N$ 个独立层构成的复合块 $g_\Theta(\mathbf{x}) = f_{\theta_N}(\cdots f_{\theta_1}(\mathbf{x}))$ 连续重用 $L$ 遍，即 $F_{(N,L)}(\mathbf{x}) = g_\Theta^L(\mathbf{x})$，仅存 $N$ 套权重即可跑出 $\mathcal{D} = N\times L$ 的执行深度。紧致参数 $\Theta$ 让计算密度（Arithmetic Intensity，FLOPs/Byte）提高最高 $L$ 倍，在硬件侧直接缓解 HBM 带宽墙。</p>
-        <p>但直接按最大循环次数 $L_{\max}$ 训练的朴素 Looped Transformer，在提前截断 $L \neq L_{\max}$ 时中间隐状态几乎不可解码——MaskGIT 早期出口画质暴跌，DiT 在 $L\neq 8$ 时 FID 直接炸到 $120\text{–}200$。为此 ELT 提出 <strong>ILSD（Intra-Loop Self Distillation，循环内自蒸馏）</strong>与<strong>随机采样学生深度（$S^3$，Stochastic Student Sampling）</strong>：训练每一步中，完整跑完 $L_{\max}$ 遍作为教师轨迹，随机采样的中间前缀步数 $L_{\text{int}} \sim \mathcal{U}(L_{\min}, L_{\max})$ 作为学生路径共享同一个输出头，用线性衰减权重 $\lambda: 1 \to 0$ 联合优化真值损失与蒸馏损失：</p>
+        <h3 id="elt-ilsd">ILSD 自蒸馏与 Any-Time 推理<a class="anchor" href="#elt-ilsd" aria-hidden="true">#</a></h3>
+        <p>不同于自回归语言模型每步只生成一个 token，扩散模型（DiT<a class="cite" href="#ref-9">[9]</a>）与 Masked Generative 模型（MaskGIT/MAGVIT）本身就有外层的 $K$ 步采样或去噪循环。ECCV 2026 论文 <em lang="en">ELT: Elastic Looped Transformers for Visual Generation</em> 在<strong>每一步采样内部</strong>又嵌套了一条正交的权重共享循环：把由 $N$ 个独立层构成的复合块 $g_\Theta(\mathbf{x}) = f_{\theta_N}(\cdots f_{\theta_1}(\mathbf{x}))$ 连续重用 $L$ 遍，即 $F_{(N,L)}(\mathbf{x}) = g_\Theta^L(\mathbf{x})$，仅存 $N$ 套权重即可跑出 $\mathcal{D} = N\times L$ 的执行深度。紧致参数 $\Theta$ 让 Arithmetic Intensity（每字节内存搬运对应的 FLOPs）最高提高 $L$ 倍，在硬件侧直接缓解 HBM 带宽墙。</p>
+        <p>但只按最大循环次数 $L_{\max}$ 训练的朴素 Looped Transformer，在提前截断 $L \neq L_{\max}$ 时中间隐状态几乎不可解码——MaskGIT 早期出口质量明显下降，DiT 在 $L\neq 8$ 时 FID 会恶化到 $120\text{–}200$。为此 ELT 提出 <strong>ILSD（Intra-Loop Self Distillation，循环内自蒸馏）</strong>与<strong>随机采样学生深度（$S^3$，Stochastic Student Sampling）</strong>：每步训练中，完整跑完 $L_{\max}$ 遍作为教师轨迹，随机采样的中间前缀步数 $L_{\text{int}} \sim \mathcal{U}(L_{\min}, L_{\max})$ 作为学生路径共享同一个输出头，用线性衰减权重 $\lambda: 1 \to 0$ 联合优化真值损失与蒸馏损失：</p>
         $$\begin{aligned}
         \mathcal{L}^{\text{ILSD}}_{\Theta} &amp;= \mathcal{L}^{\text{GT}}\!\big(F_{(N,L_{\max})}(\mathbf{x}),\,\mathbf{y}\big) + \lambda\,\mathcal{L}^{\text{GT}}\!\big(F_{(N,L_{\text{int}})}(\mathbf{x}),\,\mathbf{y}\big) \\
         &amp;\quad + (1-\lambda)\,\mathcal{L}^{\text{dist}}\!\Big(F_{(N,L_{\text{int}})}(\mathbf{x}),\,\operatorname{sg}\!\big(F_{(N,L_{\max})}(\mathbf{x})\big)\Big), \qquad L_{\text{int}} \sim \mathcal{U}(L_{\min}, L_{\max}).
         \end{aligned}$$
-        <p>关键工程亮点在于：学生状态 $F_{(N,L_{\text{int}})}$ 本来就是计算教师轨迹 $F_{(N,L_{\max})}$ 途经的前缀结果，因此 <strong>ILSD 无需任何额外教师前向</strong>（离散 MaskGIT/MAGVIT 用交叉熵，DiT 连续潜空间用 sigmoid 加权 MSE）。早期 $\lambda\approx 1$ 先靠真值锚定学生、后期转向蒸馏成熟教师，迫使 $\Theta$ 把关键细化压进更早的循环里。</p>
+        <p>设计上比较巧妙的一点是：学生状态 $F_{(N,L_{\text{int}})}$ 本来就是计算教师轨迹 $F_{(N,L_{\max})}$ 途经的前缀结果，因此 <strong>ILSD 无需任何额外教师前向</strong>（离散 MaskGIT/MAGVIT 用交叉熵，DiT 连续潜空间用 sigmoid 加权 MSE）。训练前期 $\lambda\approx 1$ 先靠真值锚定学生、后期转向蒸馏成熟教师，迫使 $\Theta$ 把主要细化压进更早的循环里。</p>
 
         <figure>
             <img src="../fig-elt-arch.svg" width="1400" height="640" alt="ELT 框架架构图：左半部展示训练阶段零额外前向的循环内前缀自蒸馏 ILSD（学生路径 L_int 共享权重且受停梯度教师路径 L_max 蒸馏）；右半部展示推理阶段一套参数 Theta 支持从端侧低算力到高保真前沿甚至外推步数的 Any-Time 弹性早退。" loading="lazy">
-            <figcaption>图 14：ELT 框架总览——训练阶段的前缀自蒸馏 ILSD（左）与推理阶段单套共享权重 $\Theta$ 驱动的 Any-Time 弹性早退（右）<a class="cite" href="#ref-9">[9]</a>。<a href="../fig-elt-arch.svg">查看原图</a></figcaption>
+            <figcaption>图 14：ELT 框架总览：训练阶段的前缀自蒸馏 ILSD（左）与推理阶段单套共享权重 $\Theta$ 驱动的 Any-Time 弹性早退（右）<a class="cite" href="#ref-9">[9]</a>。<a href="../fig-elt-arch.svg">查看原图</a></figcaption>
         </figure>
 
-        <p>实验证明，加入 ILSD 后单次训练出的模型即可在全循环谱上平滑保持生成质量，并在视频生成 UCF-101（$L_{\max}=4$）上展现温和的深度外推能力，在未见过的 $L=6$ 时把 FVD 进一步刷到 $69.20$。</p>
+        <p>加入 ILSD 后，单次训练出的模型即可在全部推理循环次数上平滑保持生成质量，并在 UCF-101 视频生成（$L_{\max}=4$）上展现出温和的深度外推能力，在训练未见过的 $L=6$ 时将 FVD 进一步降到 $69.20$。</p>
 
         <figure>
-            <img src="../fig-elt-ilsd.webp" width="1480" height="573" alt="ImageNet 256x256 上有/无 ILSD 的 Any-Time 弹性推理曲线对比：左图 MaskGIT（N=4, L_max=10）与右图 DiT（N=4, L_max=8）均显示无 ILSD 时一旦离开训练深度 FID 即急剧恶化（DiT 飙至 120-200），而 ILSD 在全部推理循环次数上保持平滑。" loading="lazy">
+            <img src="../fig-elt-ilsd.webp" width="1480" height="573" alt="ImageNet 256x256 上有/无 ILSD 的 Any-Time 弹性推理曲线对比：左图 MaskGIT（N=4, L_max=10）与右图 DiT（N=4, L_max=8）均显示无 ILSD 时一旦离开训练深度 FID 即急剧恶化（DiT 升至 120-200），而 ILSD 在全部推理循环次数上保持平滑。" loading="lazy">
             <figcaption>图 15：ImageNet $256\times 256$ 上启用 ILSD 与否的 Any-Time 弹性推理对比：MaskGIT（左，$N=4, L_{\max}=10$）与 DiT（右，$N=4, L_{\max}=8$）。来源：Goyal 等，<em lang="en">ELT</em><a class="cite" href="#ref-9">[9]</a>。</figcaption>
         </figure>
 
-        <h3 id="elt-scaling">4× 参数压缩、DiT 收敛加速与硬件吞吐<a class="anchor" href="#elt-scaling" aria-hidden="true">#</a></h3>
-        <p>在推理等算力（iso-inference-compute）约束下横跨图像与视频生成任务，ELT 用 $2\text{–}4\times$ 更少的参数追平乃至反超不循环大基线：</p>
+        <h3 id="elt-scaling">参数压缩、收敛与硬件吞吐<a class="anchor" href="#elt-scaling" aria-hidden="true">#</a></h3>
+        <p>在推理等算力（iso-inference-compute）约束下横跨图像与视频生成任务，ELT 用 $2\text{–}4\times$ 更少的参数追平甚至超过不循环的更大基线（核心数值见下表与图 16）：</p>
         <ul>
-            <li><strong>ImageNet $256\times 256$（MaskGIT）：</strong><strong>ELT-XL（$7N\times 4L$，$111\text{M}$）</strong>以完全相同的 $3.9\text{k}$ GFLOPs、少 <strong>4× 参数</strong>追平 $446\text{M}$ 的 MaskGIT-XL（<strong>FID $2.0$</strong>），前沿服从幂律 $\text{FID} = 1922.5 \cdot G^{-0.95} + 1.48$。</li>
-            <li><strong>ImageNet $256\times 256$（DiT 与表达力下限）：</strong>在 SD v1.4 潜空间 DiT（等效深度 $\mathcal{D}=32$）上，<strong>ELT（$16N\times 2L$，$1.1\text{B}$）</strong>拿到 <strong>FID $2.83$</strong>、<strong>ELT（$8N\times 4L$，$539\text{M}$）</strong>拿到 <strong>FID $3.16$</strong>，均显著优于 $2.1\text{B}$ 参数的 32 层 DiT 基线（<strong>FID $3.43$</strong>），且训练收敛分别快 <strong>$2.0\times$</strong> 与 <strong>$1.4\times$</strong>；而 $1N\times 32L$（$69\text{M}$）反例退化到 FID $10.30$，说明单步内独立层数 $N$ 存在表达力下限。</li>
-            <li><strong>UCF-101 视频生成（MAGVIT）：</strong>在仅 $\sim 13.7\text{M}$ 训练 token 的受限数据集上，<strong>$76\text{M}$ ELT（$6N\times 4L$）</strong>以相等的 $\sim 4.3\text{k}$ GFLOPs 击败 $306\text{M}$ 的 MAGVIT-L（<strong>FVD $72.8 \pm 2.5$</strong> vs. $76 \pm 2$），加到 $6N\times 6L$ / 24 步更降至 <strong>$60.8$</strong>，体现出权重共享在小数据下的正则化红利。</li>
-            <li><strong>打破内存墙与 TPU v6e 实测：</strong>单卡 TPU v6e 上（$8N\times 4L, \mathcal{D}=32$），ELT 直接把训练峰值 HBM 显存砍掉 <strong>34%</strong>（$5.1\text{ GB}$ 对 $7.7\text{ GB}$，同为 $130\text{ ms/step}$；若将循环展开为 <code>ELTopt</code> 可进一步降至 <strong>$118\text{ ms}$</strong> / $5.8\text{ GB}$）。推理阶段（batch 8）当紧凑权重 $\Theta$ 全部驻留片上 SRAM 时，消除重复 HBM 搬运带来 <strong>$2.9\times$（L）/ $3.3\times$（XL）/ $3.5\times$（H）</strong>的实测吞吐加速。</li>
+            <li><strong>ImageNet $256\times 256$（MaskGIT）：</strong>ELT-XL（$7N\times 4L$）在相同的 $3.9\text{k}$ GFLOPs 下以少 <strong>4× 参数</strong>追平 $446\text{M}$ 的 MaskGIT-XL，算力前沿服从幂律 $\text{FID} = 1922.5 \cdot G^{-0.95} + 1.48$。</li>
+            <li><strong>ImageNet $256\times 256$（DiT 与表达力下限）：</strong>在 SD v1.4 潜空间 DiT（等效深度 $\mathcal{D}=32$）上，$16N\times 2L$ 与 $8N\times 4L$ 均在更少参数下优于 2.1B 的 32 层 DiT 基线，且训练收敛明显更快。反例同样明确：$1N\times 32L$（69M）退化到 FID $10.30$，说明单步内独立层数 $N$ 存在表达力下限。</li>
+            <li><strong>UCF-101 视频生成（MAGVIT）：</strong>在仅 $\sim 13.7\text{M}$ 训练 token 的受限数据集上，<strong>76M ELT（$6N\times 4L$）</strong>以相等的 $\sim 4.3\text{k}$ GFLOPs 优于 306M 的 MAGVIT-L（<strong>FVD $72.8 \pm 2.5$</strong> vs. $76 \pm 2$）；外推到 $6N\times 6L$ / 24 步进一步降至 <strong>$60.8$</strong>，体现出权重共享在小数据下的正则化收益。</li>
+            <li><strong>内存墙与 TPU v6e 实测：</strong>单卡 TPU v6e 上（$8N\times 4L, \mathcal{D}=32$），ELT 将训练峰值 HBM 显存从 $7.7\text{ GB}$ 降至 $5.1\text{ GB}$（步时同为 $130\text{ ms}$；循环展开版 ELTopt 可进一步压到 <strong>$118\text{ ms}$</strong> / $5.8\text{ GB}$）。推理阶段（batch 8）紧凑权重 $\Theta$ 可完整驻留片上 SRAM，省去重复 HBM 搬运，在 L / XL / H 三档分别拿到 <strong>$2.9\times$ / $3.3\times$ / $3.5\times$</strong> 的吞吐加速。</li>
         </ul>
 
         <div class="table-wrap">
@@ -457,21 +456,21 @@
                         <td>1.0× 收敛速度 · 500K 步</td>
                     </tr>
                     <tr>
-                        <td><strong>ELT DiT ($8N \times 4L$)</strong></td>
-                        <td class="best">539M (少 4×)</td>
+                        <td><strong>ELT DiT（$8N \times 4L$）</strong></td>
+                        <td class="best">539M（少 4×）</td>
                         <td>FID 3.16</td>
                         <td><strong>1.4×</strong> 训练收敛加速</td>
                     </tr>
                     <tr>
-                        <td><strong>ELT DiT ($16N \times 2L$)</strong></td>
-                        <td>1.1B (少 2×)</td>
+                        <td><strong>ELT DiT（$16N \times 2L$）</strong></td>
+                        <td>1.1B（少 2×）</td>
                         <td class="best">FID 2.83</td>
                         <td><strong>2.0×</strong> 训练收敛加速</td>
                     </tr>
                     <tr>
                         <td><strong>ELT-XL / H（TPU v6e, BS=8）</strong></td>
-                        <td>111M (7N×4L)</td>
-                        <td>FID 2.0 (MaskGIT)</td>
+                        <td>111M（$7N\times 4L$）</td>
+                        <td>FID 2.0（MaskGIT）</td>
                         <td class="best"><strong>3.3×–3.5×</strong> 推理吞吐 · <strong>−34%</strong> 训练 HBM</td>
                     </tr>
                 </tbody>
@@ -483,44 +482,44 @@
             <figcaption>图 16：ImageNet $256\times 256$ 推理等算力下的 FID–参数量前沿：ELT 用少 $67\text{–}75\%$ 参数追平甚至超越 MaskGIT-XL/H，且模型宽度 $d$ 决定最终质量下限。来源：Goyal 等，<em lang="en">ELT</em><a class="cite" href="#ref-9">[9]</a>。</figcaption>
         </figure>
 
-        <h2 id="looped-dit">Looped-DiT：文生图深度监督与 Self-Modulating Attention<a class="anchor" href="#looped-dit" aria-hidden="true">#</a></h2>
+        <h2 id="looped-dit">Looped-DiT：文生图深度监督<a class="anchor" href="#looped-dit" aria-hidden="true">#</a></h2>
 
-        <h3 id="ldt-arch">朴素 MMDiT 循环为何失效：深度监督与 XSA<a class="anchor" href="#ldt-arch" aria-hidden="true">#</a></h3>
-        <p>ELT 聚焦类别条件生成并循环整套网络，而 <em lang="en">Looped Diffusion Transformer</em>（Looped-DiT，Chng, Chen 等<a class="cite" href="#ref-10">[10]</a>）直面开放文本生图（$512\times 512$ 像素空间 MiniT2I MMDiT，$260\text{M}$ 参数）的多约束隐式推理挑战：将 17 个 MMDiT 块按 <code>[6, 5, 6]</code> 切分为 Pre-loop $\mathcal{A}$、共享循环块 $\mathcal{B}$ 与 Post-loop $\mathcal{C}$，每个 flow-matching 去噪步内把中间 5 个块重复跑 $N=4$ 遍（实算 32 个块）：</p>
+        <h3 id="ldt-arch">Deep Supervision 与 XSA<a class="anchor" href="#ldt-arch" aria-hidden="true">#</a></h3>
+        <p>ELT 聚焦类别条件生成并循环整套网络，而 <em lang="en">Looped Diffusion Transformer</em>（Looped-DiT，Chng, Chen 等<a class="cite" href="#ref-10">[10]</a>）面向开放文本生图任务（$512\times 512$ 像素空间 MiniT2I MMDiT，260M 参数），处理多目标计数、属性和空间关系等复合约束。模型将 17 个 MMDiT 块按 [6, 5, 6] 切分为 Pre-loop $\mathcal{A}$、共享循环块 $\mathcal{B}$ 与 Post-loop $\mathcal{C}$，在每个 Flow Matching 去噪步内把中间 5 个块重复跑 $N=4$ 遍（实算 32 个块）：</p>
         $$h^{(0)} = \mathcal{A}(h_{\text{input}}),\qquad h^{(r)} = \mathcal{B}\big(h^{(r-1)}\big),\quad r=1,\ldots,N,\qquad \hat{x}_0 = \mathcal{C}\big(h^{(N)}\big).$$
-        <p>作者首先揪出 MMDiT 朴素循环不稳定的两大病根：</p>
+        <p>朴素重复 MMDiT 块主要会遇到两个问题：</p>
         <ul>
-            <li><strong>中间步缺乏监督：</strong>只对最后一轮 $h^{(N)}$ 算损失会让早期出口画质极差，且推理超过 $N=4$ 遍时效果不增反降。</li>
-            <li><strong>无约束重复注意力擦除局部空间信息：</strong>用线性岭回归探针从循环隐状态解码 2D patch 网格坐标，发现朴素循环的定位能力从第 1 遍的 <strong>$R^2 = 0.865$ 骤跌至第 8 遍的 $0.562$</strong>（跌去 $0.303$，反而不如不循环基线的 $0.668$）。</li>
+            <li><strong>中间步缺乏监督：</strong>只对最后一轮 $h^{(N)}$ 算损失会让早期出口画质很差，且推理超过 $N=4$ 遍时效果反而下降。</li>
+            <li><strong>无约束重复注意力擦除局部空间信息：</strong>用线性岭回归探针从循环隐状态解码 2D patch 网格坐标，朴素循环的定位能力从第 1 遍的 <strong>$R^2 = 0.865$ 降到第 8 遍的 $0.562$</strong>，跌去 $0.303$，反而不如不循环基线的 $0.668$。</li>
         </ul>
 
         <figure>
-            <img src="../fig-ldt-arch.webp" width="1440" height="746" alt="Looped-DiT 原论文架构图：右侧把 MMDiT 划分为 Pre-loop、共享 Middle Looped（重复 N 遍）与 Post-loop，并在训练时把各中间轮隐藏状态经共享 Post-loop 解码做深度监督；左侧展示仅施加在循环块内部的 Self-Modulating Attention（可学习门控或无参数 Exclusive Self Attention XSA）。" loading="lazy">
-            <figcaption>图 17：Looped-DiT 架构图：中间共享块 $\mathcal{B}$ 在单去噪步内循环 $N$ 遍，靠循环内 Self-Modulating Attention（左）与训练期共享 Post-loop $\mathcal{C}$ 深度监督（右）稳住表示。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
+            <img src="../fig-ldt-arch.webp" width="1440" height="746" alt="Looped-DiT 原论文架构图：右侧把 MMDiT 划分为 Pre-loop、共享 Middle Looped（重复 N 遍）与 Post-loop，并在训练时把各中间轮隐藏状态经共享 Post-loop 解码做 Deep Supervision；左侧展示仅施加在循环块内部的 Self-Modulating Attention（可学习门控或无参数 Exclusive Self Attention XSA）。" loading="lazy">
+            <figcaption>图 17：Looped-DiT 架构图：中间共享块 $\mathcal{B}$ 在单去噪步内循环 $N$ 遍，靠循环内 Self-Modulating Attention（左）与训练期共享 Post-loop $\mathcal{C}$ 的 Deep Supervision（右）稳住表示。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
         </figure>
 
-        <p>针对这两点，Looped-DiT 在 <code>[6, 5, 6]</code> 结构上引入了推理几乎零开销的稳定机制：</p>
+        <p>针对这两点，Looped-DiT 在 [6, 5, 6] 结构上引入了推理几乎零开销的稳定机制：</p>
         <ul>
-            <li><strong>深度监督（Deep Supervision）：</strong>仅在训练阶段把每一轮输出 $h^{(n)}$ 都喂进共享 Post-loop $\mathcal{C}$ 预测 $\hat{x}_0^{(n)} = \mathcal{C}(h^{(n)})$，对齐同一份干净图像 flow-matching 目标 $\mathcal{L} = \sum_{n=1}^N w_n \ell_n$。B/32 消融上 <code>Final+Mean</code> 权重 $(\frac{1}{3},\frac{1}{3},\frac{1}{3},1)$ 均值达 $57.5$，赢过指数加权 $(\frac{1}{8},\frac{1}{4},\frac{1}{2},1)$ 的 $57.1$ 与朴素循环的 $56.2$（训练多花 $1.54\times$ GFLOPs—$1{,}246$ vs. $809$，但<strong>推理零额外参数和算力</strong>）。</li>
-            <li><strong>轻量自适应早退门控：</strong>依托全深度中间输出监督，可额外外接一个 4-query 交叉注意力早退门控，用未来最大单轮降损 $y_r = \max\{0, \max_{k>r}(\ell_r-\ell_k)/(k-r)\}$ 做训练标签；无需重训即可在平均 $2.70$ 轮处追平 4 轮上限，并在 $1.25$ 轮超低预算下把掉点减半。</li>
+            <li><strong>Deep Supervision：</strong>仅在训练阶段把每一轮输出 $h^{(n)}$ 都喂进共享 Post-loop $\mathcal{C}$ 预测 $\hat{x}_0^{(n)} = \mathcal{C}(h^{(n)})$，对齐同一份干净图像 Flow Matching 目标 $\mathcal{L} = \sum_{n=1}^N w_n \ell_n$。B/32 消融上 Final + Mean 权重 $(\frac{1}{3},\frac{1}{3},\frac{1}{3},1)$ 均值达 $57.5$，高于指数加权 $(\frac{1}{8},\frac{1}{4},\frac{1}{2},1)$ 的 $57.1$ 与朴素循环的 $56.2$。训练多花 $1.54\times$ GFLOPs（$1{,}246$ vs. $809$），但<strong>推理零额外参数和算力</strong>。</li>
+            <li><strong>轻量自适应早退门控：</strong>依托全深度中间输出监督，可额外外接一个 4-query 交叉注意力早退门控，用未来最大单轮降损 $y_r = \max\{0, \max_{k>r}(\ell_r-\ell_k)/(k-r)\}$ 做训练标签；无需重训即可在平均 $2.70$ 轮处追平 4 轮上限，并在 $1.25$ 轮低预算下把掉点减半。</li>
             <li><strong>Self-Modulating Attention（SMA / XSA）：</strong>仅在循环块 $\mathcal{B}$ 内、头拼接与 $W_O$ 之前对每头注意力输出 $o_{i,h} = \sum_j \alpha_{ij,h} v_{j,h}$ 做逐 token 调制——可用可学习门控 Gated Attention，也可用完全无参数的 <strong>Exclusive Self Attention（XSA）</strong><a class="cite" href="#ref-11">[11]</a> 将输出正交投影到脱离自身 value $\hat{v}_{i,h}$ 方向的子空间：
             $$\begin{aligned}
             z_{i,h} &amp;= G_{i,h}\,o_{i,h}, \qquad G_{i,h}^{\text{gate}} = \sigma\!\big(w_{g,h}^\top u_i + b_{g,h}\big), \\
             G_{i,h}^{\text{xsa}} &amp;= I - \hat{v}_{i,h}\hat{v}_{i,h}^\top, \qquad \hat{v}_{i,h} = \frac{v_{i,h}}{\|v_{i,h}\|_2}, \qquad \big\|z_{i,h}^{\text{xsa}}\big\|_2 \le \|o_{i,h}\|_2.
             \end{aligned}$$
-            正交投影天然不会放大向量范数（$\|z\|_2 \le \|o\|_2$），并彻底消除 token 自身 value 向量反复累加带来的覆盖效应。对比实验表明 XSA 在 Looped-DiT 上一口气涨 <strong>$+1.6$ 分</strong>（$57.5 \to 59.1$），而在等参数 17 层基线（$-0.1$）与等算力 32 层基线（$+0.7$）上收益微弱，精准印证它抑制了跨轮重复覆写（见图 18c 中杜绝后期循环多画出一个气球的幻觉）。</li>
+            正交投影不会放大向量范数（$\|z\|_2 \le \|o\|_2$），同时消除了 token 自身 value 向量反复累加带来的覆盖效应。对比实验表明 XSA 在 Looped-DiT 上带来 <strong>$+1.6$ 分提升</strong>（$57.5 \to 59.1$），而在等参数 17 层基线（$-0.1$）与等算力 32 层基线（$+0.7$）上收益微弱，说明它主要在抑制跨轮重复覆写（见图 18c 中避免后期循环多画出一个气球的幻觉）。</li>
         </ul>
 
         <figure>
             <img src="../fig-ldt-sma.webp" width="1124" height="883" alt="Self-Modulating Attention（SMA / XSA）机制与定性对比图：(a) 1-8 轮循环下位置回归探针 R^2 曲线显示 DeepSup + XSA 远高于朴素循环；(b) XSA 明显抑制相对注意力写入范数；(c) 四只白色气球案例里，无 XSA 在第 2 轮改写叠出第 5 只气球，XSA 保持画面准确。" loading="lazy">
-            <figcaption>图 18：Self-Modulating Attention（SMA / XSA）显著稳住 2D 空间坐标可读性 $R^2$（a）、压低相对写入范数（b），并在实例图（c）中阻止后期循环把已画对的 4 个气球改写成 5 个。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
+            <figcaption>图 18：Self-Modulating Attention（SMA / XSA）稳住 2D 空间坐标可读性 $R^2$（a）、压低相对写入范数（b），并在实例图（c）中阻止后期循环把已画对的 4 个气球改写成 5 个。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
         </figure>
 
-        <h3 id="ldt-scaling">循环深度 vs. 去噪步数，以及与文本 CoT 的互补性<a class="anchor" href="#ldt-scaling" aria-hidden="true">#</a></h3>
-        <p>Looped-DiT 在大模型横评与严格控制组对照上均展现出极高的参数与算力效率：</p>
+        <h3 id="ldt-scaling">循环深度、去噪步数与 CoT<a class="anchor" href="#ldt-scaling" aria-hidden="true">#</a></h3>
+        <p>Looped-DiT 在大模型横评与严格控制组对照上都表现出较高的参数与算力效率：</p>
         <ul>
-            <li><strong>B/16 六项基准主结果：</strong>在 GenEval $87.4$、DPG $87.0$、PRISM $67.0$、CoRe $53.5$、Spatial $54.6$、TIIF-Short $79.7$ 上，<strong>$260\text{M}$ 的 Looped-DiT B/16 均分达到 $71.5$</strong>——不仅超越次优非循环多模态模型 <code>InternVL-U</code>（$1.7\text{B}$，均分 $69.0$），参数量少 <strong>$6.5\times$</strong>、推理 FLOPs 少 <strong>$4.9\times$</strong>，同时也大幅领先 6.6B–6.9B 显式 CoT 生图模型（<code>GoT-R1</code> $63.2$、<code>T2I-R1</code> $63.9$、<code>Uni-CoT</code> $66.8$）。</li>
-            <li><strong>B/32 严格控制组对照：</strong>Looped-DiT（$260\text{M}, 59.1$）全面击败等参数 <code>MiniT2I</code>（$55.2$）、等推理算力加厚/加宽基线（<code>Deeper</code> $473\text{M}, 57.7$；<code>Wider</code> $489\text{M}, 58.6$），乃至同样加深度监督的等训练算力 32 层基线（<code>Deeper + DeepSup</code> $473\text{M}, 1{,}246\text{ GFLOPs}, 58.1$）。</li>
+            <li><strong>B/16 六项基准主结果：</strong>在 GenEval $87.4$、DPG $87.0$、PRISM $67.0$、CoRe $53.5$、Spatial $54.6$、TIIF-Short $79.7$ 上，<strong>260M 的 Looped-DiT B/16 均分达到 $71.5$</strong>。相比次优非循环多模态模型 InternVL-U（1.7B，均分 $69.0$），它在参数量少 <strong>$6.5\times$</strong>、推理 FLOPs 少 <strong>$4.9\times$</strong> 的情况下更高；同时也领先 6.6B–6.9B 的显式 CoT 生图模型（GoT-R1 $63.2$、T2I-R1 $63.9$、Uni-CoT $66.8$）。</li>
+            <li><strong>B/32 严格控制组对照：</strong>Looped-DiT（260M，$59.1$）高于等参数 MiniT2I（$55.2$）、等推理算力加厚/加宽基线（Deeper 473M，$57.7$；Wider 489M，$58.6$），也高于同样加 Deep Supervision 的等训练算力 32 层基线（Deeper + DeepSup 473M，$1{,}246$ GFLOPs，$58.1$）。</li>
         </ul>
 
         <figure>
@@ -528,22 +527,22 @@
             <figcaption>图 19：六项文生图基准均分 vs. 单图推理 FLOPs（左）与 H100 时延（右）帕累托前沿：调节循环深度（$1\text{–}4$）与步数（$25\text{–}100$）让 0.26B Looped-DiT 位于最左上前沿。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
         </figure>
 
-        <p>围绕「视觉生成该怎样分配推理算力」，Looped-DiT 还给出了两项极具启发性的结论：</p>
+        <p>围绕「视觉生成如何分配推理算力」，Looped-DiT 还给出两个更一般的观察：</p>
         <ul>
-            <li><strong>等推理 FLOPs 下，加深循环比多跑去噪步数更划算：</strong>在 $14 / 20 / 28$ TFLOPs 三个对齐档位，把预算配给 <code>Loop × 4</code>（$25/35/50$ 步）在全部四个推理基准上稳赢双倍去噪步数的 <code>Loop × 1</code> 或不循环版本（$50/70/100$ 步，图 20）。</li>
-            <li><strong>潜空间循环与显式文本 CoT 精准互补：</strong>当提示词需要满足多重关系、步骤或空间方位约束时，Looped-DiT 贡献了绝大部分涨幅；当任务需要靠文字先补全隐含物理/常识画面时，Qwen3 CoT 重写更强，二者叠加可达 $+5.5$ 总分峰值（表 5）。</li>
+            <li><strong>等推理 FLOPs 下，加深循环比多跑去噪步数更划算：</strong>在 $14 / 20 / 28$ TFLOPs 三个对齐档位，把预算配给 Loop × 4（$25 / 35 / 50$ 步）在全部四个推理基准上都优于双倍去噪步数的 Loop × 1 或不循环版本（$50 / 70 / 100$ 步，图 20）。</li>
+            <li><strong>潜空间循环与显式文本 CoT 形成互补：</strong>提示词需要同时满足多重关系、步骤或空间方位约束时，Looped-DiT 贡献了绝大部分涨幅；任务需要靠文字先补全隐含物理或常识画面时，Qwen3 CoT 重写更强，二者叠加可达 $+5.5$ 总分峰值（见下表）。</li>
         </ul>
 
         <figure>
             <img src="../fig-ldt-steps.webp" width="1440" height="474" alt="等推理 FLOPs（14/20/28 TFLOPs）下对比 4 遍循环（25-50 步）与单遍循环/不循环（50-100 步）在 DPG、PRISM、CoRe 与 Spatial 四个基准上的得分：所有档位均显示步内循环 x4 明显优于多跑外部去噪步数。" loading="lazy">
-            <figcaption>图 20：等推理算力对照（$14/20/28$ TFLOPs）：把计算花在步内 <code>Loop × 4</code> 全面胜过把算力加到双倍去噪步数（$50\text{–}100$ 步）。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
+            <figcaption>图 20：等推理算力对照（$14/20/28$ TFLOPs）：把计算花在步内 Loop × 4 优于把算力加到双倍去噪步数（$50\text{–}100$ 步）。来源：Chng, Chen 等，<em lang="en">Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>。</figcaption>
         </figure>
 
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>T2I 子任务 / 能力类型 (B/32)</th>
+                        <th>T2I 子任务 / 能力类型（B/32）</th>
                         <th>仅文本 CoT</th>
                         <th>仅 Looping</th>
                         <th>CoT + Looping</th>
@@ -575,7 +574,7 @@
                         <td class="best">+6.2 / +6.3</td>
                     </tr>
                     <tr>
-                        <td>CoRe / 隐含画面推断 (Gen.)</td>
+                        <td>CoRe / 隐含画面推断（Gen.）</td>
                         <td>+22.2</td>
                         <td>+7.5</td>
                         <td class="best">+24.5</td>
@@ -585,21 +584,12 @@
         </div>
 
         <div class="callout callout-tip">
-            <p><strong>把语言模型与视觉生成的五套循环方案放在同一框架里：</strong>想让共享权重「多跑几遍还能越算越好」，必须同时管住两件事：</p>
+            <p><strong>把语言模型与视觉生成的五套循环方案放在同一框架里：</strong>想让共享权重「多跑几遍还能越算越好」，需要同时管住两件事：</p>
             <ul>
-                <li><strong>控制跨轮写入失控与特征漂移：</strong>SMELT 靠 $1/r$ 残差缩放、<em>Truncate or Not?</em> 靠 $s_0$ Input Injection、Inkling 2 Mini 靠双路门控 AttnRes，Looped-DiT 则靠无参数 XSA 正交消去 token 自身 value 向量的反复叠加。</li>
-                <li><strong>保证中间轮次的梯度供给：</strong>语言模型只在终点算 next-token loss，因此依赖完整 BPTT（$B=T$）；而视觉生成天然在每一轮都面对同一个去噪/重建目标，正好能用 ILSD 前缀自蒸馏 或共享 Post-loop 深度监督 直接对齐所有中间轮。</li>
+                <li><strong>控制跨轮写入失控与特征漂移：</strong>SMELT 靠 $1/r$ 残差缩放，<em>Truncate or Not?</em> 靠 $s_0$ Input Injection，Inkling 2 Mini 靠双路门控 AttnRes，Looped-DiT 则靠无参数 XSA 正交消去 token 自身 value 向量的反复叠加。</li>
+                <li><strong>保证中间轮次的梯度供给：</strong>语言模型只在终点算 next-token loss，因此依赖完整 BPTT（$B=T$）；而视觉生成天然在每一轮都面对同一个去噪或重建目标，正好可以用 ILSD 前缀自蒸馏或共享 Post-loop Deep Supervision 直接对齐所有中间轮。</li>
             </ul>
         </div>
-
-        <h2 id="takeaways">架构与训练启示<a class="anchor" href="#takeaways" aria-hidden="true">#</a></h2>
-        <ol>
-            <li><strong>MoE + 中间层循环才是等算力赢家：</strong>单独看稠密模型容易陷入“省参数就丢容量”的死结；把中间 50% MoE 层循环两遍并用新增专家补足总容量、同时放宽深宽比和对齐 KV，就能在严格等预算下实打实赚回 6.8–18.0% 训练算力和更好的长程推理能力。</li>
-            <li><strong>算力优先给完整反传，别为了多空转前向截断：</strong>因为每一轮完整反传带来的有效参数增益远远高过仅多跑前向（$q\approx 1.02 \gg 2p\approx 0.47$），$(4,4)$ 在同算力下稳赢 $(8,2)$；只有前向轮数因推理时延或固定架构被锁死高值时，才值得靠 $B^*=2$ 截断减负。</li>
-            <li><strong>用块级 Attention Residuals 接管跨轮信息流：</strong>用 Depth-wise + Cross-Loop Attention 替代单一累加残差后，权重无需额外人工监督就能在块末层自发演化出 $d_{2027}$ 这类兼任“路由标签”与“出循环清零”的稀疏控制通道，而且全程仍可通过 Coda-lens / Tuned-lens 保持可解释性。</li>
-            <li><strong>视觉生成里必须直接监督中间循环出口：</strong>因为扩散去噪与 Masked Generative 重建在所有深度上共享同一目标，无论是通过 ILSD 前缀自蒸馏（$\lambda: 1\to 0$） 还是共享 Post-loop 深度监督（<code>Final+Mean</code>），都能零推理成本消除早退崩塌，换取 $4\text{–}6.5\times$ 参数压缩与 Any-Time / 自适应算力调节。</li>
-            <li><strong>管住循环内过写，把步数算力挪一部分给步内循环：</strong>未经约束的循环注意力会抹掉 2D 空间坐标（$R^2: 0.865\to 0.562$），而无参数 XSA 能直接稳住空间拓扑；同等推理 FLOPs 下增加步内循环往往优于盲目加去噪步数，并与文本 CoT 形成互补。</li>
-        </ol>
 
         <h2 id="citation">引用本文<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
         <div class="citation">
@@ -618,7 +608,7 @@
 
         <h2 id="references">参考文献<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
         <ol class="references">
-            <li id="ref-1" lang="en" data-brief="证明在单 token FLOPs、总参数量和 KV cache 三项同时对齐时，将 MoE 中间半数层循环两遍仍可节省 6.8–18.0% 前沿训练算力（最高扩展到 54B），且收益在代码、长文本与 ICL 上格外突出，并发现第二遍降低 BOS sink。"><a href="https://arxiv.org/abs/2609.01343" target="_blank" rel="noopener">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</a>. Wang, Zhang et al., Tsinghua University, ByteDance Seed, M-A-P, and TokenWave.AI, 2026 (arXiv:2609.01343).</li>
+            <li id="ref-1" lang="en" data-brief="证明在单 token FLOPs、总参数量和 KV Cache 三项同时对齐时，将 MoE 中间半数层循环两遍仍可节省 6.8–18.0% 前沿训练算力（最高扩展到 54B），且收益在代码、长文本与 ICL 上格外突出，并发现第二遍降低 BOS sink。"><a href="https://arxiv.org/abs/2609.01343" target="_blank" rel="noopener">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</a>. Wang, Zhang et al., Tsinghua University, ByteDance Seed, M-A-P, and TokenWave.AI, 2026 (arXiv:2609.01343).</li>
             <li id="ref-2" lang="en" data-brief="通过 592 次 FineWeb-Edu 训练提出带饱和型循环系数的有效参数 Scaling Law（R²=0.9992），证明因 q ≈ 1.022 ≫ 2p ≈ 0.474，同算力下完整 BPTT 优于截断反传（如 (4,4) 赢 (8,2)），且 (2,2) 能以少 27% 参数近乎追平不循环模型。"><a href="https://arxiv.org/abs/2610.26030" target="_blank" rel="noopener">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</a>. Xiong, Chen et al., HKU MMLab and Yale University, 2026 (arXiv:2610.26030).</li>
             <li id="ref-3" lang="en" data-brief="Thinking Machines Lab 开源 26.4B 总参数 / 5.4B 等效激活的 Looped MoE 模型 Inkling 2 Mini（原生 NVFP4/MXFP8），系统汇报了编码智能体基准（DeepSWE 48.2%）、中间层循环消融以及 CoT 可监控性与可读性评估。"><a href="https://thinkingmachines.ai/news/inkling-2-mini/" target="_blank" rel="noopener">Introducing Inkling 2 Mini</a>. Thinking Machines Lab, November 20, 2026.</li>
             <li id="ref-4" lang="en" data-brief="Goodfire 剖析 Inkling 2 Mini 的块级 Depth-wise Attention 与 Cross-Loop Attention 分解方程，揭示块末层在权重空间对 Block Reader 打标、单维异常特征 d2027 在三轮循环内正写负清的开关行为，以及 Tuned-lens / Coda-lens 的中间层解码效果。"><a href="https://www.goodfire.com/research/interpreting-inkling-2-mini/" target="_blank" rel="noopener">Interpreting Inkling 2 Mini</a>. Lee, Krishnamurthy, Merullo, Balsam, and Lubana, Goodfire, November 20, 2026.</li>
@@ -627,7 +617,7 @@
             <li id="ref-7" lang="en" data-brief="将“Prelude → 共享循环块（含初始状态 Input Injection）→ Coda”三段式循环架构扩展到 3.5B Huginn 模型以提升隐式测试时推理深度。"><a href="https://arxiv.org/abs/2502.05171" target="_blank" rel="noopener">Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach</a>. Geiping et al., NeurIPS 2025 (arXiv:2502.05171).</li>
             <li id="ref-8" lang="en" data-brief="提出 Attention Residuals（AttnRes），以对历史块输出的归一化 softmax 选择性聚合替代标准单流逐层叠加残差。"><a href="https://arxiv.org/abs/2603.15031" target="_blank" rel="noopener">Attention Residuals</a>. Kimi Team: Chen et al., 2026 (arXiv:2603.15031).</li>
             <li id="ref-9" lang="en" data-brief="提出 Elastic Looped Transformers (ELT) 与零额外前向的 ILSD 循环内自蒸馏 / S³ 随机采样学生深度，在图像（MaskGIT FID 2.0、DiT 收敛 2×）与视频（FVD 72.8）生成上实现 4× 参数压缩、−34% HBM 及 TPU v6e 最高 3.5× 吞吐加速。"><a href="https://arxiv.org/abs/2604.09168" target="_blank" rel="noopener">ELT: Elastic Looped Transformers for Visual Generation</a>. Goyal, Agrawal, Anil, Jain, Paul, and Kusupati, ECCV 2026 (arXiv:2604.09168).</li>
-            <li id="ref-10" lang="en" data-brief="将循环 MMDiT（[6,5,6], 260M）引入像素空间文生图，利用共享 Post-loop 深度监督与无参数 XSA（Self-Modulating Attention）抑制空间信息退化，在少 6.5× 参数与 4.9× 算力下击败大模型并证明步内循环优于增加去噪步数。"><a href="https://arxiv.org/abs/2609.40305" target="_blank" rel="noopener">Looped Diffusion Transformer</a>. Chng, Chen, Tong, Diao, Cai, Yang, Liu, Lu, Lin, and Huang, SenseTime Research, Tsinghua University (LeapLab), and NTU, 2026 (arXiv:2609.40305).</li>
+            <li id="ref-10" lang="en" data-brief="将循环 MMDiT（[6, 5, 6], 260M）引入像素空间文生图，利用共享 Post-loop Deep Supervision 与无参数 XSA（Self-Modulating Attention）抑制空间信息退化，在少 6.5× 参数与 4.9× 算力下优于大模型并证明步内循环优于增加去噪步数。"><a href="https://arxiv.org/abs/2609.40305" target="_blank" rel="noopener">Looped Diffusion Transformer</a>. Chng, Chen, Tong, Diao, Cai, Yang, Liu, Lu, Lin, and Huang, SenseTime Research, Tsinghua University (LeapLab), and NTU, 2026 (arXiv:2609.40305).</li>
             <li id="ref-11" lang="en" data-brief="提出无参数的 Exclusive Self Attention（XSA），将每个注意力头输出正交投影到脱离自身归一化 value 向量的子空间，防止跨层/跨循环重复自强化。"><a href="https://arxiv.org/abs/2603.09078" target="_blank" rel="noopener">Exclusive Self Attention</a>. Zhai, 2026 (arXiv:2603.09078).</li>
         </ol>
     </div>

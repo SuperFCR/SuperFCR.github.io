@@ -56,7 +56,7 @@
         <h1 class="post-title">Looped Transformers: Compute-Matched Scaling, Training Gradients, and Internal Circuits</h1>
         <div class="post-meta">
             <span>November 21, 2026</span>
-            <span>26 min read</span>
+            <span>24 min read</span>
             <span>Chaoran Feng</span>
         </div>
     </header>
@@ -66,39 +66,38 @@
         <div class="inner">
         <ul>
             <li><a href="#overview">Five Architectures at a Glance</a></li>
-            <li><a href="#smelt">Compute-Matched MoE Looping: SMELT</a>
+            <li><a href="#smelt">SMELT: Compute-Matched MoE</a>
                 <ul>
-                    <li><a href="#smelt-recipe">Matching FLOPs, Parameters, and KV Cache</a></li>
-                    <li><a href="#smelt-scaling">Scaling Laws and Beyond-Loss Gains</a></li>
+                    <li><a href="#smelt-recipe">FLOPs, Params &amp; KV Parity</a></li>
+                    <li><a href="#smelt-scaling">Scaling Laws &amp; Beyond-Loss</a></li>
                     <li><a href="#smelt-mechanisms">Inside the Second Pass</a></li>
                 </ul>
             </li>
-            <li><a href="#truncate-or-not">Truncate or Not? Training Loops Under Compute Budgets</a>
+            <li><a href="#truncate-or-not">Truncate or Not? BPTT</a>
                 <ul>
-                    <li><a href="#tbp-arch">Input Re-Injection and (T, B) FLOP Accounting</a></li>
-                    <li><a href="#tbp-law">Effective Parameter Law and Three Regimes</a></li>
+                    <li><a href="#tbp-arch">Input Injection &amp; (T, B) FLOPs</a></li>
+                    <li><a href="#tbp-law">Effective Parameter Law</a></li>
                 </ul>
             </li>
-            <li><a href="#inkling">Production Circuits: Inkling 2 Mini</a>
+            <li><a href="#inkling">Inkling 2 Mini: Looped MoE</a>
                 <ul>
-                    <li><a href="#inkling-arch">Attention Residuals and Cross-Loop Dataflow</a></li>
-                    <li><a href="#inkling-coord">Weight Tagging and the d2027 Switch</a></li>
-                    <li><a href="#inkling-decode">Decoding Loops, Reasoning Bounds, and Monitorability</a></li>
+                    <li><a href="#inkling-arch">AttnRes &amp; Cross-Loop Flow</a></li>
+                    <li><a href="#inkling-coord">Tagging &amp; d2027 Switch</a></li>
+                    <li><a href="#inkling-decode">Lenses &amp; Monitorability</a></li>
                 </ul>
             </li>
-            <li><a href="#elt">Elastic Visual Generation: ELT</a>
+            <li><a href="#elt">ELT: Elastic Visual Generation</a>
                 <ul>
-                    <li><a href="#elt-ilsd">Intra-Loop Self Distillation and Any-Time Inference</a></li>
-                    <li><a href="#elt-scaling">Parameter Efficiency, DiT Convergence, and Hardware Throughput</a></li>
+                    <li><a href="#elt-ilsd">ILSD &amp; Any-Time Inference</a></li>
+                    <li><a href="#elt-scaling">Scaling, Convergence &amp; TPU</a></li>
                 </ul>
             </li>
-            <li><a href="#looped-dit">Text-to-Image Latent Reasoning: Looped-DiT</a>
+            <li><a href="#looped-dit">Looped-DiT: Text-to-Image</a>
                 <ul>
-                    <li><a href="#ldt-arch">Why Naive MMDiT Looping Fails: Deep Supervision and XSA</a></li>
-                    <li><a href="#ldt-scaling">Loop Depth vs. Denoising Steps and Textual CoT</a></li>
+                    <li><a href="#ldt-arch">Deep Supervision &amp; XSA</a></li>
+                    <li><a href="#ldt-scaling">Loops vs. Steps &amp; Text CoT</a></li>
                 </ul>
             </li>
-            <li><a href="#takeaways">Design Takeaways</a></li>
             <li><a href="#citation">Citation</a></li>
             <li><a href="#references">References</a></li>
         </ul>
@@ -106,19 +105,19 @@
     </details>
 
     <div class="post-content">
-        <p>Repeating a shared block of Transformer layers across depth separates execution depth from unique parameter count<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>. For years, however, looped evaluations compared weight-tied models against unlooped baselines of the same stored parameter count, conflating genuine architectural benefit with the extra FLOPs and KV cache spent during repeated passes.</p>
-        <p>Five 2026 studies resolve those questions across language modeling and visual generation:</p>
+        <p>Repeating a shared block of Transformer layers across depth separates execution depth from unique parameter count<a class="cite" href="#ref-6">[6]</a><a class="cite" href="#ref-7">[7]</a>. For years, however, looped evaluations compared weight-tied models against unlooped baselines of the same stored parameter count, conflating genuine architectural benefit with the extra FLOPs and KV Cache spent during repeated passes.</p>
+        <p>Five 2026 studies address those questions across language modeling and visual generation:</p>
         <ul>
-            <li><strong>Language models:</strong> <strong>SMELT</strong><a class="cite" href="#ref-1">[1]</a> tests looping when per-token FLOPs, total parameters, and KV cache are all held equal; <strong>Truncate or Not?</strong><a class="cite" href="#ref-2">[2]</a> settles how many forward and backward loops to allocate under fixed training compute; and Thinking Machines Lab's <strong>Inkling 2 Mini</strong><a class="cite" href="#ref-3">[3]</a> alongside Goodfire's interpretability analysis<a class="cite" href="#ref-4">[4]</a> ships an open-weights looped MoE model and traces how activations coordinate across loops.</li>
-            <li><strong>Visual generation:</strong> across diffusion (DiT/MMDiT) and masked generative models (MaskGIT/MAGVIT), <strong>ELT</strong><a class="cite" href="#ref-9">[9]</a> unlocks Any-Time elastic loop counts inside each sampling step via prefix self-distillation, while <strong>Looped-DiT</strong><a class="cite" href="#ref-10">[10]</a> stabilizes open-ended text-to-image looping with Deep Supervision and Self-Modulating Attention (SMA / XSA).</li>
+            <li><strong>Language models:</strong> <strong>SMELT</strong><a class="cite" href="#ref-1">[1]</a> tests looping when per-token FLOPs, total parameters, and KV Cache are all held equal; <strong>Truncate or Not?</strong><a class="cite" href="#ref-2">[2]</a> settles how many forward and backward loops to allocate under fixed training compute; and Thinking Machines Lab's <strong>Inkling 2 Mini</strong><a class="cite" href="#ref-3">[3]</a> alongside Goodfire's interpretability analysis<a class="cite" href="#ref-4">[4]</a> ships an open-weights looped MoE model and traces how activations coordinate across loops.</li>
+            <li><strong>Visual generation:</strong> across diffusion (DiT/MMDiT) and masked generative models (MaskGIT/MAGVIT), <strong>ELT</strong><a class="cite" href="#ref-9">[9]</a> enables Any-Time elastic loop counts inside each sampling step via prefix self-distillation, while <strong>Looped-DiT</strong><a class="cite" href="#ref-10">[10]</a> stabilizes open-ended text-to-image looping with Deep Supervision and Self-Modulating Attention (SMA / XSA).</li>
         </ul>
 
         <h2 id="overview">Five Architectures at a Glance<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
-        <p>The language-model designs keep entry and exit layers unshared while repeating a middle core under strict budget parity, gradient-horizon control, or cross-loop residual routing (Fig. 1); visual generators then embed weight-tied loops <em>inside</em> every iterative sampling or denoising step (Figs. 14 and 17), trading inter-step denoising for intra-step refinement and memory-wall hardware speedups.</p>
+        <p>The language-model designs keep entry and exit layers unshared while repeating a middle core under strict budget parity, gradient-horizon control, or cross-loop residual routing (Fig. 1). Visual generators embed weight-tied loops <em>inside</em> every iterative sampling or denoising step (Figs. 14 and 17), trading extra denoising steps for intra-step refinement and memory-wall hardware speedups.</p>
 
         <figure>
             <img src="./fig-architectures.svg" width="1400" height="720" alt="Side-by-side comparison of SMELT (MoE middle 50% repeated twice with matched budgets), Truncate or Not? (dense Prelude-Recurrent-Coda with input re-injection s0 and truncated BPTT wall), and Inkling 2 Mini (4-block MoE with 3-loop middle blocks, depth-wise attention, and cross-loop attention)." loading="lazy">
-            <figcaption>Fig. 1. Architectural topologies compared across the three LLM looped designs—SMELT (MoE, middle half repeated twice)<a class="cite" href="#ref-1">[1]</a>, Truncate or Not? (dense Prelude–Recurrent–Coda with input injection and $(T, B)$ gradient horizon)<a class="cite" href="#ref-2">[2]</a>, and Inkling 2 Mini (4 blocks of 6 layers with depth-wise and cross-loop attention residuals)<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-4">[4]</a>—before visual-generation designs ELT (Fig. 14) and Looped-DiT (Fig. 17). <a href="./fig-architectures.svg">Open full size</a></figcaption>
+            <figcaption>Fig. 1. Architectural topologies of the three LLM looped designs: SMELT (MoE, middle half repeated twice)<a class="cite" href="#ref-1">[1]</a>, Truncate or Not? (dense Prelude–Recurrent–Coda with input injection and $(T, B)$ gradient horizon)<a class="cite" href="#ref-2">[2]</a>, and Inkling 2 Mini (4 blocks of 6 layers with depth-wise and cross-loop attention residuals)<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-4">[4]</a>. Visual-generation designs appear in Fig. 14 (ELT) and Fig. 17 (Looped-DiT). <a href="./fig-architectures.svg">Open full size</a></figcaption>
         </figure>
 
         <div class="table-wrap">
@@ -158,22 +157,22 @@
                     </tr>
                     <tr>
                         <td><strong>Looped-DiT</strong></td>
-                        <td>Pixel-space MMDiT (<code>[6,5,6]</code>, 260M); middle 5 blocks $\times 4$ (32L)</td>
-                        <td>Deep Supervision (<code>Final+Mean</code>) + parameter-free XSA</td>
+                        <td>Pixel-space MMDiT ([6, 5, 6], 260M); middle 5 blocks $\times 4$ (32L)</td>
+                        <td>Deep Supervision (Final + Mean) + parameter-free XSA</td>
                         <td>Beats <strong>6.5×</strong> larger T2I model (71.5 vs. 69.0) at <strong>4.9×</strong> less compute; loops &gt; steps</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <h2 id="smelt">Compute-Matched MoE Looping: SMELT<a class="anchor" href="#smelt" aria-hidden="true">#</a></h2>
+        <h2 id="smelt">SMELT: Compute-Matched MoE<a class="anchor" href="#smelt" aria-hidden="true">#</a></h2>
 
-        <h3 id="smelt-recipe">Matching FLOPs, Parameters, and KV Cache<a class="anchor" href="#smelt-recipe" aria-hidden="true">#</a></h3>
-        <p>Simply repeating $m$ of $L$ layers $r$ times increases effective depth to $L_{\text{eff}} = L + (r-1)m$ while leaving stored weights unchanged—but per-token FLOPs and KV cache grow in lockstep. On dense models under iso-depth (fixed FLOPs and KV), losing unique weights leaves each recurrence worth only $r^{0.46}$ unique-block equivalents, so dense looping loses on perplexity. SMELT breaks that lock with Mixture-of-Experts sparsity<a class="cite" href="#ref-1">[1]</a>:</p>
+        <h3 id="smelt-recipe">FLOPs, Params &amp; KV Parity<a class="anchor" href="#smelt-recipe" aria-hidden="true">#</a></h3>
+        <p>Repeating $m$ of $L$ layers $r$ times increases effective depth to $L_{\text{eff}} = L + (r-1)m$ while leaving stored weights unchanged, yet per-token FLOPs and KV Cache grow in lockstep. On dense models under iso-depth (fixed FLOPs and KV Cache), losing unique weights leaves each recurrence worth only $r^{0.46}$ unique-block equivalents, so dense looping falls behind on perplexity. SMELT resolves this constraint with Mixture-of-Experts sparsity<a class="cite" href="#ref-1">[1]</a>:</p>
         <ul>
-            <li><strong>Match per-token FLOPs (&lt; 4% mismatch):</strong> narrow the hidden width $H$ (e.g., at 200M, $S \approx 95\%$, $H$ shrinks from $1280$ to $1056$) so executing 18 effective layers spends nearly identical FLOPs to the 12-layer Baseline ($1.37\times 10^9$ vs. $1.33\times 10^9$ training FLOPs/token).</li>
-            <li><strong>Match total non-embedding parameters (&lt; 1% mismatch):</strong> because MoE decouples stored parameters from active compute, raising expert count per layer ($192 \to 288$, still routing top-8) restores lost capacity ($3.89\text{B}$ vs. $3.87\text{B}$).</li>
-            <li><strong>Match KV cache (&lt; 4% mismatch) and stabilize updates:</strong> shrink attention head size and raise the GQA ratio across the deeper execution trace, and scale every looped Attention and MoE residual update by $1/r$ ($1/2$) so tied weights do not blow up residual norms across visits.</li>
+            <li><strong>Match per-token FLOPs (&lt; 4% mismatch):</strong> narrow the hidden width $H$ so executing 18 effective layers spends nearly the same compute as the 12-layer Baseline. At 200M active parameters ($S \approx 95\%$), $H$ shrinks from $1280$ to $1056$, putting training compute at $1.37\times 10^9$ vs. $1.33\times 10^9$ FLOPs/token.</li>
+            <li><strong>Match total non-embedding parameters (&lt; 1% mismatch):</strong> because MoE decouples stored parameters from active compute, raising the expert count per layer ($192 \to 288$, still routing top-8) restores capacity ($3.89\text{B}$ vs. $3.87\text{B}$).</li>
+            <li><strong>Match KV Cache (&lt; 4% mismatch) and stabilize updates:</strong> shrink attention head size and raise the GQA ratio across the deeper execution trace, and scale every looped Attention and MoE residual update by $1/r$ ($1/2$) so tied weights do not inflate residual norms across visits.</li>
         </ul>
 
         <figure>
@@ -181,15 +180,15 @@
             <figcaption>Fig. 2. Original SMELT architecture: middle 50% of layers loop twice while hidden width narrows (dashed red outlines) to match FLOPs, added MoE experts (red) restore total parameters, and looped sublayer residuals scale by $1/2$. Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
         </figure>
 
-        <p>Three systematic ablations at 200M lock the recipe:</p>
+        <p>Three systematic ablations at 200M determine the exact configuration:</p>
         <ul>
             <li><strong>Loop position:</strong> repeating the <strong>middle 50%</strong> ($L4\text{–}9$ of 12, yielding 18 executed layers) beats full-stack looping ($1.9257$ vs. $1.9322$ validation loss at $S\approx 85\%$, and $1.8517$ vs. $1.8601$ at $S\approx 95\%$).</li>
             <li><strong>Depth-to-width ratio:</strong> the looped model sustains a larger effective depth-to-width ratio ($12/18$ beats $8/12$, $10/15$, and $14/21$ on every metric, aided by multi-depth gradient signals feeding back to the same shared block).</li>
             <li><strong>Loop count:</strong> <strong>two passes win</strong> ($1.9257$, DCLM Core $27.57$) over three ($1.9385$) or four ($1.9360$), because more passes under a strict FLOP cap force hidden width too thin.</li>
         </ul>
 
-        <h3 id="smelt-scaling">Scaling Laws and Beyond-Loss Gains<a class="anchor" href="#smelt-scaling" aria-hidden="true">#</a></h3>
-        <p>Scaling across a $4 \times 4$ grid (100M, 200M, 600M, 1.6B active tiers $\times$ dense-FLOP control $S=0\%$ and sparse $S\approx\{85\%, 95\%, 97\%\}$, up to 53.9B non-embedding parameters, with 6 WSD cosine-decay branches to 215B tokens per run), SMELT outperforms the Baseline in every cell. Defining compute-equivalent sparsity from FLOP ratio $N_{\text{act}}^{\text{eq}} = (F/F_0)N_0$, $S = 1 - N_{\text{act}}^{\text{eq}}/N$, the authors fit separate Chinchilla-style surfaces:</p>
+        <h3 id="smelt-scaling">Scaling Laws &amp; Beyond-Loss<a class="anchor" href="#smelt-scaling" aria-hidden="true">#</a></h3>
+        <p>Scaling across a $4 \times 4$ grid (100M, 200M, 600M, and 1.6B active tiers crossed with dense-FLOP control $S=0\%$ and sparse $S\approx 85\%, 95\%, 97\%$), SMELT reaches up to 53.9B non-embedding parameters with 6 WSD cosine-decay branches to 215B tokens per run and beats the Baseline in every cell. Defining compute-equivalent sparsity from FLOP ratio $N_{\text{act}}^{\text{eq}} = (F/F_0)N_0$, $S = 1 - N_{\text{act}}^{\text{eq}}/N$, the authors fit separate Chinchilla-style surfaces:</p>
         $$\begin{aligned}
         \mathcal{L}(F, S, D) &amp;= E + \frac{A\,(1 - S)^b}{F^a} + \frac{K}{D^c}, \\
         \mathcal{L}^*(C, S) &amp;= E + f(A,K,a,b,c,S)\,C^{-\gamma}, \qquad \gamma = \frac{ac}{a+c}.
@@ -201,10 +200,10 @@
             <figcaption>Fig. 3. SMELT compute-optimal scaling frontier at $S \approx 97\%$ (left, zooming into $14.7\%$ compute-efficiency gain at $10^{21}$ FLOPs) and matched-budget benchmark radar across five capability axes (right). Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
         </figure>
 
-        <p>Crucially, downstream gains exceed what lower validation loss alone predicts:</p>
+        <p>Downstream gains also exceed what lower validation loss alone predicts:</p>
         <ul>
-            <li><strong>Matched win rates &amp; positive sigmoid residuals:</strong> across 96 matched pairs, SMELT wins <strong>96/96</strong> on DCLM Completion, <strong>83/96</strong> on DCLM Core, and <strong>29/30</strong> on above-chance MMLU. Fitting a Baseline loss-to-score sigmoid reveals positive residuals that widen with scale (up to $+12.3\text{ millinats}$ on Completion and $+1.2\text{ pp}$ on Core at 1.6B, where Symbolic Problem Solving overtakes Reading Comprehension at $+1.9\text{ pp}$).</li>
-            <li><strong>Peak gains on structured domains:</strong> per-domain CE Gain at $10^{21}$ FLOPs peaks on <strong>Code ($20.4\%$)</strong>, followed by Finance ($16.8\%$) and Math/STEM ($16.6\%$) vs. Web ($14.8\%$).</li>
+            <li><strong>Matched win rates &amp; positive sigmoid residuals:</strong> across 96 matched pairs, SMELT wins <strong>96/96</strong> on DCLM Completion, <strong>83/96</strong> on DCLM Core, and <strong>29/30</strong> on above-chance MMLU. Fitting a Baseline loss-to-score sigmoid shows positive residuals that widen with scale, reaching $+12.3\text{ millinats}$ on Completion and $+1.2\text{ pp}$ on Core at 1.6B, where Symbolic Problem Solving overtakes Reading Comprehension at $+1.9\text{ pp}$.</li>
+            <li><strong>Peak gains on structured domains:</strong> per-domain compute savings at $10^{21}$ FLOPs peak on <strong>Code ($20.4\%$)</strong>, followed by Finance ($16.8\%$) and Math/STEM ($16.6\%$) vs. Web ($14.8\%$).</li>
             <li><strong>Amplification on long contexts:</strong> normalized gain rises $1.52\times$ on long documents ($512\text{–}4096$ vs. $32\text{–}256$ tokens), whereas adding Baseline parameters or experts stays flat ($0.98\times$ and $0.88\times$).</li>
             <li><strong>Few-shot ICL &amp; Dyck bracket matching:</strong> with demonstrations ($k \ge 1$), accuracy lift doubles from $0.9\text{ pp}$ at $0$-shot to $1.9\text{ pp}$, reaching $29.8\%$ vs. $26.4\%$ on 32-shot Dyck Languages.</li>
         </ul>
@@ -215,7 +214,7 @@
         </figure>
 
         <h3 id="smelt-mechanisms">Inside the Second Pass<a class="anchor" href="#smelt-mechanisms" aria-hidden="true">#</a></h3>
-        <p>Probing 1M validation tokens across all 16 grid cells reveals a consistent internal mechanism—the second visit operates as an iterative refinement pass along coordinates discovered on visit 1 rather than overwriting or repeating the same function:</p>
+        <p>Probing 1M validation tokens across all 16 grid cells shows a consistent internal pattern: the second visit refines representations along coordinates established during visit 1 rather than overwriting or repeating the same transformation:</p>
 
         <figure>
             <img src="./fig-smelt-qkv.webp" width="1440" height="819" alt="Six 4x4 heatmaps over model scales (100M to 1.6B) and sparsity S (0% to 97%) showing high cross-visit cosine similarity for Pre-Q/K/V X (0.84-0.93), Q (0.89-0.93), and K (0.90-0.93), versus lower similarity for V (0.65-0.74), Context PV (0.56-0.69), and Output O (0.49-0.64)." loading="lazy">
@@ -226,7 +225,7 @@
             <li><strong>Router splits into core + fresh experts:</strong> even at $S\approx 97\%$, the second visit reuses <strong>2–3 of the top-8 experts</strong> (orders of magnitude above uniform random $8^2/n$) while swapping 5–6 experts, generating distinct computational paths from shared weights.</li>
             <li><strong>Residuals grow and stay aligned:</strong> Visit 2 writes $1.2\text{–}3.5\times$ larger norms in both Attention and MoE (driven initially by RMSNorm's element-wise gain reacting to a directional shift in $x_\ell$), while maintaining same-layer cross-visit cosine $0.42\text{–}0.65$ (mean $0.56$ vs. $0.16$ for mismatched layers).</li>
             <li><strong>Q/K anchor retrieval, V updates content:</strong> recomputing $Q, K, V$ leaves queries and keys closely aligned across visits ($0.89\text{–}0.93$ cosine, matching or exceeding input $X$'s $0.84\text{–}0.93$) with <strong>56–66% overlap in top-8 attended tokens</strong> (vs. $28\text{–}34\%$ for different heads), whereas $V$ drops to $0.65\text{–}0.74$ and $PV, O$ diverge further.</li>
-            <li><strong>Attention sinks collapse:</strong> in a 1.6B Dyck head ($k=4$), BOS sink mass falls from <strong>60% to 2%</strong> while attention on demonstration answers jumps from <strong>24% to 85%</strong>; on general text, Visit 2 broadly reduces sinks across heads, reversing the usual depth-increasing sink trend.</li>
+            <li><strong>Attention sinks drop:</strong> in a 1.6B Dyck head ($k=4$), BOS sink mass falls from <strong>60% to 2%</strong> while attention on demonstration answers rises from <strong>24% to 85%</strong>; on general text, Visit 2 broadly reduces sinks across heads, reversing the usual depth-increasing sink trend.</li>
         </ul>
 
         <figure>
@@ -234,9 +233,9 @@
             <figcaption>Fig. 6. General-text attention sink probability per looped physical layer and head: Visit 2 broadly suppresses the high BOS sink concentration seen in Visit 1 (especially physical layers 17–22). Source: Wang, Zhang et al., <em>SMELT</em><a class="cite" href="#ref-1">[1]</a>.</figcaption>
         </figure>
 
-        <h2 id="truncate-or-not">Truncate or Not? Training Loops Under Compute Budgets<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
+        <h2 id="truncate-or-not">Truncate or Not? BPTT<a class="anchor" href="#truncate-or-not" aria-hidden="true">#</a></h2>
 
-        <h3 id="tbp-arch">Input Re-Injection and (T, B) FLOP Accounting<a class="anchor" href="#tbp-arch" aria-hidden="true">#</a></h3>
+        <h3 id="tbp-arch">Input Injection &amp; (T, B) FLOPs<a class="anchor" href="#tbp-arch" aria-hidden="true">#</a></h3>
         <p>Where SMELT matches architectures at full BPTT, Xiong, Chen et al.<a class="cite" href="#ref-2">[2]</a> isolate the training optimization question across <strong>592 runs</strong> ($2.7\times 10^{22}$ FLOPs) of a dense Huginn-style<a class="cite" href="#ref-7">[7]</a> Prelude–Recurrent–Coda Transformer spanning $58\text{M}\text{–}919\text{M}$ non-embedding parameters on FineWeb-Edu:</p>
         $$s_0 = \mathcal{P}(x),\qquad s_t = \Phi_\theta(s_{t-1}; s_0) = \operatorname{RMSNorm}\!\Big(\mathcal{R}\!\big(W_{\text{inj}}[s_0;\,s_{t-1}]\big)\Big),\qquad p = \mathcal{C}(s_T).$$
 
@@ -247,20 +246,20 @@
 
         <p>Three structural details govern how gradients flow:</p>
         <ul>
-            <li><strong>Per-loop $s_0$ input injection:</strong> every loop injects $s_0$ via $W_{\text{inj}} \in \mathbb{R}^{d\times 2d}$ initialized to $[I,\,0]$ (starting purely from the Prelude before learning to blend recurrent state), while a post-block RMSNorm keeps activation scale bounded across $T$ passes.</li>
-            <li><strong>Gradient truncation $(T, B)$:</strong> under $1 \le B \le T$, state $s_{T-B}$ is detached after $T-B$ forward-only passes, leaving only the final $B$ loops and the Coda in the backward graph—though <strong>Prelude still receives gradients directly through $s_0$ injection into the final $B$ loops</strong>.</li>
+            <li><strong>Per-loop $s_0$ input injection:</strong> every loop injects $s_0$ via $W_{\text{inj}} \in \mathbb{R}^{d\times 2d}$ initialized to $[I,\,0]$, starting purely from the Prelude before learning to blend recurrent state, while a post-block RMSNorm keeps activation scale bounded across $T$ passes.</li>
+            <li><strong>Gradient truncation $(T, B)$:</strong> under $1 \le B \le T$, state $s_{T-B}$ is stopped with <code>detach</code> after $T-B$ forward-only passes, leaving only the final $B$ loops and the Coda in the backward graph. Note that <strong>Prelude still receives gradients directly through $s_0$ injection into the final $B$ loops</strong>.</li>
             <li><strong>Forward/backward FLOP symmetry:</strong> at standard matrix accounting of $2$ FLOPs/param/token forward and $4$ backward, total compute-equivalent parameters $N_{\text{comp}}$ scale linearly with $T + 2B$:</li>
         </ul>
         $$C \simeq 6 D \cdot N_{\text{comp}}, \qquad N_{\text{comp}} = N_{\text{once}} + \frac{T + 2B}{3} N_{\text{rec}}.$$
         <p>Dropping two backward passes saves $8 N_{\text{rec}}$ FLOPs, which buys exactly four forward passes: $(T, B) = (8, 2)$ and $(4, 4)$ both spend $24 N_{\text{rec}}$ loop FLOPs per token ($T + 2B = 12$), and $(4, 1)$ matches $(2, 2)$ with $T + 2B = 6$. From a fixed-point perspective, truncating to $B$ loops sums only the first $B$ terms of the Neumann series $(I - \mathcal{J}^\star)^{-1}\partial_\theta\Phi^\star \approx \sum_{k=0}^{B-1}(\mathcal{J}^\star)^k \partial_\theta\Phi^\star$, injecting cumulative bias when $T$ is small (far from a contractive fixed point) or $B \lt T$.</p>
 
-        <h3 id="tbp-law">Effective Parameter Law and Three Regimes<a class="anchor" href="#tbp-law" aria-hidden="true">#</a></h3>
-        <p>Extending a coupled size–data scaling law with a bounded multiplicative <strong>looping coefficient</strong> $g(T, B)$ fits 230 training configurations with $R^2 = 0.9992$ and in-sample RMSE $6.14 \times 10^{-3}$ nats (predicting held-out $(T,B)$ settings at $8.67\times 10^{-3}$ RMSE, nearly half the $1.65\times 10^{-2}$ error of an unbounded power-law gain):</p>
+        <h3 id="tbp-law">Effective Parameter Law<a class="anchor" href="#tbp-law" aria-hidden="true">#</a></h3>
+        <p>Extending a coupled size–data scaling law with a bounded multiplicative <strong>looping coefficient</strong> $g(T, B)$ fits 230 training configurations with $R^2 = 0.9992$ and in-sample RMSE $6.14 \times 10^{-3}$ nats. On held-out $(T, B)$ settings, its extrapolation RMSE is $8.67\times 10^{-3}$, nearly half the $1.65\times 10^{-2}$ error of an unbounded power-law gain:</p>
         $$\begin{aligned}
         L &amp;= E + \left[A\left(\frac{N_{\text{eff}}}{N_0}\right)^{-\alpha} + H\left(\frac{D}{D_0}\right)^{-\beta}\right]^{\kappa}, \\
         N_{\text{eff}} &amp;= N_{\text{once}} + g(T,B) N_{\text{rec}}, \qquad g(T, B) = \exp\!\Big[c\,(1 - T^{-p}B^{-q})\Big].
         \end{aligned}$$
-        <p>With fitted exponents $c \approx 1.112$, $p \approx 0.237$, and $q \approx 1.022$ (extrapolated ceiling $e^c \approx 3.04$), <strong>$q \gt 2p$ by more than a factor of two</strong>. Minimizing $T^{-p}B^{-q}$ along any equal-compute line $T + 2B = S$ proves (Lemma D.2) that whenever $q \ge 2p$, the unique optimum sits on the boundary $T^* = B^* = S/3$: <strong>backward loops buy more effective parameters per FLOP than forward-only loops</strong>, reversing the apparent paradox from earlier truncation studies.</p>
+        <p>With fitted exponents $c \approx 1.112$, $p \approx 0.237$, and $q \approx 1.022$ (extrapolated ceiling $e^c \approx 3.04$), <strong>$q \gt 2p$ by more than a factor of two</strong>. Minimizing $T^{-p}B^{-q}$ along any equal-compute line $T + 2B = S$ proves (Lemma D.2) that whenever $q \ge 2p$, the unique optimum sits on the boundary $T^* = B^* = S/3$: <strong>backward loops buy more effective parameters per FLOP than forward-only loops</strong>, clarifying why earlier fixed-$T$ truncation studies seemed to favor truncation.</p>
 
         <figure>
             <img src="./fig-tbp-law-parts.webp" width="1440" height="503" alt="Three-panel anatomy of the Truncate or Not? scaling law: (a) looping coefficient g(T, T) saturating toward fitted ceiling ~3.04, (b) truncation discounting g(T, B) as B/T decreases, and (c) effective parameter multiplier across (T, B) settings from 1.00 for (1,1) to 1.91 for (8,8)." loading="lazy">
@@ -307,13 +306,13 @@
         </figure>
 
         <div class="callout callout-tip">
-            <p><strong>Connecting Dense (Truncate or Not?) vs. MoE (SMELT):</strong> Why does <em>Truncate or Not?</em> find unlooped $(1,1)$ ahead of looping on free-size dense models, while <em>SMELT</em> beats unlooped MoE by 6.8–18.0% FLOPs? They agree more than they disagree! Both conclude independently that <strong>$r = 2$ with full BPTT</strong> is the sweet spot. In dense models, weight tying forces $g(2,2) \approx 1.910 \lt 2$ without freeing capacity for extra weights, so 2 untied copies win purely on loss/FLOP. SMELT breaks that trade-off by spending the narrowed width's parameter budget on <strong>more sparse MoE experts</strong> while dynamic routing divergence across visits unlocks extra expressivity.</p>
+            <p><strong>Connecting Dense (Truncate or Not?) vs. MoE (SMELT):</strong> Why does <em>Truncate or Not?</em> find unlooped $(1,1)$ ahead of looping on free-size dense models, while <em>SMELT</em> beats unlooped MoE by 6.8–18.0% FLOPs? The two findings are consistent: both independently identify <strong>$r = 2$ with full BPTT</strong> as the best looped point. In dense models, weight tying yields $g(2,2) \approx 1.910 \lt 2$ without freeing capacity for extra weights, so 2 untied copies win purely on loss/FLOP. SMELT sidesteps that trade-off by spending the narrowed width's parameter budget on <strong>more sparse MoE experts</strong> while cross-visit routing divergence adds expressivity.</p>
         </div>
 
-        <h2 id="inkling">Production Circuits: Inkling 2 Mini<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
+        <h2 id="inkling">Inkling 2 Mini: Looped MoE<a class="anchor" href="#inkling" aria-hidden="true">#</a></h2>
 
-        <h3 id="inkling-arch">Attention Residuals and Cross-Loop Dataflow<a class="anchor" href="#inkling-arch" aria-hidden="true">#</a></h3>
-        <p>Released under Apache 2.0 by Thinking Machines Lab on November 20, 2026<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a> (and analyzed mechanistically by Goodfire<a class="cite" href="#ref-4">[4]</a>), <strong>Inkling 2 Mini</strong> turns weight-tied looping into a 26.4B-total / 3.4B-active / 5.4B-effective-active open-weights multimodal MoE model (~20GB mixed NVFP4/MXFP8 checkpoint supporting 1M context). Its 24 physical layers ($d = 2304$, 8 of 128 experts after pruning from 384 and healing on 1T tokens, then 2.2T RL tokens) split into four 6-layer blocks: Prelude Block 1 ($L1\text{–}6$) and Coda Block 4 ($L19\text{–}24$) run once, while core Blocks 2 &amp; 3 ($L7\text{–}18$) loop $T=3$ times to execute 48 layers per token.</p>
+        <h3 id="inkling-arch">AttnRes &amp; Cross-Loop Flow<a class="anchor" href="#inkling-arch" aria-hidden="true">#</a></h3>
+        <p>Released under Apache 2.0 by Thinking Machines Lab on November 20, 2026<a class="cite" href="#ref-3">[3]</a><a class="cite" href="#ref-5">[5]</a> and analyzed mechanistically by Goodfire<a class="cite" href="#ref-4">[4]</a>, <strong>Inkling 2 Mini</strong> is a production open-weights multimodal looped MoE model: 26.4B total parameters, 3.4B static active, and 5.4B effective active across 3 loops, packaged as a ~20GB mixed NVFP4/MXFP8 checkpoint with 1M context. Its 24 physical layers ($d = 2304$, pruned from 384 to top-8 of 128 experts, healed on 1T tokens, then trained with 2.2T RL tokens) split into four 6-layer blocks: Prelude Block 1 ($L1\text{–}6$) and Coda Block 4 ($L19\text{–}24$) run once, while Blocks 2 and 3 ($L7\text{–}18$) loop $T=3$ times to execute 48 layers per token.</p>
         <ul>
             <li><strong>Loop-span ablation:</strong> repeating the middle 12 layers beats looping the final 12 layers on <strong>27 of 28 evaluations</strong> ($1.51\text{–}1.91\times$ compute-equivalent gain vs. $1.24\text{–}1.36\times$).</li>
             <li><strong>Long-horizon control:</strong> on 512k-token agentic traces, an unpruned non-looped baseline requires <strong>$140\%$ more inference compute</strong> to reach the looped model's validation loss (with only $7.5\%$ lower training compute).</li>
@@ -333,20 +332,20 @@
         \mathbf{m}_s &amp;= \sum_{j\in\{2,3\}} \beta_j\,\hat{\mathbf{v}}_j^{[t-1]}, \qquad \mathbf{z} = \mathbf{P}\big[\text{RMSNorm}(\mathbf{x});\,\text{RMSNorm}(\mathbf{m}_s)\big], \\
         \mathbf{x}' &amp;= \underbrace{\big(1 - \tanh(\mathbf{F}\mathbf{z})\big)}_{\boldsymbol{\kappa}}\odot\mathbf{x} + \underbrace{\tanh(\mathbf{G}\mathbf{z})}_{\boldsymbol{\gamma}}\odot\mathbf{m}_s.
         \end{aligned}$$
-        <p>Crucially, $\boldsymbol{\gamma}$ initializes to zero so training starts identically to an unlooped model before gradually opening the cross-loop channel.</p>
-        <p>Because every sublayer's input decomposes linearly into weighted earlier writes $\mathbf{x}' = \sum_w \mathbf{c}_w$ with normalized attribution shares $s_w = (\mathbf{c}_w \cdot \mathbf{x}')/\|\mathbf{x}'\|^2$ summing to 1, Goodfire uncovered a striking structural twist: since <strong>Layer 13 on Loop 2</strong> already receives current-loop Block 2 ($\mathbf{v}_2^{[2]}$) via depth-wise attention, <strong>its cross-loop reader attends almost exclusively to Loop 1's Block 3 ($\mathbf{v}_3^{[1]}$)</strong>—including Layer 18, reading directly from physically "deeper" layers than index 13.</p>
+        <p>Initializing $\boldsymbol{\gamma}$ to zero keeps early training identical to an unlooped model before gradually opening the cross-loop channel.</p>
+        <p>Every sublayer input decomposes linearly into weighted earlier writes $\mathbf{x}' = \sum_w \mathbf{c}_w$ with normalized attribution shares $s_w = (\mathbf{c}_w \cdot \mathbf{x}')/\|\mathbf{x}'\|^2$ summing to 1. Using this decomposition, Goodfire found a notable routing pattern: because <strong>Layer 13 on Loop 2</strong> already receives current-loop Block 2 ($\mathbf{v}_2^{[2]}$) via depth-wise attention, <strong>its cross-loop reader attends almost exclusively to Loop 1's Block 3 ($\mathbf{v}_3^{[1]}$)</strong>. That channel includes Layer 18, allowing Layer 13 to read directly from physically deeper layers.</p>
 
         <figure>
             <img src="./fig-inkling-dataflow.svg" width="1400" height="620" alt="Inkling 2 Mini Loop 2 Layer 13 dataflow diagram showing depth-wise attention over v0, v1, and v2[2] combined via channel-gated fusion x'=kappa*x+gamma*m with cross-loop readers reading Loop 1 Block 3 tagged by Layer 18 on coordinate d2027." loading="lazy">
             <figcaption>Fig. 11. Dual-path Attention Residuals inside Loop 2, Layer 13 of Inkling 2 Mini and the three-loop lifecycle of coordination dimension $d_{2027}$<a class="cite" href="#ref-4">[4]</a>. <a href="./fig-inkling-dataflow.svg">Open full size</a></figcaption>
         </figure>
 
-        <h3 id="inkling-coord">Weight Tagging and the d2027 Switch<a class="anchor" href="#inkling-coord" aria-hidden="true">#</a></h3>
+        <h3 id="inkling-coord">Tagging &amp; d2027 Switch<a class="anchor" href="#inkling-coord" aria-hidden="true">#</a></h3>
         <p>How do layers learn which blocks to read without an explicit routing supervisor? Goodfire inspects coordination in both weight space and activation space across 13,233 FineWeb tokens:</p>
         <ul>
-            <li><strong>Block-end weight tagging:</strong> comparing all $3{,}538{,}944$ MoE down-projection writer vectors ($24\text{ layers} \times 128 \times 1{,}152$ per layer) against all $104$ depth-wise + cross-loop reader queries ($|\cos| \ge 0.30$ top $0.001\%$, 3,490 pairs) reveals sharp concentration at block boundaries—layers 6, 12, and 18 write directly to Block 4's depth-wise readers, while Layer 18 writes heavily to Layer 13's cross-loop readers.</li>
-            <li><strong>Massive outlier switch $d_{2027}$:</strong> in RMS-normalized activations ($\sum_{i=1}^{2304} \hat{v}_i^2 = 2304$, average coord $=1$), single coordinate $d_{2027}$ reaches $+32.4$, carrying <strong>46% of total squared norm</strong>. Since $\beta_3 = \sigma(s_3 - s_2) = \sigma\!\big(\frac{1}{\sqrt{d}}\sum_i u_i(\hat{v}_{3,i}-\hat{v}_{2,i})\big)$, $d_{2027}$ alone contributes <strong>17% ($Q$), 19% ($V$), 11% ($K$), and 6% (MoE)</strong> of Loop 2 Layer 13's routing gap (top-5 outlier coords account for 60%, 62%, 32%, and 30%).</li>
-            <li><strong>Context-dependent polarity flip:</strong> most remarkably, the <em>identical physical weights</em> of Layer 18 write a massive <strong>positive</strong> spike onto $d_{2027}$ at the ends of Loop 1 and Loop 2 (telling future loops to attend to Block 3), then write a massive <strong>negative</strong> spike at the end of Loop 3 to clear the coordination signal before entering Coda Block 4.</li>
+            <li><strong>Block-end weight tagging:</strong> comparing all $3{,}538{,}944$ MoE down-projection writer vectors against all $104$ depth-wise and cross-loop reader queries shows sharp boundary concentration. In the top $0.001\%$ pairs ($|\cos| \ge 0.30$, 3,490 pairs), layers 6, 12, and 18 write directly to Block 4's depth-wise readers, while Layer 18 writes heavily to Layer 13's cross-loop readers.</li>
+            <li><strong>High-magnitude outlier dimension $d_{2027}$:</strong> in RMS-normalized activations ($\sum_{i=1}^{2304} \hat{v}_i^2 = 2304$, average squared entry $=1$), single coordinate $d_{2027}$ averages $+32.4$, carrying <strong>46% of total squared norm</strong>. Since $\beta_3 = \sigma(s_3 - s_2) = \sigma\!\big(\frac{1}{\sqrt{d}}\sum_i u_i(\hat{v}_{3,i}-\hat{v}_{2,i})\big)$, $d_{2027}$ alone accounts for <strong>17% ($Q$), 19% ($V$), 11% ($K$), and 6% (MoE)</strong> of Loop 2 Layer 13's routing gap; the top 5 outlier coordinates cover 60%, 62%, 32%, and 30%.</li>
+            <li><strong>Context-dependent polarity flip:</strong> notably, the <em>identical physical weights</em> of Layer 18 write a large <strong>positive</strong> value onto $d_{2027}$ at the ends of Loop 1 and Loop 2 (signaling future loops to attend to Block 3), then write a large <strong>negative</strong> value at the end of Loop 3 to clear the coordination flag before entering Coda Block 4.</li>
         </ul>
 
         <figure>
@@ -354,25 +353,25 @@
             <figcaption>Fig. 12. Mean Attention and MoE writes to outlier coordinate $d_{2027}$ across loops: the same physical Layer 18 writes strongly positive in Loops 1 and 2 before erasing the signal on Loop 3 prior to the Coda. Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
         </figure>
 
-        <h3 id="inkling-decode">Decoding Loops, Reasoning Bounds, and Monitorability<a class="anchor" href="#inkling-decode" aria-hidden="true">#</a></h3>
-        <p>Evaluating intermediate hidden states across 1,250 FineWeb documents shows a stark contrast between vanilla logit decoding and learned/block lenses: raw <strong>logit-lens</strong> recovers poorly mid-block except near Block 3's end in each loop, whereas <strong>tuned-lens</strong> (learned affine map) and <strong>coda-lens</strong> (running Block 4 directly on intermediate states across the sequence) track final predictions smoothly even across early loops—showing that looped latent computation remains decodable rather than opaque.</p>
+        <h3 id="inkling-decode">Lenses &amp; Monitorability<a class="anchor" href="#inkling-decode" aria-hidden="true">#</a></h3>
+        <p>Evaluating intermediate hidden states across 1,250 FineWeb documents highlights a clear difference between vanilla logit decoding and learned or block lenses. Raw <strong>logit-lens</strong> recovers poorly mid-block except near Block 3's end in each loop, whereas <strong>tuned-lens</strong> (a learned affine map) and <strong>coda-lens</strong> (running Block 4 directly on intermediate states across the sequence) track final predictions smoothly even across early loops. Looped latent computation therefore remains decodable rather than opaque.</p>
 
         <figure>
             <img src="./fig-inkling-lenses.webp" width="1600" height="1102" alt="Original Goodfire chart comparing Logit lens, Tuned lens, Jacobian lens, and Coda lens across all layers and three loops on final top-1 in lens top-50 accuracy and probability mass." loading="lazy">
             <figcaption>Fig. 13. Intermediate decoding across Inkling 2 Mini's loops (Logit, Tuned, Jacobian, and Coda lenses on 1,250 held-out FineWeb documents). Source: Goodfire, <em>Interpreting Inkling 2 Mini</em><a class="cite" href="#ref-4">[4]</a>.</figcaption>
         </figure>
 
-        <p>Using both Inkling 2 Mini and its research sibling <code>TML-d24-varloop-research</code> (trained on 1–5 passes, RL at 3 passes), Thinking Machines also pinned down what extra loops do—and do not—buy at inference time:</p>
+        <p>On coding and efficiency benchmarks, Inkling 2 Mini reaches $48.2\%$ on DeepSWE v1.1, $46.5\%$ on Vals Index v2.2, and $0.703$ intelligence/watt on DGX Spark (ahead of Qwen3.6-35B-A3B at $0.430$). Using its research sibling <code>TML-d24-<wbr>varloop-research</code> (trained on 1–5 passes, RL at 3 passes), Thinking Machines also maps what extra inference loops do and do not improve:</p>
         <ul>
-            <li><strong>Reasoning improves, static knowledge does not:</strong> on no-CoT Think Fast tasks, 50%-reliability horizon climbs from $16\text{ s}$ ($1$ pass) to $37\text{ s}$ ($3$ passes) and holds steady out to $10$ extrapolated passes ($40\text{ s}$), while serial N-Hop Lookup accuracy keeps rising out to $10$ hops and DeepSWE v1.1 hits $48.2\%$ ($0.703$ intelligence/watt on DGX Spark). In contrast, closed-book factual benchmarks (SimpleQA Verified, AA-Omniscience) stay flat with extra loops—memory bandwidth still tracks stored parameters ($26.4\text{B}$), which Inkling 2 Mini offsets with tool-assisted search ($79.0\%$ BrowseComp, $85.3\%$ DeepSearchQA).</li>
-            <li><strong>Shorter, not stealthier CoTs:</strong> on matched solved GPQA Diamond problems, raising loops cuts generated reasoning tokens by more than half while leaving English readability intact and reducing backtracking ("wait", "actually", "hmm"). Meanwhile, CoT controllability remains near floor ($\le 0.1\%$ at 750–1,250 tokens) and LinuxArena stealth rates under full monitoring stay low ($0.3\text{–}1.3\%$), though Thinking Machines cautions larger RL-trained looped models remain an open oversight frontier.</li>
+            <li><strong>Reasoning improves, static knowledge does not:</strong> on no-CoT Think Fast tasks, 50%-reliability horizon climbs from $16\text{ s}$ ($1$ pass) to $37\text{ s}$ ($3$ passes) and holds steady out to $10$ extrapolated passes ($40\text{ s}$), while serial N-Hop Lookup accuracy keeps rising out to $10$ hops. In contrast, closed-book factual benchmarks (SimpleQA Verified, AA-Omniscience) stay flat with extra loops; factual storage remains bound by the 26.4B parameters, which Inkling 2 Mini offsets with tool-assisted search ($79.0\%$ BrowseComp, $85.3\%$ DeepSearchQA).</li>
+            <li><strong>Shorter, not stealthier CoTs:</strong> on matched solved GPQA Diamond problems, raising loops cuts generated reasoning tokens by more than half while leaving English readability intact and reducing backtracking ("wait", "actually", "hmm"; see table below). CoT controllability stays near floor ($\le 0.1\%$ at 750–1,250 tokens) and LinuxArena stealth rates under full monitoring remain low ($0.3\text{–}1.3\%$), though Thinking Machines notes that larger RL-trained looped models remain an open oversight frontier.</li>
         </ul>
 
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>GPQA Diamond Metric (<code>varloop</code>)</th>
+                        <th>GPQA Diamond Metric (varloop)</th>
                         <th>1 Pass</th>
                         <th>3 Passes</th>
                         <th>5 Passes</th>
@@ -407,11 +406,11 @@
             </table>
         </div>
 
-        <h2 id="elt">Elastic Visual Generation: ELT<a class="anchor" href="#elt" aria-hidden="true">#</a></h2>
+        <h2 id="elt">ELT: Elastic Visual Generation<a class="anchor" href="#elt" aria-hidden="true">#</a></h2>
 
-        <h3 id="elt-ilsd">Intra-Loop Self Distillation and Any-Time Inference<a class="anchor" href="#elt-ilsd" aria-hidden="true">#</a></h3>
-        <p>Unlike language models that generate one token per forward pass, visual generators already run an outer loop over $K$ iterative denoising (DiT<a class="cite" href="#ref-9">[9]</a>) or masked parallel-decoding steps (MaskGIT/MAGVIT). <strong>Elastic Looped Transformers (ELT)</strong> (Goyal et al., ECCV 2026) nest an orthogonal <em>intra-step</em> loop inside each sampling iteration: a single composite block $g_\Theta(\mathbf{x}) = f_{\theta_N}(\cdots f_{\theta_1}(\mathbf{x}))$ of $N$ unique layers is reused $L$ times per step, $F_{(N,L)}(\mathbf{x}) = g_\Theta^L(\mathbf{x})$, yielding effective depth $\mathcal{D} = N\times L$ from only $N$ stored layers. This reuse directly targets accelerator memory bottlenecks, lifting arithmetic intensity (FLOPs per transferred byte) by up to $L\times$ and matching on-chip SRAM capacity.</p>
-        <p>However, naïvely optimizing only the maximum loop depth $L_{\max}$ turns intermediate states $X_k^{\text{int}}$ into a black box—images look coherent solely at $L = L_{\max}$ and collapse at every other loop count (DiT FID explodes to $120\text{–}200$ away from $L=8$). ELT solves this with <strong>Intra-Loop Self Distillation (ILSD)</strong> paired with <strong>Stochastic Student Sampling ($S^3$)</strong>: at every training step, the full $L_{\max}$ teacher trajectory supervises a randomly sampled prefix student exit $L_{\text{int}} \sim \mathcal{U}(L_{\min}, L_{\max})$ through a curriculum weight $\lambda$ linearly decayed from $1 \to 0$:</p>
+        <h3 id="elt-ilsd">ILSD &amp; Any-Time Inference<a class="anchor" href="#elt-ilsd" aria-hidden="true">#</a></h3>
+        <p>Unlike language models that generate one token per forward pass, visual generators already run an outer loop over $K$ iterative denoising (DiT<a class="cite" href="#ref-9">[9]</a>) or masked parallel-decoding steps (MaskGIT/MAGVIT). <strong>Elastic Looped Transformers (ELT)</strong> (Goyal et al., ECCV 2026) nest an orthogonal <em>intra-step</em> loop inside each sampling iteration: a single composite block $g_\Theta(\mathbf{x}) = f_{\theta_N}(\cdots f_{\theta_1}(\mathbf{x}))$ of $N$ unique layers is reused $L$ times per step, $F_{(N,L)}(\mathbf{x}) = g_\Theta^L(\mathbf{x})$, yielding effective depth $\mathcal{D} = N\times L$ from only $N$ stored layers. This reuse targets accelerator memory bottlenecks directly, lifting arithmetic intensity (FLOPs per transferred byte) by up to $L\times$ so weights fit better in on-chip SRAM.</p>
+        <p>However, optimizing only the maximum loop depth $L_{\max}$ leaves intermediate states $X_k^{\text{int}}$ unaligned; images look coherent only at $L = L_{\max}$ and degrade sharply at other loop counts (DiT FID rises to $120\text{–}200$ away from $L=8$). ELT solves this with <strong>Intra-Loop Self Distillation (ILSD)</strong> paired with <strong>Stochastic Student Sampling ($S^3$)</strong>: at every training step, the full $L_{\max}$ teacher trajectory supervises a randomly sampled prefix student exit $L_{\text{int}} \sim \mathcal{U}(L_{\min}, L_{\max})$ through a curriculum weight $\lambda$ linearly decayed from $1 \to 0$:</p>
         $$\begin{aligned}
         \mathcal{L}^{\text{ILSD}}_{\Theta} &amp;= \mathcal{L}^{\text{GT}}\!\big(F_{(N,L_{\max})}(\mathbf{x}),\,\mathbf{y}\big) + \lambda\,\mathcal{L}^{\text{GT}}\!\big(F_{(N,L_{\text{int}})}(\mathbf{x}),\,\mathbf{y}\big) \\
         &amp;\quad + (1-\lambda)\,\mathcal{L}^{\text{dist}}\!\Big(F_{(N,L_{\text{int}})}(\mathbf{x}),\,\operatorname{sg}\!\big(F_{(N,L_{\max})}(\mathbf{x})\big)\Big), \qquad L_{\text{int}} \sim \mathcal{U}(L_{\min}, L_{\max}).
@@ -423,20 +422,20 @@
             <figcaption>Fig. 14. ELT framework overview: prefix Intra-Loop Self Distillation (ILSD) during training (left) and Any-Time elastic inference over a single shared weight block $\Theta$ (right)<a class="cite" href="#ref-9">[9]</a>. <a href="./fig-elt-arch.svg">Open full size</a></figcaption>
         </figure>
 
-        <p>Empirically, ILSD keeps FID smooth across the entire loop spectrum for both MaskGIT and DiT—and even enables modest depth extrapolation beyond $L_{\max}$ (on UCF-101 trained at $L_{\max}=4$, video FVD improves to $69.20$ at unseen $L=6$).</p>
+        <p>Empirically, ILSD keeps FID smooth across the entire loop spectrum for both MaskGIT and DiT. It also enables modest depth extrapolation beyond $L_{\max}$: on UCF-101 trained at $L_{\max}=4$, video FVD improves to $69.20$ at unseen $L=6$.</p>
 
         <figure>
-            <img src="./fig-elt-ilsd.webp" width="1480" height="573" alt="Two-panel plot comparing ELT with ILSD against vanilla looping without ILSD on ImageNet 256x256: left panel (MaskGIT, N=4, L_max=10) shows ILSD maintaining FID 2.2-3.3 down to L=3; right panel (Diffusion Transformer, N=4, L_max=8) shows vanilla looping exploding to FID 120-200 away from L=8 while ILSD remains stable across L=4 to 10." loading="lazy">
+            <img src="./fig-elt-ilsd.webp" width="1480" height="573" alt="Two-panel plot comparing ELT with ILSD against vanilla looping without ILSD on ImageNet 256x256: left panel (MaskGIT, N=4, L_max=10) shows ILSD maintaining FID 2.2-3.3 down to L=3; right panel (Diffusion Transformer, N=4, L_max=8) shows vanilla looping rising to FID 120-200 away from L=8 while ILSD remains stable across L=4 to 10." loading="lazy">
             <figcaption>Fig. 15. Any-Time inference stability with vs. without ILSD on ImageNet $256\times 256$: MaskGIT ($N=4, L_{\max}=10$, left) and DiT ($N=4, L_{\max}=8$, right). Source: Goyal et al., <em>ELT</em><a class="cite" href="#ref-9">[9]</a>.</figcaption>
         </figure>
 
-        <h3 id="elt-scaling">Parameter Efficiency, DiT Convergence, and Hardware Throughput<a class="anchor" href="#elt-scaling" aria-hidden="true">#</a></h3>
-        <p>Across class-conditional image and video synthesis under iso-inference-compute settings, ELT cuts unique parameter counts by $2\text{–}4\times$ while matching or beating deeper unlooped models:</p>
+        <h3 id="elt-scaling">Scaling, Convergence &amp; TPU<a class="anchor" href="#elt-scaling" aria-hidden="true">#</a></h3>
+        <p>Across class-conditional image and video synthesis under iso-inference-compute settings, ELT cuts unique parameter counts by $2\text{–}4\times$ while matching or beating deeper unlooped models (headline figures in the table below and Fig. 16):</p>
         <ul>
-            <li><strong>ImageNet $256\times 256$ (MaskGIT):</strong> <strong>ELT-XL ($7N\times 4L$, $111\text{M}$)</strong> matches $446\text{M}$ MaskGIT-XL at <strong>FID $2.0$</strong> and identical $3.9\text{k}$ GFLOPs ($4\times$ fewer params), tracing a clean compute frontier $\text{FID} = 1922.5 \cdot G^{-0.95} + 1.48$.</li>
-            <li><strong>ImageNet $256\times 256$ (DiT &amp; minimum unique depth):</strong> on SD v1.4 latent DiT ($\mathcal{D}=32$ effective layers), <strong>ELT ($16N\times 2L$, $1.1\text{B}$)</strong> reaches <strong>FID $2.83$</strong> and <strong>ELT ($8N\times 4L$, $539\text{M}$)</strong> reaches <strong>FID $3.16$</strong>—both beating the $2.1\text{B}$ 32-layer DiT baseline (<strong>FID $3.43$</strong>) while converging <strong>$2.0\times$</strong> and <strong>$1.4\times$</strong> faster during training. A clear expressivity floor also appears: $1N\times 32L$ ($69\text{M}$) degrades to FID $10.30$, showing a minimum unique block size $N$ is required per step.</li>
-            <li><strong>UCF-101 Video (MAGVIT):</strong> under data-constrained video training ($\sim 13.7\text{M}$ tokens), a compact <strong>$76\text{M}$ ELT ($6N\times 4L$)</strong> outperforms $306\text{M}$ MAGVIT-L (<strong>FVD $72.8 \pm 2.5$</strong> vs. $76 \pm 2$) at matched $\sim 4.3\text{k}$ GFLOPs, scaling down to <strong>FVD $60.8$</strong> at $6N\times 6L$ (24 steps) thanks to weight-sharing regularization.</li>
-            <li><strong>Memory wall &amp; TPU v6e hardware gains:</strong> on a $1\times 1$ TPU v6e slice ($\mathcal{D}=32, 8N\times 4L$), ELT cuts peak training HBM by <strong>$34\%$</strong> ($5.1\text{ GB}$ vs. $7.7\text{ GB}$ at the same $130\text{ ms}$ step time; unrolling layers into <code>ELTopt</code> drops step time to <strong>$118\text{ ms}$</strong> at $5.8\text{ GB}$). At inference (batch 8), keeping $\Theta$ on-chip avoids repeated HBM transfers and lifts throughput by <strong>$2.9\times$ (L)</strong>, <strong>$3.3\times$ (XL)</strong>, and <strong>$3.5\times$ (H)</strong>.</li>
+            <li><strong>ImageNet $256\times 256$ (MaskGIT):</strong> ELT-XL ($7N\times 4L$) matches $446\text{M}$ MaskGIT-XL at identical $3.9\text{k}$ GFLOPs with <strong>4× fewer parameters</strong>, tracing a clean compute frontier $\text{FID} = 1922.5 \cdot G^{-0.95} + 1.48$.</li>
+            <li><strong>ImageNet $256\times 256$ (DiT &amp; minimum unique depth):</strong> on SD v1.4 latent DiT ($\mathcal{D}=32$), both $16N\times 2L$ and $8N\times 4L$ beat the $2.1\text{B}$ 32-layer baseline while converging faster during training. A clear expressivity floor also appears: $1N\times 32L$ ($69\text{M}$) degrades to FID $10.30$, showing a minimum unique block size $N$ is required per step.</li>
+            <li><strong>UCF-101 Video (MAGVIT):</strong> under data-constrained video training ($\sim 13.7\text{M}$ tokens), a compact <strong>76M ELT ($6N\times 4L$)</strong> outperforms 306M MAGVIT-L (<strong>FVD $72.8 \pm 2.5$</strong> vs. $76 \pm 2$) at matched $\sim 4.3\text{k}$ GFLOPs, dropping further to <strong>FVD $60.8$</strong> at $6N\times 6L$ (24 steps) thanks to weight-sharing regularization.</li>
+            <li><strong>Memory wall &amp; TPU v6e hardware gains:</strong> on a $1\times 1$ TPU v6e slice ($\mathcal{D}=32, 8N\times 4L$), peak training HBM falls from $7.7\text{ GB}$ to $5.1\text{ GB}$ at the same $130\text{ ms}$ step time; unrolling layers into ELTopt drops step time to <strong>$118\text{ ms}$</strong> at $5.8\text{ GB}$. At inference (batch 8), keeping $\Theta$ on-chip avoids repeated HBM transfers and lifts throughput by <strong>$2.9\times$ (L)</strong>, <strong>$3.3\times$ (XL)</strong>, and <strong>$3.5\times$ (H)</strong>.</li>
         </ul>
 
         <div class="table-wrap">
@@ -470,7 +469,7 @@
                     </tr>
                     <tr>
                         <td><strong>ELT-XL / H (TPU v6e, BS=8)</strong></td>
-                        <td>111M (7N×4L)</td>
+                        <td>111M ($7N\times 4L$)</td>
                         <td>FID 2.0 (MaskGIT)</td>
                         <td class="best"><strong>3.3×–3.5×</strong> inference throughput; <strong>−34%</strong> train HBM</td>
                     </tr>
@@ -483,15 +482,15 @@
             <figcaption>Fig. 16. Iso-inference-compute scaling of FID vs. parameter count on ImageNet $256\times 256$: ELT matches MaskGIT-XL/H quality with $67\text{–}75\%$ fewer parameters while width $d$ governs the ultimate quality floor. Source: Goyal et al., <em>ELT</em><a class="cite" href="#ref-9">[9]</a>.</figcaption>
         </figure>
 
-        <h2 id="looped-dit">Text-to-Image Latent Reasoning: Looped-DiT<a class="anchor" href="#looped-dit" aria-hidden="true">#</a></h2>
+        <h2 id="looped-dit">Looped-DiT: Text-to-Image<a class="anchor" href="#looped-dit" aria-hidden="true">#</a></h2>
 
-        <h3 id="ldt-arch">Why Naive MMDiT Looping Fails: Deep Supervision and XSA<a class="anchor" href="#ldt-arch" aria-hidden="true">#</a></h3>
-        <p>Where ELT studies class-conditional synthesis by looping the full transformer stack, <strong>Looped-DiT</strong> (Chng, Chen et al.<a class="cite" href="#ref-10">[10]</a>) brings looped computation to open-ended $512\times 512$ pixel-space text-to-image generation where prompts impose simultaneous counting, attribute, and spatial constraints. Built on the $260\text{M}$ MiniT2I MMDiT backbone (17 blocks split <code>[6, 5, 6]</code> into pre-loop $\mathcal{A}$, shared middle blocks $\mathcal{B}$, and post-loop $\mathcal{C}$, looped $N=4$ times to $32$ effective block applications per flow-matching denoising step):</p>
+        <h3 id="ldt-arch">Deep Supervision &amp; XSA<a class="anchor" href="#ldt-arch" aria-hidden="true">#</a></h3>
+        <p>Where ELT studies class-conditional synthesis by looping the full transformer stack, <strong>Looped-DiT</strong> (Chng, Chen et al.<a class="cite" href="#ref-10">[10]</a>) brings looped computation to open-ended $512\times 512$ pixel-space text-to-image generation where prompts impose simultaneous counting, attribute, and spatial constraints. Built on the 260M MiniT2I MMDiT backbone (17 blocks split [6, 5, 6] into pre-loop $\mathcal{A}$, shared middle blocks $\mathcal{B}$, and post-loop $\mathcal{C}$, looped $N=4$ times to $32$ effective block applications per Flow Matching denoising step):</p>
         $$h^{(0)} = \mathcal{A}(h_{\text{input}}),\qquad h^{(r)} = \mathcal{B}\big(h^{(r-1)}\big),\quad r=1,\ldots,N,\qquad \hat{x}_0 = \mathcal{C}\big(h^{(N)}\big).$$
-        <p>Repeating $\mathcal{B}$ naïvely fails for two concrete mechanistic reasons:</p>
+        <p>Repeating $\mathcal{B}$ naively fails for two concrete mechanistic reasons:</p>
         <ul>
             <li><strong>Gradient starvation on intermediate loops:</strong> supervising only the final loop $h^{(N)}$ leaves earlier exits unaligned and causes quality to degrade once test-time loops exceed training depth ($N > 4$).</li>
-            <li><strong>Spatial geometry erosion from unregulated attention:</strong> a linear ridge-regression probe decoding 2D patch grid coordinates from post-loop activations plunges from <strong>$R^2 = 0.865$ after loop 1 to $0.562$ after loop 8</strong> ($-0.303$, worse than the non-looped baseline's $0.668$).</li>
+            <li><strong>Spatial geometry erosion from unregulated attention:</strong> a linear ridge-regression probe decoding 2D patch grid coordinates from post-loop activations drops from <strong>$R^2 = 0.865$ after loop 1 to $0.562$ after loop 8</strong> ($-0.303$, worse than the non-looped baseline's $0.668$).</li>
         </ul>
 
         <figure>
@@ -499,16 +498,16 @@
             <figcaption>Fig. 17. Looped-DiT architecture: middle blocks $\mathcal{B}$ loop $N$ times inside each denoising step, stabilized by Self-Modulating Attention (left) and training-only Deep Supervision through shared post-loop $\mathcal{C}$ (right). Source: Chng, Chen et al., <em>Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>.</figcaption>
         </figure>
 
-        <p>Looped-DiT resolves both failure modes inside the <code>[6, 5, 6]</code> loop with virtually zero inference overhead:</p>
+        <p>Looped-DiT resolves both failure modes inside the [6, 5, 6] loop with virtually zero inference overhead:</p>
         <ul>
-            <li><strong>Deep Supervision across all loops:</strong> during training only, every intermediate state $h^{(n)}$ ($n=1,\ldots,N$) passes through the shared post-loop stage $\hat{x}_0^{(n)} = \mathcal{C}(h^{(n)})$ against the clean-image flow-matching loss $\mathcal{L} = \sum_{n=1}^N w_n \ell_n$. On B/32, <code>Final + Mean</code> weighting $(\frac{1}{3},\frac{1}{3},\frac{1}{3},1)$ reaches $57.5$ average vs. exponential $(\frac{1}{8},\frac{1}{4},\frac{1}{2},1)$ at $57.1$ and naive looping at $56.2$ (at $1.54\times$ training GFLOPs—$1{,}246$ vs. $809$—with <strong>0 extra inference params or FLOPs</strong>).</li>
+            <li><strong>Deep Supervision across all loops:</strong> during training only, every intermediate state $h^{(n)}$ ($n=1,\ldots,N$) passes through the shared post-loop stage $\hat{x}_0^{(n)} = \mathcal{C}(h^{(n)})$ against the clean-image Flow Matching loss $\mathcal{L} = \sum_{n=1}^N w_n \ell_n$. On B/32, Final + Mean weighting $(\frac{1}{3},\frac{1}{3},\frac{1}{3},1)$ reaches $57.5$ average vs. exponential $(\frac{1}{8},\frac{1}{4},\frac{1}{2},1)$ at $57.1$ and naive looping at $56.2$. Training takes $1.54\times$ GFLOPs ($1{,}246$ vs. $809$), with <strong>0 extra inference params or FLOPs</strong>.</li>
             <li><strong>Lightweight adaptive early-exit gate:</strong> leveraging supervised intermediate exits, a 4-query cross-attention gate predicts the maximum remaining per-loop loss reduction $y_r = \max\{0, \max_{k>r}(\ell_r-\ell_k)/(k-r)\}$ without retraining the generator, matching the 4-loop ceiling in $2.70$ mean loops and halving degradation at $1.25$ loops.</li>
             <li><strong>Self-Modulating Attention (SMA / XSA):</strong> inside looped blocks $\mathcal{B}$ only, each attention head output $o_{i,h} = \sum_j \alpha_{ij,h} v_{j,h}$ is modulated before head concatenation by either a learned sigmoid gate or parameter-free <strong>Exclusive Self Attention (XSA)</strong><a class="cite" href="#ref-11">[11]</a>, which orthogonally projects out the token's own value direction $\hat{v}_{i,h}$:
             $$\begin{aligned}
             z_{i,h} &amp;= G_{i,h}\,o_{i,h}, \qquad G_{i,h}^{\text{gate}} = \sigma\!\big(w_{g,h}^\top u_i + b_{g,h}\big), \\
             G_{i,h}^{\text{xsa}} &amp;= I - \hat{v}_{i,h}\hat{v}_{i,h}^\top, \qquad \hat{v}_{i,h} = \frac{v_{i,h}}{\|v_{i,h}\|_2}, \qquad \big\|z_{i,h}^{\text{xsa}}\big\|_2 \le \|o_{i,h}\|_2.
             \end{aligned}$$
-            Because $G_{i,h}^{\text{xsa}}$ is non-expansive ($\|z\|_2 \le \|o\|_2$) and removes self-value reinforcement across repeated passes, controlled ablations show XSA adds <strong>$+1.6$ points on Looped-DiT</strong> ($57.5 \to 59.1$) vs. $-0.1$ on the parameter-matched non-looped baseline (17L) and $+0.7$ on compute-matched 32L+DeepSup—preventing over-writing hallucinations such as adding extra objects on later loops (Fig. 18c).</li>
+            Because $G_{i,h}^{\text{xsa}}$ is non-expansive ($\|z\|_2 \le \|o\|_2$) and removes self-value reinforcement across repeated passes, controlled ablations show XSA adds <strong>$+1.6$ points on Looped-DiT</strong> ($57.5 \to 59.1$) vs. $-0.1$ on the parameter-matched 17L baseline and $+0.7$ on compute-matched 32L+DeepSup. Qualitatively, this suppresses overwriting hallucinations such as duplicating objects on later loops (Fig. 18c).</li>
         </ul>
 
         <figure>
@@ -516,11 +515,11 @@
             <figcaption>Fig. 18. Self-Modulating Attention (XSA) preserves spatial position decodability ($R^2$, panel a), shrinks relative attention writes (b), and stops later loops from duplicating objects in an already correct image (c). Source: Chng, Chen et al., <em>Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>.</figcaption>
         </figure>
 
-        <h3 id="ldt-scaling">Loop Depth vs. Denoising Steps and Textual CoT<a class="anchor" href="#ldt-scaling" aria-hidden="true">#</a></h3>
-        <p>Looped-DiT outperforms both frontier generators and strictly compute-matched unlooped controls:</p>
+        <h3 id="ldt-scaling">Loops vs. Steps &amp; Text CoT<a class="anchor" href="#ldt-scaling" aria-hidden="true">#</a></h3>
+        <p>Looped-DiT outperforms both larger generators and strictly compute-matched unlooped controls:</p>
         <ul>
-            <li><strong>B/16 six-benchmark suite:</strong> across GenEval ($87.4$), DPG ($87.0$), PRISM ($67.0$), T2I-CoReBench ($53.5$), SpatialGenEval ($54.6$), and TIIF-Short ($79.7$), the $0.26\text{B}$ <strong>Looped-DiT B/16</strong> averages <strong>$71.5$</strong>—beating runner-up <code>InternVL-U</code> ($1.7\text{B}$, avg $69.0$) with <strong>$6.5\times$ fewer parameters</strong> and <strong>$4.9\times$ lower inference compute</strong>, as well as 6.6B–6.9B explicit CoT-reasoning generators (<code>GoT-R1</code> $63.2$, <code>T2I-R1</code> $63.9$, <code>Uni-CoT</code> $66.8$).</li>
-            <li><strong>Controlled B/32 ablations:</strong> Looped-DiT ($260\text{M}$, $59.1$) cleanly defeats parameter-matched (<code>MiniT2I</code>, $260\text{M}$, $55.2$), inference-FLOP-matched (<code>Deeper</code> $473\text{M}$, $57.7$; <code>Wider</code> $489\text{M}$, $58.6$), and training-FLOP-matched deep-supervised baselines (<code>Deeper + DeepSup</code>, $1{,}246$ GFLOPs, $58.1$).</li>
+            <li><strong>B/16 six-benchmark suite:</strong> across GenEval ($87.4$), DPG ($87.0$), PRISM ($67.0$), T2I-CoReBench ($53.5$), SpatialGenEval ($54.6$), and TIIF-Short ($79.7$), the 0.26B <strong>Looped-DiT B/16</strong> averages <strong>$71.5$</strong>. That surpasses runner-up InternVL-U (1.7B, avg $69.0$) with <strong>$6.5\times$ fewer parameters</strong> and <strong>$4.9\times$ lower inference compute</strong>, as well as 6.6B–6.9B explicit CoT generators (GoT-R1 $63.2$, T2I-R1 $63.9$, Uni-CoT $66.8$).</li>
+            <li><strong>Controlled B/32 ablations:</strong> Looped-DiT (260M, $59.1$) outperforms parameter-matched MiniT2I (260M, $55.2$), inference-FLOP-matched baselines (Deeper 473M, $57.7$; Wider 489M, $58.6$), and the training-FLOP-matched deep-supervised baseline (Deeper + DeepSup, $1{,}246$ GFLOPs, $58.1$).</li>
         </ul>
 
         <figure>
@@ -528,15 +527,15 @@
             <figcaption>Fig. 19. Pareto frontier across six text-to-image benchmarks vs. inference TFLOPs (left) and single-H100 latency (right), sweeping denoising steps ($25\text{–}100$) and loop depth ($1\text{–}4$). Source: Chng, Chen et al., <em>Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>.</figcaption>
         </figure>
 
-        <p>Crucially, Looped-DiT settles two broader inference-compute allocation questions:</p>
+        <p>Looped-DiT also tests two broader inference-compute allocation questions:</p>
         <ul>
-            <li><strong>Loop depth beats extra denoising steps under equal FLOPs:</strong> at matched per-image budgets ($14, 20, 28$ TFLOPs), spending FLOPs on <code>Loop × 4</code> ($25, 35, 50$ steps) consistently outperforms doubling denoising steps at <code>Loop × 1</code> or without looping ($50, 70, 100$ steps) across DPG, PRISM, CoRe, and Spatial (Fig. 20).</li>
-            <li><strong>Looped latent refinement complements explicit textual CoT:</strong> on subtasks requiring multi-object, relational, or spatial constraint satisfaction, looping delivers almost all the gain, whereas Qwen3 CoT prompt rewriting excels at inferring unstated world/physical details—combining both reaches $+5.5$ overall (Table 5).</li>
+            <li><strong>Loop depth beats extra denoising steps under equal FLOPs:</strong> at matched per-image budgets ($14, 20, 28$ TFLOPs), spending FLOPs on Loop × 4 ($25, 35, 50$ steps) consistently outperforms doubling denoising steps at Loop × 1 or without looping ($50, 70, 100$ steps) across DPG, PRISM, CoRe, and Spatial (Fig. 20).</li>
+            <li><strong>Looped latent refinement complements explicit textual CoT:</strong> on subtasks requiring multi-object, relational, or spatial constraint satisfaction, looping delivers most of the gain, whereas Qwen3 CoT prompt rewriting excels at inferring unstated world or physical details. Combining both reaches $+5.5$ overall (table below).</li>
         </ul>
 
         <figure>
             <img src="./fig-ldt-steps.webp" width="1440" height="474" alt="Four-panel compute-matched comparison across DPG, PRISM, CoRe, and Spatial at 14, 20, and 28 TFLOPs/image showing Looped-DiT with Loop x4 (25-50 steps) consistently outperforming Loop x1 and Non-Looped Baselines running twice as many denoising steps (50-100 steps)." loading="lazy">
-            <figcaption>Fig. 20. Iso-FLOP comparison ($14, 20, 28$ TFLOPs/image): scaling loop depth (<code>Loop × 4</code>, fewer denoising steps) beats spending the same budget on more denoising steps (<code>Loop × 1</code> / unlooped). Source: Chng, Chen et al., <em>Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>.</figcaption>
+            <figcaption>Fig. 20. Iso-FLOP comparison ($14, 20, 28$ TFLOPs/image): scaling loop depth (Loop × 4, fewer denoising steps) beats spending the same budget on more denoising steps (Loop × 1 / unlooped). Source: Chng, Chen et al., <em>Looped Diffusion Transformer</em><a class="cite" href="#ref-10">[10]</a>.</figcaption>
         </figure>
 
         <div class="table-wrap">
@@ -588,18 +587,9 @@
             <p><strong>Connecting LLM vs. Visual Looped Transformers:</strong> Across all five papers, repeating weights succeeds only when two failure modes are controlled together:</p>
             <ul>
                 <li><strong>Signal and norm drift across shared passes:</strong> stabilized via $1/r$ residual scaling in SMELT, $W_{\text{inj}}[s_0; s_{t-1}]$ input injection in <em>Truncate or Not?</em>, cross-loop attention residuals in Inkling 2 Mini, and XSA orthogonal self-value projection in Looped-DiT.</li>
-                <li><strong>Gradient supply across intermediate loops:</strong> language models compute next-token loss only at the end and therefore require full BPTT ($B=T$), whereas visual generators share the exact same denoising/unmasking target at every loop—allowing ILSD prefix self-distillation or shared post-loop Deep Supervision to supervise every intermediate exit directly.</li>
+                <li><strong>Gradient supply across intermediate loops:</strong> language models compute next-token loss only at the end and therefore require full BPTT ($B=T$). Visual generators share the same denoising or unmasking target at every loop, allowing ILSD prefix self-distillation or shared post-loop Deep Supervision to supervise every intermediate exit directly.</li>
             </ul>
         </div>
-
-        <h2 id="takeaways">Design Takeaways<a class="anchor" href="#takeaways" aria-hidden="true">#</a></h2>
-        <ol>
-            <li><strong>Combine looping with sparse MoE—not thin dense blocks:</strong> repeating the middle 50% twice gives both dense and MoE models the best return per executed layer, but MoE lets you narrow hidden width without forfeiting total parameter memory, yielding genuine 6.8–18.0% compute savings at equal FLOPs and KV cache.</li>
-            <li><strong>Do not blindly truncate BPTT if $T$ is tunable:</strong> backward passes through the recurrent core buy over twice the effective-parameter exponent of forward-only passes ($q\approx 1.02 \gg 2p\approx 0.47$). Only truncate ($B^*=2$) when $T$ is forced large by architecture or latency constraints.</li>
-            <li><strong>Expect multi-loop coordination to concentrate on sharp channels:</strong> replacing plain residual addition with block-level attention residuals gives loops rich selective memory across passes, yet training still organically elects single outlier dimensions like $d_{2027}$ at block exits to tag state and flip polarity before decoding.</li>
-            <li><strong>In visual generation, supervise intermediate loops directly:</strong> when every loop shares the same denoising or unmasking target, supervising random prefix exits via ILSD ($\lambda: 1 \to 0$) or shared post-loop Deep Supervision (<code>Final+Mean</code>) eliminates intermediate-exit collapse with zero inference overhead and unlocks Any-Time / adaptive compute scaling plus $4\text{–}6.5\times$ parameter savings.</li>
-            <li><strong>Regulate repeated attention writes and pair loops with steps/CoT:</strong> unchecked looped self-attention erodes 2D spatial layout ($R^2: 0.865 \to 0.562$), which parameter-free XSA fixes without adding weights. Under matched inference TFLOPs, spending compute on intra-step loops outperforms extra denoising steps while complementing textual CoT on constraint-heavy prompts.</li>
-        </ol>
 
         <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
         <div class="citation">
@@ -618,7 +608,7 @@
 
         <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
         <ol class="references">
-            <li id="ref-1" data-brief="Shows looping the middle 50% of MoE layers twice saves 6.8–18.0% frontier training FLOPs at matched FLOPs, total parameters, and KV cache up to 54B, with extra gains on Code, long samples, and ICL plus second-visit sink reduction."><a href="https://arxiv.org/abs/2609.01343" target="_blank" rel="noopener">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</a>. Wang, Zhang et al., Tsinghua University, ByteDance Seed, M-A-P, and TokenWave.AI, 2026 (arXiv:2609.01343).</li>
+            <li id="ref-1" data-brief="Shows looping the middle 50% of MoE layers twice saves 6.8–18.0% frontier training FLOPs at matched FLOPs, total parameters, and KV Cache up to 54B, with extra gains on Code, long samples, and ICL plus second-visit sink reduction."><a href="https://arxiv.org/abs/2609.01343" target="_blank" rel="noopener">SMELT: Scaling Laws for Compute-Matched MoE Looped Transformers</a>. Wang, Zhang et al., Tsinghua University, ByteDance Seed, M-A-P, and TokenWave.AI, 2026 (arXiv:2609.01343).</li>
             <li id="ref-2" data-brief="Fits an effective-parameter scaling law over 592 runs showing full BPTT beats truncated BPTT at matched compute because backward loops outweigh forward-only loops (q ≈ 1.022 ≫ 2p ≈ 0.474), while (2,2) matches unlooped loss with 27% fewer parameters."><a href="https://arxiv.org/abs/2610.26030" target="_blank" rel="noopener">Truncate or Not? A Scaling Study of Looped Transformers with Truncated Backpropagation</a>. Xiong, Chen et al., HKU MMLab and Yale University, 2026 (arXiv:2610.26030).</li>
             <li id="ref-3" data-brief="Releases Inkling 2 Mini (26.4B total / 5.4B effective active open-weights looped MoE in native NVFP4/MXFP8), reporting coding-agent frontier results (48.2% DeepSWE v1.1), middle-layer loop ablations, and CoT monitorability tests."><a href="https://thinkingmachines.ai/news/inkling-2-mini/" target="_blank" rel="noopener">Introducing Inkling 2 Mini</a>. Thinking Machines Lab, November 20, 2026.</li>
             <li id="ref-4" data-brief="Decomposes Inkling 2 Mini's depth-wise and cross-loop attention residuals, uncovers block-end weight tagging onto Block 3/4 readers, identifies outlier coordinate d2027 (46% squared norm) flipping polarity across loops, and evaluates Coda/Tuned lenses."><a href="https://www.goodfire.com/research/interpreting-inkling-2-mini/" target="_blank" rel="noopener">Interpreting Inkling 2 Mini</a>. Lee, Krishnamurthy, Merullo, Balsam, and Lubana, Goodfire, November 20, 2026.</li>
@@ -627,7 +617,7 @@
             <li id="ref-7" data-brief="Scales the unshared-prelude, shared-recurrent-block, unshared-coda architecture with input state injection to Huginn-3.5B for latent test-time reasoning."><a href="https://arxiv.org/abs/2502.05171" target="_blank" rel="noopener">Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach</a>. Geiping et al., NeurIPS 2025 (arXiv:2502.05171).</li>
             <li id="ref-8" data-brief="Replaces standard cumulative residual addition with softmax attention over preceding block outputs, enabling selective depth-wise routing across Transformer blocks."><a href="https://arxiv.org/abs/2603.15031" target="_blank" rel="noopener">Attention Residuals</a>. Kimi Team: Chen et al., 2026 (arXiv:2603.15031).</li>
             <li id="ref-9" data-brief="Introduces Elastic Looped Transformers (ELT) with Intra-Loop Self Distillation (ILSD) and Stochastic Student Sampling (S³) for visual generation, achieving 4× fewer parameters (FID 2.0 on ImageNet, FVD 72.8 on UCF-101), 2× faster DiT convergence, −34% HBM, and 3.5× TPU v6e throughput."><a href="https://arxiv.org/abs/2604.09168" target="_blank" rel="noopener">ELT: Elastic Looped Transformers for Visual Generation</a>. Goyal, Agrawal, Anil, Jain, Paul, and Kusupati, ECCV 2026 (arXiv:2604.09168).</li>
-            <li id="ref-10" data-brief="Applies looped MMDiT blocks ([6,5,6], 260M params) inside pixel-space text-to-image flow matching, fixing intermediate degradation and spatial erasure via Deep Supervision and XSA Self-Modulating Attention to beat 6.5× larger models at 4.9× lower inference compute."><a href="https://arxiv.org/abs/2609.40305" target="_blank" rel="noopener">Looped Diffusion Transformer</a>. Chng, Chen, Tong, Diao, Cai, Yang, Liu, Lu, Lin, and Huang, SenseTime Research, Tsinghua University (LeapLab), and NTU, 2026 (arXiv:2609.40305).</li>
+            <li id="ref-10" data-brief="Applies looped MMDiT blocks ([6, 5, 6], 260M params) inside pixel-space text-to-image flow matching, fixing intermediate degradation and spatial erasure via Deep Supervision and XSA Self-Modulating Attention to beat 6.5× larger models at 4.9× lower inference compute."><a href="https://arxiv.org/abs/2609.40305" target="_blank" rel="noopener">Looped Diffusion Transformer</a>. Chng, Chen, Tong, Diao, Cai, Yang, Liu, Lu, Lin, and Huang, SenseTime Research, Tsinghua University (LeapLab), and NTU, 2026 (arXiv:2609.40305).</li>
             <li id="ref-11" data-brief="Proposes parameter-free Exclusive Self Attention (XSA), projecting each head's output orthogonal to the token's own normalized value vector to prevent self-reinforcing updates across repeated blocks."><a href="https://arxiv.org/abs/2603.09078" target="_blank" rel="noopener">Exclusive Self Attention</a>. Zhai, 2026 (arXiv:2603.09078).</li>
         </ol>
     </div>
