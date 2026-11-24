@@ -537,6 +537,77 @@
         .badge-link:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
 
         .news-list { list-style: none; margin: 0; padding: 0; }
+
+        /* Latest blog posts: title cards in the same family as the Experience cards. */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .blog-card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #eaecf0 !important;
+            border-radius: var(--radius);
+            background: #fff;
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+        .blog-card:hover {
+            border-color: var(--primary) !important;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+            background: #fafcff;
+            color: inherit;
+        }
+        .blog-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            height: 100%;
+            padding: 12px 14px 14px;
+        }
+        .blog-card-meta {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        .blog-type {
+            color: var(--type, #64748b);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        /* Same colours as assets/css/blog.css. */
+        .blog-type.type-deep-dive   { --type: #1f4e79; }
+        .blog-type.type-tech-report { --type: #9a4a0c; }
+        .blog-type.type-tutorial    { --type: #146c50; }
+        .blog-type.type-paper-notes { --type: #6237a0; }
+        .blog-type.type-tool        { --type: #0e6b74; }
+        .blog-date { color: #94a3b8; font-size: 0.75rem; white-space: nowrap; }
+        .blog-card-title {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            color: var(--accent);
+            font-size: 1.02rem;
+            font-weight: normal;
+            line-height: 1.5;
+            text-wrap: pretty;
+        }
+        .blog-card:hover .blog-card-title { color: var(--primary); }
+        .blog-more {
+            margin: 10px 0 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            text-align: right;
+        }
         .news-item {
             display: flex;
             gap: 15px;
@@ -980,6 +1051,7 @@
             /* Eight 34px icons stay on one row down to 360px screens. */
             .social-links { gap: 6px; }
             .social-icon { width: 34px; height: 34px; }
+            .blog-grid { grid-template-columns: 1fr; gap: 12px; }
             .social-icon svg { width: 16px; height: 16px; }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
@@ -1145,7 +1217,6 @@
                     <a href="{{personal.googleScholar}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.scholar}}" data-analytics-event="profile_link_click" data-analytics-channel="scholar">{{{icons.googlescholar}}}<span class="social-label">{{ui.scholar}}</span></a>
                     <a href="{{personal.github}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.github}}" data-analytics-event="profile_link_click" data-analytics-channel="github">{{{icons.github}}}<span class="social-label">{{ui.github}}</span></a>
                     <a href="{{personal.cv}}" target="_blank" rel="noopener noreferrer" class="social-icon" title="{{ui.cv}}" data-analytics-event="profile_link_click" data-analytics-channel="cv">{{{icons.cv}}}<span class="social-label">{{ui.cv}}</span></a>
-                    <a href="{{personal.blog}}" class="social-icon" title="{{ui.blog}}" data-analytics-event="profile_link_click" data-analytics-channel="blog">{{{icons.blog}}}<span class="social-label">{{ui.blog}}</span></a>
                     {{#each personal.social}}
                     {{#if qr}}
                     <span class="social-item">
@@ -1298,6 +1369,24 @@
     {{/if}}
 
 
+
+    {{#if latestPosts}}
+    <!-- Latest blog posts -->
+    <section id="blog">
+        <h2 data-section-id="blog">📝 {{ui.sections.blog}}</h2>
+        <div class="blog-grid">
+            {{#each latestPosts}}
+            <a class="blog-card" href="{{url}}" data-analytics-event="blog_post_click" data-analytics-channel="{{slug}}">
+                <span class="blog-card-body">
+                    <span class="blog-card-meta"><span class="blog-type type-{{typeKey}}">{{typeLabel}}</span><time class="blog-date" datetime="{{isoDate}}">{{dateLabel}}</time></span>
+                    <span class="blog-card-title">{{title}}</span>
+                </span>
+            </a>
+            {{/each}}
+        </div>
+        <p class="blog-more"><a href="{{personal.blog}}" data-analytics-event="profile_link_click" data-analytics-channel="blog">{{ui.allPosts}}</a></p>
+    </section>
+    {{/if}}
 
     <!-- Awards -->
     <section id="awards" class="awards-section">

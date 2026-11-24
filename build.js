@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const Handlebars = require('handlebars');
 const path = require('path');
 const sharp = require('sharp');
+const cheerio = require('cheerio');
 
 const ROOT = __dirname;
 const fromRoot = (...parts) => path.join(ROOT, ...parts);
@@ -159,6 +160,32 @@ const contentDate = (() => {
     return new Date();
 })();
 
+// The homepage lists the newest blog posts, read from the blog index so a new
+// post only has to be added there. Entries are already ordered newest first.
+const LATEST_POST_COUNT = 3;
+const latestPosts = (() => {
+    const indexPath = fromRoot('blogs', 'index.html');
+    if (!fs.existsSync(indexPath)) return [];
+    const $ = cheerio.load(fs.readFileSync(indexPath, 'utf8'));
+    return $('article.post-entry').slice(0, LATEST_POST_COUNT).map((_, element) => {
+        const entry = $(element);
+        const href = entry.find('a.entry-link').attr('href') || '';
+        const slug = href.replace(/^\.\//, '').replace(/\/$/, '');
+        const date = new Date(entry.find('.entry-footer span').first().text().trim());
+        if (!slug || Number.isNaN(date.getTime())) {
+            throw new Error(`Cannot read blog entry: ${href || entry.find('h2').text()}`);
+        }
+        return {
+            slug,
+            title: entry.find('.entry-header h2').text().trim(),
+            typeKey: entry.attr('data-type'),
+            typeLabel: entry.find('.post-type').first().text().trim(),
+            date,
+            hasChinese: fs.existsSync(fromRoot('blogs', slug, 'zh', 'index.html'))
+        };
+    }).get();
+})();
+
 const localeConfigs = pages.map((page) => readJson(path.join('config', 'locales', page.localeFile)));
 const pageUrl = (localeConfig) => new URL(localeConfig.locale.path, baseData.site.url).href;
 const englishUrl = pageUrl(localeConfigs.find((config) => !config.locale.isChinese));
@@ -255,6 +282,15 @@ const preparePageData = (localeConfig, profileImageSize) => {
     data.paperCount = data.projectGroups.reduce((count, group) => count + group.items.length, 0);
     data.selectedPaperCount = selectedIds.length;
     data.defaultPaperFilter = selectedIds.length ? 'selected' : 'all';
+    data.latestPosts = latestPosts.map((post) => ({
+        ...post,
+        url: `blogs/${post.slug}/${localeConfig.locale.isChinese && post.hasChinese ? 'zh/' : ''}`,
+        isoDate: post.date.toISOString().slice(0, 10),
+        dateLabel: new Intl.DateTimeFormat(localeConfig.locale.dateTimeLocale, {
+            year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC'
+        }).format(post.date)
+    }));
+
     data.showcaseProjects = showcaseIds.map((id) => {
         const project = allProjects.get(id);
         if (!project) throw new Error(`Unknown projectShowcaseId: ${id}`);

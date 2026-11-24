@@ -21,6 +21,7 @@
     "github": "GitHub",
     "cv": "CV",
     "blog": "Blog",
+    "allPosts": "All posts →",
     "socialLabels": {
       "x": "X (Twitter)",
       "xiaohongshu": "RedNote",
@@ -39,6 +40,7 @@
     "sections": {
       "research": "Research Interests",
       "education": "Education",
+      "blog": "Blog",
       "news": "News",
       "projects": "Selected Research Papers",
       "projectShowcase": "Projects",

@@ -535,6 +535,77 @@
         .badge-link:hover { background: var(--primary); color: #fff; transform: translateY(-1px); }
 
         .news-list { list-style: none; margin: 0; padding: 0; }
+
+        /* Latest blog posts: title cards in the same family as the Experience cards. */
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .blog-card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #eaecf0 !important;
+            border-radius: var(--radius);
+            background: #fff;
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+        .blog-card:hover {
+            border-color: var(--primary) !important;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+            background: #fafcff;
+            color: inherit;
+        }
+        .blog-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            height: 100%;
+            padding: 12px 14px 14px;
+        }
+        .blog-card-meta {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        .blog-type {
+            color: var(--type, #64748b);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        /* Same colours as assets/css/blog.css. */
+        .blog-type.type-deep-dive   { --type: #1f4e79; }
+        .blog-type.type-tech-report { --type: #9a4a0c; }
+        .blog-type.type-tutorial    { --type: #146c50; }
+        .blog-type.type-paper-notes { --type: #6237a0; }
+        .blog-type.type-tool        { --type: #0e6b74; }
+        .blog-date { color: #94a3b8; font-size: 0.75rem; white-space: nowrap; }
+        .blog-card-title {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            color: var(--accent);
+            font-size: 1.02rem;
+            font-weight: normal;
+            line-height: 1.5;
+            text-wrap: pretty;
+        }
+        .blog-card:hover .blog-card-title { color: var(--primary); }
+        .blog-more {
+            margin: 10px 0 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            text-align: right;
+        }
         .news-item {
             display: flex;
             gap: 15px;
@@ -978,6 +1049,7 @@
             /* Eight 34px icons stay on one row down to 360px screens. */
             .social-links { gap: 6px; }
             .social-icon { width: 34px; height: 34px; }
+            .blog-grid { grid-template-columns: 1fr; gap: 12px; }
             .social-icon svg { width: 16px; height: 16px; }
             .paper-card { flex-direction: column-reverse; }
             .paper-img { width: 100%; height: auto; }
@@ -1139,7 +1211,6 @@
                     <a href="https://scholar.google.com/citations?user&#x3D;Thyo5v4AAAAJ&amp;hl&#x3D;en" target="_blank" rel="noopener noreferrer" class="social-icon" title="Scholar" data-analytics-event="profile_link_click" data-analytics-channel="scholar"><svg fill="#4285F4" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg><span class="social-label">Scholar</span></a>
                     <a href="https://github.com/SuperFCR" target="_blank" rel="noopener noreferrer" class="social-icon" title="GitHub" data-analytics-event="profile_link_click" data-analytics-channel="github"><svg fill="#181717" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span class="social-label">GitHub</span></a>
                     <a href="./assets/files/ChaoranFeng_CV.pdf" target="_blank" rel="noopener noreferrer" class="social-icon" title="CV" data-analytics-event="profile_link_click" data-analytics-channel="cv"><svg fill="#205488" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17.1" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="600" letter-spacing="-0.6">CV</text></svg><span class="social-label">CV</span></a>
-                    <a href="./blogs/" class="social-icon" title="Blog" data-analytics-event="profile_link_click" data-analytics-channel="blog"><svg aria-hidden="true" focusable="false" viewBox="3 3 18 18" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(45 12 12)"><rect x="8.6" y="2.2" width="6.8" height="3.6" rx="1.1" fill="#141923"/><path fill="#c08a2e" fill-rule="evenodd" d="M12 22.2 5.9 14.6Q7.5 10.8 8.5 7H15.5Q16.5 10.8 18.1 14.6ZM12 12.3a1.75 1.75 0 1 0 0.01 0ZM11.5 14.9h1V22h-1Z"/></g></svg><span class="social-label">Blog</span></a>
                     <a href="https://x.com/StarFalcary" class="social-icon" title="X (Twitter)" target="_blank" rel="noopener noreferrer" data-analytics-event="profile_link_click" data-analytics-channel="x"><svg fill="#000000" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg><span class="social-label">X (Twitter)</span></a>
                     <span class="social-item">
                         <a href="./assets/imgs/xiaohongshu-qr.png" class="social-icon" title="RedNote" aria-expanded="false" aria-controls="social-qr-xiaohongshu" data-qr-toggle data-analytics-event="profile_link_click" data-analytics-channel="xiaohongshu"><svg fill="#FF2442" aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6.5 2H18a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 18 18H6.5a1 1 0 0 0 0 2H19a1 1 0 1 1 0 2H6.5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3Zm2.25 4.5a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h4a.75.75 0 0 0 0-1.5h-4Z"/></svg><span class="social-label">RedNote</span></a>
@@ -1644,6 +1715,32 @@
     </section>
 
 
+
+    <!-- Latest blog posts -->
+    <section id="blog">
+        <h2 data-section-id="blog">📝 Blog</h2>
+        <div class="blog-grid">
+            <a class="blog-card" href="blogs/marin/" data-analytics-event="blog_post_click" data-analytics-channel="marin">
+                <span class="blog-card-body">
+                    <span class="blog-card-meta"><span class="blog-type type-tutorial">Tutorial</span><time class="blog-date" datetime="2026-11-22">22 Nov 2026</time></span>
+                    <span class="blog-card-title">Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</span>
+                </span>
+            </a>
+            <a class="blog-card" href="blogs/looped-transformers/" data-analytics-event="blog_post_click" data-analytics-channel="looped-transformers">
+                <span class="blog-card-body">
+                    <span class="blog-card-meta"><span class="blog-type type-deep-dive">Deep Dive</span><time class="blog-date" datetime="2026-11-21">21 Nov 2026</time></span>
+                    <span class="blog-card-title">Looped Transformers: Compute-Matched Scaling, Training Gradients, and Internal Circuits</span>
+                </span>
+            </a>
+            <a class="blog-card" href="blogs/duet-translator/" data-analytics-event="blog_post_click" data-analytics-channel="duet-translator">
+                <span class="blog-card-body">
+                    <span class="blog-card-meta"><span class="blog-type type-tool">Tool</span><time class="blog-date" datetime="2026-11-21">21 Nov 2026</time></span>
+                    <span class="blog-card-title">Duet-Translator: Side-by-Side Web Translation with Paragraph-Aligned Scrolling</span>
+                </span>
+            </a>
+        </div>
+        <p class="blog-more"><a href="./blogs/" data-analytics-event="profile_link_click" data-analytics-channel="blog">All posts →</a></p>
+    </section>
 
     <!-- Awards -->
     <section id="awards" class="awards-section">

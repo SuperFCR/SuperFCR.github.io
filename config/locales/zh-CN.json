@@ -22,6 +22,7 @@
     "github": "GitHub",
     "cv": "简历",
     "blog": "博客",
+    "allPosts": "全部文章 →",
     "socialLabels": {
       "x": "X（Twitter）",
       "xiaohongshu": "小红书",
@@ -40,6 +41,7 @@
     "sections": {
       "research": "研究方向",
       "education": "教育经历",
+      "blog": "博客",
       "news": "近期动态",
       "projects": "代表性论文",
       "projectShowcase": "项目",
