@@ -27,8 +27,7 @@
     "blog": "./blogs/",
     "social": [
       {"type": "x", "url": "https://x.com/StarFalcary"},
-      {"type": "xiaohongshu", "qr": "./assets/imgs/xiaohongshu-qr.png", "account": "6939187440"},
-      {"type": "wechat", "qr": "./assets/imgs/wechat-qr.png"}
+      {"type": "xiaohongshu", "qr": "./assets/imgs/xiaohongshu-qr.png", "account": "6939187440"}
     ]
   },
   "analytics": {
