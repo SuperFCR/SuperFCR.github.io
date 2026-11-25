@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="双语学术主页构建管线、静态博客结构、本地化 KaTeX 数学公式与自动校验流程快速上手指南。">
+    <title>使用这份研究博客模板快速上手 | 陈明</title>
+    <link rel="canonical" href="https://yourusername.github.io/blogs/sample-post/zh/">
+    <link rel="alternate" hreflang="en" href="https://yourusername.github.io/blogs/sample-post/">
+    <link rel="alternate" hreflang="zh-CN" href="https://yourusername.github.io/blogs/sample-post/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://yourusername.github.io/blogs/sample-post/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../../assets/imgs/favicon.png?v=1.0.0">
+    <link rel="icon" type="image/svg+xml" href="../../../assets/imgs/logo.svg?v=1.0.0">
+    <link rel="apple-touch-icon" href="../../../assets/imgs/favicon.png?v=1.0.0">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="陈明">
+    <meta property="og:title" content="使用这份研究博客模板快速上手">
+    <meta property="og:description" content="双语学术主页构建管线、静态博客结构、本地化 KaTeX 数学公式与自动校验流程快速上手指南。">
+    <meta property="og:url" content="https://yourusername.github.io/blogs/sample-post/zh/">
+    <meta property="og:image" content="https://yourusername.github.io/blogs/sample-post/cover.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preload" href="../../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../../assets/css/blog.css?v=1.0.0">
+    <script src="../../../assets/js/blog-theme.js?v=1.0.0"></script>
+</head>
+<body>
+
+<header lang="en">
+    <nav class="nav">
+        <div class="logo">
+            <a href="../../"><img class="nav-mark" src="../../../assets/imgs/logo.svg?v=1.0.0" width="26" height="26" alt="">Alex Chen</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../../"><span class="active">Posts</span></a></li>
+                <li><a href="../../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs" lang="en"><a href="../../../">Home</a>&nbsp;»&nbsp;<a href="../../">Posts</a></div>
+            <nav class="lang-switch" aria-label="语言">
+                <a href="../" hreflang="en" lang="en">EN</a>
+                <a href="./" hreflang="zh-CN" aria-current="page">中文</a>
+            </nav>
+        </div>
+        <span class="post-type type-tutorial">教程</span>
+        <h1 class="post-title">使用这份研究博客模板快速上手</h1>
+        <div class="post-meta"><span>2026 年 11 月 20 日</span><span>1 分钟阅读</span><span>陈明</span></div>
+    </header>
+
+    <details class="toc">
+        <summary>目录</summary>
+        <div class="inner">
+            <ul>
+                <li><a href="#overview">概览</a></li>
+                <li><a href="#homepage-pipeline">主页与博客构建管线</a></li>
+                <li><a href="#math-and-figures">公式渲染与插图</a></li>
+                <li><a href="#writing-workflow">发布流程</a></li>
+                <li><a href="#citation">引用本文</a></li>
+                <li><a href="#references">参考文献</a></li>
+            </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>这篇入门教程展示了学术主页与研究博客模板的内置能力。版式参考 <a href="https://lilianweng.github.io/">Lil'Log</a><a class="cite" href="#ref-1">[1]</a>，所有文章均为自包含的静态 HTML 页面，内置浅色/深色主题、桌面端左侧手风琴目录、本地化字体以及自动规范校验。</p>
+
+        <h2 id="overview">概览<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
+        <p>将主页编译与长文博客解耦后，两边都可以独立维护。<code>build.js</code> 负责根据 JSON 配置生成中英文学术主页，而 <code>blogs/</code> 下的文章目录则可自由嵌入自定义矢量插图、响应式表格、代码块和数学公式，互不干扰。</p>
+
+        <h2 id="homepage-pipeline">主页与博客构建管线<a class="anchor" href="#homepage-pipeline" aria-hidden="true">#</a></h2>
+        <p>运行 <code>npm run build</code> 时，脚本不仅会生成中英文主页并输出带内容哈希的 WebP 缩略图，还会自动解析 <code>blogs/index.html</code> 中的最新文章卡片并渲染到主页 <strong>Blog</strong> 栏目。</p>
+        <figure>
+            <img src="../fig-workflow.svg" width="1200" height="420" alt="展示 build.js 生成双语主页以及 blogs/check.py 校验博客文章的双路静态构建流程图" loading="lazy">
+            <figcaption>图 1：连接 JSON 配置、双语主页构建、博客规范校验与 GitHub Pages 部署的双路静态管线示意图。<a href="../fig-workflow.svg">查看原图</a></figcaption>
+        </figure>
+
+        <h2 id="math-and-figures">公式渲染与插图<a class="anchor" href="#math-and-figures" aria-hidden="true">#</a></h2>
+        <p>数学公式完全依托 <code>assets/vendor/katex/</code> 中的本地 KaTeX 资源离线渲染，无需外链 CDN。例如行内速度场写法为 $v_\theta(x_t, t)$，块级公式如下：</p>
+        $$\mathcal{L}_{\text{FM}}(\theta) = \mathbb{E}_{t,\,x_0,\,x_1} \left[ \left\| v_\theta(x_t, t) - (x_1 - x_0) \right\|_2^2 \right], \qquad x_t = (1 - t) x_0 + t x_1.$$
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>文件</th><th>用途</th><th>校验方式</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>config/data.json</code></td><td>个人信息、论文与经历配置</td><td><code>npm run build</code></td></tr>
+                    <tr><td><code>blogs/&lt;slug&gt;/index.html</code></td><td>静态中英文文章页面</td><td class="best"><code>blogs/check.py</code></td></tr>
+                    <tr><td><code>blogs/index.html</code></td><td>文章列表页与主页文章流来源</td><td><code>blogs/check.py</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 id="writing-workflow">发布流程<a class="anchor" href="#writing-workflow" aria-hidden="true">#</a></h2>
+        <p>复制 <code>blogs/example/</code> 为新文章目录，在 <code>blogs/index.html</code> 登记条目后，推送前在本地依次完成校验与预览即可：</p>
+<pre><code>python3 blogs/check.py
+npm run build
+python3 -I -m http.server 8000 --bind 127.0.0.1</code></pre>
+
+        <h2 id="citation">引用本文<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>引用格式：</p>
+            <blockquote><p lang="en">Chen, Alex. (Nov 2026). Getting Started with This Research Blog. Alex Chen's Blog. https://yourusername.github.io/blogs/sample-post/.</p></blockquote>
+            <p>或</p>
+<pre lang="en"><code>@article{chen2026gettingstarted,
+  title   = "Getting Started with This Research Blog",
+  author  = "Chen, Alex",
+  journal = "yourusername.github.io",
+  year    = "2026",
+  month   = "Nov",
+  url     = "https://yourusername.github.io/blogs/sample-post/"
+}</code></pre>
+        </div>
+
+        <h2 id="references">参考文献<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references" lang="en">
+            <li id="ref-1" data-brief="提供了本博客单栏阅读版式、吸顶左侧目录及文末参考文献悬浮卡片规范的设计参考。"><a href="https://lilianweng.github.io/" target="_blank" rel="noopener">Lil'Log</a>. Weng, Lilian. Layout reference for this blog system.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer" lang="en">
+        <ul class="post-tags">
+            <li><a href="../../?tag=Template">Template</a></li>
+            <li><a href="../../?tag=Workflow">Workflow</a></li>
+            <li><a href="../../?tag=Typography">Typography</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../../../"><span class="title">Homepage »</span>Alex Chen</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer" lang="en">
+    &copy; 2026 Alex Chen&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../../">Homepage</a>
+</footer>
+
+<script src="../../../assets/vendor/katex/katex.min.js"></script>
+<script src="../../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../../assets/js/blog-post.js?v=1.0.0"></script>
+</body>
+</html>

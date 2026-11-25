@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Research notes, technical tutorials and paper readings by Alex Chen.">
+    <title>Blog | Alex Chen</title>
+    <link rel="canonical" href="https://yourusername.github.io/blogs/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../assets/imgs/favicon.png?v=1.0.0">
+    <link rel="icon" type="image/svg+xml" href="../assets/imgs/logo.svg?v=1.0.0">
+    <link rel="apple-touch-icon" href="../assets/imgs/favicon.png?v=1.0.0">
+    <link rel="preload" href="../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/blog.css?v=1.0.0">
+    <script src="../assets/js/blog-theme.js?v=1.0.0"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="./"><img class="nav-mark" src="../assets/imgs/logo.svg?v=1.0.0" width="26" height="26" alt="">Alex Chen</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="./"><span class="active">Posts</span></a></li>
+                <li><a href="../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+    <section class="profile">
+        <div class="profile-main">
+            <h1>Research Notes</h1>
+            <p class="profile-desc">Notes on papers I read, systems I build, and ideas I am working through: multimodal generation, 3D vision, world models, and coding agents.</p>
+        </div>
+        <div class="social-icons">
+            <a href="https://scholar.google.com/citations?user=YOUR_SCHOLAR_ID&amp;hl=en" title="Google Scholar" aria-label="Google Scholar" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/></svg></a>
+            <a href="https://github.com/yourusername" title="GitHub" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
+            <a href="https://x.com/yourusername" title="X (Twitter)" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
+            <a href="mailto:alex.chen@example.edu" title="Email" aria-label="Email"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
+        </div>
+    </section>
+
+    <div class="list-head">
+        <div class="list-head-left">
+            <div class="type-filters" role="group" aria-label="Filter posts by type" hidden>
+                <button class="type-filter" type="button" data-filter="all" aria-pressed="true">All <span class="count"></span></button>
+                <button class="type-filter type-deep-dive" type="button" data-filter="deep-dive" aria-pressed="false">Deep Dive <span class="count"></span></button>
+                <button class="type-filter type-tech-report" type="button" data-filter="tech-report" aria-pressed="false">Tech Report <span class="count"></span></button>
+                <button class="type-filter type-tutorial" type="button" data-filter="tutorial" aria-pressed="false">Tutorial <span class="count"></span></button>
+                <button class="type-filter type-paper-notes" type="button" data-filter="paper-notes" aria-pressed="false">Paper Notes <span class="count"></span></button>
+                <button class="type-filter type-tool" type="button" data-filter="tool" aria-pressed="false">Tool <span class="count"></span></button>
+            </div>
+            <span class="active-tag" hidden>Topic: <span class="active-tag-name"></span><button class="active-tag-clear" type="button" aria-label="Clear topic filter">&times;</button></span>
+        </div>
+        <div class="list-head-right">
+            <input class="list-search" type="search" placeholder="Filter posts… (/)" aria-label="Filter posts" hidden>
+            <span class="list-count" aria-live="polite">1 post</span>
+        </div>
+    </div>
+
+    <section class="post-list" aria-label="Posts">
+        <article class="post-entry" data-type="tutorial" data-tags="Typography">
+            <div class="entry-body">
+                <div class="entry-top"><span class="post-type type-tutorial">Tutorial</span><span class="entry-topics"><span>Template</span><span>Workflow</span></span></div>
+                <header class="entry-header"><h2>Getting Started with This Research Blog</h2></header>
+                <p class="entry-content">A concise walkthrough of the bilingual academic homepage build pipeline, static blog structure, self-hosted KaTeX math, and verification checks.</p>
+                <footer class="entry-footer"><span>November 20, 2026</span><span>1 min read</span><span>EN · <span lang="zh-CN">中文</span></span></footer>
+            </div>
+            <img class="entry-cover" src="./sample-post/cover.webp" width="880" height="495" alt="" loading="eager">
+            <a class="entry-link" href="./sample-post/" aria-label="Getting Started with This Research Blog"></a>
+        </article>
+        <div class="list-empty" hidden>
+            <div>No posts match the current filter.</div>
+            <button type="button">Reset filters</button>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Alex Chen&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../">Homepage</a>
+</footer>
+
+<script src="../assets/js/blog-list.js?v=1.0.0"></script>
+</body>
+</html>

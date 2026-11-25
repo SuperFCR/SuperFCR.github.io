@@ -1,0 +1,149 @@
+{
+  "locale": {
+    "htmlLang": "zh-CN",
+    "isChinese": true,
+    "baseHref": "../",
+    "path": "zh/",
+    "ogLocale": "zh_CN",
+    "dateTimeLocale": "zh-CN",
+    "englishHref": "./index.html",
+    "chineseHref": "./zh/index.html"
+  },
+  "meta": {
+    "title": "陈明｜学术主页",
+    "description": "陈明的个人学术主页，研究方向涵盖多模态生成、三维视觉与智能体系统。"
+  },
+  "ui": {
+    "languageSwitcherLabel": "语言切换",
+    "themeToggleLabel": "切换浅色/深色模式",
+    "englishLabel": "EN",
+    "chineseLabel": "中文",
+    "email": "邮箱",
+    "scholar": "谷歌学术",
+    "github": "GitHub",
+    "cv": "简历",
+    "blog": "博客",
+    "allPosts": "全部文章 →",
+    "socialLabels": {
+      "x": "X（Twitter）",
+      "xiaohongshu": "小红书",
+      "wechat": "微信"
+    },
+    "socialQrCaptions": {
+      "xiaohongshu": "扫码在小红书找到我",
+      "wechat": "扫码添加微信"
+    },
+    "socialAccountLabels": {
+      "xiaohongshu": "小红书号："
+    },
+    "profileImageAlt": "陈明的个人照片",
+    "projectImageAlt": "项目示意图",
+    "organizationLogoSuffix": "标志",
+    "sections": {
+      "research": "研究方向",
+      "education": "教育经历",
+      "blog": "博客",
+      "news": "近期动态",
+      "projects": "代表性论文",
+      "projectShowcase": "项目",
+      "experience": "研究经历",
+      "awards": "荣誉奖励",
+      "activities": "学术服务"
+    },
+    "projectGroupLabels": {
+      "generative_models": "生成模型",
+      "systems_agents": "系统与智能体"
+    },
+    "paperFilterLabel": "按研究方向筛选论文",
+    "paperFilterAll": "全部",
+    "paperFilterSelected": "精选",
+    "paperFilterResults": "篇论文已显示",
+    "equalContribution": "* 共同一作",
+    "projectLead": "# 项目负责人",
+    "resourceLabels": {
+      "Paper": "论文",
+      "Project Page": "项目主页",
+      "Code": "代码",
+      "Datasets": "数据集",
+      "HF / Upvote": "HF / 支持"
+    },
+    "experienceTitleJoiner": "，",
+    "hostedBy": "合作导师：",
+    "conferenceReviewer": "会议审稿人：",
+    "journalReviewer": "期刊审稿人：",
+    "copyrightJoiner": "，",
+    "allRightsReserved": "版权所有。",
+    "lastUpdated": "最后更新：",
+    "visitorStatistics": "访客统计",
+    "visitorMapAlt": "访客分布图"
+  },
+  "content": {
+    "personal": {
+      "title": "博士研究生",
+      "school": "计算机科学学院",
+      "university": "示例大学",
+      "location": "美国·旧金山"
+    },
+    "education": [
+      {
+        "description": "<strong>计算机科学博士研究生</strong>，计算机科学学院，<a href=\"https://example.edu/\">示例大学</a>。",
+        "note": "导师：<a href=\"https://example.edu/\">Jordan Lee 教授</a>。"
+      },
+      {
+        "description": "<strong>人工智能工学学士</strong>，计算机工程系，<a href=\"https://example.edu/\">示例理工大学</a>。"
+      }
+    ],
+    "biography": "🎓 请在 <code>config/data.json</code> 与 <code>config/locales/zh-CN.json</code> 中替换为你自己的个人简介。联系邮箱：<a class=\"bio-email\" href=\"mailto:alex.chen@example.edu\">alex.chen@example.edu</a>。",
+    "research": {
+      "intro": "我在 <a href=\"https://example.edu/\">Example Lab</a> 从事多模态生成模型、三维视觉与可靠智能体系统研究，目前主要关注以下方向：",
+      "topics": [
+        "多模态生成",
+        "三维世界建模",
+        "智能体系统与后训练"
+      ]
+    },
+    "news": [
+      {
+        "content": "开源发布了 <a href=\"https://github.com/yourusername/project-alpha\">Project Alpha</a> 评测基准与实现代码。"
+      },
+      {
+        "content": "论文 <a href=\"https://example.edu/\">Project Beta</a> 被 <i>Sample Conference 2026</i> 接收。"
+      }
+    ],
+    "projects": {
+      "generative_models": [
+        {
+          "description": "一个面向可控多模态合成的开源框架，结合时空 Flow Matching 与轨迹条件控制；通过 projectShowcaseIds 在主页「项目」栏目置顶展示。"
+        },
+        {
+          "description": "面向长时序场景合成的视角一致世界模型，配备可按相机查询的隐式记忆模块；通过 selectedPaperIds 默认收录于「精选」视图。"
+        }
+      ],
+      "systems_agents": [
+        {
+          "description": "面向多轮编码与研究智能体的沙盒验证框架与奖励塑形方案；可在论文栏「全部」及方向筛选中查看。"
+        }
+      ]
+    },
+    "experiences": [
+      {
+        "title": "研究实习生",
+        "organization": "Example AI Lab",
+        "period": "2026年5月—2026年8月"
+      },
+      {
+        "title": "访问学者",
+        "organization": "Open Systems Group",
+        "period": "2025年1月—2025年6月"
+      }
+    ],
+    "awards": [
+      {
+        "content": "示例大学研究生科研奖学金"
+      },
+      {
+        "content": "示例理工大学优秀本科毕业论文（前 <b>5%</b>）"
+      }
+    ]
+  }
+}

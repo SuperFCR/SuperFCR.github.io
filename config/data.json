@@ -1,0 +1,147 @@
+{
+  "projectShowcaseIds": ["project_alpha"],
+  "selectedPaperIds": ["project_beta"],
+  "site": {
+    "url": "https://yourusername.github.io/"
+  },
+  "personal": {
+    "name": "Alex Chen",
+    "nameChinese": "陈明",
+    "title": "Ph.D. Candidate",
+    "citations": "N/A",
+    "school": "School of Computer Science",
+    "university": "Example University",
+    "location": "San Francisco, USA",
+    "timeZone": "America/Los_Angeles",
+    "email": "alex.chen@example.edu",
+    "profileImage": "./assets/imgs/avatar.png",
+    "googleScholar": "https://scholar.google.com/citations?user=YOUR_SCHOLAR_ID&hl=en",
+    "github": "https://github.com/yourusername",
+    "cv": "./assets/files/CV.pdf",
+    "blog": "./blogs/",
+    "social": [
+      {"type": "x", "url": "https://x.com/yourusername"}
+    ]
+  },
+  "analytics": {
+    "measurementId": ""
+  },
+  "footer": {
+    "visitorTracker": null
+  },
+  "education": [
+    {
+      "period": "2023–2027",
+      "description": "<strong>Ph.D. in Computer Science</strong>, School of Computer Science, <a href=\"https://example.edu/\">Example University</a>.",
+      "note": "Advised by <a href=\"https://example.edu/\">Prof. Jordan Lee</a>."
+    },
+    {
+      "period": "2019–2023",
+      "description": "<strong>B.S. in Artificial Intelligence</strong>, Department of Computer Engineering, <a href=\"https://example.edu/\">Sample Institute of Technology</a>."
+    }
+  ],
+  "biography": "🎓 Replace this biography in <code>config/data.json</code> and <code>config/locales/zh-CN.json</code>. Contact me at <a class=\"bio-email\" href=\"mailto:alex.chen@example.edu\">alex.chen@example.edu</a>.",
+  "research": {
+    "intro": "I work on multimodal generative modeling, 3D vision, and reliable agentic systems at <a href=\"https://example.edu/\">Example Lab</a>. Currently, my research focuses on:",
+    "topics": [
+      "Multimodal Generation",
+      "3D World Modeling",
+      "Agentic Systems & Post-Training"
+    ]
+  },
+  "projectCategories": [
+    {
+      "key": "generative_models",
+      "analyticsArea": "generative_models"
+    },
+    {
+      "key": "systems_agents",
+      "analyticsArea": "systems_agents"
+    }
+  ],
+  "showNews": true,
+  "news": [
+    {
+      "date": "[2026-09]",
+      "emoji": "🚀",
+      "content": "Released open-source benchmark and evaluation code for <a href=\"https://github.com/yourusername/project-alpha\">Project Alpha</a>."
+    },
+    {
+      "date": "[2026-06]",
+      "content": "One paper (<a href=\"https://example.edu/\">Project Beta</a>) accepted to <i>Sample Conference 2026</i>."
+    }
+  ],
+  "projects": {
+    "generative_models": [
+      {
+        "analyticsId": "project_alpha",
+        "title": "✨ Project Alpha: Controllable Multimodal Flow Generation",
+        "authors": "<u><b>Alex Chen<sup>*</sup></b></u>, Taylor Wu*, Jordan Lee†",
+        "description": "An open framework for controllable multimodal synthesis pairing spatio-temporal flow matching with trajectory conditioning. Listed under projectShowcaseIds as a top-level Project card.",
+        "venue": "Technical Report",
+        "image": "./assets/pipelines/project_alpha.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/0000.00001"},
+          {"type": "Project Page", "url": "https://yourusername.github.io/project-alpha/"},
+          {"type": "Code", "url": "https://github.com/yourusername/project-alpha"}
+        ]
+      },
+      {
+        "analyticsId": "project_beta",
+        "title": "🌐 Project Beta: Geometrically Consistent 3D World Modeling",
+        "authors": "<u><b>Alex Chen</b></u>, Morgan Lin, Jordan Lee†",
+        "description": "A view-consistent world model with camera-queryable latent memory for long-horizon scene synthesis. Highlighted under Selected Research Papers via selectedPaperIds.",
+        "venue": "Conf. 2026",
+        "image": "./assets/pipelines/project_beta.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/0000.00002"},
+          {"type": "Code", "url": "https://github.com/yourusername/project-beta"}
+        ]
+      }
+    ],
+    "systems_agents": [
+      {
+        "analyticsId": "project_gamma",
+        "title": "⚙️ Project Gamma: Verifiable Tool-Use Loops for Coding Agents",
+        "authors": "Sam Patel*, <u><b>Alex Chen<sup>*</sup></b></u>, Jordan Lee",
+        "description": "A sandboxed verification harness and reward-shaping recipe for multi-turn coding and research agents. Included in the All view and category filters.",
+        "venue": "Workshop 2025",
+        "image": "./assets/pipelines/project_gamma.png",
+        "links": [
+          {"type": "Paper", "url": "https://arxiv.org/abs/0000.00003"},
+          {"type": "Code", "url": "https://github.com/yourusername/project-gamma"}
+        ]
+      }
+    ]
+  },
+  "experiences": [
+    {
+      "title": "Research Intern",
+      "organization": "Example AI Lab",
+      "period": "May 2026 - Aug. 2026",
+      "host": "<a href=\"https://example.edu/\" target=\"_blank\" rel=\"noopener noreferrer\">Dr. Riley Zhang</a>",
+      "emoji": "🏛️"
+    },
+    {
+      "title": "Visiting Researcher",
+      "organization": "Open Systems Group",
+      "period": "Jan. 2025 - Jun. 2025",
+      "host": "Casey Park",
+      "emoji": "🔬"
+    }
+  ],
+  "awards": [
+    {
+      "date": "2026.05",
+      "content": "Graduate Research Fellowship, Example University"
+    },
+    {
+      "date": "2023.06",
+      "content": "Outstanding Undergraduate Thesis (Top <b>5%</b>), Sample Institute of Technology"
+    }
+  ],
+  "activities": {
+    "conference_reviewer": "CVPR[26], ICLR[26], NeurIPS[25]",
+    "journal_reviewer": "IEEE T-PAMI"
+  }
+}

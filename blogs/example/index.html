@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta name="description" content="A tour of the blog's building blocks: table of contents, headings, quotes, code, tables, figures and citations.">
+    <title>Example Post: Blog Typography Sample | Alex Chen</title>
+    <link rel="canonical" href="https://yourusername.github.io/blogs/example/">
+    <link rel="alternate" hreflang="en" href="https://yourusername.github.io/blogs/example/">
+    <link rel="alternate" hreflang="zh-CN" href="https://yourusername.github.io/blogs/example/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://yourusername.github.io/blogs/example/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png?v=1.0.0">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg?v=1.0.0">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png?v=1.0.0">
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=1.0.0">
+    <script src="../../assets/js/blog-theme.js?v=1.0.0"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../"><img class="nav-mark" src="../../assets/imgs/logo.svg?v=1.0.0" width="26" height="26" alt="">Alex Chen</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../"><span class="active">Posts</span></a></li>
+                <li><a href="../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+            <nav class="lang-switch" aria-label="Language">
+                <a href="./" hreflang="en" aria-current="page">EN</a>
+                <a href="./zh/" hreflang="zh-CN" lang="zh-CN">中文</a>
+            </nav>
+        </div>
+        <span class="post-type type-tutorial">Tutorial</span>
+        <h1 class="post-title">Example Post: Blog Typography Sample</h1>
+        <div class="post-meta"><span>November 19, 2026</span><span>1 min read</span><span>Alex Chen</span></div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+            <ul>
+                <li><a href="#paragraphs">Paragraphs and Emphasis</a>
+                    <ul><li><a href="#lists">Lists</a></li></ul>
+                </li>
+                <li><a href="#quotes">Quotes</a></li>
+                <li><a href="#code">Code</a></li>
+                <li><a href="#tables">Tables</a></li>
+                <li><a href="#figures">Figures</a></li>
+                <li><a href="#citation">Citation</a></li>
+                <li><a href="#references">References</a></li>
+            </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>This is an example post for checking the blog's typography. The structure follows <a href="https://lilianweng.github.io/">Lil'Log</a><a class="cite" href="#ref-1">[1]</a>: a top navigation bar, a single reading column, a collapsible table of contents, and a citation block with references at the end. Colours, backdrop and the name in the header come from the homepage. Every post has an English and a Chinese version; switch with the pill above the title.</p>
+
+        <h2 id="paragraphs">Paragraphs and Emphasis<a class="anchor" href="#paragraphs" aria-hidden="true">#</a></h2>
+        <p>The reading column is centered for comfortable reading. Text is set in Inter, with <em>italics</em> for terms such as <em>diffusion model</em>, <strong>bold</strong> for key conclusions, <a href="../">links</a> with a thin underline, and inline code like <code>flow_grpo.step()</code>.</p>
+        <p>Each paragraph should carry one idea. Paper notes usually read best in the order "what the paper does, why it works, where it falls short", so a reader can grasp the structure from the section headings alone.</p>
+
+        <h3 id="lists">Lists<a class="anchor" href="#lists" aria-hidden="true">#</a></h3>
+        <ul>
+            <li>Keep each item to one or two lines; split longer ones into paragraphs.</li>
+            <li>Use an ordered list when the sequence matters.</li>
+            <li>Introduce a list with a sentence that says what it is about.</li>
+        </ul>
+
+        <h2 id="quotes">Quotes<a class="anchor" href="#quotes" aria-hidden="true">#</a></h2>
+        <blockquote>
+            <p>A quote carries a navy rule on the left. Use it for passages from a paper or someone else's view.</p>
+        </blockquote>
+
+        <h2 id="code">Code<a class="anchor" href="#code" aria-hidden="true">#</a></h2>
+        <p>Code blocks use a dark background, as on Lil'Log:</p>
+<pre><code>def reward(video, camera):
+    depth = estimate_depth(video)
+    return consistency(depth, camera)  # higher is better</code></pre>
+
+        <h2 id="tables">Tables<a class="anchor" href="#tables" aria-hidden="true">#</a></h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Method</th><th>FID ↓</th><th>CLIP ↑</th><th>3D Consistency ↑</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Baseline</td><td>18.4</td><td>0.301</td><td>0.62</td></tr>
+                    <tr><td>+ RL fine-tuning</td><td>17.9</td><td>0.305</td><td>0.71</td></tr>
+                    <tr><td>Ours</td><td class="best">16.2</td><td class="best">0.312</td><td class="best">0.78</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The numbers only illustrate the layout and do not come from any real experiment<a class="cite" href="#ref-2">[2]</a>.</p>
+
+        <h2 id="figures">Figures<a class="anchor" href="#figures" aria-hidden="true">#</a></h2>
+        <figure>
+            <img src="./fig-pipeline.webp" width="1600" height="640" alt="Sample pipeline diagram" loading="lazy">
+            <figcaption>Fig. 1. Sample pipeline diagram demonstrating responsive WebP figures.</figcaption>
+        </figure>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>Cited as:</p>
+            <blockquote><p>Chen, Alex. (Nov 2026). Example Post: Blog Typography Sample. Alex Chen's Blog. https://yourusername.github.io/blogs/example/.</p></blockquote>
+            <p>Or</p>
+<pre><code>@article{chen2026example,
+  title   = "Example Post: Blog Typography Sample",
+  author  = "Chen, Alex",
+  journal = "yourusername.github.io",
+  year    = "2026",
+  month   = "Nov",
+  url     = "https://yourusername.github.io/blogs/example/"
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li id="ref-1" data-brief="Provides the single-column editorial typography, sticky TOC, and reference-block conventions that this blog builds on."><a href="https://lilianweng.github.io/" target="_blank" rel="noopener">Lil'Log</a>. Weng, Lilian. Layout reference for this blog.</li>
+            <li id="ref-2" data-brief="Sample unlinked reference demonstrating that citations without an external URL still show a hover card and jump smoothly to the bottom reference list.">Example reference. <em>Conference on Example Studies</em>, 2026.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../?tag=Typography">Typography</a></li>
+            <li><a href="../?tag=Layout">Layout</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../../"><span class="title">Homepage »</span>Alex Chen</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Alex Chen&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+<script src="../../assets/js/blog-post.js?v=1.0.0"></script>
+</body>
+</html>

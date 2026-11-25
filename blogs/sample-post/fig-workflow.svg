@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420">
+  <rect width="1200" height="420" rx="16" fill="#fcfbf8"/>
+  <rect x="16" y="16" width="1168" height="388" rx="12" fill="none" stroke="#e2ddd3" stroke-width="1.5"/>
+
+  <text x="48" y="56" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#1f4e79">HOMEPAGE PIPELINE (NODE.JS + HANDLEBARS + SHARP)</text>
+  <rect x="48" y="76" width="250" height="106" rx="12" fill="#eef4fb" stroke="#1f4e79" stroke-width="1.8"/>
+  <text x="173" y="116" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">config/data.json</text>
+  <text x="173" y="142" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">+ config/locales/{en,zh-CN}.json</text>
+  <text x="173" y="162" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">+ templates/index.html</text>
+
+  <path d="M310 129 H390" stroke="#1f4e79" stroke-width="2.5"/>
+  <polygon points="390,123 402,129 390,135" fill="#1f4e79"/>
+
+  <rect x="410" y="76" width="260" height="106" rx="12" fill="#ffffff" stroke="#1f4e79" stroke-width="2.2"/>
+  <text x="540" y="116" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#1f4e79">npm run build (build.js)</text>
+  <text x="540" y="142" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">Deep-merge locales &amp; stars</text>
+  <text x="540" y="162" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">Generate hashed WebP thumbs</text>
+
+  <path d="M682 129 H762" stroke="#1f4e79" stroke-width="2.5"/>
+  <polygon points="762,123 774,129 762,135" fill="#1f4e79"/>
+
+  <rect x="782" y="76" width="370" height="106" rx="12" fill="#0f172a"/>
+  <text x="967" y="116" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#ffffff">index.html  &amp;  zh/index.html</text>
+  <text x="967" y="142" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#cbd5e1">Bilingual static pages + Latest Blog cards</text>
+  <text x="967" y="162" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#94a3b8">assets/thumbs/*.webp</text>
+
+  <text x="48" y="236" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#146c50">BLOG PIPELINE (STATIC HTML + PYTHON LINTER)</text>
+  <rect x="48" y="256" width="250" height="114" rx="12" fill="#edf8f4" stroke="#146c50" stroke-width="1.8"/>
+  <text x="173" y="296" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">blogs/&lt;slug&gt;/</text>
+  <text x="173" y="322" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">index.html + optional zh/index.html</text>
+  <text x="173" y="344" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">cover.webp (880x495) + fig-*</text>
+
+  <path d="M310 313 H390" stroke="#146c50" stroke-width="2.5"/>
+  <polygon points="390,307 402,313 390,319" fill="#146c50"/>
+
+  <rect x="410" y="256" width="260" height="114" rx="12" fill="#ffffff" stroke="#146c50" stroke-width="2.2"/>
+  <text x="540" y="296" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#146c50">python3 blogs/check.py</text>
+  <text x="540" y="322" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">Check TOC, metadata &amp; assets</text>
+  <text x="540" y="344" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">Enforce ?v= parity &amp; EN/ZH sync</text>
+
+  <path d="M682 313 H762" stroke="#146c50" stroke-width="2.5"/>
+  <polygon points="762,307 774,313 762,319" fill="#146c50"/>
+
+  <rect x="782" y="256" width="370" height="114" rx="12" fill="#146c50"/>
+  <text x="967" y="296" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#ffffff">blogs/index.html &amp; GitHub Pages</text>
+  <text x="967" y="322" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#ecfdf5">Parsed by build.js via cheerio for homepage</text>
+  <text x="967" y="344" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="13" fill="#d1fae5">Checked on push via blog-check.yml</text>
+
+  <path d="M967 256 V196" stroke="#9a4a0c" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="961,196 967,184 973,196" fill="#9a4a0c"/>
+</svg>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A concise walkthrough of the bilingual academic homepage build pipeline, static blog structure, self-hosted KaTeX math, and verification checks.">
+    <title>Getting Started with This Research Blog | Alex Chen</title>
+    <link rel="canonical" href="https://yourusername.github.io/blogs/sample-post/">
+    <link rel="alternate" hreflang="en" href="https://yourusername.github.io/blogs/sample-post/">
+    <link rel="alternate" hreflang="zh-CN" href="https://yourusername.github.io/blogs/sample-post/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://yourusername.github.io/blogs/sample-post/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png?v=1.0.0">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg?v=1.0.0">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png?v=1.0.0">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Alex Chen">
+    <meta property="og:title" content="Getting Started with This Research Blog">
+    <meta property="og:description" content="A concise walkthrough of the bilingual academic homepage build pipeline, static blog structure, self-hosted KaTeX math, and verification checks.">
+    <meta property="og:url" content="https://yourusername.github.io/blogs/sample-post/">
+    <meta property="og:image" content="https://yourusername.github.io/blogs/sample-post/cover.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=1.0.0">
+    <script src="../../assets/js/blog-theme.js?v=1.0.0"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../"><img class="nav-mark" src="../../assets/imgs/logo.svg?v=1.0.0" width="26" height="26" alt="">Alex Chen</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../"><span class="active">Posts</span></a></li>
+                <li><a href="../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+            <nav class="lang-switch" aria-label="Language">
+                <a href="./" hreflang="en" aria-current="page">EN</a>
+                <a href="./zh/" hreflang="zh-CN" lang="zh-CN">中文</a>
+            </nav>
+        </div>
+        <span class="post-type type-tutorial">Tutorial</span>
+        <h1 class="post-title">Getting Started with This Research Blog</h1>
+        <div class="post-meta"><span>November 20, 2026</span><span>1 min read</span><span>Alex Chen</span></div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#homepage-pipeline">Homepage &amp; Blog Pipeline</a></li>
+                <li><a href="#math-and-figures">Math Equations &amp; Figures</a></li>
+                <li><a href="#writing-workflow">Publishing Workflow</a></li>
+                <li><a href="#citation">Citation</a></li>
+                <li><a href="#references">References</a></li>
+            </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>This starter tutorial demonstrates every built-in feature of the academic homepage and blog template. Inspired by <a href="https://lilianweng.github.io/">Lil'Log</a><a class="cite" href="#ref-1">[1]</a>, posts are written as self-contained static HTML pages with light/dark themes, a sticky desktop table of contents, self-hosted typography, and automated structural validation.</p>
+
+        <h2 id="overview">Overview<a class="anchor" href="#overview" aria-hidden="true">#</a></h2>
+        <p>Keeping homepage generation and long-form blog posts cleanly decoupled makes both easy to maintain. While <code>build.js</code> compiles your bilingual homepage from JSON configuration, each post under <code>blogs/</code> can embed custom figures, tables, code snippets, and equations without touching the template compiler.</p>
+
+        <h2 id="homepage-pipeline">Homepage &amp; Blog Pipeline<a class="anchor" href="#homepage-pipeline" aria-hidden="true">#</a></h2>
+        <p>When <code>npm run build</code> executes, it compiles the English and Chinese homepages, optimizes figures into content-hashed WebP thumbnails, and extracts the newest posts listed in <code>blogs/index.html</code> into the homepage <strong>Blog</strong> section.</p>
+        <figure>
+            <img src="./fig-workflow.svg" width="1200" height="420" alt="Dual static pipeline showing build.js compiling the bilingual homepage and blogs/check.py validating blog posts" loading="lazy">
+            <figcaption>Fig. 1. Architecture of the dual static pipelines connecting configuration, homepage compilation, blog validation, and GitHub Pages deployment. <a href="./fig-workflow.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h2 id="math-and-figures">Math Equations &amp; Figures<a class="anchor" href="#math-and-figures" aria-hidden="true">#</a></h2>
+        <p>Mathematical expressions render offline through self-hosted KaTeX scripts in <code>assets/vendor/katex/</code>. For example, a velocity-matching objective can be written inline as $v_\theta(x_t, t)$ or as a centered display block:</p>
+        $$\mathcal{L}_{\text{FM}}(\theta) = \mathbb{E}_{t,\,x_0,\,x_1} \left[ \left\| v_\theta(x_t, t) - (x_1 - x_0) \right\|_2^2 \right], \qquad x_t = (1 - t) x_0 + t x_1.$$
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>File</th><th>Purpose</th><th>Validated By</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>config/data.json</code></td><td>Profile, papers, experience</td><td><code>npm run build</code></td></tr>
+                    <tr><td><code>blogs/&lt;slug&gt;/index.html</code></td><td>Static EN / ZH article pages</td><td class="best"><code>blogs/check.py</code></td></tr>
+                    <tr><td><code>blogs/index.html</code></td><td>Post index &amp; homepage feed</td><td><code>blogs/check.py</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 id="writing-workflow">Publishing Workflow<a class="anchor" href="#writing-workflow" aria-hidden="true">#</a></h2>
+        <p>Copy <code>blogs/example/</code> into a new slug folder, register the entry in <code>blogs/index.html</code>, and run local verification before pushing:</p>
+<pre><code>python3 blogs/check.py
+npm run build
+python3 -I -m http.server 8000 --bind 127.0.0.1</code></pre>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>Cited as:</p>
+            <blockquote><p>Chen, Alex. (Nov 2026). Getting Started with This Research Blog. Alex Chen's Blog. https://yourusername.github.io/blogs/sample-post/.</p></blockquote>
+            <p>Or</p>
+<pre><code>@article{chen2026gettingstarted,
+  title   = "Getting Started with This Research Blog",
+  author  = "Chen, Alex",
+  journal = "yourusername.github.io",
+  year    = "2026",
+  month   = "Nov",
+  url     = "https://yourusername.github.io/blogs/sample-post/"
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li id="ref-1" data-brief="Provides the single-column editorial reading layout, sticky table of contents, and reference-list conventions used by this blog template."><a href="https://lilianweng.github.io/" target="_blank" rel="noopener">Lil'Log</a>. Weng, Lilian. Layout reference for this blog system.</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../?tag=Template">Template</a></li>
+            <li><a href="../?tag=Workflow">Workflow</a></li>
+            <li><a href="../?tag=Typography">Typography</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../../"><span class="title">Homepage »</span>Alex Chen</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Alex Chen&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+<script src="../../assets/vendor/katex/katex.min.js"></script>
+<script src="../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../assets/js/blog-post.js?v=1.0.0"></script>
+</body>
+</html>

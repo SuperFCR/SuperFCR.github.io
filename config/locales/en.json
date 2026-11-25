@@ -1,0 +1,79 @@
+{
+  "locale": {
+    "htmlLang": "en",
+    "isChinese": false,
+    "path": "",
+    "ogLocale": "en_US",
+    "dateTimeLocale": "en-GB",
+    "englishHref": "./index.html",
+    "chineseHref": "./zh/index.html"
+  },
+  "meta": {
+    "title": "Alex Chen | Academic Homepage",
+    "description": "Academic homepage of Alex Chen, a researcher in multimodal generation, 3D vision, and agentic systems."
+  },
+  "ui": {
+    "languageSwitcherLabel": "Language",
+    "themeToggleLabel": "Toggle dark mode",
+    "englishLabel": "EN",
+    "chineseLabel": "中文",
+    "email": "Email",
+    "scholar": "Scholar",
+    "github": "GitHub",
+    "cv": "CV",
+    "blog": "Blog",
+    "allPosts": "All posts →",
+    "socialLabels": {
+      "x": "X (Twitter)",
+      "xiaohongshu": "RedNote",
+      "wechat": "WeChat"
+    },
+    "socialQrCaptions": {
+      "xiaohongshu": "Scan to find me on RedNote",
+      "wechat": "Scan to add me on WeChat"
+    },
+    "socialAccountLabels": {
+      "xiaohongshu": "RedNote ID: "
+    },
+    "profileImageAlt": "Portrait of Alex Chen",
+    "projectImageAlt": "Project preview",
+    "organizationLogoSuffix": " logo",
+    "sections": {
+      "research": "Research Interests",
+      "education": "Education",
+      "blog": "Blog",
+      "news": "News",
+      "projects": "Selected Research Papers",
+      "projectShowcase": "Projects",
+      "experience": "Experience",
+      "awards": "Awards",
+      "activities": "Professional Activities"
+    },
+    "projectGroupLabels": {
+      "generative_models": "Generative Models",
+      "systems_agents": "Systems & Agents"
+    },
+    "paperFilterLabel": "Filter research papers by topic",
+    "paperFilterAll": "All",
+    "paperFilterSelected": "Selected",
+    "paperFilterResults": "papers shown",
+    "equalContribution": "* Equal contribution",
+    "projectLead": "# Project lead",
+    "resourceLabels": {
+      "Paper": "Paper",
+      "Project Page": "Project Page",
+      "Code": "Code",
+      "Datasets": "Datasets",
+      "HF / Upvote": "HF / Upvote"
+    },
+    "experienceTitleJoiner": ", ",
+    "hostedBy": "Hosted by",
+    "conferenceReviewer": "Conference Reviewer:",
+    "journalReviewer": "Journal Reviewer:",
+    "copyrightJoiner": ". ",
+    "allRightsReserved": "All rights reserved.",
+    "lastUpdated": "Last updated:",
+    "visitorStatistics": "Visitor statistics",
+    "visitorMapAlt": "Visitor map"
+  }
+}
