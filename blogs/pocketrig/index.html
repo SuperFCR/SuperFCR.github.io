@@ -12,6 +12,7 @@
     <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
     <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../assets/css/blog.css?v=20261122.3">
+    <link rel="stylesheet" href="../../assets/css/pocketrig-arch.css?v=20261125.1">
     <script src="../../assets/js/blog-theme.js?v=20261122.3"></script>
 </head>
 <body>
@@ -84,9 +85,9 @@
         <p>Moving the state to a machine that is always on, and making every other device a thin client of it, turns the phone and the laptop into interchangeable windows onto the same session. That needs exactly three things: one computer that stays on, one private network that only my devices can join, and one session that does not drop when a client disconnects.</p>
 
         <h2 id="architecture">Architecture<a class="anchor" href="#architecture" aria-hidden="true">#</a></h2>
-        <figure>
-            <img src="./fig-architecture.svg" width="1600" height="780" alt="PocketRig architecture: phone and Mac on a private network (Tailscale or a company VPN) connect to a Paseo instance on an always-on workstation, which runs Claude Code or Codex, submits jobs to GPU nodes over SSH and receives small results." loading="lazy">
-            <figcaption>Fig. 1. PocketRig in three layers. Phone and Mac are thin clients on a private network: a Tailscale tailnet or a company VPN. The always-on workstation runs one Paseo instance per person, which starts Claude Code or Codex. Heavy jobs go to GPU nodes over SSH, and only small results come back. <a href="./fig-architecture.svg">Open full size</a></figcaption>
+        <figure class="pk-arch-fig" id="pocketrig-arch-fig">
+            <div class="pk-arch-root" data-pk-arch></div>
+            <figcaption>Fig. 1. Interactive PocketRig architecture in three layers. Switch views across the private network, Paseo daemon, remote GPU loop, and multi-user isolation; click any node or link to inspect details, or run the guided walkthrough. <a href="./fig-architecture.svg">Static SVG</a></figcaption>
         </figure>
         <p>Each device has one job, and the expensive state lives in exactly one place:</p>
         <div class="table-wrap">
@@ -269,5 +270,6 @@ claude auth login &amp;&amp; codex login</code></pre>
 </footer>
 
 <script src="../../assets/js/blog-post.js?v=20261122.3"></script>
+<script src="../../assets/js/pocketrig-arch.js?v=20261125.1"></script>
 </body>
 </html>
