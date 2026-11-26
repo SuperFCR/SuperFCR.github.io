@@ -6,7 +6,7 @@ Live site: [falcary.com](https://www.falcary.com/). If you build your site on to
 
 ## 🚀 Features
 
-- **Data-driven bilingual homepage**: One Handlebars template ([templates/index.html](templates/index.html)) builds both the English (`/`) and Chinese (`/zh/`) pages from shared metadata in [config/data.json](config/data.json) and locale overrides in [config/locales/](config/locales/).
+- **Data-driven bilingual homepage with light/dark mode**: One Handlebars template ([templates/index.html](templates/index.html)) builds both the English (`/`) and Chinese (`/zh/`) pages from shared metadata in [config/data.json](config/data.json) and locale overrides in [config/locales/](config/locales/), sharing a persistent light/dark theme toggle ([assets/js/blog-theme.js](assets/js/blog-theme.js)) with the blog.
 - **Curated Projects & filterable Papers**: Pin flagship work in **Projects** via `projectShowcaseIds`, highlight selected papers with `selectedPaperIds`, and let readers filter **Selected Research Papers** by research direction (`All`, `Selected`, or topic pills) with live result counts, horizontal mobile scrolling, and full no-JS readability.
 - **Automated thumbnails & self-hosted fonts**: `build.js` generates content-hashed WebP thumbnails in [assets/thumbs/](assets/thumbs/) via `sharp`, cleans up stale thumbnails automatically, and bundles self-hosted Inter subsets (`assets/fonts/inter-latin.woff2`) so typography works reliably everywhere.
 - **Header social bar & live local clock**: Configurable icons in [templates/icons/](templates/icons/) supporting direct URLs and accessible click-to-toggle QR popovers (such as RedNote or WeChat), paired with a live timezone clock driven by `personal.timeZone`.

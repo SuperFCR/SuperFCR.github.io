@@ -181,19 +181,19 @@ body > header.is-scrolled {
 .theme-toggle {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     padding: 0;
-    border: 0;
+    border: 1px solid var(--border);
     border-radius: 999px;
-    background: none;
-    color: var(--secondary);
+    background: var(--glass-control);
+    color: var(--heading);
     cursor: pointer;
-    transition: color 0.15s ease, background-color 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
-.theme-toggle:hover { color: var(--heading); background: var(--glass-control); }
+.theme-toggle:hover { color: var(--primary); background: var(--glass-active); border-color: var(--border-strong); }
 .theme-toggle:focus-visible { outline: 1.5px solid var(--primary); outline-offset: 2px; }
-.theme-toggle svg { width: 17px; height: 17px; }
+.theme-toggle svg { width: 16px; height: 16px; }
 .theme-toggle .sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .sun { display: block; }
 :root[data-theme="dark"] .theme-toggle .moon { display: none; }
@@ -211,8 +211,8 @@ body > header.is-scrolled {
     align-items: flex-end;
     justify-content: space-between;
     gap: 20px 40px;
-    margin: 0 0 24px;
-    padding-bottom: 28px;
+    margin: 0 0 18px;
+    padding-bottom: 24px;
     border-bottom: 1px solid var(--border);
 }
 .profile-main { max-width: 620px; }
@@ -283,14 +283,17 @@ body > header.is-scrolled {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 10px 16px;
-    margin: 0 0 24px;
+    gap: 12px 16px;
+    margin: 0 0 32px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
 }
 .list-head-left {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    flex: 1 1 auto;
+    gap: 8px 12px;
     min-width: 0;
 }
 
@@ -355,12 +358,14 @@ body > header.is-scrolled {
 .list-head-right {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-left: auto;
+    flex: 0 1 auto;
+    gap: 12px;
+    max-width: 100%;
 }
 .list-search {
-    width: 196px;
-    height: 30px;
+    width: 210px;
+    max-width: 100%;
+    height: 32px;
     padding: 0 13px;
     border: 1px solid var(--glass-border);
     border-radius: 999px;
@@ -502,7 +507,7 @@ body > header.is-scrolled {
     flex-direction: row;
     align-items: center;
     gap: 44px;
-    padding: 4px 0 34px;
+    padding: 0 0 34px;
 }
 .post-list.is-stacked > .post-entry + .post-entry { padding: 30px 0 32px; }
 .post-list.has-featured > .post-entry.is-featured .entry-cover,
@@ -1264,23 +1269,52 @@ a.cite-card-title:hover {
         flex-direction: column;
         align-items: flex-start;
         gap: 14px;
-        margin-bottom: 20px;
-        padding-bottom: 22px;
+        margin-bottom: 16px;
+        padding-bottom: 20px;
     }
     .profile h1 { font-size: 1.9rem; }
     .profile-desc { font-size: 0.93rem; }
     .social-icons { margin-left: -6px; }
 
-    .list-head { margin-bottom: 18px; }
+    .list-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+    }
+    .list-head-left {
+        width: 100%;
+        flex: none;
+        gap: 8px 10px;
+    }
     .type-filters {
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
         max-width: 100%;
+        padding: 2px 0;
+        gap: 2px;
     }
     .type-filters::-webkit-scrollbar { display: none; }
-    .type-filter { flex: 0 0 auto; }
-    .list-search { width: 100%; }
+    .type-filter {
+        flex: 0 0 auto;
+        padding: 0 10px;
+        font-size: 0.82rem;
+        gap: 5px;
+    }
+    .list-head-right {
+        width: 100%;
+        flex: none;
+        gap: 12px;
+    }
+    .list-search {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        height: 36px;
+    }
+    .list-count { flex: 0 0 auto; }
 
     .post-list { grid-template-columns: 1fr; gap: 24px; }
     .post-list.is-stacked { row-gap: 0; }

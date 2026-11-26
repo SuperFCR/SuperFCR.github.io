@@ -14,6 +14,7 @@
     "description": "冯超然的个人学术主页，研究方向包括多模态生成与三维视觉。"
   },
   "ui": {
+    "themeToggleLabel": "切换浅色/深色模式",
     "languageSwitcherLabel": "语言切换",
     "englishLabel": "EN",
     "chineseLabel": "中文",

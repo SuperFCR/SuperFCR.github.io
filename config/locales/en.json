@@ -13,6 +13,7 @@
     "description": "Academic homepage of Chaoran Feng, a researcher in multimodal generation and 3D vision."
   },
   "ui": {
+    "themeToggleLabel": "Toggle dark mode",
     "languageSwitcherLabel": "Language",
     "englishLabel": "EN",
     "chineseLabel": "中文",

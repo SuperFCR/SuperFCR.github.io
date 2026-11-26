@@ -31,6 +31,7 @@
 
     <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/fonts/profile-fangsong.woff2" as="font" type="font/woff2" crossorigin>
+    <script src="assets/js/blog-theme.js?v=20261125.2"></script>
 
     <style>
         /* Self-hosted Inter (latin subset, variable font): Google Fonts is often
@@ -63,20 +64,38 @@
         }
 
         :root {
-            --primary: #205488;        
-            --primary-hover: #001F3F;  
-            --accent: #001F3F;         
-            
-            --bg-page: #f0f2f5;        
-            --bg-paper: #ffffff;      
-            --bg-bio: #f8fafc;        
-            
+            --primary: #205488;
+            --primary-hover: #001F3F;
+            --accent: #001F3F;
+
+            --bg-page: #f0f2f5;
+            --bg-paper: #ffffff;
+            --bg-bio: #f8fafc;
+
             --text-main: #333;
             --text-sec: #666;
-            
+
             --radius: 12px;
             --shadow-card: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-hover: 0 12px 24px -6px rgba(32, 84, 136, 0.15), 0 0 0 1px rgba(32, 84, 136, 0.1);
+            color-scheme: light;
+        }
+
+        :root[data-theme="dark"] {
+            --primary: #82add9;
+            --primary-hover: #a8cbe9;
+            --accent: #efede8;
+
+            --bg-page: #0f1013;
+            --bg-paper: #17181c;
+            --bg-bio: #1e2026;
+
+            --text-main: #d4d2cc;
+            --text-sec: #969ba6;
+
+            --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.36);
+            --shadow-hover: 0 12px 26px -6px rgba(0, 0, 0, 0.52), 0 0 0 1px rgba(130, 173, 217, 0.22);
+            color-scheme: dark;
         }
 
         *,
@@ -139,7 +158,40 @@
             top: 14px;
             right: 18px;
             z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        .theme-toggle {
+            display: inline-grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid #dbe3ec;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+            color: #475569;
+            cursor: pointer;
+            transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .theme-toggle:hover {
+            color: var(--primary);
+            border-color: #b7c8da;
+            background: #f8fafc;
+        }
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        .theme-toggle svg {
+            width: 15px;
+            height: 15px;
+        }
+        .theme-toggle .sun { display: none; }
+        :root[data-theme="dark"] .theme-toggle .sun { display: block; }
+        :root[data-theme="dark"] .theme-toggle .moon { display: none; }
         .language-switcher {
             display: inline-flex;
             align-items: center;
@@ -942,6 +994,284 @@
             height: auto;
         }
 
+        /* Dark mode overrides (shared with blog via localStorage 'blog-theme') */
+        :root[data-theme="dark"] body {
+            background-image:
+                radial-gradient(circle at 8% 10%, rgba(82, 130, 185, 0.14) 0, rgba(82, 130, 185, 0) 32%),
+                radial-gradient(circle at 92% 18%, rgba(129, 117, 166, 0.10) 0, rgba(129, 117, 166, 0) 30%),
+                radial-gradient(circle at 78% 88%, rgba(205, 155, 91, 0.07) 0, rgba(205, 155, 91, 0) 32%);
+        }
+        :root[data-theme="dark"] a:hover {
+            background: rgba(130, 173, 217, 0.12);
+        }
+        :root[data-theme="dark"] .container {
+            border-color: #262932;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+        }
+        :root[data-theme="dark"] .theme-toggle,
+        :root[data-theme="dark"] .language-switcher {
+            border-color: #2c313c;
+            background: rgba(30, 32, 38, 0.92);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+        }
+        :root[data-theme="dark"] .theme-toggle {
+            color: #cbd5e1;
+        }
+        :root[data-theme="dark"] .theme-toggle:hover {
+            color: var(--primary);
+            border-color: #46546a;
+            background: #252933;
+        }
+        :root[data-theme="dark"] .language-option {
+            color: #969ba6;
+        }
+        :root[data-theme="dark"] .language-option:hover {
+            color: var(--primary);
+            background: #272b35;
+        }
+        :root[data-theme="dark"] .language-option.is-active {
+            color: #111317;
+            background: var(--primary);
+        }
+        :root[data-theme="dark"] .role-divider {
+            color: #3f4552;
+        }
+        :root[data-theme="dark"] .location-time {
+            color: #969ba6;
+        }
+        :root[data-theme="dark"] .location-time-divider {
+            color: #464d5c;
+        }
+        :root[data-theme="dark"] .avatar {
+            border-color: #262932;
+            outline-color: #353a47;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        }
+        :root[data-theme="dark"] .social-icon {
+            border-color: #2e333f !important;
+            background: #1e2026;
+        }
+        :root[data-theme="dark"] .social-icon:hover,
+        :root[data-theme="dark"] .social-icon[aria-expanded="true"] {
+            border-color: var(--primary) !important;
+            background: #252933;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        }
+        :root[data-theme="dark"] .social-icon[data-analytics-channel="github"] svg,
+        :root[data-theme="dark"] .social-icon[data-analytics-channel="x"] svg {
+            fill: #efede8;
+        }
+        :root[data-theme="dark"] .social-icon[data-analytics-channel="cv"] svg {
+            fill: var(--primary);
+        }
+        :root[data-theme="dark"] .social-icon[href^="mailto:"] svg {
+            fill: #f87171;
+        }
+        :root[data-theme="dark"] .social-icon[data-analytics-channel="scholar"] svg {
+            fill: #60a5fa;
+        }
+        :root[data-theme="dark"] .social-icon[data-analytics-channel="xiaohongshu"] svg {
+            fill: #ff546e;
+        }
+        :root[data-theme="dark"] .social-icon[data-analytics-channel="blog"] svg rect {
+            fill: #efede8;
+        }
+        :root[data-theme="dark"] .social-qr {
+            border-color: #2e333f;
+            background: #1e2026;
+            color: #d4d2cc;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+        }
+        :root[data-theme="dark"] .social-qr img {
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 6px;
+        }
+        :root[data-theme="dark"] .social-qr-account {
+            color: #969ba6;
+        }
+        :root[data-theme="dark"] .bio-text-box {
+            border-color: #2a2e38;
+            color: #d4d2cc;
+        }
+        :root[data-theme="dark"] .bio-text-box:hover {
+            border-color: rgba(130, 173, 217, 0.35);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+        }
+        :root[data-theme="dark"] h2 {
+            border-bottom-color: #262932;
+        }
+        :root[data-theme="dark"] .research-intro {
+            color: #b5bac4;
+        }
+        :root[data-theme="dark"] .research-topic {
+            border-color: #2a2f3a;
+            background: linear-gradient(135deg, #1f242e 0%, #1a1c22 75%);
+            color: #e2e6ee;
+        }
+        :root[data-theme="dark"] .research-topic::before {
+            box-shadow: 0 0 0 4px rgba(130, 173, 217, 0.16);
+        }
+        :root[data-theme="dark"] .education-item {
+            border-color: #292f3b;
+            background: linear-gradient(110deg, #1d222c 0%, #191b20 62%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        :root[data-theme="dark"] .education-item::before {
+            background: linear-gradient(180deg, #82add9, #4a6f96);
+        }
+        :root[data-theme="dark"] .education-item:hover {
+            border-color: #3a475c;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.34);
+        }
+        :root[data-theme="dark"] .education-period {
+            border-color: #313d4f;
+            background: #161920;
+            color: var(--primary);
+        }
+        :root[data-theme="dark"] .education-main {
+            color: #d4d2cc;
+        }
+        :root[data-theme="dark"] .education-main strong {
+            color: #f3f1ec;
+        }
+        :root[data-theme="dark"] .education-note::before {
+            color: #6b7280;
+        }
+        :root[data-theme="dark"] .news-date {
+            background: #222630;
+            color: #a7b0be;
+        }
+        :root[data-theme="dark"] .paper-filter {
+            border-color: #2e3542;
+            background: #1c1e24;
+            color: #b9cde2;
+        }
+        :root[data-theme="dark"] .paper-filter:hover {
+            border-color: #4f6b8a;
+            background: #232833;
+            color: #e6eff8;
+        }
+        :root[data-theme="dark"] .paper-filter[aria-pressed="true"] {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #111317;
+            font-weight: 600;
+        }
+        :root[data-theme="dark"] .paper-card {
+            background: #1b1d22;
+            border-color: #272a33;
+        }
+        :root[data-theme="dark"] .paper-card:hover {
+            border-color: rgba(130, 173, 217, 0.38);
+            background: #20232a;
+            box-shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(130, 173, 217, 0.10);
+        }
+        :root[data-theme="dark"] .paper-img {
+            background: #f4f3ef;
+            border-color: #2f333e;
+        }
+        :root[data-theme="dark"] .paper-card:hover .paper-img {
+            border-color: #475569;
+        }
+        :root[data-theme="dark"] .paper-title {
+            color: #efede8;
+        }
+        :root[data-theme="dark"] .paper-desc {
+            color: #f08a8a;
+        }
+        :root[data-theme="dark"] .badge-venue {
+            background: #273447;
+            color: #dce8f5;
+            border: 1px solid #354761;
+        }
+        :root[data-theme="dark"] .badge-link {
+            border-color: rgba(130, 173, 217, 0.55) !important;
+            color: var(--primary);
+        }
+        :root[data-theme="dark"] .badge-link:hover {
+            background: var(--primary);
+            color: #111317;
+        }
+        :root[data-theme="dark"] .blog-card {
+            border-color: #272a33 !important;
+            background: #1b1d22;
+        }
+        :root[data-theme="dark"] .blog-card:hover {
+            border-color: var(--primary) !important;
+            background: #20232a;
+        }
+        :root[data-theme="dark"] .blog-type.type-deep-dive   { --type: #82add9; }
+        :root[data-theme="dark"] .blog-type.type-tech-report { --type: #e3a764; }
+        :root[data-theme="dark"] .blog-type.type-tutorial    { --type: #68cfa7; }
+        :root[data-theme="dark"] .blog-type.type-paper-notes { --type: #b9a4e8; }
+        :root[data-theme="dark"] .blog-type.type-tool        { --type: #5cc4cf; }
+        :root[data-theme="dark"] .blog-date {
+            color: #858d9b;
+        }
+        :root[data-theme="dark"] .blog-card-title {
+            color: #efede8;
+        }
+        :root[data-theme="dark"] .experience-card {
+            background: #1b1d22;
+            border-color: #272a33;
+        }
+        :root[data-theme="dark"] .experience-card:hover {
+            border-color: var(--primary);
+            background: #20232a;
+        }
+        :root[data-theme="dark"] .experience-logo {
+            border-color: #2f333e;
+            background: #f4f3ef;
+        }
+        :root[data-theme="dark"] .experience-logo-fallback {
+            border-color: #2f333e;
+            background: #222630;
+            color: #cbd5e1;
+        }
+        :root[data-theme="dark"] .experience-title {
+            color: #efede8;
+        }
+        :root[data-theme="dark"] .experience-period {
+            color: #8f96a3;
+        }
+        :root[data-theme="dark"] .award-item {
+            border-color: #363125;
+            background: linear-gradient(110deg, #242019 0%, #1a1b20 58%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        :root[data-theme="dark"] .award-item::before {
+            background: linear-gradient(180deg, #d49a2f, #9c7222);
+        }
+        :root[data-theme="dark"] .award-item:hover {
+            border-color: #54472c;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.34);
+        }
+        :root[data-theme="dark"] .award-date {
+            border-color: #4f4228;
+            background: #181613;
+            color: #e2b866;
+        }
+        :root[data-theme="dark"] .award-detail {
+            color: #d4d2cc;
+        }
+        :root[data-theme="dark"] .section-note {
+            color: #8f96a3;
+        }
+        :root[data-theme="dark"] .activities-list strong {
+            color: #efede8;
+        }
+        :root[data-theme="dark"] .page-footer {
+            border-top-color: #262932;
+            color: #8f96a3;
+        }
+        :root[data-theme="dark"] .page-footer strong {
+            color: #d4d2cc;
+        }
+        :root[data-theme="dark"] .visitor-map img {
+            border-radius: 6px;
+        }
+
         html[lang="zh-CN"] .role-info,
         html[lang="zh-CN"] .paper-desc {
             font-style: normal;
@@ -980,6 +1310,8 @@
                 position: static;
                 display: flex;
                 justify-content: flex-end;
+                align-items: center;
+                gap: 8px;
                 margin: -10px 0 8px;
             }
             .header-top {
@@ -1092,6 +1424,9 @@
                 font-weight: 600;
                 letter-spacing: 0.01em;
             }
+            html[lang="zh-CN"][data-theme="dark"] .experience-organization {
+                color: #cbd5e1;
+            }
             html[lang="zh-CN"] .experience-period {
                 margin-top: 5px;
                 font-size: 0.82rem;
@@ -1135,6 +1470,12 @@
                 right: -5px;
                 background: linear-gradient(to left, var(--bg-paper), rgba(255, 255, 255, 0));
             }
+            :root[data-theme="dark"] .paper-filter-bar::before {
+                background: linear-gradient(to right, var(--bg-paper), rgba(23, 24, 28, 0));
+            }
+            :root[data-theme="dark"] .paper-filter-bar::after {
+                background: linear-gradient(to left, var(--bg-paper), rgba(23, 24, 28, 0));
+            }
             .paper-filter-bar.can-scroll-left::before,
             .paper-filter-bar.can-scroll-right::after { opacity: 1; }
             .paper-filter {
@@ -1171,6 +1512,10 @@
 <div class="container">
 
     <div class="page-topbar">
+        <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+            <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
         <nav class="language-switcher" aria-label="Language">
             <a href="./index.html" hreflang="en" lang="en" class="language-option is-active" aria-current="page" data-analytics-event="language_switch" data-analytics-channel="en">EN</a>
             <a href="./zh/index.html" hreflang="zh-CN" lang="zh-CN" class="language-option" data-analytics-event="language_switch" data-analytics-channel="zh-CN">中文</a>
@@ -1801,9 +2146,6 @@
                 Last updated: November 2026
             </div>
         </div>
-        <a class="visitor-map" href="https://clustrmaps.com/site/1c5bo" target="_blank" rel="noopener noreferrer" title="Visitor statistics">
-            <img src="https://www.clustrmaps.com/map_v2.png?d&#x3D;BRf4_qJelQm7X4ukCxJuzTHr88doqXYrA5-S7H0IEWA&amp;cl&#x3D;ffffff" alt="Visitor map" loading="lazy">
-        </a>
 </footer>
 
 </div>
@@ -1831,6 +2173,16 @@
             console.warn('Unable to display local time:', error);
         }
     }
+
+    // Hide the visitor tracker cleanly if the external service is unreachable or blocked.
+    document.querySelectorAll('img[data-visitor-map]').forEach((img) => {
+        const hideTracker = () => {
+            const link = img.closest('.visitor-map');
+            if (link) link.hidden = true;
+        };
+        img.addEventListener('error', hideTracker, { once: true });
+        if (img.complete && img.naturalWidth === 0) hideTracker();
+    });
 
     // QR entries link to the image itself, so they still work without JavaScript.
     document.querySelectorAll('[data-qr-toggle]').forEach((toggle) => {
