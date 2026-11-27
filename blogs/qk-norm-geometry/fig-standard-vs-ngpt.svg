@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+  <rect width="1200" height="560" rx="16" fill="#ffffff"/>
+
+  <defs>
+    <marker id="arrAxis" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,1 L8,4 L0,7 Z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrNavy" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1b3b6f"/>
+    </marker>
+    <marker id="arrSlate" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,1 L8,4.5 L0,8 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrTeal" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrCoral" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#c2410c"/>
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <text x="600" y="40" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" fill="#1e293b">Residual State Updates: Euclidean Addition vs. nGPT on the Hypersphere</text>
+  <text x="600" y="66" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" fill="#64748b">Unconstrained additions drift radially outward; nGPT stays on Sᵈ⁻¹ via LERP + spherical retraction</text>
+
+  <!-- Vertical divider -->
+  <line x1="600" y1="92" x2="600" y2="534" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 6"/>
+
+  <!-- ==================== PANEL A: STANDARD TRANSFORMER ==================== -->
+  <text x="300" y="106" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">(a) Standard Transformer (Euclidean)</text>
+
+  <!-- Axes from O=(108, 444) -->
+  <line x1="108" y1="444" x2="492" y2="444" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrAxis)"/>
+  <line x1="108" y1="444" x2="108" y2="144" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrAxis)"/>
+  <text x="88" y="464" font-family="Georgia, serif" font-size="18" font-style="italic" fill="#475569">O</text>
+  <text x="504" y="450" font-family="Georgia, serif" font-size="18" font-style="italic" fill="#64748b">X</text>
+  <text x="102" y="134" text-anchor="middle" font-family="Georgia, serif" font-size="18" font-style="italic" fill="#64748b">Y</text>
+
+  <!-- Constant radius arc at ||h|| = 248 -->
+  <path d="M 108 196 A 248 248 0 0 1 356 444" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4 5"/>
+  <text x="148" y="188" font-family="Inter, -apple-system, sans-serif" font-size="13" fill="#64748b">constant radius ‖h‖</text>
+
+  <!-- Vector h: (108,444) -> (306,295) [len=248] -->
+  <line x1="108" y1="444" x2="300" y2="299" stroke="#1b3b6f" stroke-width="3.6" marker-end="url(#arrNavy)"/>
+  <text x="232" y="388" font-family="Georgia, serif" font-size="22" font-weight="700" font-style="italic" fill="#1b3b6f">h</text>
+
+  <!-- Module output h_A: (306,295) -> (356,175) -->
+  <line x1="306" y1="295" x2="353" y2="182" stroke="#475569" stroke-width="2.6" marker-end="url(#arrSlate)"/>
+  <text x="348" y="250" font-family="Georgia, serif" font-size="20" font-style="italic" fill="#334155">h<tspan baseline-shift="sub" font-size="14">A</tspan></text>
+
+  <!-- Resultant h + h_A: (108,444) -> (356,175) -->
+  <line x1="108" y1="444" x2="350" y2="181" stroke="#c2410c" stroke-width="3.2" stroke-dasharray="8 5" marker-end="url(#arrCoral)"/>
+  <text x="148" y="284" font-family="Georgia, serif" font-size="21" font-weight="700" font-style="italic" fill="#c2410c">h + h<tspan baseline-shift="sub" font-size="14">A</tspan></text>
+
+  <!-- Radial drift annotation -->
+  <rect x="378" y="160" width="194" height="50" rx="9" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+  <text x="475" y="182" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13.5" font-weight="700" fill="#9a3412">‖h + h<tspan baseline-shift="sub" font-size="10">A</tspan>‖ &gt; ‖h‖</text>
+  <text x="475" y="201" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12" fill="#9a3412">Norm drifts across depth</text>
+
+  <!-- Bottom note A -->
+  <rect x="34" y="490" width="532" height="44" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="300" y="517" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13.5" font-weight="600" fill="#9a3412">Growing ‖θ‖ shrinks angular step Δθ → implicit LR decay</text>
+
+  <!-- ==================== PANEL B: nGPT ON HYPERSPHERE ==================== -->
+  <text x="900" y="106" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#115e59">(b) nGPT on Unit Hypersphere Sᵈ⁻¹</text>
+
+  <!-- Unit circle centered at O=(840, 314), r=140 -->
+  <circle cx="840" cy="314" r="140" fill="#f0fdfa" fill-opacity="0.45" stroke="#64748b" stroke-width="2.2"/>
+  <circle cx="840" cy="314" r="3.5" fill="#1e293b"/>
+  <text x="822" y="335" font-family="Georgia, serif" font-size="18" font-style="italic" fill="#1e293b">O</text>
+  <text x="642" y="396" font-family="Georgia, serif" font-size="16" font-style="italic" fill="#475569">‖x‖₂ = 1</text>
+
+  <!-- Points on circle (cx=840, cy=314, r=140):
+       h at angle 14 deg above +x: (840 + 136, 314 - 34) = (976, 280)
+       h_A at angle 122 deg from +x: (840 - 74, 314 - 119) = (766, 195)
+       LERP point (alpha=0.45): (976 + 0.45*(-210), 280 + 0.45*(-85)) = (881, 242)
+       Direction (881-840, 242-314) = (41, -72), len=82.85 -> unit=(0.495, -0.869)
+       h_next on circle = (840 + 69, 314 - 122) = (909, 192)
+  -->
+  <!-- Vector h -->
+  <line x1="840" y1="314" x2="969" y2="282" stroke="#1b3b6f" stroke-width="3.6" marker-end="url(#arrNavy)"/>
+  <text x="916" y="314" font-family="Georgia, serif" font-size="22" font-weight="700" font-style="italic" fill="#1b3b6f">h</text>
+
+  <!-- Target vector h_A -->
+  <line x1="840" y1="314" x2="770" y2="201" stroke="#475569" stroke-width="2.6" marker-end="url(#arrSlate)"/>
+  <text x="738" y="190" font-family="Georgia, serif" font-size="20" font-weight="700" font-style="italic" fill="#334155">h<tspan baseline-shift="sub" font-size="14">A</tspan></text>
+
+  <!-- Chord (LERP) from h to h_A -->
+  <line x1="976" y1="280" x2="766" y2="195" stroke="#64748b" stroke-width="2" stroke-dasharray="6 4"/>
+  <!-- LERP intermediate point -->
+  <circle cx="881" cy="242" r="5" fill="#c2410c"/>
+  <text x="845" y="264" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#64748b">LERP chord</text>
+
+  <!-- Retraction ray from LERP point out to h_next on sphere -->
+  <line x1="881" y1="242" x2="905" y2="199" stroke="#c2410c" stroke-width="2.6" marker-end="url(#arrCoral)"/>
+
+  <!-- Subtle radius to h_next -->
+  <line x1="840" y1="314" x2="905" y2="199" stroke="#0f766e" stroke-width="3" opacity="0.25"/>
+  <circle cx="909" cy="192" r="6" fill="#0f766e"/>
+  <text x="918" y="168" font-family="Georgia, serif" font-size="19" font-weight="700" font-style="italic" fill="#0f766e">h<tspan baseline-shift="sub" font-size="13">next</tspan> <tspan font-family="Inter, sans-serif" font-style="normal" font-size="13" font-weight="600">(‖h</tspan><tspan font-family="Inter, sans-serif" font-style="normal" baseline-shift="sub" font-size="9.5" font-weight="600">next</tspan><tspan font-family="Inter, sans-serif" font-style="normal" font-size="13" font-weight="600">‖₂ = 1)</tspan></text>
+
+  <!-- Geodesic arc along outer rim from h to h_next -->
+  <path d="M 988 276 A 152 152 0 0 0 920 185" fill="none" stroke="#0f766e" stroke-width="3.2" marker-end="url(#arrTeal)"/>
+
+  <!-- Clean right-side annotations completely outside the circle (x >= 1005) -->
+  <rect x="1002" y="202" width="174" height="52" rx="9" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.4"/>
+  <text x="1089" y="224" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#0f766e">Geodesic step</text>
+  <text x="1089" y="243" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="11.5" fill="#115e59">Norm(h + α(h<tspan baseline-shift="sub" font-size="8.5">A</tspan> − h))</text>
+
+  <rect x="1002" y="324" width="174" height="58" rx="9" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+  <text x="1089" y="346" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#c2410c">Retraction</text>
+  <text x="1089" y="365" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="11.5" fill="#9a3412">Projects LERP chord back</text>
+  <text x="1089" y="378" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="11.5" fill="#9a3412">onto Sᵈ⁻¹</text>
+
+  <!-- Bottom note B -->
+  <rect x="634" y="490" width="532" height="44" rx="10" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="900" y="517" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13.5" font-weight="600" fill="#115e59">Direction &amp; scale decoupled · No weight decay or warmup needed</text>
+</svg>

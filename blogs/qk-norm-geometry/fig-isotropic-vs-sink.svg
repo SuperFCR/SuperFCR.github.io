@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580">
+  <rect width="1200" height="580" rx="16" fill="#ffffff"/>
+
+  <defs>
+    <marker id="arrRay" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,1 L8,4 L0,7 Z" fill="#6b96a6"/>
+    </marker>
+    <marker id="arrQ" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1b3b6f"/>
+    </marker>
+    <marker id="arrRes" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrSink" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#c2410c"/>
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <text x="600" y="40" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" fill="#1e293b">Key Geometry on the Hypersphere: Ideal Isotropy vs. Real-World Failure Modes</text>
+  <text x="600" y="66" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" fill="#64748b">Softmax weights aᵢ ∝ exp(q·kᵢ∥) are blind to kᵢ⊥ — only symmetric unit keys cancel orthogonal drift</text>
+
+  <!-- Vertical divider -->
+  <line x1="600" y1="92" x2="600" y2="548" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 6"/>
+
+  <!-- ==================== PANEL A: IDEAL ISOTROPIC KEYS ==================== -->
+  <text x="300" y="106" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">(a) Ideal Isotropic Keys on Sᵈ⁻¹</text>
+
+  <!-- Dashed axes -->
+  <line x1="100" y1="316" x2="500" y2="316" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5 5"/>
+  <line x1="300" y1="132" x2="300" y2="496" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5 5"/>
+
+  <!-- Unit circle -->
+  <circle cx="300" cy="316" r="156" fill="#f8fafd" stroke="#64748b" stroke-width="2"/>
+  <text x="430" y="460" font-family="Georgia, serif" font-size="15" font-style="italic" fill="#64748b">‖kᵢ‖₂ = 1</text>
+
+  <!-- 17 uniform isotropic key rays -->
+  <g stroke="#6b96a6" stroke-width="1.8" opacity="0.85">
+    <line x1="300" y1="316" x2="351" y2="175" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="396" y2="201" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="430" y2="241" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="448" y2="290" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="448" y2="342" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="430" y2="391" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="396" y2="431" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="351" y2="457" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="300" y2="466" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="249" y2="457" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="204" y2="431" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="170" y2="391" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="152" y2="342" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="152" y2="290" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="170" y2="241" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="204" y2="201" marker-end="url(#arrRay)"/>
+    <line x1="300" y1="316" x2="249" y2="175" marker-end="url(#arrRay)"/>
+  </g>
+
+  <!-- Resultant vector (aligned with q) -->
+  <line x1="300" y1="316" x2="300" y2="150" stroke="#0f766e" stroke-width="3.2" stroke-dasharray="7 4" marker-end="url(#arrRes)"/>
+  <!-- Query vector q -->
+  <line x1="300" y1="316" x2="300" y2="226" stroke="#1b3b6f" stroke-width="4" marker-end="url(#arrQ)"/>
+
+  <text x="318" y="256" font-family="Georgia, serif" font-size="21" font-weight="700" font-style="italic" fill="#1b3b6f">q</text>
+  <text x="318" y="144" font-family="Georgia, serif" font-size="19" font-style="italic" fill="#0f766e"><tspan font-style="normal">Σ</tspan> a<tspan baseline-shift="sub" font-size="13">i</tspan>k<tspan baseline-shift="sub" font-size="13">i</tspan> ≈ λq</text>
+  <text x="444" y="220" font-family="Georgia, serif" font-size="19" font-weight="700" font-style="italic" fill="#475569">k<tspan baseline-shift="sub" font-size="13">i</tspan></text>
+
+  <!-- Bottom note A -->
+  <rect x="34" y="508" width="532" height="44" rx="10" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.5"/>
+  <text x="300" y="535" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13.5" font-weight="600" fill="#115e59">Orthogonal parts cancel (Σ aᵢkᵢ⊥ ≈ 0) · vMF mean aligns with q</text>
+
+  <!-- ==================== PANEL B: ANISOTROPY & ATTENTION SINK ==================== -->
+  <text x="900" y="106" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#9a3412">(b) Anisotropy &amp; Attention Sink</text>
+
+  <!-- Dashed axes -->
+  <line x1="700" y1="316" x2="1100" y2="316" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5 5"/>
+  <line x1="900" y1="132" x2="900" y2="496" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5 5"/>
+
+  <!-- Unit circle -->
+  <circle cx="900" cy="316" r="156" fill="#fdfaf6" stroke="#64748b" stroke-width="2"/>
+
+  <!-- Narrow cone shaded wedge -->
+  <path d="M 900 316 L 1041 247 A 156 156 0 0 0 973 178 Z" fill="#fde68a" opacity="0.45"/>
+
+  <!-- Clustered anisotropic keys inside narrow cone -->
+  <g stroke="#5b8696" stroke-width="2">
+    <line x1="900" y1="316" x2="972" y2="183" marker-end="url(#arrRay)"/>
+    <line x1="900" y1="316" x2="987" y2="192" marker-end="url(#arrRay)"/>
+    <line x1="900" y1="316" x2="1000" y2="203" marker-end="url(#arrRay)"/>
+    <line x1="900" y1="316" x2="1013" y2="216" marker-end="url(#arrRay)"/>
+    <line x1="900" y1="316" x2="1025" y2="230" marker-end="url(#arrRay)"/>
+    <line x1="900" y1="316" x2="1035" y2="246" marker-end="url(#arrRay)"/>
+  </g>
+  <text x="1036" y="186" font-family="Georgia, serif" font-size="19" font-weight="700" font-style="italic" fill="#334155">k<tspan baseline-shift="sub" font-size="13">i</tspan></text>
+  <text x="1044" y="210" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#92400e">Narrow cone</text>
+  <text x="1044" y="228" font-family="Inter, -apple-system, sans-serif" font-size="12.5" fill="#92400e">(k̄ ≠ 0)</text>
+
+  <!-- Massive Attention Sink outlier vector breaking outside the circle -->
+  <line x1="900" y1="316" x2="764" y2="176" stroke="#c2410c" stroke-width="4" marker-end="url(#arrSink)"/>
+  <text x="724" y="138" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="15" font-weight="700" fill="#c2410c">Attention Sink</text>
+  <text x="724" y="156" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" fill="#9a3412">(outlier ‖k‖ ≫ 1)</text>
+
+  <!-- Resultant pulled heavily off-axis -->
+  <line x1="900" y1="316" x2="784" y2="214" stroke="#0f766e" stroke-width="3.2" stroke-dasharray="7 4" marker-end="url(#arrRes)"/>
+  <text x="790" y="282" font-family="Georgia, serif" font-size="18" font-style="italic" fill="#0f766e"><tspan font-style="normal">Σ</tspan> a<tspan baseline-shift="sub" font-size="12">i</tspan>k<tspan baseline-shift="sub" font-size="12">i</tspan></text>
+
+  <!-- Angular drift arc between q and resultant -->
+  <path d="M 900 256 A 60 60 0 0 0 855 276" fill="none" stroke="#c2410c" stroke-width="2" stroke-dasharray="3 3"/>
+
+  <!-- Query vector q -->
+  <line x1="900" y1="316" x2="900" y2="226" stroke="#1b3b6f" stroke-width="4" marker-end="url(#arrQ)"/>
+  <text x="918" y="256" font-family="Georgia, serif" font-size="21" font-weight="700" font-style="italic" fill="#1b3b6f">q</text>
+
+  <!-- Bottom note B -->
+  <rect x="634" y="508" width="532" height="44" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="900" y="535" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13.5" font-weight="600" fill="#9a3412">Outlier norm &amp; cone drift hijack Σ aᵢkᵢ · Logit / entropy collapse risk</text>
+</svg>

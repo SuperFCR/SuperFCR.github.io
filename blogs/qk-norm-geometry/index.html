@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tracing the geometric evolution of QK normalization from Softmax Attention linearization to QK-Norm, MLA absorption, QK-Clip, QK-Normed MLA, nGPT hyperspheres, and Householder spectral stability in linear attention.">
+    <title>The Geometry of QK Normalization: From Softmax Stability to Hyperspheres and Linear Attention | Chaoran Feng</title>
+    <link rel="canonical" href="https://www.falcary.com/blogs/qk-norm-geometry/">
+    <link rel="alternate" hreflang="en" href="https://www.falcary.com/blogs/qk-norm-geometry/">
+    <link rel="alternate" hreflang="zh-CN" href="https://www.falcary.com/blogs/qk-norm-geometry/zh/">
+    <link rel="alternate" hreflang="x-default" href="https://www.falcary.com/blogs/qk-norm-geometry/">
+    <link rel="icon" type="image/png" sizes="192x192" href="../../assets/imgs/favicon.png?v=20261125.2">
+    <link rel="icon" type="image/svg+xml" href="../../assets/imgs/logo.svg?v=20261125.2">
+    <link rel="apple-touch-icon" href="../../assets/imgs/favicon.png?v=20261125.2">
+    <script src="../../assets/js/analytics-init.js?v=20260906" data-measurement-id="G-E3G650ZKVZ"></script>
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Chaoran Feng">
+    <meta property="og:title" content="The Geometry of QK Normalization: From Softmax Stability to Hyperspheres and Linear Attention">
+    <meta property="og:description" content="How Q/K normalization evolved from logit stabilization to MLA factorization, nGPT hypersphere updates, and Householder stability in DeltaNet and Gated DeltaNet.">
+    <meta property="og:url" content="https://www.falcary.com/blogs/qk-norm-geometry/">
+    <meta property="og:image" content="https://www.falcary.com/blogs/qk-norm-geometry/cover.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preload" href="../../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../assets/vendor/katex/katex.min.css">
+    <link rel="stylesheet" href="../../assets/css/blog.css?v=20261125.2">
+    <script src="../../assets/js/blog-theme.js?v=20261125.2"></script>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <div class="logo">
+            <a href="../"><img class="nav-mark" src="../../assets/imgs/logo.svg?v=20261125.2" width="26" height="26" alt="">Chaoran Feng</a>
+        </div>
+        <div class="nav-right">
+            <ul class="menu">
+                <li><a href="../"><span class="active">Posts</span></a></li>
+                <li><a href="../../">Homepage</a></li>
+            </ul>
+            <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<main class="main">
+<article class="paper">
+    <header class="post-header">
+        <div class="post-header-top">
+            <div class="breadcrumbs"><a href="../../">Home</a>&nbsp;»&nbsp;<a href="../">Posts</a></div>
+            <div class="lang-switch" role="navigation" aria-label="Language"><a href="./" class="active" aria-current="page">EN</a><a href="./zh/">中文</a></div>
+        </div>
+        <span class="post-type type-deep-dive">Deep Dive</span>
+        <h1 class="post-title">The Geometry of QK Normalization: From Softmax Stability to Hyperspheres and Linear Attention</h1>
+        <div class="post-meta">
+            <span>November 27, 2026</span>
+            <span>20 min read</span>
+            <span>Chaoran Feng</span>
+        </div>
+    </header>
+
+    <details class="toc">
+        <summary>Table of Contents</summary>
+        <div class="inner">
+        <ul>
+            <li><a href="#linearization-prelude">From Softmax Attention to Linear RNNs</a></li>
+            <li><a href="#hypersphere-vs-cone">Isotropic Assumptions vs. Empirical Geometry</a></li>
+            <li><a href="#qk-norm-and-mla">QK-Norm and MLA Compatibility</a>
+                <ul>
+                    <li><a href="#activation-qk-norm">Activation-Level QK-Norm</a></li>
+                    <li><a href="#mha-gqa-mla">MHA, GQA, MQA, and MLA Formulations</a></li>
+                    <li><a href="#mla-workarounds">QK-Clip and QK-Normed MLA</a></li>
+                </ul>
+            </li>
+            <li><a href="#ngpt-hypersphere">nGPT: Full-Network Hypersphere Normalization</a></li>
+            <li><a href="#linear-attention-householder">L2 Norm and Householder Stability in Linear Attention</a>
+                <ul>
+                    <li><a href="#householder-spectrum">Eigenstructure of Delta Updates</a></li>
+                    <li><a href="#non-normal-shear-capacity">Non-Normal Shear and State Capacity</a></li>
+                </ul>
+            </li>
+            <li><a href="#geometric-tension">Softmax vs. Linear: Divergent Geometric Goals</a></li>
+            <li><a href="#citation">Citation</a></li>
+            <li><a href="#references">References</a></li>
+        </ul>
+        </div>
+    </details>
+
+    <div class="post-content">
+        <p>Before surveying Query–Key ($Q, K$) normalization methods across modern language models, it helps to trace the theoretical context behind them. What looks in code like a couple of lines of <code>RMSNorm</code> or L2 normalization connects directly to how Softmax Attention and Linear Attention differ geometrically.</p>
+
+        <h2 id="linearization-prelude">From Softmax Attention to Linear RNNs<a class="anchor" href="#linearization-prelude" aria-hidden="true">#</a></h2>
+
+        <p>Over the past year, Jianlin Su published two derivations bridging <strong>Softmax Attention</strong> and <strong>Linear Attention / Test-Time Training (TTT)</strong>.</p>
+
+        <p>The first post<a class="cite" href="#ref-1">[1]</a> rewrites standard Softmax Attention as an exact quadratic-cost recurrence and applies a first-order Taylor expansion $\alpha_{t,i} \approx \frac{1}{t}\big(1 + \boldsymbol{q}\cdot(\boldsymbol{k}_i - \bar{\boldsymbol{k}}_t)\big)$ to pull the query vector $\boldsymbol{q}$ out of the state recursion. Balancing the truncation error under a minimax criterion requires finding a query $\boldsymbol{q}^*$ that maximizes $\alpha_{t,t}(\boldsymbol{q})$—yet without norm bounds, dot products diverge and no finite maximum exists. Assuming comparable norms for $\boldsymbol{q}$ and $\boldsymbol{k}$ and setting $\boldsymbol{q}^* = \boldsymbol{k}_t - \bar{\boldsymbol{k}}_t$ leads directly to <strong>Gated DeltaNet (GDN)</strong>. Even in that purely algebraic derivation, norm geometry already enters as a hidden precondition.</p>
+
+        <p>The companion post<a class="cite" href="#ref-2">[2]</a> takes a cleaner three-step averaging perspective directly from standard Softmax Attention, showing how the entire KV Cache can be peeled away layer by layer. Starting from:</p>
+
+        $$\boldsymbol{o} = \sum_{i=1}^n a_i \boldsymbol{v}_i, \qquad a_i = \frac{e^{\boldsymbol{q}\cdot \boldsymbol{k}_i}}{\sum_{j=1}^n e^{\boldsymbol{q}\cdot \boldsymbol{k}_j}} \tag{1}$$
+
+        <p>reducing Eq. (1) to a KV-Cache-free linear RNN breaks into three conceptual steps:</p>
+
+        <ol>
+            <li><strong>Online regression eliminates $V$ (drops the V Cache).</strong> Generalize each discrete value vector $\boldsymbol{v}_i$ into a conditional expectation $\mathbb{E}_{p(\boldsymbol{v}\mid \boldsymbol{k}_i)}[\boldsymbol{v}]$ and fit a parametric mean predictor $\boldsymbol{\mu}_{\boldsymbol{W}}(\boldsymbol{k}_i)$ online over the stream $(\boldsymbol{k}_i, \boldsymbol{v}_i)$. Substituting $\boldsymbol{\mu}_{\boldsymbol{W}}(\boldsymbol{k}_i)$ for $\boldsymbol{v}_i$ yields:
+            $$\boldsymbol{o} = \sum_{i=1}^n a_i \boldsymbol{\mu}_{\boldsymbol{W}}(\boldsymbol{k}_i) \tag{2}$$</li>
+            <li><strong>Mean-field approximation pulls nonlinearity outside.</strong> Eq. (2) no longer caches $V$, yet still scans all past keys in quadratic time. Borrowing a mean-field step from statistical physics, approximate the weighted average of the function by the function of the weighted average:
+            $$\boldsymbol{o} = \sum_{i=1}^n a_i \boldsymbol{\mu}_{\boldsymbol{W}}(\boldsymbol{k}_i) \approx \boldsymbol{\mu}_{\boldsymbol{W}}\!\left(\sum_{i=1}^n a_i \boldsymbol{k}_i\right) \tag{3}$$
+            Whenever $\boldsymbol{\mu}_{\boldsymbol{W}}$ is linear (such as $\boldsymbol{W}\boldsymbol{k}_i$), Eq. (3) is an exact identity rather than an approximation. Inside the parentheses sits a <strong>$K=V$ Softmax Attention</strong> core, $\sum_{i=1}^n a_i \boldsymbol{k}_i$.</li>
+            <li><strong>Isotropic approximation eliminates $K$ (yields a linear RNN).</strong> Because $a_i \propto e^{\boldsymbol{q}\cdot \boldsymbol{k}_i}$, if $\boldsymbol{k}_1, \dots, \boldsymbol{k}_n$ are roughly isotropic in space—more precisely, if their weighted components orthogonal to $\boldsymbol{q}$ cancel out—then:
+            $$\sum_{i=1}^n a_i \boldsymbol{k}_i \approx \lambda \boldsymbol{q} \implies \boldsymbol{o} \approx \boldsymbol{\mu}_{\boldsymbol{W}}(\boldsymbol{q}) \tag{4}$$
+            Absorbing the scalar $\lambda$ into $\boldsymbol{q}$ removes the summation over past keys altogether. All historical context now lives inside the state weights $\boldsymbol{W}$, recovering standard linear-complexity RNNs such as <strong>TTT</strong><a class="cite" href="#ref-3">[3]</a> (or <strong>DeltaNet</strong> when $\boldsymbol{\mu}_{\boldsymbol{W}}$ is linear and updated via one gradient step).</li>
+        </ol>
+
+        <figure>
+            <img src="./fig-softmax-to-ttt.svg" width="1200" height="436" alt="Four-stage diagram showing the reduction from Softmax Attention via Online Regression, Mean-Field Approximation, and Isotropic Approximation to TTT / Linear RNN, with MLA and DeepSeek-V4 highlighted at the K=V Attention stage." loading="lazy">
+            <figcaption>Fig. 1. The three-step averaging path from Softmax Attention to TTT and Linear RNNs<a class="cite" href="#ref-2">[2]</a>. MLA and DeepSeek-V4 sit at the $K=V$ Attention stage after inference matrix absorption. <a href="./fig-softmax-to-ttt.svg">Open full size</a></figcaption>
+        </figure>
+
+        <p>There is, however, an obvious counterexample to Eq. (4): in real models, $K=V$ Attention does not generally collapse to $\lambda \boldsymbol{q}$. After inference-time matrix absorption, <strong>MLA</strong> and <strong>DeepSeek-V4 (DSV4)</strong> both reduce to $K=V$ Multi-Query Attention computing $\sum_{i=1}^n a_i \boldsymbol{k}_i$. If that sum were merely proportional to $\boldsymbol{q}$, every token's output would depend only on itself and cross-token interaction would disappear.</p>
+
+        <p>Eq. (4) therefore does not hold automatically in trained Transformers, yet it still sets the approximation error boundary for linearization. Viewed from this angle, recent $Q, K$ normalization designs—from <strong>QK-Norm</strong>, <strong>QK-Clip</strong>, and <strong>QK-Normed MLA</strong> to <strong>nGPT</strong> and strict <strong>L2 Normalization</strong> in DeltaNet and Gated DeltaNet—illustrate how Softmax Attention and Linear Attention impose diverging geometric requirements on queries and keys.</p>
+
+        <h2 id="hypersphere-vs-cone">Isotropic Assumptions vs. Empirical Geometry<a class="anchor" href="#hypersphere-vs-cone" aria-hidden="true">#</a></h2>
+
+        <p>To see exactly when $\sum_{i=1}^n a_i \boldsymbol{k}_i \approx \lambda \boldsymbol{q}$ holds, decompose each historical key $\boldsymbol{k}_i$ into components parallel and orthogonal to the current query $\boldsymbol{q}$:</p>
+
+        $$\boldsymbol{k}_i = \boldsymbol{k}_i^{\parallel} + \boldsymbol{k}_i^{\perp}, \qquad \boldsymbol{k}_i^{\parallel} = \frac{\boldsymbol{q} \cdot \boldsymbol{k}_i}{\|\boldsymbol{q}\|_2^2}\,\boldsymbol{q}, \qquad \boldsymbol{q} \cdot \boldsymbol{k}_i^{\perp} = 0 \tag{5}$$
+
+        <p>Since the attention weights $a_i \propto e^{\boldsymbol{q}\cdot \boldsymbol{k}_i} = e^{\boldsymbol{q}\cdot \boldsymbol{k}_i^{\parallel}}$ depend solely on the parallel projection, Softmax is completely blind to $\boldsymbol{k}_i^{\perp}$. For Eq. (4) to hold, key geometry must satisfy two conditions:</p>
+
+        <ul>
+            <li><strong>Directional isotropy:</strong> inside the hyperplane orthogonal to $\boldsymbol{q}$, the residual vectors $\boldsymbol{k}_i^{\perp}$ spread uniformly across directions so their weighted sum cancels, $\sum_{i=1}^n a_i \boldsymbol{k}_i^{\perp} \approx \mathbf{0}$.</li>
+            <li><strong>Bounded norms:</strong> no individual key carries an extreme radius outlier that dominates the weighted average on its own.</li>
+        </ul>
+
+        <p>When $\boldsymbol{q}$ and all $\boldsymbol{k}_i$ lie on the unit hypersphere $\mathbb{S}^{d-1}$ ($\|\boldsymbol{q}\|_2 = \|\boldsymbol{k}_i\|_2 = 1$), the attention weights $a_i \propto e^{\tau \boldsymbol{q}^\top \boldsymbol{k}_i}$ define the classical <strong>von Mises–Fisher (vMF) distribution</strong> in directional statistics. Under a uniform base measure on $\mathbb{S}^{d-1}$, the vMF mean vector points strictly along $\boldsymbol{q}$—the clean geometric prototype behind Eq. (4).</p>
+
+        <p>Trained Transformers, however, rarely inhabit this clean spherical regime. Representation analyses point to two pervasive distortions:</p>
+
+        <ul>
+            <li><strong>Anisotropy<a class="cite" href="#ref-4">[4]</a>:</strong> contextual representations do not fill the hypersphere evenly; instead, keys cluster inside a narrow cone with a substantial non-zero mean $\bar{\boldsymbol{k}} \neq \mathbf{0}$. Orthogonal components fail to cancel and pull the weighted sum toward the cone axis.</li>
+            <li><strong>Attention Sinks and Massive Activations<a class="cite" href="#ref-5">[5]</a><a class="cite" href="#ref-6">[6]</a>:</strong> because Softmax weights must sum to one, any head wishing to execute a near no-op needs a sink for surplus probability mass. Under causal masking, initial tokens such as <code>&lt;bos&gt;</code> are visible from every subsequent position, so training drives their keys to extreme norm outliers while pushing their corresponding values near zero.</li>
+        </ul>
+
+        <figure>
+            <img src="./fig-isotropic-vs-sink.svg" width="1200" height="580" alt="Two-panel unit circle diagram comparing ideal isotropic unit keys whose vMF mean aligns with q against anisotropic narrow-cone keys plus a large Attention Sink outlier pulling the weighted average off axis." loading="lazy">
+            <figcaption>Fig. 2. Ideal isotropic key geometry on $\mathbb{S}^{d-1}$ (left) versus narrow-cone anisotropy and Attention Sink norm outliers in trained Transformers (right). <a href="./fig-isotropic-vs-sink.svg">Open full size</a></figcaption>
+        </figure>
+
+        <p>Without norm bounds, dot-product attention no longer reflects angular similarity alone and becomes easily dominated by a handful of large-norm keys. The first practical step was therefore simply to constrain query and key norms explicitly.</p>
+
+        <h2 id="qk-norm-and-mla">QK-Norm and MLA Compatibility<a class="anchor" href="#qk-norm-and-mla" aria-hidden="true">#</a></h2>
+
+        <p>The initial motivation for normalizing $Q$ and $K$ was straightforward: preventing <strong>loss spikes</strong> at large scale. By Cauchy–Schwarz, pre-softmax scaled dot-product logits obey:</p>
+
+        $$\left|\frac{\boldsymbol{q}^\top \boldsymbol{k}}{\sqrt{d_h}}\right| \le \frac{\|\boldsymbol{q}\|_2 \|\boldsymbol{k}\|_2}{\sqrt{d_h}} \tag{6}$$
+
+        <p>As pre-training progresses under high learning rates, residual-stream norms and projection weights $\boldsymbol{W}_Q, \boldsymbol{W}_K$ tend to grow steadily. Once $\|\boldsymbol{q}\|_2 \|\boldsymbol{k}\|_2$ grows large enough, attention logits expand rapidly and Softmax saturates into near one-hot distributions—a regime known as <strong>Entropy Collapse</strong>—which starves attention gradients and destabilizes training.</p>
+
+        <h3 id="activation-qk-norm">Activation-Level QK-Norm<a class="anchor" href="#activation-qk-norm" aria-hidden="true">#</a></h3>
+
+        <p>The most direct fix normalizes $\boldsymbol{q}$ and $\boldsymbol{k}$ across the head dimension right before the dot product. Early work by Henry et al.<a class="cite" href="#ref-7">[7]</a> introduced L2-based cosine attention; ViT-22B<a class="cite" href="#ref-8">[8]</a> proved LayerNorm-based QK-Norm essential for stabilizing 22B vision Transformers; and recent open-weight LLMs—including Gemma 3<a class="cite" href="#ref-9">[9]</a>, OLMo 2<a class="cite" href="#ref-10">[10]</a>, and Qwen3<a class="cite" href="#ref-11">[11]</a>—have converged on per-head <strong>RMSNorm QK-Norm</strong>:</p>
+
+        $$\hat{\boldsymbol{q}} = \frac{\boldsymbol{q}}{\sqrt{\frac{1}{d_h}\|\boldsymbol{q}\|_2^2 + \epsilon}} \odot \boldsymbol{\gamma}_q, \qquad \hat{\boldsymbol{k}} = \frac{\boldsymbol{k}}{\sqrt{\frac{1}{d_h}\|\boldsymbol{k}\|_2^2 + \epsilon}} \odot \boldsymbol{\gamma}_k \tag{7}$$
+
+        <p>Geometrically, Eq. (7) maps unconstrained Euclidean vectors onto an ellipsoid whose axis scales are controlled by the learnable vectors $\boldsymbol{\gamma}_q, \boldsymbol{\gamma}_k$, breaking the link between residual-stream norm growth and attention logit growth.</p>
+
+        <h3 id="mha-gqa-mla">MHA, GQA, MQA, and MLA Formulations<a class="anchor" href="#mha-gqa-mla" aria-hidden="true">#</a></h3>
+
+        <p>Applying normalization directly to activations works cleanly in standard attention variants, but creates an algebraic conflict in <strong>Multi-Head Latent Attention (MLA)</strong>. To make the conflict explicit—and tie back to why MLA behaves like $K=V$ attention in Section 1—let $\boldsymbol{h}_t \in \mathbb{R}^d$ denote the token-$t$ hidden state (column vector), $n_h$ the number of query heads, and $d_h$ the per-head dimension:</p>
+
+        <ul>
+            <li><strong>MHA (Multi-Head Attention)<a class="cite" href="#ref-12">[12]</a>:</strong> every head $m \in \{1,\dots,n_h\}$ has its own projection matrices $\boldsymbol{W}_Q^{(m)}, \boldsymbol{W}_K^{(m)}, \boldsymbol{W}_V^{(m)} \in \mathbb{R}^{d_h \times d}$:
+            $$\boldsymbol{q}_t^{(m)} = \boldsymbol{W}_Q^{(m)} \boldsymbol{h}_t, \qquad \boldsymbol{k}_t^{(m)} = \boldsymbol{W}_K^{(m)} \boldsymbol{h}_t, \qquad \boldsymbol{v}_t^{(m)} = \boldsymbol{W}_V^{(m)} \boldsymbol{h}_t \tag{8}$$
+            Every token caches $2 n_h d_h$ scalars per layer, making long-context decoding memory-bandwidth bound.</li>
+            <li><strong>GQA (Grouped-Query Attention) &amp; MQA (Multi-Query Attention)<a class="cite" href="#ref-13">[13]</a><a class="cite" href="#ref-14">[14]</a>:</strong> partition the $n_h$ query heads into $n_{kv}$ groups ($1 \le n_{kv} \le n_h$, group index $g(m) = \lceil m \cdot n_{kv}/n_h \rceil$) so heads in group $g$ share key and value projections:
+            $$\boldsymbol{q}_t^{(m)} = \boldsymbol{W}_Q^{(m)} \boldsymbol{h}_t, \qquad \boldsymbol{k}_t^{(g)} = \boldsymbol{W}_K^{(g)} \boldsymbol{h}_t, \qquad \boldsymbol{v}_t^{(g)} = \boldsymbol{W}_V^{(g)} \boldsymbol{h}_t \tag{9}$$
+            Setting $n_{kv}=n_h$ recovers MHA and $n_{kv}=1$ gives MQA. KV Cache drops to $2 n_{kv} d_h$ scalars per token per layer, while keys and values remain explicit per-group vectors where standard QK-Norm still drops right in.</li>
+            <li><strong>MLA (Multi-Head Latent Attention)<a class="cite" href="#ref-15">[15]</a>:</strong> instead of sharing raw KV heads, MLA compresses $\boldsymbol{h}_t$ into a single low-rank joint latent vector $\boldsymbol{c}_t^{KV} \in \mathbb{R}^{d_c}$ ($d_c \ll n_h d_h$) paired with a small shared decoupled RoPE key $\boldsymbol{k}_t^R \in \mathbb{R}^{d_R}$:
+            $$\begin{aligned}
+            \boldsymbol{c}_t^{KV} &= \boldsymbol{W}_{DKV} \boldsymbol{h}_t, & \boldsymbol{k}_t^{C,(m)} &= \boldsymbol{W}_{UK}^{(m)} \boldsymbol{c}_t^{KV}, & \boldsymbol{v}_t^{C,(m)} &= \boldsymbol{W}_{UV}^{(m)} \boldsymbol{c}_t^{KV} \\
+            \boldsymbol{k}_t^R &= \operatorname{RoPE}(\boldsymbol{W}_{KR} \boldsymbol{h}_t), & \boldsymbol{k}_t^{(m)} &= \big[\boldsymbol{k}_t^{C,(m)};\, \boldsymbol{k}_t^R\big], & \boldsymbol{q}_t^{(m)} &= \big[\boldsymbol{q}_t^{C,(m)};\, \boldsymbol{q}_t^{R,(m)}\big]
+            \end{aligned} \tag{10}$$
+            During decoding, associativity absorbs $\boldsymbol{W}_{UK}^{(m)}$ into the query side and $\boldsymbol{W}_{UV}^{(m)}$ into the output projection $\boldsymbol{W}_O^{(m)}$. Only $(\boldsymbol{c}_t^{KV}, \boldsymbol{k}_t^R)$—just $d_c + d_R$ scalars per token per layer—ever enters the KV Cache, and the content branch attends directly over $\boldsymbol{c}_t^{KV}$ as both key and value (precisely the $K=V$ MQA core from Fig. 1).</li>
+        </ul>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Variant</th><th>KV Cache / Token / Layer</th><th>Inference Absorption</th><th>Standard Post-Projection QK-Norm</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>MHA</strong></td><td>$2 n_h d_h$</td><td>None needed</td><td>Direct drop-in per head</td></tr>
+                <tr><td><strong>GQA</strong></td><td>$2 n_{kv} d_h$</td><td>None needed</td><td>Direct drop-in per group</td></tr>
+                <tr><td><strong>MQA</strong></td><td>$2 d_h$</td><td>None needed</td><td>Direct drop-in on shared key</td></tr>
+                <tr><td><strong>MLA</strong></td><td>$d_c + d_R$</td><td>Absorbs $\boldsymbol{W}_{UK}^{(m)}, \boldsymbol{W}_{UV}^{(m)}$</td><td>Breaks associativity unless factorized</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h3 id="mla-workarounds">QK-Clip and QK-Normed MLA<a class="anchor" href="#mla-workarounds" aria-hidden="true">#</a></h3>
+
+        <p>Focus on MLA's content inner product (omitting the decoupled RoPE term and head superscript for brevity, with $\boldsymbol{k}_t^C = \boldsymbol{W}_K \boldsymbol{c}_t$). Matrix absorption relies on simple associativity:</p>
+
+        $$\boldsymbol{q}_i^\top (\boldsymbol{W}_K \boldsymbol{c}_t) = \big(\boldsymbol{W}_K^\top \boldsymbol{q}_i\big)^\top \boldsymbol{c}_t \tag{11}$$
+
+        <p>Wrapping $\boldsymbol{k}_t^C = \boldsymbol{W}_K \boldsymbol{c}_t$ in a nonlinear QK-Norm breaks Eq. (11): computing the normalization denominator naively requires materializing every full key vector $\boldsymbol{k}_t^C$ at inference, undoing MLA's KV Cache compression. Two distinct solutions address this constraint:</p>
+
+        <ul>
+            <li><strong>Path 1 — Move control to the optimizer: QK-Clip / MuonClip (Kimi K2)<a class="cite" href="#ref-16">[16]</a>.</strong> While scaling the Muon optimizer to the trillion-parameter Kimi K2 MoE model, the Kimi team observed that Muon's spectral-norm updates jointly amplified $\boldsymbol{W}_Q$ and $\boldsymbol{W}_K$, causing attention logits to grow unchecked. Instead of modifying the forward graph, <strong>QK-Clip</strong> tracks the per-head maximum attention logit $S_{\max}$ at each step; whenever $S_{\max} &gt; \tau$, it rescales that head's projection weights directly after the optimizer step:
+            $$\boldsymbol{W}_Q \leftarrow \sqrt{\frac{\tau}{S_{\max}}}\,\boldsymbol{W}_Q, \qquad \boldsymbol{W}_K \leftarrow \sqrt{\frac{\tau}{S_{\max}}}\,\boldsymbol{W}_K \tag{12}$$
+            (For MLA's decoupled RoPE branch, only the per-head query projection is scaled while the shared $\boldsymbol{W}_{KR}$ stays untouched.) Because the forward pass remains strictly linear in $\boldsymbol{c}_t$, MLA absorption stays intact and Kimi K2 completed 15.5T tokens of pre-training without loss spikes.</li>
+            <li><strong>Path 2 — Factorize RMSNorm for absorption: QK-Normed MLA<a class="cite" href="#ref-17">[17]</a>.</strong> Look closer at Eq. (7): RMSNorm is not an indivisible black box, but the product of a <strong>static feature weight</strong> $\boldsymbol{\gamma}_k$ and a <strong>dynamic scalar RMS statistic</strong> $S(\boldsymbol{k}_t^C) = \sqrt{\frac{1}{d_h}\|\boldsymbol{k}_t^C\|_2^2 + \epsilon}$. Substituting Eq. (7) into MLA's content dot product factors cleanly:
+            $$\boldsymbol{q}_i^\top \!\left(\frac{(\boldsymbol{W}_K \boldsymbol{c}_t) \odot \boldsymbol{\gamma}_k}{S(\boldsymbol{k}_t^C)}\right) = \underbrace{\Big(\boldsymbol{W}_K^\top (\boldsymbol{q}_i \odot \boldsymbol{\gamma}_k)\Big)^\top}_{\tilde{\boldsymbol{q}}_i^\top} \boldsymbol{c}_t \cdot \underbrace{\frac{1}{S(\boldsymbol{k}_t^C)}}_{\alpha_t} \tag{13}$$
+            The static gain $\boldsymbol{\gamma}_k$ still folds cleanly into the absorbed query $\tilde{\boldsymbol{q}}_i$, while the dynamic part reduces from a full key vector to a single <strong>inverse-RMS scalar</strong> $\alpha_t = 1 / S(\boldsymbol{k}_t^C)$ per token and key group. Storing one extra scalar alongside $\boldsymbol{c}_t^{KV}$ adds negligible memory and under 2% latency up to 256K context, restoring mathematically exact QK RMSNorm inside MLA.</li>
+        </ul>
+
+        <h2 id="ngpt-hypersphere">nGPT: Full-Network Hypersphere Normalization<a class="anchor" href="#ngpt-hypersphere" aria-hidden="true">#</a></h2>
+
+        <p>Once QK-Norm showed that constraining query and key norms stabilizes training while supporting larger learning rates and faster convergence, a natural next question followed: what happens if every weight and hidden state in the Transformer is constrained to the unit hypersphere $\mathbb{S}^{d-1}$?</p>
+
+        <p>That is the step taken by NVIDIA's <strong>nGPT (Normalized Transformer)</strong><a class="cite" href="#ref-18">[18]</a>. In a standard Transformer, residual updates $\boldsymbol{h} \leftarrow \boldsymbol{h} + \boldsymbol{h}_A$ add vectors freely in Euclidean space. In nGPT, input and output embeddings, every linear layer's weight matrix along the embedding axis, every hidden state $\boldsymbol{h}$, and every Attention / MLP block output $\boldsymbol{h}_A, \boldsymbol{h}_M$ are all normalized to unit norm.</p>
+
+        <p>On a hypersphere, moving from one unit vector to another follows the shortest path along the surface—the <strong>geodesic</strong>—given exactly by spherical linear interpolation (SLERP):</p>
+
+        $$\operatorname{SLERP}(\boldsymbol{h}, \boldsymbol{h}_A; \alpha) = \frac{\sin((1-\alpha)\theta)}{\sin\theta}\,\boldsymbol{h} + \frac{\sin(\alpha\theta)}{\sin\theta}\,\boldsymbol{h}_A, \qquad \theta = \arccos(\boldsymbol{h}^\top \boldsymbol{h}_A) \tag{14}$$
+
+        <p>For training efficiency, nGPT approximates geodesic transport with first-order linear interpolation (LERP) followed by spherical retraction back onto $\mathbb{S}^{d-1}$:</p>
+
+        $$\boldsymbol{h} \leftarrow \operatorname{Norm}\!\Big(\boldsymbol{h} + \boldsymbol{\alpha}_A \odot (\boldsymbol{h}_A - \boldsymbol{h})\Big), \qquad \boldsymbol{h} \leftarrow \operatorname{Norm}\!\Big(\boldsymbol{h} + \boldsymbol{\alpha}_M \odot (\boldsymbol{h}_M - \boldsymbol{h})\Big) \tag{15}$$
+
+        <p>Here $\boldsymbol{\alpha}_A, \boldsymbol{\alpha}_M \in \mathbb{R}_{\ge 0}^d$ are learnable per-channel step sizes (termed <em>eigen learning rates</em>) controlling how far the hidden state moves along the sphere toward $\boldsymbol{h}_A$ or $\boldsymbol{h}_M$.</p>
+
+        <figure>
+            <img src="./fig-standard-vs-ngpt.svg" width="1200" height="560" alt="Two-panel geometric diagram contrasting Euclidean residual addition h + h_A drifting outside the constant-radius arc against nGPT's LERP chord plus spherical retraction keeping h_next on the unit hypersphere." loading="lazy">
+            <figcaption>Fig. 3. Standard Euclidean residual accumulation (left) lets state and parameter norms grow across depth, whereas nGPT (right) transports states strictly along $\mathbb{S}^{d-1}$ via LERP plus normalization<a class="cite" href="#ref-18">[18]</a>. <a href="./fig-standard-vs-ngpt.svg">Open full size</a></figcaption>
+        </figure>
+
+        <p>nGPT's faster convergence (reported as 4–20× fewer training steps depending on sequence length) reflects a clean optimization geometry:</p>
+
+        <ul>
+            <li><strong>Eliminating implicit angular learning-rate decay:</strong> in unconstrained Euclidean space, as a parameter vector's norm $\|\boldsymbol{\theta}\|_2$ grows under Adam, the same step size rotates the vector by a progressively smaller angle $\Delta\theta \propto \|\Delta\boldsymbol{\theta}\|_2 / \|\boldsymbol{\theta}\|_2$.</li>
+            <li><strong>Decoupling semantic direction from temperature:</strong> locking every vector on $\mathbb{S}^{d-1}$ bounds dot products $\boldsymbol{q}^\top \boldsymbol{k} \in [-1, 1]$. Rather than dividing by $\sqrt{d_h}$ to control variance, attention scores are multiplied by a learnable scale around $\sqrt{d_h}$ to restore sharpness, and both weight decay and learning-rate warmup can be removed.</li>
+        </ul>
+
+        <p>From QK-Norm to nGPT, the Softmax progression shares a single motivation: remove redundant radial degrees of freedom so optimizer updates act primarily on semantic directions.</p>
+
+        <h2 id="linear-attention-householder">L2 Norm and Householder Stability in Linear Attention<a class="anchor" href="#linear-attention-householder" aria-hidden="true">#</a></h2>
+
+        <p>Now return to the endpoint of Section 1: <strong>Linear Attention and modern RNNs</strong>. In Softmax Attention, normalizing $Q$ and $K$ serves mainly to stabilize training; in modern linear attention architectures—<strong>DeltaNet</strong>, <strong>Gated DeltaNet (GDN)</strong>, and <strong>Kimi Delta Attention (KDA)</strong>—strict <strong>L2 normalization</strong> of keys ($\|\boldsymbol{k}_t\|_2 = 1$) is a necessary condition for stable recurrence.</p>
+
+        <h3 id="householder-spectrum">Eigenstructure of Delta Updates<a class="anchor" href="#householder-spectrum" aria-hidden="true">#</a></h3>
+
+        <p>Early linear attention<a class="cite" href="#ref-19">[19]</a> accumulated key–value outer products purely additively, $\boldsymbol{S}_t = \boldsymbol{S}_{t-1} + \boldsymbol{k}_t \boldsymbol{v}_t^\top$, so stale associations written into the fixed-size state matrix $\boldsymbol{S}_t \in \mathbb{R}^{d_k \times d_v}$ could never be overwritten and interfered over long contexts. To enable selective overwriting in fixed-size memory, <strong>DeltaNet</strong><a class="cite" href="#ref-20">[20]</a><a class="cite" href="#ref-21">[21]</a> introduced online error-correcting updates via the Delta Rule:</p>
+
+        $$\boldsymbol{S}_t = \boldsymbol{S}_{t-1} + \beta_t \boldsymbol{k}_t \Big(\boldsymbol{v}_t^\top - \boldsymbol{k}_t^\top \boldsymbol{S}_{t-1}\Big) = \big(\boldsymbol{I} - \beta_t \boldsymbol{k}_t \boldsymbol{k}_t^\top\big) \boldsymbol{S}_{t-1} + \beta_t \boldsymbol{k}_t \boldsymbol{v}_t^\top \tag{16}$$
+
+        <p><strong>Gated DeltaNet</strong><a class="cite" href="#ref-22">[22]</a> and <strong>Kimi Delta Attention (KDA)</strong><a class="cite" href="#ref-23">[23]</a> further compose the delta update with a forget-gate decay matrix $\boldsymbol{D}_t$ (scalar $d_t \boldsymbol{I}$ in GDN, fine-grained diagonal $\operatorname{Diag}(\boldsymbol{d}_t)$ in KDA):</p>
+
+        $$\boldsymbol{S}_t = \big(\boldsymbol{I} - \beta_t \boldsymbol{k}_t \boldsymbol{k}_t^\top\big) \boldsymbol{D}_t \boldsymbol{S}_{t-1} + \beta_t \boldsymbol{k}_t \boldsymbol{v}_t^\top \tag{17}$$
+
+        <p>Inspect the eigenstructure of the core transition operator $\boldsymbol{M}_t = \boldsymbol{I} - \beta_t \boldsymbol{k}_t \boldsymbol{k}_t^\top$ by decomposing any vector $\boldsymbol{u} \in \mathbb{R}^{d_k}$ along $\boldsymbol{k}_t$ and its orthogonal complement $\boldsymbol{k}_t^\perp$:</p>
+
+        $$\boldsymbol{M}_t \boldsymbol{k}_t = \big(1 - \beta_t \|\boldsymbol{k}_t\|_2^2\big)\,\boldsymbol{k}_t, \qquad \boldsymbol{M}_t \boldsymbol{u} = \boldsymbol{u} \quad (\forall\, \boldsymbol{u} \perp \boldsymbol{k}_t) \tag{18}$$
+
+        <p>Thus $\boldsymbol{M}_t$ has $d_k - 1$ eigenvalues identically equal to $1$ on $\boldsymbol{k}_t^\perp$, and a single non-trivial eigenvalue $\lambda = 1 - \beta_t \|\boldsymbol{k}_t\|_2^2$ along $\boldsymbol{k}_t$. Preventing exponential growth across long recurrent products $\prod_t \boldsymbol{M}_t$ requires keeping the spectral radius $|\lambda| \le 1$, which leads directly to <strong>$\|\boldsymbol{k}_t\|_2 = 1$</strong>. Once keys are unit-normalized, the gate $\beta_t \in [0, 2]$ maps onto three clear geometric regimes:</p>
+
+        <ul>
+            <li><strong>$\beta_t \in (0, 1)$ (partial decay):</strong> attenuates existing memory along $\boldsymbol{k}_t$ while leaving the orthogonal subspace $\boldsymbol{k}_t^\perp$ untouched.</li>
+            <li><strong>$\beta_t = 1$ (orthogonal projection, $\lambda = 0$):</strong> $\boldsymbol{M}_t = \boldsymbol{I} - \boldsymbol{k}_t \boldsymbol{k}_t^\top$ zeroes out the component along $\boldsymbol{k}_t$ before writing $\boldsymbol{v}_t$.</li>
+            <li><strong>$\beta_t = 2$ (Householder reflection, $\lambda = -1$):</strong> $\boldsymbol{M}_t = \boldsymbol{I} - 2\boldsymbol{k}_t \boldsymbol{k}_t^\top$ mirrors the state vector across the hyperplane $\boldsymbol{k}_t^\perp$, introducing negative eigenvalues that strengthen state-tracking and parity expressivity.</li>
+        </ul>
+
+        <figure>
+            <img src="./fig-deltanet-householder.svg" width="1200" height="580" alt="3D geometric diagram showing unit normal key k_t, hyperplane k_t perp, input state column s, partial decay for beta in (0,1), orthogonal projection onto the hyperplane at beta=1, Householder mirror reflection below the plane at beta=2, and an eigenvalue stability summary panel." loading="lazy">
+            <figcaption>Fig. 4. Action of the generalized Householder operator $\boldsymbol{M}_t = \boldsymbol{I} - \beta_t \boldsymbol{k}_t \boldsymbol{k}_t^\top$ on a state column $\boldsymbol{s}$ when $\|\boldsymbol{k}_t\|_2 = 1$, alongside the three gating regimes and spectral stability requirements. <a href="./fig-deltanet-householder.svg">Open full size</a></figcaption>
+        </figure>
+
+        <h3 id="non-normal-shear-capacity">Non-Normal Shear and State Capacity<a class="anchor" href="#non-normal-shear-capacity" aria-hidden="true">#</a></h3>
+
+        <p>Even with $\|\boldsymbol{k}_t\|_2 = 1$ enforced, breaking the <strong>symmetric orthogonal structure</strong> of $\boldsymbol{I} - \beta_t \boldsymbol{k}_t \boldsymbol{k}_t^\top$ can still cause long-context divergence. <strong>Gated DeltaNet-2 (GDN-2)</strong><a class="cite" href="#ref-24">[24]</a> generalized the scalar erasure gate $\beta_t$ into a channel-wise vector gate $\boldsymbol{b}_t \in (0, 1)^{d_k}$, turning the erase operator into $\boldsymbol{I} - \boldsymbol{k}_t (\boldsymbol{b}_t \odot \boldsymbol{k}_t)^\top$.</p>
+
+        <p>A subsequent stability analysis in <strong>Stable GDN-2</strong><a class="cite" href="#ref-25">[25]</a> traced GDN-2's long-context overflow to non-normality: because the readout direction $\boldsymbol{b}_t \odot \boldsymbol{k}_t$ and the write-back erase direction $\boldsymbol{k}_t$ are no longer collinear, the operator injects a non-orthogonal <strong>shear</strong> component. Even when every single eigenvalue stays bounded inside $[-1, 1]$, a non-normal shear matrix can have largest singular value $\sigma_{\max} &gt; 1$—so orthogonal components leak gain back onto $\boldsymbol{k}_t$, causing recurrent state norms to grow exponentially even with zero new writes. Restoring symmetric erasure eliminates this shear and recovers non-expansive state propagation.</p>
+
+        <p>Beyond operator stability, key geometry directly sets the <strong>state capacity ceiling</strong> of linear attention. Readout computes $\boldsymbol{o}_t = \boldsymbol{S}_t^\top \boldsymbol{q}_t$: if historical keys $\boldsymbol{k}_1, \dots, \boldsymbol{k}_t$ cluster into a narrow cone, pairwise overlaps $\boldsymbol{k}_i^\top \boldsymbol{k}_j$ stay large, and erasing one key interferes with neighboring associations. Only when keys spread isotropically—approaching pairwise orthogonality on $\mathbb{S}^{d_k - 1}$—can a fixed $d_k \times d_v$ state matrix fully utilize its $d_k$ storage dimensions.</p>
+
+        <h2 id="geometric-tension">Softmax vs. Linear: Divergent Geometric Goals<a class="anchor" href="#geometric-tension" aria-hidden="true">#</a></h2>
+
+        <p>Putting all five normalization families side by side summarizes the progression:</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Stage</th><th>Representative Work</th><th>Where Applied</th><th>Core Geometric Operation</th><th>Primary Problem Solved</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Activation</strong></td><td>QK-Norm (ViT-22B, Gemma 3, Qwen3)</td><td>$Q, K$ activations</td><td>Head-wise RMSNorm / L2 Norm</td><td>Caps dot-product magnitude; prevents logit growth and entropy collapse</td></tr>
+                <tr><td><strong>Optimizer</strong></td><td>QK-Clip (Kimi K2 / MuonClip)</td><td>Weights $\boldsymbol{W}_Q, \boldsymbol{W}_K$</td><td>Rescale by $\sqrt{\tau / S_{\max}}$</td><td>Bounds logits without breaking MLA inference absorption</td></tr>
+                <tr><td><strong>Factorized</strong></td><td>QK-Normed MLA</td><td>Latent space + scalar cache</td><td>Absorb static $\boldsymbol{\gamma}_k$ + cache $1/S(\boldsymbol{k}_t^C)$</td><td>Restores exact QK RMSNorm inside MLA at minimal cache cost</td></tr>
+                <tr><td><strong>Full manifold</strong></td><td>nGPT</td><td>All weights &amp; hidden states</td><td>Pin to $\mathbb{S}^{d-1}$ + LERP/Norm retraction</td><td>Decouples direction and scale; removes implicit angular LR decay</td></tr>
+                <tr><td><strong>Operator spectrum</strong></td><td>DeltaNet, Gated DeltaNet, KDA</td><td>Linear-attention key $\boldsymbol{k}_t$</td><td>Strict L2 Norm ($\|\boldsymbol{k}_t\|_2 = 1$)</td><td>Keeps $\boldsymbol{I} - \beta_t \boldsymbol{k}_t \boldsymbol{k}_t^\top$ a generalized Householder operator for stability and capacity</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <p>We can now return to the question left open in Section 1: for the isotropic approximation $\sum_{i=1}^n a_i \boldsymbol{k}_i \approx \lambda \boldsymbol{q}$, do we actually <em>want</em> it to hold or <em>not</em>?</p>
+
+        <p>The answer highlights the <strong>divergent geometric objectives of Softmax Attention and Linear Attention</strong>:</p>
+
+        <ol>
+            <li><strong>Linear Attention and DeltaNet favor global isotropy.</strong> Because a linear RNN compresses history into a fixed-size state matrix $\boldsymbol{S}_t$, unit keys act like <strong>orthogonal address hashes</strong>. The more uniformly and orthogonally keys cover $\mathbb{S}^{d_k - 1}$, the better conditioned the generalized Householder transitions become, the lower the cross-talk between stored values, and the longer the effective memory horizon.</li>
+            <li><strong>Softmax Attention—especially $K=V$ designs like MLA and DSV4—cannot collapse to a uniform, unstructured sphere.</strong> Rewrite the key average explicitly as a query-aligned term plus its deviation:
+            $$\sum_{i=1}^n a_i \boldsymbol{k}_i = \lambda \boldsymbol{q} + \underbrace{\left(\sum_{i=1}^n a_i \boldsymbol{k}_i - \lambda \boldsymbol{q}\right)}_{\text{semantic interaction residual}} \tag{19}$$
+            In a $K=V$ architecture, if keys behaved like isotropic white noise on the sphere, the residual term would vanish and cross-token information transfer would disappear. Contextual reasoning lives inside that residual—formed when semantically related keys cluster locally off the $\boldsymbol{q}$ axis. Softmax normalization (QK-Norm, QK-Clip, and nGPT) therefore strikes a trade-off: suppress norm drift, global narrow-cone collapse, and extreme sink outliers while preserving local semantic clustering on the hypersphere.</li>
+        </ol>
+
+        <p>Stepping back, the progression from basic <code>RMSNorm</code> to MLA absorption, nGPT spherical updates, DeltaNet's Householder spectrum, and the interaction residual in $K=V$ attention all centers on the same two questions: how to decouple vector magnitude from direction, and how each attention family trades off global isotropy against local semantic clustering.</p>
+
+        <h2 id="citation">Citation<a class="anchor" href="#citation" aria-hidden="true">#</a></h2>
+        <div class="citation">
+            <p>If you reference these notes or diagrams, please cite:</p>
+            <blockquote cite="https://www.falcary.com/blogs/qk-norm-geometry/">
+                <p>Chaoran Feng (2026). "The Geometry of QK Normalization: From Softmax Stability to Hyperspheres and Linear Attention". <em>Chaoran Feng's Blog</em>. https://www.falcary.com/blogs/qk-norm-geometry/</p>
+            </blockquote>
+            <pre><code>@article{feng2026qknorm,
+  title   = {The Geometry of QK Normalization: From Softmax Stability to Hyperspheres and Linear Attention},
+  author  = {Feng, Chaoran},
+  year    = {2026},
+  month   = {November},
+  url     = {https://www.falcary.com/blogs/qk-norm-geometry/}
+}</code></pre>
+        </div>
+
+        <h2 id="references">References<a class="anchor" href="#references" aria-hidden="true">#</a></h2>
+        <ol class="references">
+            <li id="ref-1" data-brief="Rewrites Softmax Attention as an exact quadratic RNN, applies a first-order Taylor expansion, and shows that minimax error balancing requires bounded Q/K norms, yielding Gated DeltaNet."><a href="https://kexue.fm/archives/11823" target="_blank" rel="noopener">Linearizing Softmax Attention into Gated DeltaNet (将Softmax Attention线性化为Gated DeltaNet)</a>. Jianlin Su, Scientific Spaces, July 2026.</li>
+            <li id="ref-2" data-brief="Derives TTT and Linear RNNs from Softmax Attention via three averaging steps (online regression, mean-field, and key isotropy), highlighting MLA and DeepSeek-V4 as K=V counterexamples."><a href="https://spaces.ac.cn/archives/11993" target="_blank" rel="noopener">The Path of Averaging: From Attention to TTT (平均之路：从Attention到TTT)</a>. Jianlin Su, Scientific Spaces, November 2026.</li>
+            <li id="ref-3" data-brief="Introduces Test-Time Training (TTT) layers where the RNN hidden state is a parametric model updated online via self-supervised gradient steps during inference."><a href="https://arxiv.org/abs/2407.04620" target="_blank" rel="noopener">Learning to (Learn at Test Time): RNNs with Expressive Hidden States</a>. Sun, Li, Dalal, Xu, Vikram, Zhang, Dubois, Chen, Wang, Koyejo, Hashimoto, and Guestrin, ICML 2025 (arXiv:2407.04620).</li>
+            <li id="ref-4" data-brief="Demonstrates empirically that contextualized representations in pretrained Transformers are highly anisotropic and occupy a narrow cone in high-dimensional space."><a href="https://arxiv.org/abs/1909.00512" target="_blank" rel="noopener">How Contextual are Contextualized Word Representations? Comparing the Geometry of BERT, ELMo, and GPT-2 Embeddings</a>. Ethayarajh, EMNLP 2019 (arXiv:1909.00512).</li>
+            <li id="ref-5" data-brief="Identifies the Attention Sink phenomenon where initial tokens absorb disproportionate Softmax probability mass and enables streaming inference by retaining sink KV states."><a href="https://arxiv.org/abs/2309.17453" target="_blank" rel="noopener">Efficient Streaming Language Models with Attention Sinks</a>. Xiao, Tian, Chen, Han, and Lewis, ICLR 2024 (arXiv:2309.17453).</li>
+            <li id="ref-6" data-brief="Documents extreme constant-like activation outliers in LLMs concentrated on initial and delimiter tokens, acting as implicit bias terms that shape Softmax attention distributions."><a href="https://arxiv.org/abs/2402.17762" target="_blank" rel="noopener">Massive Activations in Large Language Models</a>. Sun, Chen, Kolter, and Liu, COLM 2024 (arXiv:2402.17762).</li>
+            <li id="ref-7" data-brief="Proposes L2 Query-Key Normalization (cosine attention with learnable scale) before Softmax to prevent attention saturation and improve low-resource translation stability."><a href="https://arxiv.org/abs/2010.04245" target="_blank" rel="noopener">Query-Key Normalization for Transformers</a>. Henry, Dachapally, Pawar, and Chen, Findings of EMNLP 2020 (arXiv:2010.04245).</li>
+            <li id="ref-8" data-brief="Scales Vision Transformers to 22B parameters and shows that applying LayerNorm to queries and keys prevents attention logit blow-up and training divergence."><a href="https://arxiv.org/abs/2302.05442" target="_blank" rel="noopener">Scaling Vision Transformers to 22 Billion Parameters</a>. Dehghani et al., Google Research, ICML 2023 (arXiv:2302.05442).</li>
+            <li id="ref-9" data-brief="Introduces the Gemma 3 multimodal family (1B–27B), replacing logit soft-capping with QK-Norm alongside local/global attention interleaving for long-context stability."><a href="https://arxiv.org/abs/2503.19786" target="_blank" rel="noopener">Gemma 3 Technical Report</a>. Gemma Team, Google DeepMind, 2025 (arXiv:2503.19786).</li>
+            <li id="ref-10" data-brief="Details OLMo 2 (7B–32B), combining RMSNorm QK-Norm with reordered layer norms to eliminate loss spikes across multi-trillion-token pre-training."><a href="https://arxiv.org/abs/2501.00656" target="_blank" rel="noopener">2 OLMo 2 Furious</a>. OLMo Team, Allen Institute for AI, 2024 (arXiv:2501.00656).</li>
+            <li id="ref-11" data-brief="Presents the Qwen3 dense and MoE family (0.6B–235B) trained on 36T tokens, adopting head-wise QK-Norm as standard architecture across scales."><a href="https://arxiv.org/abs/2505.09388" target="_blank" rel="noopener">Qwen3 Technical Report</a>. Qwen Team, Alibaba, 2025 (arXiv:2505.09388).</li>
+            <li id="ref-12" data-brief="Introduces the Transformer architecture and scaled dot-product Multi-Head Attention (MHA) with per-head Q, K, and V projections."><a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Attention Is All You Need</a>. Vaswani et al., NeurIPS 2017 (arXiv:1706.03762).</li>
+            <li id="ref-13" data-brief="Introduces Multi-Query Attention (MQA), sharing a single key and value head across all query heads to relieve KV Cache memory-bandwidth bottlenecks during decoding."><a href="https://arxiv.org/abs/1911.02150" target="_blank" rel="noopener">Fast Transformer Decoding: One Write-Head is All You Need</a>. Shazeer, Google, 2019 (arXiv:1911.02150).</li>
+            <li id="ref-14" data-brief="Introduces Grouped-Query Attention (GQA), interpolating between MHA and MQA via grouped KV sharing to balance decoding speed and model quality."><a href="https://arxiv.org/abs/2305.13245" target="_blank" rel="noopener">GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints</a>. Ainslie et al., Google Research, EMNLP 2023 (arXiv:2305.13245).</li>
+            <li id="ref-15" data-brief="Introduces Multi-Head Latent Attention (MLA), compressing KV states into a low-rank latent vector with decoupled RoPE and inference-time weight absorption."><a href="https://arxiv.org/abs/2405.04434" target="_blank" rel="noopener">DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model</a>. DeepSeek-AI, 2024 (arXiv:2405.04434).</li>
+            <li id="ref-16" data-brief="Introduces the 1T-parameter Kimi K2 MoE and MuonClip (Muon + QK-Clip), rescaling W_Q and W_K when per-head max logits exceed threshold τ without breaking MLA absorption."><a href="https://arxiv.org/abs/2507.20534" target="_blank" rel="noopener">Kimi K2: Open Agentic Intelligence</a>. Kimi Team, Moonshot AI, 2025 (arXiv:2507.20534).</li>
+            <li id="ref-17" data-brief="Factorizes key RMSNorm into static weights absorbed into query projections plus one cached inverse-RMS scalar per token/group, restoring exact QK-Norm in MLA with under 2% latency overhead up to 256K context."><a href="https://arxiv.org/abs/2606.16310" target="_blank" rel="noopener">QK-Normed MLA: QK Normalization Without Full Key Caching</a>. Han, Zhao, Zhou, Li, and Sun, 2026 (arXiv:2606.16310).</li>
+            <li id="ref-18" data-brief="Constrains all weights, embeddings, and hidden states onto the unit hypersphere S^{d-1} with LERP + normalization updates, achieving 4–20× faster convergence without weight decay or warmup."><a href="https://arxiv.org/abs/2410.01131" target="_blank" rel="noopener">nGPT: Normalized Transformer with Representation Learning on the Hypersphere</a>. Loshchilov, Hsieh, Sun, and Ginsburg, NVIDIA, ICLR 2025 (arXiv:2410.01131).</li>
+            <li id="ref-19" data-brief="Replaces Softmax with kernel feature maps so self-attention rewrites as an O(n) additive recurrent state update over key–value outer products."><a href="https://arxiv.org/abs/2006.16236" target="_blank" rel="noopener">Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention</a>. Katharopoulos, Vyas, Pappas, and Fleuret, ICML 2020 (arXiv:2006.16236).</li>
+            <li id="ref-20" data-brief="Connects linear Transformers to Fast Weight Programmers, diagnoses associative interference in additive states, and introduces the Delta Rule update (DeltaNet)."><a href="https://arxiv.org/abs/2102.11174" target="_blank" rel="noopener">Linear Transformers Are Secretly Fast Weight Programmers</a>. Schlag, Irie, and Schmidhuber, ICML 2021 (arXiv:2102.11174).</li>
+            <li id="ref-21" data-brief="Develops a hardware-efficient chunkwise parallel training algorithm for DeltaNet using the WY representation of generalized Householder matrices."><a href="https://arxiv.org/abs/2406.06484" target="_blank" rel="noopener">Parallelizing Linear Transformers with the Delta Rule over Sequence Length</a>. Yang, Wang, Zhang, Shen, and Kim, NeurIPS 2024 (arXiv:2406.06484).</li>
+            <li id="ref-22" data-brief="Combines Mamba-2 style gating decay with DeltaNet's targeted erasure via the gated delta rule (Gated DeltaNet), improving retrieval and long-context modeling."><a href="https://arxiv.org/abs/2412.06464" target="_blank" rel="noopener">Gated Delta Networks: Improving Mamba2 with Delta Rule</a>. Yang, Kautz, and Hatamizadeh, ICLR 2025 (arXiv:2412.06464).</li>
+            <li id="ref-23" data-brief="Introduces Kimi Delta Attention (KDA) with fine-grained channel-wise diagonal decay inside a hybrid KDA+MLA architecture (Kimi Linear)."><a href="https://arxiv.org/abs/2510.26692" target="_blank" rel="noopener">Kimi Linear: An Expressive, Efficient Attention Architecture</a>. Kimi Team, Moonshot AI, 2025 (arXiv:2510.26692).</li>
+            <li id="ref-24" data-brief="Decouples erasure and writing in linear attention via independent channel-wise erase and write gates (Gated DeltaNet-2)."><a href="https://arxiv.org/abs/2605.22791" target="_blank" rel="noopener">Gated DeltaNet-2: Decoupling Erase and Write in Linear Attention</a>. Hatamizadeh, Choi, and Kautz, 2026 (arXiv:2605.22791).</li>
+            <li id="ref-25" data-brief="Diagnoses GDN-2 long-context state blow-up as non-normal shear from asymmetric erasure I − k_t(b_t ⊙ k_t)^T and resolves it with symmetric erasure plus decay-regulated residual writing."><a href="https://arxiv.org/abs/2611.34051" target="_blank" rel="noopener">Stable Gated DeltaNet-2: Understanding and Mitigating Recurrent State Instability</a>. Zhang, Hao, Liu, Zhou, Zhang, Liu, Su, and Li, 2026 (arXiv:2611.34051).</li>
+        </ol>
+    </div>
+
+    <footer class="post-footer">
+        <ul class="post-tags">
+            <li><a href="../?tag=Attention">Attention</a></li>
+            <li><a href="../?tag=Linear%20Attention">Linear Attention</a></li>
+            <li><a href="../?tag=Normalization">Normalization</a></li>
+            <li><a href="../?tag=MLA">MLA</a></li>
+            <li><a href="../?tag=Hypersphere">Hypersphere</a></li>
+        </ul>
+        <nav class="paginav">
+            <a class="prev" href="../"><span class="title">« All posts</span>Back to the list</a>
+            <a class="next" href="../marin/"><span class="title">Next post »</span>Marin End-to-End Tutorial: From LatentMoE and Datakit to 535B Pre-Training and Agentic RL</a>
+        </nav>
+    </footer>
+</article>
+</main>
+
+<footer class="footer">
+    &copy; 2026 Chaoran Feng&nbsp;&nbsp;·&nbsp;&nbsp;<a href="../../">Homepage</a>
+</footer>
+
+<script src="../../assets/vendor/katex/katex.min.js"></script>
+<script src="../../assets/vendor/katex/contrib/auto-render.min.js"></script>
+<script src="../../assets/js/blog-post.js?v=20261125.2"></script>
+</body>
+</html>

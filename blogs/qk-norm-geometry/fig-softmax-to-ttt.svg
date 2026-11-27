@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="436" viewBox="0 0 1200 436">
+  <rect width="1200" height="436" rx="16" fill="#ffffff"/>
+
+  <defs>
+    <marker id="arrNavy" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1f4e79"/>
+    </marker>
+    <marker id="arrCoral" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#c2410c"/>
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <text x="600" y="42" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" fill="#1e293b">Three-Step Averaging Path: From Softmax Attention to Linear RNN / TTT</text>
+  <text x="600" y="68" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" fill="#64748b">Eliminating V Cache via online regression, pulling μ<tspan baseline-shift="sub" font-size="11">W</tspan> outside via mean-field, and eliminating K Cache via key isotropy</text>
+
+  <!-- Step 1 Card: Softmax Attention -->
+  <rect x="28" y="108" width="212" height="178" rx="14" fill="#eef4fa" stroke="#205488" stroke-width="2.2"/>
+  <text x="134" y="142" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f">Softmax Attention</text>
+  <text x="134" y="204" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-style="italic" fill="#0f172a">o = <tspan font-style="normal" font-size="26">Σ</tspan><tspan baseline-shift="sub" font-size="13">i=1</tspan><tspan baseline-shift="super" font-size="13">n</tspan> a<tspan baseline-shift="sub" font-size="14">i</tspan> v<tspan baseline-shift="sub" font-size="14">i</tspan></text>
+  <rect x="48" y="242" width="172" height="28" rx="14" fill="#dbeafe"/>
+  <text x="134" y="261" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12.5" font-weight="600" fill="#1e40af">O(n²) · Full K, V Cache</text>
+
+  <!-- Arrow 1 -> 2 (240 -> 344) -->
+  <line x1="240" y1="197" x2="338" y2="197" stroke="#1f4e79" stroke-width="2.6" marker-end="url(#arrNavy)"/>
+  <text x="292" y="164" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#1f4e79">1. Online</text>
+  <text x="292" y="182" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#1f4e79">Regression</text>
+  <text x="292" y="220" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="13.5" font-style="italic" fill="#475569">μ<tspan baseline-shift="sub" font-size="10">W</tspan>(k<tspan baseline-shift="sub" font-size="10">i</tspan>) ≈ v<tspan baseline-shift="sub" font-size="10">i</tspan></text>
+  <text x="292" y="239" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12" fill="#64748b">(eliminate V)</text>
+
+  <!-- Step 2 Card: V-Free Form -->
+  <rect x="346" y="108" width="212" height="178" rx="14" fill="#f8fafc" stroke="#334155" stroke-width="2.2"/>
+  <text x="452" y="142" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#1e293b">V-Free Form</text>
+  <text x="452" y="204" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="20" font-style="italic" fill="#0f172a">o = <tspan font-style="normal" font-size="25">Σ</tspan><tspan baseline-shift="sub" font-size="12">i</tspan> a<tspan baseline-shift="sub" font-size="13">i</tspan> μ<tspan baseline-shift="sub" font-size="13">W</tspan>(k<tspan baseline-shift="sub" font-size="13">i</tspan>)</text>
+  <rect x="370" y="242" width="164" height="28" rx="14" fill="#e2e8f0"/>
+  <text x="452" y="261" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12.5" font-weight="600" fill="#334155">O(n²) · K Cache only</text>
+
+  <!-- Arrow 2 -> 3 (558 -> 662) -->
+  <line x1="558" y1="197" x2="656" y2="197" stroke="#1f4e79" stroke-width="2.6" marker-end="url(#arrNavy)"/>
+  <text x="610" y="164" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#1f4e79">2. Mean-Field</text>
+  <text x="610" y="182" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#1f4e79">Approx.</text>
+  <text x="610" y="220" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12" fill="#475569">(exact if μ<tspan baseline-shift="sub" font-size="9.5">W</tspan></text>
+  <text x="610" y="237" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12" fill="#475569">is linear)</text>
+
+  <!-- Step 3 Card: K=V Attention (Highlighted) -->
+  <rect x="664" y="108" width="212" height="178" rx="14" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5" stroke-dasharray="8 5"/>
+  <text x="770" y="142" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#9a3412">K = V Attention</text>
+  <text x="770" y="204" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="21" font-style="italic" fill="#7c2d12">μ<tspan baseline-shift="sub" font-size="13">W</tspan><tspan font-style="normal" font-size="24">(</tspan><tspan font-style="normal" font-size="25">Σ</tspan><tspan baseline-shift="sub" font-size="12">i</tspan> a<tspan baseline-shift="sub" font-size="13">i</tspan> k<tspan baseline-shift="sub" font-size="13">i</tspan><tspan font-style="normal" font-size="24">)</tspan></text>
+  <rect x="692" y="242" width="156" height="28" rx="14" fill="#ffedd5"/>
+  <text x="770" y="261" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12.5" font-weight="600" fill="#9a3412">K = V MQA Core</text>
+
+  <!-- Arrow 3 -> 4 (876 -> 980) -->
+  <line x1="876" y1="197" x2="974" y2="197" stroke="#1f4e79" stroke-width="2.6" marker-end="url(#arrNavy)"/>
+  <text x="928" y="164" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#1f4e79">3. Isotropic</text>
+  <text x="928" y="182" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#1f4e79">Approx.</text>
+  <text x="928" y="220" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="13.5" font-style="italic" fill="#475569"><tspan font-style="normal">Σ</tspan> a<tspan baseline-shift="sub" font-size="10">i</tspan>k<tspan baseline-shift="sub" font-size="10">i</tspan> ≈ λq</text>
+  <text x="928" y="239" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12" fill="#64748b">(eliminate K)</text>
+
+  <!-- Step 4 Card: TTT / Linear RNN -->
+  <rect x="982" y="108" width="190" height="178" rx="14" fill="#f0fdfa" stroke="#0f766e" stroke-width="2.2"/>
+  <text x="1077" y="138" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="17" font-weight="700" fill="#115e59">TTT /</text>
+  <text x="1077" y="160" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="17" font-weight="700" fill="#115e59">Linear RNN</text>
+  <text x="1077" y="206" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-style="italic" fill="#0f172a">o ≈ μ<tspan baseline-shift="sub" font-size="14">W</tspan>(q)</text>
+  <rect x="1002" y="242" width="150" height="28" rx="14" fill="#ccfbf1"/>
+  <text x="1077" y="261" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="12.5" font-weight="600" fill="#0f766e">O(n) · State W only</text>
+
+  <!-- Callout pointing cleanly to K=V Attention -->
+  <path d="M 770 338 L 770 295" fill="none" stroke="#c2410c" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#arrCoral)"/>
+  <rect x="380" y="340" width="780" height="66" rx="12" fill="#fff7ed" stroke="#fdba74" stroke-width="1.6"/>
+  <text x="770" y="366" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="15" font-weight="700" fill="#9a3412">MLA &amp; DeepSeek-V4 live here (after inference matrix absorption)</text>
+  <text x="770" y="390" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="13.5" fill="#7c2d12">Their cross-token expressivity proves Σ aᵢkᵢ ≠ λq in practice — motivating Q/K geometry analysis</text>
+</svg>

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580">
+  <rect width="1200" height="580" rx="16" fill="#ffffff"/>
+
+  <defs>
+    <marker id="arrNavy" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#1b3b6f"/>
+    </marker>
+    <marker id="arrState" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#47668a"/>
+    </marker>
+    <marker id="arrTeal" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrCoral" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#c2410c"/>
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <text x="600" y="40" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" fill="#1e293b">DeltaNet State Transition: Orthogonal Erasure &amp; Householder Reflection</text>
+  <text x="600" y="66" text-anchor="middle" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" fill="#64748b">Action of M<tspan baseline-shift="sub" font-size="11">t</tspan> = I − β<tspan baseline-shift="sub" font-size="11">t</tspan> k<tspan baseline-shift="sub" font-size="11">t</tspan> k<tspan baseline-shift="sub" font-size="11">t</tspan>ᵀ on a column s of state S<tspan baseline-shift="sub" font-size="11">t−1</tspan> under strict L2 normalization (‖k<tspan baseline-shift="sub" font-size="11">t</tspan>‖₂ = 1)</text>
+
+  <!-- ==================== LEFT: 3D GEOMETRY DIAGRAM ==================== -->
+  <!-- Hyperplane k_t^\perp -->
+  <polygon points="182,274 686,274 562,402 58,402" fill="#edf2f7" stroke="#64748b" stroke-width="2"/>
+  <text x="108" y="387" font-family="Inter, -apple-system, sans-serif" font-size="14.5" font-weight="600" fill="#475569">Hyperplane <tspan font-family="Georgia, serif" font-size="17" font-style="italic" fill="#1e293b">k</tspan><tspan font-family="Georgia, serif" font-style="italic" baseline-shift="sub" font-size="11.5" fill="#1e293b">t</tspan><tspan font-family="Georgia, serif" baseline-shift="super" font-size="11.5" fill="#1e293b">⊥</tspan></text>
+
+  <!-- Perspective dashed axis inside hyperplane passing through O=(332,338) -->
+  <line x1="332" y1="338" x2="572" y2="306" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5"/>
+
+  <!-- Unit normal key vector k_t pointing straight up -->
+  <line x1="332" y1="338" x2="332" y2="122" stroke="#1b3b6f" stroke-width="4" marker-end="url(#arrNavy)"/>
+  <text x="290" y="138" font-family="Georgia, serif" font-size="24" font-weight="700" font-style="italic" fill="#1b3b6f">k<tspan baseline-shift="sub" font-size="15">t</tspan></text>
+  <text x="228" y="164" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#1e40af">(‖k<tspan baseline-shift="sub" font-size="10">t</tspan>‖₂ = 1)</text>
+
+  <!-- Vertical dashed projection/reflection line at x=518 -->
+  <line x1="518" y1="178" x2="518" y2="498" stroke="#64748b" stroke-width="2" stroke-dasharray="6 5"/>
+
+  <!-- Right-angle symbol at (518, 338) -->
+  <polyline points="500,338 500,320 518,320" fill="none" stroke="#475569" stroke-width="1.8"/>
+
+  <!-- Input state column s -->
+  <line x1="332" y1="338" x2="511" y2="184" stroke="#47668a" stroke-width="3.6" marker-end="url(#arrState)"/>
+  <text x="412" y="232" font-family="Georgia, serif" font-size="23" font-weight="700" font-style="italic" fill="#334155">s</text>
+
+  <!-- Partial decay point (0 < beta < 1) -->
+  <line x1="332" y1="338" x2="514" y2="258" stroke="#d97706" stroke-width="2.2" stroke-dasharray="5 4"/>
+  <circle cx="518" cy="256" r="6" fill="#d97706"/>
+  <text x="534" y="261" font-family="Georgia, serif" font-size="16" font-style="italic" fill="#b45309">0 &lt; β<tspan baseline-shift="sub" font-size="11">t</tspan> &lt; 1</text>
+
+  <!-- Orthogonal projection beta = 1 -->
+  <line x1="332" y1="338" x2="509" y2="338" stroke="#0f766e" stroke-width="4" marker-end="url(#arrTeal)"/>
+  <text x="534" y="344" font-family="Georgia, serif" font-size="20" font-weight="700" font-style="italic" fill="#0f766e">β<tspan baseline-shift="sub" font-size="13">t</tspan> = 1</text>
+  <text x="534" y="365" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#115e59">Orthogonal erase</text>
+
+  <!-- Householder reflection beta = 2 -->
+  <line x1="332" y1="338" x2="511" y2="492" stroke="#c2410c" stroke-width="4" marker-end="url(#arrCoral)"/>
+  <text x="534" y="495" font-family="Georgia, serif" font-size="20" font-weight="700" font-style="italic" fill="#c2410c">β<tspan baseline-shift="sub" font-size="13">t</tspan> = 2</text>
+  <text x="534" y="516" font-family="Inter, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#9a3412">Householder mirror</text>
+
+  <!-- Origin dot -->
+  <circle cx="332" cy="338" r="4.5" fill="#1e293b"/>
+
+  <!-- ==================== RIGHT: SPECTRUM & STABILITY CARD ==================== -->
+  <rect x="720" y="106" width="452" height="440" rx="14" fill="#f8fafd" stroke="#cbd5e1" stroke-width="1.8"/>
+  <rect x="720" y="106" width="452" height="52" rx="14" fill="#1f4e79"/>
+  <rect x="720" y="144" width="452" height="14" fill="#1f4e79"/>
+  <text x="946" y="138" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-size="17" font-weight="700" fill="#ffffff">Eigenvalues of M<tspan baseline-shift="sub" font-size="12">t</tspan> = I − β<tspan baseline-shift="sub" font-size="12">t</tspan> k<tspan baseline-shift="sub" font-size="12">t</tspan> k<tspan baseline-shift="sub" font-size="12">t</tspan>ᵀ</text>
+
+  <!-- Eigenvalue summary -->
+  <text x="744" y="188" font-family="Inter, -apple-system, sans-serif" font-size="14.5" fill="#334155">• <tspan font-weight="700">d<tspan baseline-shift="sub" font-size="11">k</tspan> − 1</tspan> eigenvalues = <tspan font-weight="700" fill="#1e3a5f">1</tspan> on k<tspan baseline-shift="sub" font-size="11">t</tspan>⊥ (preserved)</text>
+  <text x="744" y="216" font-family="Inter, -apple-system, sans-serif" font-size="14.5" fill="#334155">• 1 eigenvalue <tspan font-weight="700" fill="#0f766e">λ = 1 − β<tspan baseline-shift="sub" font-size="11">t</tspan> ‖k<tspan baseline-shift="sub" font-size="11">t</tspan>‖₂²</tspan> along k<tspan baseline-shift="sub" font-size="11">t</tspan></text>
+
+  <!-- Regime 1 -->
+  <rect x="742" y="238" width="408" height="62" rx="10" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+  <text x="760" y="264" font-family="Inter, -apple-system, sans-serif" font-size="14.5" font-weight="700" fill="#b45309">β<tspan baseline-shift="sub" font-size="10.5">t</tspan> ∈ (0, 1)  ·  Partial Decay</text>
+  <text x="760" y="286" font-family="Inter, -apple-system, sans-serif" font-size="13" fill="#78350f">Shrinks k<tspan baseline-shift="sub" font-size="10">t</tspan> component; leaves orthogonal k<tspan baseline-shift="sub" font-size="10">t</tspan>⊥ intact</text>
+
+  <!-- Regime 2 -->
+  <rect x="742" y="312" width="408" height="62" rx="10" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.5"/>
+  <text x="760" y="338" font-family="Inter, -apple-system, sans-serif" font-size="14.5" font-weight="700" fill="#0f766e">β<tspan baseline-shift="sub" font-size="10.5">t</tspan> = 1  ·  Orthogonal Projection (λ = 0)</text>
+  <text x="760" y="360" font-family="Inter, -apple-system, sans-serif" font-size="13" fill="#115e59">Erases old value along k<tspan baseline-shift="sub" font-size="10">t</tspan> before writing new v<tspan baseline-shift="sub" font-size="10">t</tspan></text>
+
+  <!-- Regime 3 -->
+  <rect x="742" y="386" width="408" height="62" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="760" y="412" font-family="Inter, -apple-system, sans-serif" font-size="14.5" font-weight="700" fill="#c2410c">β<tspan baseline-shift="sub" font-size="10.5">t</tspan> = 2  ·  Householder Reflection (λ = −1)</text>
+  <text x="760" y="434" font-family="Inter, -apple-system, sans-serif" font-size="13" fill="#9a3412">Allows negative eigenvalues for parity &amp; state tracking</text>
+
+  <!-- Shear warning box -->
+  <rect x="742" y="462" width="408" height="66" rx="10" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+  <text x="760" y="486" font-family="Inter, -apple-system, sans-serif" font-size="13.5" font-weight="700" fill="#991b1b">Stability requires ‖k<tspan baseline-shift="sub" font-size="10">t</tspan>‖₂ = 1 &amp; symmetry</text>
+  <text x="760" y="510" font-family="Inter, -apple-system, sans-serif" font-size="12.5" fill="#7f1d1d">Asymmetric I − k<tspan baseline-shift="sub" font-size="9.5">t</tspan>(b<tspan baseline-shift="sub" font-size="9.5">t</tspan> ⊙ k<tspan baseline-shift="sub" font-size="9.5">t</tspan>)ᵀ injects shear (σ<tspan baseline-shift="sub" font-size="9.5">max</tspan> &gt; 1)</text>
+</svg>
