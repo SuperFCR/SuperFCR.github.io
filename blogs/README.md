@@ -214,14 +214,56 @@ require('sharp')('paper-fig.svg', { density: 288 })
 
 ## 封面
 
-- 固定 **880×495（16:9）** 的 WebP，放在 `blogs/<slug>/cover.webp`。列表页按 16:9 裁切显示，尺寸不对会被裁掉边缘，脚本也会报错。
-- 封面在电脑上只显示约 240px 宽，要在这个尺寸下也看得清：一个主体，或者三四个大图标，加几个大字（880px 画布上不小于 30px）。**不要直接把论文 pipeline 图或文章里的架构图缩小当封面**，缩小后只剩一团噪点。
-- 封面不写文章标题：标题就在卡片左边，重复了反而显得挤。
-- 配色沿用站点：深蓝 `#205488`，类型色（`blog.css` 的「Post types」），浅底 `#eaf1f8` → `#f6efe4` 渐变。
-- 推荐先画 SVG 再转 WebP，例如（`FONTCONFIG_FILE` 让 sharp 找到系统字体）：
+所有文章列表页封面统一采用**编辑部孔版印刷科学几何插画（Archival Risograph Scientific Illustration）**体系，确保列表页 7+ 篇文章在浅色与深色模式下呈现一致的出版物画册质感（类似 Anthropic Research / Stripe Press / Quanta Magazine）。
+
+### 1. 尺寸与文件规范
+
+- 固定 **880×495（16:9）** 的 WebP，存放于 `blogs/<slug>/cover.webp`，单张 `< 300 KB`（通常 50–120 KB）。列表页按 16:9 显示，尺寸不对会被裁切且 `blogs/check.py` 会报错。
+- **不放任何文字、字母、数字、数学符号、假字或 UI 边框**：文章标题、类型和元信息已位于卡片左侧，封面只承载纯视觉几何隐喻；不再使用扁平 PPT 流程图、圆角文字胶囊或直接把论文 pipeline 缩小当封面。
+
+### 2. 统一视觉语言（四色 + 暖棉纸）
+
+| 视觉要素 | 色值 / 材质 | 职责 |
+|---|---|---|
+| 纸张底色 | 暖米白棉纸 `#f6f3ea` | 极轻纸张肌理与充足留白，无边框、无卡片投影 |
+| 普鲁士深蓝 | `#205488` | 核心几何体、精细建筑/数学线框、主结构与流线 |
+| 哑光青绿 | `#0f766e` | 半透明次级层次、测地线/流形带、辅助通道与叠色 |
+| 陶土赭橙 | `#c2410c` | 单一高对比焦点（反射面、对齐带、反馈环或主传输束，克制使用） |
+| 冷石板灰 | `#64748b` | 圆规辅助弧、十字准星、坐标网格与半调网点阴影（halftone dots） |
+
+- **构图原则**：每篇文章只提炼 **1 个核心机理的几何隐喻**（例如：QK-Norm 用超球面浑仪与反射平面；Looped Transformer 用堆叠核心板与正反双环回路；Distributed Training 用 2×2 切片立方体与对角通信带；Flow Matching RL 用网点高斯云经流线分叉收敛至目标环），确保在列表页 `240px–420px` 宽度下依然一眼可辨。
+
+### 3. 生图 Prompt 模板与转码入库
+
+使用图像生成工具（如内置 `image-generator`）生成 16:9 样图时，复用以下英文锚点模板，并将既有任意一篇封面（如 `blogs/qk-norm-geometry/cover.webp`）作为风格参考，只替换 `[SUBJECT]` 部分：
+
+```text
+Generate a single 16:9 widescreen editorial cover illustration matching the EXACT
+visual style, warm cream-ivory cotton paper texture, line weight, halftone shading,
+and color palette of blogs/qk-norm-geometry/cover.webp (Anthropic Research / Stripe
+Press / Quanta Magazine modern risograph scientific illustration).
+
+STRICT STYLE ANCHOR:
+- Background: warm cream-ivory cotton archival paper (#f6f3ea) with very subtle paper
+  grain, clean generous negative space, NO border or frame.
+- Palette ONLY: deep Prussian blue (#205488), muted translucent teal (#0f766e), bold
+  terracotta-ochre (#c2410c), and fine slate-gray (#64748b) geometric compass /
+  construction lines and stippled halftone dot shading.
+- Strictly ZERO text, ZERO letters, ZERO numbers, ZERO symbols, ZERO UI chrome.
+
+SUBJECT:
+[Describe one clear geometric/architectural metaphor for the post's core mechanism.]
+```
+
+出图后先目检确认**无残留文字/乱码、无外框、纸色和四色比例与既有封面一致**，再用 `sharp` 统一压成 `880×495` WebP：
 
 ```bash
-FONTCONFIG_FILE=$HOME/.local/lib/chromium-deps/fonts.conf node -e "require('sharp')('cover.svg', { density: 144 }).resize({ width: 880 }).webp({ quality: 88 }).toFile('blogs/<slug>/cover.webp')"
+node -e "
+require('sharp')('raw-cover.jpg')
+  .resize(880, 495, { fit: 'cover', position: 'centre' })
+  .webp({ quality: 86, effort: 6 })
+  .toFile('blogs/<slug>/cover.webp')
+"
 ```
 
 ## 改样式或脚本之后
