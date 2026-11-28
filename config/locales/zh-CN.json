@@ -11,7 +11,7 @@
   },
   "meta": {
     "title": "冯超然｜学术主页",
-    "description": "冯超然的个人学术主页，研究方向包括多模态生成与三维视觉。"
+    "description": "冯超然的个人学术主页，北京大学博士研究生，研究方向涵盖后训练 RL、Agentic AI、多模态生成与世界模型。"
   },
   "ui": {
     "themeToggleLabel": "切换浅色/深色模式",
@@ -80,27 +80,27 @@
   },
   "content": {
     "personal": {
-      "title": "硕士研究生",
+      "title": "博士研究生",
       "school": "北京大学·信息工程学院",
       "university": "北京大学",
       "location": "中国深圳"
     },
     "education": [
       {
-        "description": "<strong>硕士研究生</strong>，计算机科学与技术专业，信息工程学院，<a href=\"https://www.pku.edu.cn/\">北京大学</a>。",
-        "note": "导师：<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>、<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">田永鸿教授</a>。"
+        "description": "<strong>博士研究生（硕博连读）</strong>，计算机科学与技术专业，信息工程学院，<a href=\"https://www.pku.edu.cn/\">北京大学</a>。",
+        "note": "博士导师：<a href=\"https://zhoudaquan.github.io/homepage.io/index.html\">周大权教授</a>；硕士导师：<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>、<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">田永鸿教授</a>。"
       },
       {
         "description": "<strong>工学学士</strong>，人工智能专业，未来技术学院，<a href=\"https://www.dlut.edu.cn/\">大连理工大学</a>。"
       }
     ],
-    "biography": "🎓 我正在寻找 2027 年秋季入学的博士机会及全职工作机会。欢迎潜在导师、合作者和用人单位通过 <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a> 与我联系。",
+    "biography": "✨ 长期欢迎科研合作、学术交流及研究实习机会，欢迎通过 <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a> 与我联系。",
     "research": {
-      "intro": "我的研究方向为多模态生成与三维视觉，目前在北京大学 <a href=\"https://yuanli2333.github.io/\">YuanGroup</a> 开展研究，由<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>和<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">田永鸿教授</a>指导。我致力于具有实际影响力的研究工作，现阶段主要关注以下方向：",
+      "intro": "我就读于北京大学信息工程学院（硕博连读），博士阶段在 <a href=\"https://github.com/DAGroup-PKU\">DAGroup</a> 师从<a href=\"https://zhoudaquan.github.io/homepage.io/index.html\">周大权教授</a>，硕士阶段在 <a href=\"https://yuanli2333.github.io/\">YuanGroup</a> 师从<a href=\"https://yuanli2333.github.io/\">袁粒教授</a>与<a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">田永鸿教授</a>。我的研究围绕后训练强化学习、Agentic AI、多模态生成与世界模型展开，目前主要关注以下方向：",
       "topics": [
-        "多模态生成",
-        "Agentic AI",
-        "融合三维先验的视频生成"
+        "后训练 RL 与 Agentic AI",
+        "多模态与视频生成",
+        "世界模型与三维视觉"
       ]
     },
     "news": [

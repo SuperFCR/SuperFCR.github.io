@@ -13,7 +13,7 @@
   "personal": {
     "name": "Chaoran Feng",
     "nameChinese": "冯超然",
-    "title": "Master Student",
+    "title": "Ph.D. Student",
     "citations": "N/A",
     "school": "School of Electronics and Computer Engineering",
     "university": "Peking University",
@@ -38,22 +38,22 @@
   },
   "education": [
     {
-      "period": "2024–2027",
-      "description": "<strong>M.S. in Computer Science</strong>, School of Electronics and Computer Engineering, <a href=\"https://english.pku.edu.cn/\">Peking University</a>.",
-      "note": "Advised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
+      "period": "2024–2029",
+      "description": "<strong>Ph.D. Student (M.S.–Ph.D. Track)</strong> in Computer Science, School of Electronics and Computer Engineering, <a href=\"https://english.pku.edu.cn/\">Peking University</a>.",
+      "note": "Ph.D. advised by <a href=\"https://zhoudaquan.github.io/homepage.io/index.html\">Prof. Daquan Zhou</a>; M.S. advised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&hl=en\">Prof. Yonghong Tian</a>."
     },
     {
       "period": "2020–2024",
       "description": "<strong>B.E. in Artificial Intelligence</strong>, School of Future Technology, <a href=\"https://en.dlut.edu.cn/\">Dalian University of Technology</a>."
     }
   ],
-  "biography": "🎓 I am currently seeking Fall 2027 Ph.D. opportunities and full-time positions. I warmly welcome potential advisors, collaborators, and employers to contact me at <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a>.",
+  "biography": "✨ Always open to research collaborations, academic discussions, and research internship opportunities. Feel free to reach out via <a class=\"bio-email\" href=\"mailto:chaoran.feng@stu.pku.edu.cn\">chaoran.feng@stu.pku.edu.cn</a>.",
   "research": {
-    "intro": "I work in the fields of Multimodal Generation and 3D Vision, supervised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">Prof. Yonghong Tian</a> at <a href=\"https://yuanli2333.github.io/\">YuanGroup</a>, Peking University. I strive to develop impactful research projects. Now, I focus on the following topics:",
+    "intro": "I am a Ph.D. student (M.S.–Ph.D. track) at Peking University, working with <a href=\"https://zhoudaquan.github.io/homepage.io/index.html\">Prof. Daquan Zhou</a> at <a href=\"https://github.com/DAGroup-PKU\">DAGroup</a> for my Ph.D., and previously advised by <a href=\"https://yuanli2333.github.io/\">Prof. Li Yuan</a> and <a href=\"https://scholar.google.com/citations?user=fn6hJx0AAAAJ&amp;hl=en\">Prof. Yonghong Tian</a> at <a href=\"https://yuanli2333.github.io/\">YuanGroup</a> during my M.S. My research centers on post-training reinforcement learning, agentic AI, multimodal generation, and world models:",
     "topics": [
-      "Multimodal Generation",
-      "Agentic AI",
-      "Video Generation with 3D Priors"
+      "Post-Training RL & Agentic AI",
+      "Multimodal & Video Generation",
+      "World Models & 3D Vision"
     ]
   },
   "projectCategories": [

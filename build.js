@@ -236,21 +236,23 @@ const preparePageData = (localeConfig, profileImageSize) => {
         sameAs: [data.personal.googleScholar, data.personal.github]
     }).replace(/</g, '\\u003c');
 
+    const showcaseIds = data.projectShowcaseIds || [];
+    const showcaseIdSet = new Set(showcaseIds);
+    if (showcaseIdSet.size !== showcaseIds.length) {
+        throw new Error('Duplicate projectShowcaseIds');
+    }
+
     for (const projects of Object.values(data.projects)) {
         for (const project of projects) {
             project.thumb = thumbnails.get(project.image);
+            const showStars = showcaseIdSet.has(project.analyticsId);
             for (const link of project.links || []) {
-                if (Object.prototype.hasOwnProperty.call(starsMap, link.url)) {
+                if (showStars && Object.prototype.hasOwnProperty.call(starsMap, link.url)) {
                     link.stars = starsMap[link.url];
                 }
                 link.label = data.ui.resourceLabels[link.type] || link.type;
             }
         }
-    }
-
-    const showcaseIds = data.projectShowcaseIds || [];
-    if (new Set(showcaseIds).size !== showcaseIds.length) {
-        throw new Error('Duplicate projectShowcaseIds');
     }
     const selectedIds = data.selectedPaperIds || [];
     const selectedIdSet = new Set(selectedIds);
