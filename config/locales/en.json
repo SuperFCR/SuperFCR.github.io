@@ -50,6 +50,7 @@
       "activities": "Professional Activities"
     },
     "projectGroupLabels": {
+      "agentic_ai": "Agentic AI",
       "t2i_model": "Multimodal Generation",
       "3d_reconstruction": "3D Vision & World Modeling",
       "neuromorphic_vision": "Neuromorphic Vision"
@@ -63,6 +64,7 @@
     "resourceLabels": {
       "Paper": "Paper",
       "Project Page": "Project Page",
+      "Blog": "Blog",
       "Code": "Code",
       "Datasets": "Datasets",
       "HF / Upvote": "HF / Upvote"

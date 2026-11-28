@@ -1,5 +1,5 @@
 {
-  "projectShowcaseIds": ["lingbot_video", "uniworld_view"],
+  "projectShowcaseIds": ["researchboost_agent", "lingbot_video", "uniworld_view"],
   "selectedPaperIds": [
     "style_grpo",
     "enhancing_spatial_understanding_in_image_generation_via_reward_modeling",
@@ -57,6 +57,10 @@
     ]
   },
   "projectCategories": [
+    {
+      "key": "agentic_ai",
+      "analyticsArea": "agentic_ai"
+    },
     {
       "key": "t2i_model",
       "analyticsArea": "multimodal_generation"
@@ -118,6 +122,21 @@
     }
   ],
   "projects": {
+    "agentic_ai": [
+      {
+        "analyticsId": "researchboost_agent",
+        "title": "🚀 ResearchBoost-Agent: Autonomous AI Training Acceleration Verified by a Frozen Judge",
+        "authors": "ResearchBoost Team",
+        "description": "An open-source agent from DAGroup-PKU that autonomously profiles, optimizes, and verifies AI training code under a frozen judge, achieving up to 9.59× speedup across 27 projects in 7 domains. Contributed to algorithm design and the validation of <a href=\"https://github.com/SuperFCR/Faster-VGGT\" target=\"_blank\" rel=\"noopener noreferrer\">Faster-VGGT</a> (2.19× faster VGGT-1B fine-tuning with 31.7% lower peak VRAM; 1.86× pure lossless).",
+        "venue": "Open Source",
+        "image": "./assets/pipelines/Pipeline_researchboost_agent.png",
+        "links": [
+          {"type": "Project Page", "url": "https://ai4ai-for-anything.github.io/#research"},
+          {"type": "Blog", "url": "https://ydove0324.github.io/hx_resume/blog/researchboost/"},
+          {"type": "Code", "url": "https://github.com/DAGroup-PKU/ResearchBoost-Agent"}
+        ]
+      }
+    ],
     "t2i_model": [
       {
         "analyticsId": "uniworld_view",

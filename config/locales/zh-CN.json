@@ -51,6 +51,7 @@
       "activities": "学术服务"
     },
     "projectGroupLabels": {
+      "agentic_ai": "Agentic AI",
       "t2i_model": "多模态生成",
       "3d_reconstruction": "三维视觉与世界建模",
       "neuromorphic_vision": "神经形态视觉"
@@ -64,6 +65,7 @@
     "resourceLabels": {
       "Paper": "论文",
       "Project Page": "项目主页",
+      "Blog": "博客",
       "Code": "代码",
       "Datasets": "数据集",
       "HF / Upvote": "HF / 支持"
@@ -136,6 +138,11 @@
       }
     ],
     "projects": {
+      "agentic_ai": [
+        {
+          "description": "北京大学 DAGroup 开源的自主训练加速智能体，在冻结评测机制约束下自动完成性能剖析、代码优化与等价性验证，已在 7 个领域的 27 个项目中实现最高 9.59× 加速。参与算法设计与 <a href=\"https://github.com/SuperFCR/Faster-VGGT\" target=\"_blank\" rel=\"noopener noreferrer\">Faster-VGGT</a> 验证（VGGT-1B 微调实现 2.19× 加速并降低 31.7% 峰值显存，纯无损模式达 1.86× 加速）。"
+        }
+      ],
       "t2i_model": [
         {
           "description": "一个面向单目图像或视频、支持大基线可控新视角合成的统一视觉世界模型；将遮挡感知的三维点云引导与视频扩散相结合，实现精准相机控制与几何一致的内容生成。"
